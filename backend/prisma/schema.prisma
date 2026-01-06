@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Company {
+  id        Int      @id @default(autoincrement())
+  name      String
+  cnpj      String   @unique
+  phone     String?
+  email     String?
+  address   String?
+  city      String?
+  state     String?
+  zipCode   String?  @map("zip_code")
+  logo      String? // Logo URL
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("companies")
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  username String  @unique
+  email    String  @unique
+  password String // Hash bcrypt
+  fullName String  @map("full_name")
+  cpf      String? @unique
+  phone    String?
+  role     String  @default("USER") // ADMIN, MANAGER, WAITER, CASHIER, KITCHEN
+  active   Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at") // Soft delete
+
+  @@index([role])
+  @@index([active])
+  @@map("users")
+}
