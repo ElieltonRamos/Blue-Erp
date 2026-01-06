@@ -17,7 +17,7 @@ export class CompanyService {
     createCompanyDto: CreateCompanyDto,
   ): Promise<CompanyResponseDto> {
     // Verifica se já existe uma empresa cadastrada
-    const existingCompany = await this.prisma.company.findFirst();
+    const existingCompany = await this.prisma.client.company.findFirst();
     if (existingCompany) {
       throw new ConflictException(
         'Já existe uma empresa cadastrada no sistema',
@@ -25,14 +25,14 @@ export class CompanyService {
     }
 
     // Verifica se CNPJ já existe
-    const existingCnpj = await this.prisma.company.findUnique({
+    const existingCnpj = await this.prisma.client.company.findUnique({
       where: { cnpj: createCompanyDto.cnpj },
     });
     if (existingCnpj) {
       throw new ConflictException('CNPJ já está cadastrado');
     }
 
-    const company = await this.prisma.company.create({
+    const company = await this.prisma.client.company.create({
       data: createCompanyDto,
     });
 
@@ -41,7 +41,7 @@ export class CompanyService {
 
   async getCompany(): Promise<CompanyResponseDto> {
     // Sempre busca a empresa com ID 1
-    const company = await this.prisma.company.findUnique({
+    const company = await this.prisma.client.company.findUnique({
       where: { id: 1 },
     });
 
@@ -58,7 +58,7 @@ export class CompanyService {
     updateCompanyDto: UpdateCompanyDto,
   ): Promise<CompanyResponseDto> {
     // Verifica se a empresa existe
-    const existingCompany = await this.prisma.company.findUnique({
+    const existingCompany = await this.prisma.client.company.findUnique({
       where: { id: 1 },
     });
 
@@ -73,7 +73,7 @@ export class CompanyService {
       updateCompanyDto.cnpj &&
       updateCompanyDto.cnpj !== existingCompany.cnpj
     ) {
-      const cnpjExists = await this.prisma.company.findFirst({
+      const cnpjExists = await this.prisma.client.company.findFirst({
         where: {
           cnpj: updateCompanyDto.cnpj,
           id: { not: 1 },
@@ -84,7 +84,7 @@ export class CompanyService {
       }
     }
 
-    const company = await this.prisma.company.update({
+    const company = await this.prisma.client.company.update({
       where: { id: 1 },
       data: updateCompanyDto,
     });
@@ -93,7 +93,7 @@ export class CompanyService {
   }
 
   async isCompanyConfigured(): Promise<boolean> {
-    const company = await this.prisma.company.findUnique({
+    const company = await this.prisma.client.company.findUnique({
       where: { id: 1 },
     });
     return !!company;

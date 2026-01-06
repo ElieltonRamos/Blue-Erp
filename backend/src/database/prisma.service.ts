@@ -13,12 +13,4 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   async onModuleDestroy() {
     await prisma.$disconnect();
   }
-
-  get user() {
-    return prisma.user;
-  }
-
-  get company() {
-    return prisma.company;
-  }
 }

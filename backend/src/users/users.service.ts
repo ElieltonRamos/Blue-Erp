@@ -16,7 +16,7 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto): Promise<UserResponseDto> {
     // Verifica se username já existe
-    const existingUsername = await this.prisma.user.findUnique({
+    const existingUsername = await this.prisma.client.user.findUnique({
       where: { username: createUserDto.username },
     });
     if (existingUsername) {
@@ -24,7 +24,7 @@ export class UsersService {
     }
 
     // Verifica se email já existe
-    const existingEmail = await this.prisma.user.findUnique({
+    const existingEmail = await this.prisma.client.user.findUnique({
       where: { email: createUserDto.email },
     });
     if (existingEmail) {
@@ -33,7 +33,7 @@ export class UsersService {
 
     // Verifica se CPF já existe (se foi enviado)
     if (createUserDto.cpf) {
-      const existingCpf = await this.prisma.user.findUnique({
+      const existingCpf = await this.prisma.client.user.findUnique({
         where: { cpf: createUserDto.cpf },
       });
       if (existingCpf) {
@@ -44,7 +44,7 @@ export class UsersService {
     // Hash da senha
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-    const user = await this.prisma.user.create({
+    const user = await this.prisma.client.user.create({
       data: {
         ...createUserDto,
         password: hashedPassword,
@@ -56,7 +56,7 @@ export class UsersService {
   }
 
   async findAll(): Promise<UserResponseDto[]> {
-    const users = await this.prisma.user.findMany({
+    const users = await this.prisma.client.user.findMany({
       where: { deletedAt: null, active: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -72,7 +72,7 @@ export class UsersService {
       throw new BadRequestException('ID inválido');
     }
 
-    const user = await this.prisma.user.findFirst({
+    const user = await this.prisma.client.user.findFirst({
       where: {
         id,
         deletedAt: null,
@@ -88,7 +88,7 @@ export class UsersService {
   }
 
   async findByEmail(email: string): Promise<UserResponseDto | null> {
-    const user = await this.prisma.user.findFirst({
+    const user = await this.prisma.client.user.findFirst({
       where: {
         email,
         deletedAt: null,
@@ -104,7 +104,7 @@ export class UsersService {
   }
 
   async findByUsername(username: string): Promise<UserResponseDto | null> {
-    const user = await this.prisma.user.findFirst({
+    const user = await this.prisma.client.user.findFirst({
       where: {
         username,
         deletedAt: null,
@@ -128,7 +128,7 @@ export class UsersService {
     }
 
     // Verifica se usuário existe
-    const existingUser = await this.prisma.user.findFirst({
+    const existingUser = await this.prisma.client.user.findFirst({
       where: {
         id,
         deletedAt: null,
@@ -144,7 +144,7 @@ export class UsersService {
       updateUserDto.username &&
       updateUserDto.username !== existingUser.username
     ) {
-      const usernameExists = await this.prisma.user.findFirst({
+      const usernameExists = await this.prisma.client.user.findFirst({
         where: {
           username: updateUserDto.username,
           id: { not: id },
@@ -158,7 +158,7 @@ export class UsersService {
 
     // Verifica se email já existe em outro usuário
     if (updateUserDto.email && updateUserDto.email !== existingUser.email) {
-      const emailExists = await this.prisma.user.findFirst({
+      const emailExists = await this.prisma.client.user.findFirst({
         where: {
           email: updateUserDto.email,
           id: { not: id },
@@ -172,7 +172,7 @@ export class UsersService {
 
     // Verifica se CPF já existe em outro usuário
     if (updateUserDto.cpf && updateUserDto.cpf !== existingUser.cpf) {
-      const cpfExists = await this.prisma.user.findFirst({
+      const cpfExists = await this.prisma.client.user.findFirst({
         where: {
           cpf: updateUserDto.cpf,
           id: { not: id },
@@ -192,7 +192,7 @@ export class UsersService {
       data.password = await bcrypt.hash(updateUserDto.password, 10);
     }
 
-    const user = await this.prisma.user.update({
+    const user = await this.prisma.client.user.update({
       where: { id },
       data,
     });
@@ -207,7 +207,7 @@ export class UsersService {
     }
 
     // Verifica se usuário existe e não está deletado
-    const user = await this.prisma.user.findFirst({
+    const user = await this.prisma.client.user.findFirst({
       where: {
         id,
         deletedAt: null,
@@ -219,7 +219,7 @@ export class UsersService {
     }
 
     // Soft delete
-    await this.prisma.user.update({
+    await this.prisma.client.user.update({
       where: { id },
       data: {
         deletedAt: new Date(),
@@ -234,7 +234,7 @@ export class UsersService {
     email: string,
     password: string,
   ): Promise<UserResponseDto> {
-    const user = await this.prisma.user.findFirst({
+    const user = await this.prisma.client.user.findFirst({
       where: {
         email,
         deletedAt: null,
