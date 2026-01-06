@@ -6,12 +6,31 @@ datasource db {
   provider = "mysql"
 }
 
-// Seus models aqui
-model Restaurante {
-  id        Int      @id @default(autoincrement())
-  nome      String
-  cnpj      String   @unique
-  ativo     Boolean  @default(true)
+model User {
+  id        String   @id @default(uuid())
+  username     String   @unique
+  password  String
+  role      Role     @default(USER)
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  USER
+  MANAGER
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  cnpj      String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("companies")
 }
