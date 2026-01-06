@@ -1,24 +1,17 @@
-import { Exclude } from 'class-transformer';
-
-export class User {
+export class UserResponseDto {
   id: number;
   username: string;
   email: string;
-
-  @Exclude()
-  password: string;
-
   fullName: string;
   cpf: string | null;
   phone: string | null;
   role: string;
   active: boolean;
-
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
 
-  constructor(partial: Partial<User>) {
+  constructor(partial: Partial<UserResponseDto>) {
     Object.assign(this, partial);
   }
 }

@@ -1,26 +1,258 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { PrismaService } from '../database/prisma.service.js';
+import * as bcrypt from 'bcrypt';
+import { CreateUserDto } from './dto/create-user.dto.js';
+import { UserResponseDto } from './dto/user-response.dto.js';
+import { UpdateUserDto } from './dto/update-user.dto.js';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private prisma: PrismaService) {}
+
+  async create(createUserDto: CreateUserDto): Promise<UserResponseDto> {
+    // Verifica se username já existe
+    const existingUsername = await this.prisma.user.findUnique({
+      where: { username: createUserDto.username },
+    });
+    if (existingUsername) {
+      throw new ConflictException('Nome de usuário já está em uso');
+    }
+
+    // Verifica se email já existe
+    const existingEmail = await this.prisma.user.findUnique({
+      where: { email: createUserDto.email },
+    });
+    if (existingEmail) {
+      throw new ConflictException('Email já está em uso');
+    }
+
+    // Verifica se CPF já existe (se foi enviado)
+    if (createUserDto.cpf) {
+      const existingCpf = await this.prisma.user.findUnique({
+        where: { cpf: createUserDto.cpf },
+      });
+      if (existingCpf) {
+        throw new ConflictException('CPF já está cadastrado');
+      }
+    }
+
+    // Hash da senha
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+    const user = await this.prisma.user.create({
+      data: {
+        ...createUserDto,
+        password: hashedPassword,
+      },
+    });
+
+    const { password: _password, ...result } = user;
+    return new UserResponseDto(result);
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll(): Promise<UserResponseDto[]> {
+    const users = await this.prisma.user.findMany({
+      where: { deletedAt: null, active: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return users.map((user) => {
+      const { password: _password, ...result } = user;
+      return new UserResponseDto(result);
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: number): Promise<UserResponseDto> {
+    if (isNaN(id) || id <= 0) {
+      throw new BadRequestException('ID inválido');
+    }
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    const { password: _password, ...result } = user;
+    return new UserResponseDto(result);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async findByEmail(email: string): Promise<UserResponseDto | null> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email,
+        deletedAt: null,
+      },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    const { password: _password, ...result } = user;
+    return new UserResponseDto(result);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async findByUsername(username: string): Promise<UserResponseDto | null> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        username,
+        deletedAt: null,
+      },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    const { password: _password, ...result } = user;
+    return new UserResponseDto(result);
+  }
+
+  async update(
+    id: number,
+    updateUserDto: UpdateUserDto,
+  ): Promise<UserResponseDto> {
+    if (isNaN(id) || id <= 0) {
+      throw new BadRequestException('ID inválido');
+    }
+
+    // Verifica se usuário existe
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+    });
+
+    if (!existingUser) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    // Verifica se username já existe em outro usuário
+    if (
+      updateUserDto.username &&
+      updateUserDto.username !== existingUser.username
+    ) {
+      const usernameExists = await this.prisma.user.findFirst({
+        where: {
+          username: updateUserDto.username,
+          id: { not: id },
+          deletedAt: null,
+        },
+      });
+      if (usernameExists) {
+        throw new ConflictException('Nome de usuário já está em uso');
+      }
+    }
+
+    // Verifica se email já existe em outro usuário
+    if (updateUserDto.email && updateUserDto.email !== existingUser.email) {
+      const emailExists = await this.prisma.user.findFirst({
+        where: {
+          email: updateUserDto.email,
+          id: { not: id },
+          deletedAt: null,
+        },
+      });
+      if (emailExists) {
+        throw new ConflictException('Email já está em uso');
+      }
+    }
+
+    // Verifica se CPF já existe em outro usuário
+    if (updateUserDto.cpf && updateUserDto.cpf !== existingUser.cpf) {
+      const cpfExists = await this.prisma.user.findFirst({
+        where: {
+          cpf: updateUserDto.cpf,
+          id: { not: id },
+          deletedAt: null,
+        },
+      });
+      if (cpfExists) {
+        throw new ConflictException('CPF já está cadastrado');
+      }
+    }
+
+    // Prepara os dados
+    const data: Partial<CreateUserDto> = { ...updateUserDto };
+
+    // Hash da senha se foi enviada
+    if (updateUserDto.password) {
+      data.password = await bcrypt.hash(updateUserDto.password, 10);
+    }
+
+    const user = await this.prisma.user.update({
+      where: { id },
+      data,
+    });
+
+    const { password: _password, ...result } = user;
+    return new UserResponseDto(result);
+  }
+
+  async remove(id: number): Promise<{ message: string }> {
+    if (isNaN(id) || id <= 0) {
+      throw new BadRequestException('ID inválido');
+    }
+
+    // Verifica se usuário existe e não está deletado
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    // Soft delete
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        active: false,
+      },
+    });
+
+    return { message: 'Usuário removido com sucesso' };
+  }
+
+  async validateCredentials(
+    email: string,
+    password: string,
+  ): Promise<UserResponseDto> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email,
+        deletedAt: null,
+        active: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      throw new BadRequestException('Senha inválida');
+    }
+
+    const { password: _password, ...result } = user;
+    return new UserResponseDto(result);
   }
 }
