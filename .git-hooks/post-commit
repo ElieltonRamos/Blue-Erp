@@ -1,5 +1,13 @@
 #!/usr/bin/env sh
 
+# post-commit hook para versionamento automático em monorepo
+# ========================================================
+# COPIE este arquivo para: .git-hooks/post-commit
+# Execute: chmod +x .git-hooks/post-commit
+# Configure: git config core.hooksPath .git-hooks
+# Faça um commit para testar
+# ========================================================
+
 # Evita loop infinito
 if [ "$HUSKY_SKIP_HOOKS" = "1" ]; then
   exit 0
