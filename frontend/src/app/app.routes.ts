@@ -4,6 +4,7 @@ import { Dashboard } from './features/dashboard/pages/dashboard';
 import { authGuard } from './core/guards/auth.guard';
 import { Clients } from './features/clients/pages/clients';
 import { Users } from './features/users/pages/users';
+import { Products } from './features/products/pages/products';
 
 export const routes: Routes = [
   {
@@ -23,6 +24,11 @@ export const routes: Routes = [
   {
     path: 'usuarios',
     component: Users,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'produtos',
+    component: Products,
     canActivate: [authGuard],
   },
 ];
