@@ -11,9 +11,9 @@ import { NotificationService } from '../../../shared/toastr/notification.service
   templateUrl: './login.html',
 })
 export class Login {
-  private route = inject(Router)
-  private loginService = inject(ServiceLogin)
-  private notification = inject(NotificationService)
+  private route = inject(Router);
+  private loginService = inject(ServiceLogin);
+  private notification = inject(NotificationService);
 
   form = new FormGroup({
     username: new FormControl('', [Validators.required]),
@@ -30,15 +30,20 @@ export class Login {
     alertLoading();
 
     this.loginService.login(username, password).subscribe({
-      next: (loginData) => {
-        localStorage.setItem('token', JSON.stringify(loginData));
-        closeLoading();
-        this.route.navigate(['/menu']);
+      next: (response) => {
+        if ('token' in response) {
+          localStorage.setItem('token', response.token);
+          closeLoading();
+          this.route.navigate(['/dashboard']);
+        } else {
+          closeLoading();
+          this.notification.error(response.message);
+        }
       },
       error: (err) => {
         closeLoading();
         localStorage.removeItem('token');
-        this.notification.error('Erro ao fazer login', 'Falha');
+        this.notification.error('Erro de conexão');
       },
     });
 
