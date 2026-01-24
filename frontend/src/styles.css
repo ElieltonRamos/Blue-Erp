@@ -1,3 +1,17 @@
-/* You can add global styles to this file, and also import other style files */
-
 @import "tailwindcss";
+
+@layer components {
+  .msg-error {
+    @apply text-red-500 font-light text-sm;
+  }
+}
+
+@layer components {
+  button {
+    @apply cursor-pointer;
+  }
+}
+
+body {
+  user-select: none;
+}

@@ -1,14 +1,14 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { ListClients } from "../components/list-clients/list-clients";
-import { CreateClient } from "../components/create-client/create-client";
+import { CreateUser } from "../components/create-user/create-user";
+import { ListUsers } from "../components/list-users/list-users";
 
 @Component({
-  selector: 'app-clients',
-  imports: [ListClients, CreateClient],
-  templateUrl: './clients.html',
+  selector: 'app-users',
+  imports: [CreateUser, ListUsers],
+  templateUrl: './users.html',
 })
-export class Clients {
+export class Users {
   private router = inject(Router);
   menuContext = 'create';
   classBtnSelected =

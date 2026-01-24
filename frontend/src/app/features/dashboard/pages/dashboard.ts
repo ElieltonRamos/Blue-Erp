@@ -32,7 +32,6 @@ export class Dashboard implements OnInit {
     this.role = payload.role || 'garcom';
     this.isAdmin = this.role === 'admin';
 
-    this.notification.success(`Olá, ${this.userName}! 👋`);
   }
 
   logout() {

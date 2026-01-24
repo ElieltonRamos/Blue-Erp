@@ -38,6 +38,7 @@ export class Login {
         if ('token' in response) {
           localStorage.setItem('token', response.token);
           closeLoading();
+          this.notification.success(`Bem Vindo! 👋`);
           this.route.navigate(['/dashboard']);
         } else {
           closeLoading();

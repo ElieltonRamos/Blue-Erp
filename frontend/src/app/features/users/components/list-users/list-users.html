@@ -1,0 +1,46 @@
+<!-- Tabela de Usuários -->
+<div class="overflow-x-auto">
+  <table class="min-w-full text-white text-left">
+    <thead class="bg-[#1d2a3c] text-sky-400 uppercase text-sm">
+      <tr>
+        <th class="py-3 px-4">ID</th>
+        <th class="py-3 px-4">Nome</th>
+        <th class="py-3 px-4">Função</th>
+        <th class="py-3 px-4">Ações</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-700">
+      @for (user of listUsers; track user.id) {
+        <tr class="hover:bg-[#243447] transition">
+          <td class="py-3 px-4">{{ user.id }}</td>
+          <td class="py-3 px-4">{{ user.username }}</td>
+          <td class="py-3 px-4">{{ user.role }}</td>
+          <td class="py-3 px-4 space-x-2">
+            <button
+              (click)="openModalEdit(user)"
+              class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm"
+            >
+              Editar
+            </button>
+            <button
+              (click)="deleteUser(user)"
+              class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+            >
+              Excluir
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal -->
+<app-modal-edit-entity
+  [title]="'Editar Usuario'"
+  [show]="showModalEdit"
+  [entity]="editUser"
+  [fields]="userFields"
+  (close)="closeModalEdit()"
+  (save)="onSave($event)"
+></app-modal-edit-entity>
