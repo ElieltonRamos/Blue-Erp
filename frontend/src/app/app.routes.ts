@@ -5,6 +5,8 @@ import { authGuard } from './core/guards/auth.guard';
 import { Clients } from './features/clients/pages/clients';
 import { Users } from './features/users/pages/users';
 import { Products } from './features/products/pages/products';
+import { SalesHistory } from './features/sales/pages/sales-history/sales-history';
+import { Company } from './features/company/pages/company';
 
 export const routes: Routes = [
   {
@@ -29,6 +31,16 @@ export const routes: Routes = [
   {
     path: 'produtos',
     component: Products,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'historico-vendas',
+    component: SalesHistory,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'empresa',
+    component: Company,
     canActivate: [authGuard],
   },
 ];
