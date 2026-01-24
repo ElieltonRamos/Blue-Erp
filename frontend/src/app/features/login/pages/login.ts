@@ -20,6 +20,10 @@ export class Login {
     password: new FormControl('', [Validators.required]),
   });
 
+  ngOnInit() {
+    localStorage.removeItem('token');
+  }
+
   onSubmit() {
     const { username, password } = this.form.value;
 
