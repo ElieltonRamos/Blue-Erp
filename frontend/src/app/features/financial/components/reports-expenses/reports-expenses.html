@@ -1,0 +1,120 @@
+<!-- Container Principal -->
+<div class="w-full max-w-6xl bg-[#182233] rounded-2xl shadow-lg p-6">
+  <!-- Título Principal -->
+  <div class="mb-4">
+    <h1 class="text-3xl font-bold text-white">Relatório de Despesas</h1>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex flex-wrap gap-4 mb-6">
+    <!-- Data Inicial -->
+    <div class="flex flex-col">
+      <label class="text-white text-sm mb-1">Data Início</label>
+      <input
+        type="date"
+        [(ngModel)]="startDate"
+        class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+      />
+    </div>
+
+    <!-- Data Final -->
+    <div class="flex flex-col">
+      <label class="text-white text-sm mb-1">Data Fim</label>
+      <input
+        type="date"
+        [(ngModel)]="endDate"
+        class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+      />
+    </div>
+
+    <!-- Botões Rápidos -->
+    <div class="flex items-end gap-2">
+      <button
+        (click)="setThisMonth()"
+        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+      >
+        Este Mês
+      </button>
+    </div>
+
+    <!-- Gerar Relatório -->
+    <div class="flex items-end">
+      <button
+        (click)="generateReport()"
+        class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
+      >
+        Gerar Relatório
+      </button>
+    </div>
+  </div>
+
+  <div class="text-white">
+    <h2 class="text-2xl font-bold mb-6">Relatorio de Despesas {{ getFullDate() }}</h2>
+
+    <!-- Total Geral -->
+    <div class="bg-[#2a3445] p-4 rounded-xl shadow mb-6 max-w-sm">
+      <h3 class="text-lg font-semibold mb-2">Total de Despesas no Período</h3>
+      <p class="text-3xl font-bold">R$ {{ report.totalValue.toFixed(2) }}</p>
+    </div>
+
+    <!-- Total por Status -->
+    <div>
+      <h3 class="text-xl font-bold mb-4">Total por Status</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 max-w-4xl">
+        <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+          <h4 class="text-sm text-gray-300">Pago</h4>
+          <p class="text-2xl font-semibold text-green-400">R$ {{ report.totalByStatus.pago }}</p>
+        </div>
+        <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+          <h4 class="text-sm text-gray-300">Pendente</h4>
+          <p class="text-2xl font-semibold text-yellow-400">
+            R$ {{ report.totalByStatus.pendente }}
+          </p>
+        </div>
+        <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+          <h4 class="text-sm text-gray-300">Atrasado</h4>
+          <p class="text-2xl font-semibold text-red-500">R$ {{ report.totalByStatus.atrasado }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total por Fornecedor -->
+    <div>
+      <h3 class="text-xl font-bold mb-4">Total por Fornecedor</h3>
+      <div class="overflow-x-auto max-w-full">
+        <table class="w-full text-left border-collapse border border-gray-700">
+          <thead>
+            <tr class="bg-[#2a3445]">
+              <th class="border border-gray-700 px-4 py-2">Fornecedor</th>
+              <th class="border border-gray-700 px-4 py-2">Total (R$)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of report.totalBySupplier; track item.supplier) {
+              <tr class="odd:bg-[#1f2a40] even:bg-[#24304a]">
+                <td class="border border-gray-700 px-4 py-2">
+                  {{ item.supplier }}
+                </td>
+                <td class="border border-gray-700 px-4 py-2">
+                  {{ item.total.toFixed(2) }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (isLoading) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+    <div class="text-white text-lg font-semibold animate-pulse text-center px-4">
+      <p>Carregando relatório...</p>
+      <p class="mt-2">Isso pode demorar um pouco.</p>
+      <p class="mt-2 text-sm text-indigo-300">
+        ⚠️ Evite gerar relatórios com mais de <strong>30 dias</strong> de diferença.
+      </p>
+    </div>
+  </div>
+}

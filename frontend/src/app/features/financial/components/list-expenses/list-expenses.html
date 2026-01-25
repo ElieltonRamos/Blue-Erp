@@ -1,0 +1,185 @@
+<div class="overflow-x-auto overflow-y-auto">
+  <div class="flex flex-wrap justify-between mb-4 gap-4">
+    <!-- Filtros com labels -->
+    <div class="flex flex-wrap gap-4 items-end">
+      <div class="flex flex-col">
+        <label class="text-white text-sm mb-1">Fornecedor</label>
+        <input
+          type="text"
+          placeholder="Fornecedor..."
+          class="px-3 py-2 rounded bg-gray-800 text-white"
+          [(ngModel)]="filter.supplier"
+          (ngModelChange)="applyFilters()"
+        />
+      </div>
+
+      <div class="flex flex-col">
+        <label class="text-white text-sm mb-1">Status</label>
+        <select
+          class="px-3 py-2 rounded bg-gray-800 text-white"
+          [(ngModel)]="filter.status"
+          (change)="applyFilters()"
+        >
+          <option value="">Todos os Status</option>
+          <option value="Pago">Pago</option>
+          <option value="Pendente">Pendente</option>
+          <option value="Atrasado">Atrasado</option>
+        </select>
+      </div>
+
+      <div class="flex flex-col">
+        <label class="text-white text-sm mb-1">Data Inicial</label>
+        <input
+          type="date"
+          class="px-3 py-2 rounded bg-gray-800 text-white"
+          [(ngModel)]="filter.startDate"
+          (change)="applyFilters()"
+        />
+      </div>
+
+      <div class="flex flex-col">
+        <label class="text-white text-sm mb-1">Data Final</label>
+        <input
+          type="date"
+          class="px-3 py-2 rounded bg-gray-800 text-white"
+          [(ngModel)]="filter.endDate"
+          (change)="applyFilters()"
+        />
+      </div>
+
+      <div class="flex flex-col">
+        <label class="text-white text-sm mb-1 invisible">.</label>
+        <button
+          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 text-sm"
+          (click)="clearFilters()"
+        >
+          Limpar Filtros
+        </button>
+      </div>
+    </div>
+
+    <!-- Paginador -->
+    <app-paginator
+      [totalItems]="totalItems"
+      [itemsPerPage]="limit"
+      [totalPages]="totalPages"
+      [page]="page"
+      (pageChanged)="getAllExpenses($event, limit)"
+    ></app-paginator>
+  </div>
+
+  <!-- Tabela -->
+  <div class="text-gray-400 text-xs italic mb-2 select-none">
+    Clique no cabeçalho das colunas para ordenar (▲ ascendente, ▼ descendente).
+  </div>
+  <table class="min-w-full text-white text-left">
+    <thead class="bg-[#1d2a3c] text-sky-400 uppercase text-sm">
+      <tr>
+        <th class="py-3 px-4 cursor-pointer select-none" (click)="sortBy('id')">
+          ID
+          @if (sortKey === 'id') {
+            {{ sortAsc ? '▲' : '▼' }}
+          }
+        </th>
+        <th class="py-3 px-4 cursor-pointer select-none" (click)="sortBy('supplier')">
+          Fornecedor
+          @if (sortKey === 'supplier') {
+            {{ sortAsc ? '▲' : '▼' }}
+          }
+        </th>
+        <th class="py-3 px-4 cursor-pointer select-none" (click)="sortBy('description')">
+          Descrição
+          @if (sortKey === 'description') {
+            {{ sortAsc ? '▲' : '▼' }}
+          }
+        </th>
+        <th class="py-3 px-4 cursor-pointer select-none" (click)="sortBy('value')">
+          Valor
+          @if (sortKey === 'value') {
+            {{ sortAsc ? '▲' : '▼' }}
+          }
+        </th>
+        <th class="py-3 px-4 cursor-pointer select-none" (click)="sortBy('status')">
+          Status
+          @if (sortKey === 'status') {
+            {{ sortAsc ? '▲' : '▼' }}
+          }
+        </th>
+        <th class="py-3 px-4 cursor-pointer select-none" (click)="sortBy('datePayment')">
+          Data Vencimento
+          @if (sortKey === 'datePayment') {
+            {{ sortAsc ? '▲' : '▼' }}
+          }
+        </th>
+        <th class="py-3 px-4">Ações</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-700">
+      @for (expense of listExpenses; track expense.id) {
+        <tr class="hover:bg-[#243447] transition">
+          <td class="py-3 px-4">{{ expense.id }}</td>
+          <td class="py-3 px-4">{{ expense.supplier }}</td>
+          <td class="py-3 px-4">{{ expense.description }}</td>
+          <td class="py-3 px-4">
+            {{ expense.value | currency: 'BRL' : 'symbol' }}
+          </td>
+          <td class="py-3 px-4">
+            <span
+              [ngClass]="{
+                'text-green-500': expense.status === 'Pago',
+                'text-yellow-500': expense.status === 'Pendente',
+                'text-red-500': expense.status === 'Atrasado',
+              }"
+            >
+              {{ expense.status }}
+            </span>
+          </td>
+          <td class="py-3 px-4">
+            {{ expense.datePayment | date: 'dd/MM/yyyy' : 'UTC' }}
+          </td>
+          <td class="py-3 px-4">
+            <div class="flex flex-col space-y-2">
+              <button
+                (click)="openModalEdit(expense)"
+                class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300"
+                title="Editar"
+              >
+                ✏️ <span>Editar</span>
+              </button>
+              <button
+                (click)="markAsPaid(expense)"
+                [disabled]="expense.status === 'Pago'"
+                [ngClass]="{
+                  'text-green-400 hover:text-green-300': expense.status !== 'Pago',
+                  'text-gray-400 cursor-not-allowed opacity-50': expense.status === 'Pago',
+                }"
+                class="flex items-center gap-2"
+                title="Marcar como Pago"
+              >
+                ✅ <span>Pagar</span>
+              </button>
+
+              <button
+                (click)="deleteExpense(expense)"
+                class="flex items-center gap-2 text-red-400 hover:text-red-300"
+                title="Excluir"
+              >
+                🗑️ <span>Excluir</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal -->
+<app-modal-edit-entity
+  [title]="'Editar Usuario'"
+  [show]="showModalEdit"
+  [entity]="editExpense"
+  [fields]="expenseFields"
+  (close)="closeModalEdit()"
+  (save)="onSave($event)"
+></app-modal-edit-entity>

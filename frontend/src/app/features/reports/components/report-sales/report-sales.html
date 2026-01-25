@@ -1,0 +1,149 @@
+<!-- Container Principal -->
+<div class="w-full max-w-6xl bg-[#182233] rounded-2xl shadow-lg p-6">
+  <!-- Título Principal -->
+  <div class="mb-4">
+    <h1 class="text-3xl font-bold text-white">Relatorio de Vendas</h1>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex flex-wrap gap-4 mb-6">
+    <!-- Data Inicial -->
+    <div class="flex flex-col">
+      <label class="text-white text-sm mb-1">Data Início</label>
+      <input
+        type="date"
+        [(ngModel)]="startDate"
+        class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+      />
+    </div>
+
+    <!-- Data Final -->
+    <div class="flex flex-col">
+      <label class="text-white text-sm mb-1">Data Fim</label>
+      <input
+        type="date"
+        [(ngModel)]="endDate"
+        class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+      />
+    </div>
+
+    <!-- Botões Rápidos -->
+    <div class="flex items-end gap-2">
+      <button
+        (click)="setToday()"
+        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+      >
+        Hoje
+      </button>
+      <button
+        (click)="setThisMonth()"
+        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+      >
+        Este Mês
+      </button>
+    </div>
+
+    <!-- Gerar Relatório -->
+    <div class="flex items-end">
+      <button
+        (click)="generateReport()"
+        class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
+      >
+        Gerar Relatório
+      </button>
+    </div>
+  </div>
+
+  <div class="w-full max-w-6xl mx-auto bg-[#182233] rounded-2xl shadow-lg p-6 mt-6 text-white">
+    <h2 class="text-2xl font-bold mb-6">Relatorio de Vendas {{ getFullDate() }}</h2>
+
+    <!-- Totals -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+      <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+        <h3 class="text-sm text-gray-300">Vendas Feitas</h3>
+        <p class="text-2xl font-semibold">{{ report.totalSales }}</p>
+      </div>
+      <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+        <h3 class="text-sm text-gray-300">Faturamento Bruto</h3>
+        <p class="text-2xl font-semibold">R$ {{ report.grossRevenue }}</p>
+      </div>
+      <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+        <h3 class="text-sm text-gray-300">Lucro Bruto</h3>
+        <p class="text-2xl font-semibold">R$ {{ report.grossProfit }}</p>
+      </div>
+      <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+        <h3 class="text-sm text-gray-300">Descontos</h3>
+        <p class="text-2xl font-semibold">R$ {{ report.totalDiscounts }}</p>
+      </div>
+    </div>
+
+    <!-- Payment Breakdown -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div class="bg-[#2a3445] p-4 rounded-xl">
+        <h4 class="text-sm text-gray-300">PIX</h4>
+        <p class="text-xl font-semibold">R$ {{ report.salesByPaymentMethod.pix }}</p>
+      </div>
+      <div class="bg-[#2a3445] p-4 rounded-xl">
+        <h4 class="text-sm text-gray-300">Dinheiro</h4>
+        <p class="text-xl font-semibold">R$ {{ report.salesByPaymentMethod.cash }}</p>
+      </div>
+      <div class="bg-[#2a3445] p-4 rounded-xl">
+        <h4 class="text-sm text-gray-300">Cartão</h4>
+        <p class="text-xl font-semibold">R$ {{ report.salesByPaymentMethod.card }}</p>
+      </div>
+      <div class="bg-[#2a3445] p-4 rounded-xl">
+        <h4 class="text-sm text-gray-300">Notinha</h4>
+        <p class="text-xl font-semibold">R$ {{ report.salesByPaymentMethod.promissoryNote }}</p>
+      </div>
+    </div>
+
+    <!-- Sales by Operator - Caixa Resumo -->
+    <div class="bg-[#2a3445] p-4 rounded-xl mb-6 w-full">
+      <h4 class="text-xl font-bold text-white mb-4">Resumo por Operador</h4>
+
+      <!-- Scroll Container -->
+      <div class="flex gap-4 overflow-x-auto pb-2">
+        @for (item of report.salesByOperator; track $index) {
+          <div class="w-full sm:w-1/2 bg-[#1f2a40] p-4 rounded-xl shadow-md text-white shrink-0">
+            <div class="text-lg font-bold mb-1">{{ item.operator }}</div>
+
+            <div class="text-md font-semibold text-indigo-300 mb-2">
+              {{ item.totalSales }} Vendas – R$ {{ item.revenue }}
+            </div>
+
+            <div class="text-xl text-gray-300 space-y-1">
+              <div>
+                <span class="font-semibold">Dinheiro:</span> R$
+                {{ item.paymentBreakdown.cash }}
+              </div>
+              <div>
+                <span class="font-semibold">Cartão:</span> R$
+                {{ item.paymentBreakdown.card }}
+              </div>
+              <div>
+                <span class="font-semibold">PIX:</span> R$
+                {{ item.paymentBreakdown.pix }}
+              </div>
+              <div>
+                <span class="font-semibold">Notinha:</span> R$
+                {{ item.paymentBreakdown.promissoryNote }}
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (isLoading) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+    <div class="text-white text-lg font-semibold animate-pulse text-center px-4">
+      <p>Carregando relatório...</p>
+      <p class="mt-2">Isso pode demorar um pouco.</p>
+      <p class="mt-2 text-sm text-indigo-300">
+        ⚠️ Evite gerar relatórios com mais de <strong>30 dias</strong> de diferença.
+      </p>
+    </div>
+  </div>
+}

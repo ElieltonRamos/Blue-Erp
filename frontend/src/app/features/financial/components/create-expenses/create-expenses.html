@@ -1,0 +1,85 @@
+<!-- Formulário -->
+<form
+  (ngSubmit)="onSubmit()"
+  [formGroup]="formCreateExpense"
+  class="bg-[#1d2a3c] p-6 rounded-lg space-y-6"
+>
+  <!-- Inputs lado a lado -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <label for="supplier" class="block text-white font-bold mb-2"
+        >Nome do Fornecedor</label
+      >
+      <input
+        id="supplier"
+        formControlName="supplier"
+        type="text"
+        required
+        placeholder="Digite o Fornecedor"
+        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+      />
+      @if (formCreateExpense.get('supplier')?.touched &&
+      formCreateExpense.get('supplier')?.invalid) {
+      <p class="msg-error">Digite o nome do Fornecedor!</p>
+      }
+    </div>
+
+    <div>
+      <label for="description" class="block text-white font-bold mb-2"
+        >Descrição</label
+      >
+      <input
+        id="description"
+        formControlName="description"
+        type="text"
+        placeholder="Digite uma Descrição ou observação"
+        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+      />
+    </div>
+
+    <div>
+      <label for="value" class="block text-white font-bold mb-2"
+        >Valor da Despesa</label
+      >
+      <input
+        id="value"
+        formControlName="value"
+        type="number"
+        required
+        placeholder="Digite o Valor"
+        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+      />
+      @if (formCreateExpense.get('value')?.touched &&
+      formCreateExpense.get('value')?.invalid) {
+      <p class="msg-error">Digite o Valor!</p>
+      }
+    </div>
+
+    <div>
+      <label for="date" class="block text-white font-bold mb-2"
+        >Data de Vencimento</label
+      >
+      <input
+        id="date"
+        formControlName="datePayment"
+        type="date"
+        required
+        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+      />
+      @if (formCreateExpense.get('datePay')?.touched &&
+      formCreateExpense.get('datePay')?.invalid) {
+      <p class="msg-error">Selecione uma Data!</p>
+      }
+    </div>
+  </div>
+
+  <!-- Botão -->
+  <div class="flex justify-center pt-4">
+    <button
+      type="submit"
+      class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold"
+    >
+      Salvar
+    </button>
+  </div>
+</form>

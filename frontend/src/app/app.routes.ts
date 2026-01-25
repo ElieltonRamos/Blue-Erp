@@ -7,6 +7,8 @@ import { Users } from './features/users/pages/users';
 import { Products } from './features/products/pages/products';
 import { SalesHistory } from './features/sales/pages/sales-history/sales-history';
 import { Company } from './features/company/pages/company';
+import { Reports } from './features/reports/pages/reports';
+import { Financial } from './features/financial/pages/financial';
 
 export const routes: Routes = [
   {
@@ -41,6 +43,16 @@ export const routes: Routes = [
   {
     path: 'empresa',
     component: Company,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'relatorios',
+    component: Reports,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'financeiro',
+    component: Financial,
     canActivate: [authGuard],
   },
 ];
