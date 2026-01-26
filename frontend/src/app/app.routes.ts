@@ -9,6 +9,7 @@ import { SalesHistory } from './features/sales/pages/sales-history/sales-history
 import { Company } from './features/company/pages/company';
 import { Reports } from './features/reports/pages/reports';
 import { Financial } from './features/financial/pages/financial';
+import { TableManagement } from './features/table-management/pages/table-management';
 
 export const routes: Routes = [
   {
@@ -53,6 +54,11 @@ export const routes: Routes = [
   {
     path: 'financeiro',
     component: Financial,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'mesas',
+    component: TableManagement,
     canActivate: [authGuard],
   },
 ];

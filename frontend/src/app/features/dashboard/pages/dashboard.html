@@ -18,6 +18,13 @@
     />
 
     <app-card-menu
+      [title]="'Salão de Mesas'"
+      [icon]="'🍽️🪑'"
+      [path]="'/mesas'"
+      [isActive]="isActive()"
+    />
+
+    <app-card-menu
       [title]="'Cadastro de Produto'"
       [icon]="'🏷️'"
       [path]="'/produtos'"
@@ -31,11 +38,7 @@
       [isActive]="isActive()"
     />
 
-    <app-card-menu
-      [title]="'Histórico de Vendas'"
-      [icon]="'🔁'"
-      [path]="'/historico-vendas'"
-    />
+    <app-card-menu [title]="'Histórico de Vendas'" [icon]="'🔁'" [path]="'/historico-vendas'" />
 
     <app-card-menu
       [title]="'Relatórios'"

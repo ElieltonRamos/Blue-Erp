@@ -1,0 +1,109 @@
+<div class="min-h-screen bg-linear-to-br from-indigo-950 via-purple-950 to-purple-900 p-6">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+      <button
+        (click)="goToMenu()"
+        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-sm font-medium transition-colors"
+      >
+        Voltar para menu
+      </button>
+    </div>
+
+    <!-- Main Card -->
+    <div
+      class="bg-slate-800/50 backdrop-blur-sm rounded-lg shadow-2xl border border-slate-700/50 p-8"
+    >
+      <!-- Tabs -->
+      <div class="flex gap-2 mb-8">
+        <button class="px-6 py-2 bg-slate-700/70 text-slate-300 rounded-md text-sm font-medium">
+          Mesas Cadastradas
+        </button>
+        <button
+          class="px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-md text-sm font-medium transition-colors"
+        >
+          Gerenciar Mesas
+        </button>
+      </div>
+
+      <!-- Title -->
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-white mb-1">Gerenciamento de Mesas</h2>
+        <p class="text-slate-400 text-sm">Gerencie as mesas do restaurante e suas comandas</p>
+      </div>
+
+      <!-- Action Button -->
+      <div class="mb-6">
+        <button
+          (click)="openModalAdd()"
+          class="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-md text-sm font-medium transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          Nova Mesa
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <app-table-stats
+        [total]="totalTables"
+        [available]="availableTables"
+        [occupied]="occupiedTables"
+      />
+
+      <!-- Tables Grid - Responsivo -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @for (table of sortedTables; track table.id) {
+          <app-table-card
+            [table]="table"
+            [statusColors]="statusColors"
+            [statusLabels]="statusLabels"
+            (edit)="openModalEdit($event)"
+            (delete)="handleDelete($event)"
+            (reserve)="openModalReserve($event)"
+            (occupy)="handleOccupy($event)"
+            (release)="handleRelease($event)"
+            (products)="openProductModal($event)"
+            (tab)="openTabModal($event)"
+          />
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Edit/Add Table -->
+  <!-- Substitua o <app-modal-edit-entity> por: -->
+  <app-table-modal
+    [show]="showModal"
+    [type]="modalType"
+    [tableId]="selectedTable?.id"
+    [entity]="selectedTable"
+    (close)="closeModal()"
+    (saved)="onTableModalSave($event)"
+  />
+  <!-- Products Modal -->
+  <app-table-product-modal
+    [show]="showProductModal"
+    [table]="selectedTableForProducts!"
+    [products]="products"
+    (close)="closeProductModal()"
+    (add)="addProductToTable($event)"
+    (remove)="removeProduct($event)"
+    (update)="updateProductQuantity($event.id, $event.change)"
+  />
+
+  <!-- Tab/Comanda Modal -->
+  <app-tab-modal
+    [show]="showTabModal"
+    [table]="selectedTableForProducts!"
+    [total]="tabTotal"
+    (close)="closeTabModal()"
+    (finish)="closeTab()"
+  />
+</div>
