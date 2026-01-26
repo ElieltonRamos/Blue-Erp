@@ -50,7 +50,6 @@ export class TableModalComponent implements OnChanges {
   private tableService = inject(TableMockService);
   private notification = inject(NotificationService);
 
-  // Configurações por tipo
   private readonly configs: Record<string, ModalConfig> = {
     add: {
       title: 'Nova Mesa',
@@ -92,19 +91,11 @@ export class TableModalComponent implements OnChanges {
     },
   };
 
-  // ===============================
-  // Lifecycle
-  // ===============================
-
   ngOnChanges(changes: SimpleChanges) {
     if (changes['type'] || changes['show'] || changes['entity']) {
       this.setupModal();
     }
   }
-
-  // ===============================
-  // Setup
-  // ===============================
 
   private setupModal() {
     if (!this.type || !this.configs[this.type]) {
@@ -114,23 +105,16 @@ export class TableModalComponent implements OnChanges {
 
     this.config = this.configs[this.type];
 
-    // Garante entity válida
     if (!this.entity) {
       this.entity = {} as Table;
     } else {
-      // Clona para evitar mutação direta
       this.entity = { ...this.entity };
     }
 
-    // Segurança: edit/reserve/occupy sem id
     if (this.type !== 'add' && !this.tableId) {
       console.warn('TableModal aberto sem tableId:', this.type);
     }
   }
-
-  // ===============================
-  // Save
-  // ===============================
 
   onSave(table: Table): void {
     if (!this.config) {

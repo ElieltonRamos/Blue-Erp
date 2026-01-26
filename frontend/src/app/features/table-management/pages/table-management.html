@@ -77,9 +77,8 @@
     </div>
   </div>
 
-  <!-- Modal Edit/Add Table -->
-  <!-- Substitua o <app-modal-edit-entity> por: -->
   <app-table-modal
+    *ngIf="showModal"
     [show]="showModal"
     [type]="modalType"
     [tableId]="selectedTable?.id"
@@ -89,6 +88,7 @@
   />
   <!-- Products Modal -->
   <app-table-product-modal
+    *ngIf="showProductModal && selectedTableForProducts"
     [show]="showProductModal"
     [table]="selectedTableForProducts!"
     [products]="products"
@@ -100,6 +100,7 @@
 
   <!-- Tab/Comanda Modal -->
   <app-tab-modal
+    *ngIf="showTabModal && selectedTableForProducts"
     [show]="showTabModal"
     [table]="selectedTableForProducts!"
     [total]="tabTotal"

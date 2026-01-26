@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { NotificationService } from '../../../shared/toastr/notification.service';
@@ -16,6 +16,7 @@ import { TableProductModal } from '../components/table-product-modal/table-produ
   standalone: true,
   imports: [CommonModule, TableStats, TableCard, TableModalComponent, TabModal, TableProductModal],
   templateUrl: './table-management.html',
+  changeDetection: ChangeDetectionStrategy.OnPush, // ✅ FIX 1: OnPush elimina checks desnecessários
 })
 export class TableManagement {
   private notification = inject(NotificationService);
@@ -49,7 +50,7 @@ export class TableManagement {
     this.getProducts();
   }
 
-  // 📊 Getters
+  // 📊 Getters (OnPush-safe)
   get totalTables(): number {
     return this.tables.length;
   }
@@ -66,17 +67,17 @@ export class TableManagement {
     return this.selectedTableForProducts?.products?.reduce((sum, p) => sum + p.totalPrice, 0) || 0;
   }
 
-  // 🚪 Modal Operations (simples)
+  // 🔍 TrackBy para @for (obrigatório com OnPush)
+  trackById(index: number, table: Table): string | number {
+    return table.id!;
+  }
+
+  // 🚪 Modal Operations
   openTableModal(type: 'add' | 'edit' | 'reserve' | 'occupy', table?: Table) {
     this.modalType = type;
-
-    if (table) {
-      this.selectedTable = table;
-    } else {
-      this.selectedTable = null;
-    }
-
+    this.selectedTable = table || null;
     this.showModal = true;
+    this.cdr.markForCheck(); // ✅ Manual trigger
   }
 
   onTableModalSave(table: Table) {
@@ -103,11 +104,11 @@ export class TableManagement {
     this.openTableModal('occupy', table);
   }
 
-  // 🆗 Event Handlers do TableCard
+  // 🆗 Event Handlers
   handleOccupy(table: Table) {
     this.openModalOccupy(table);
   }
-  
+
   handleDelete(table: Table) {
     alertConfirm('Excluir Mesa').then((result) => {
       if (result) {
@@ -121,7 +122,14 @@ export class TableManagement {
       }
     });
   }
+
   handleRelease(table: Table) {
+    // ✅ VALIDAÇÃO: Bloqueia release se tem produtos
+    if (table.products && table.products.length > 0) {
+      this.notification.warning('❌ Pague a comanda primeiro!');
+      return;
+    }
+
     this.tableService.releaseTable(table.id!).subscribe({
       next: () => {
         this.notification.success('Mesa liberada!');
@@ -137,7 +145,7 @@ export class TableManagement {
       next: (response) => {
         this.selectedTableForProducts = response;
         this.showProductModal = true;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck(); // ✅ Em vez de detectChanges()
       },
       error: (e) =>
         this.notification.error(`Erro ao buscar mesa: ${e.error?.message || e.message}`),
@@ -150,7 +158,7 @@ export class TableManagement {
       next: (response) => {
         this.selectedTableForProducts = response;
         this.showTabModal = true;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
       error: (e) =>
         this.notification.error(`Erro ao buscar mesa: ${e.error?.message || e.message}`),
@@ -189,7 +197,7 @@ export class TableManagement {
       next: (response) => {
         this.selectedTableForProducts = response;
         this.notification.success('Produto adicionado!');
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
       error: (e) => this.notification.error(`Erro: ${e.error?.message || e.message}`),
     });
@@ -212,7 +220,7 @@ export class TableManagement {
       .subscribe({
         next: (response) => {
           this.selectedTableForProducts = response;
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
         },
         error: (e) => this.notification.error(`Erro: ${e.error?.message || e.message}`),
       });
@@ -229,7 +237,7 @@ export class TableManagement {
             next: (response) => {
               this.selectedTableForProducts = response;
               this.notification.success('Produto removido!');
-              this.cdr.detectChanges();
+              this.cdr.markForCheck();
             },
             error: (e) => this.notification.error(`Erro: ${e.error?.message || e.message}`),
           });
@@ -237,7 +245,6 @@ export class TableManagement {
     });
   }
 
-  // 💰 Close Tab
   closeTab() {
     if (!this.selectedTableForProducts) return;
 
@@ -245,22 +252,27 @@ export class TableManagement {
       if (result) {
         this.tableService.closeTab(this.selectedTableForProducts!.id!).subscribe({
           next: (response) => {
-            this.notification.success('Comanda fechada e mesa liberada!');
-            this.closeTabModal();
-            this.router.navigate(['/vendas', response.saleId]);
+            setTimeout(() => {
+              this.notification.success('Comanda fechada e mesa liberada!');
+              this.closeTabModal();
+              this.getTables();
+              this.router.navigate(['/vendas', response.saleId]);
+            }, 100);
           },
-          error: (e) => this.notification.error(`Erro: ${e.error?.message || e.message}`),
+          error: (e) => {
+            this.notification.error(`Erro: ${e.error?.message || e.message}`);
+          },
         });
       }
     });
   }
 
-  // 🔄 Services
+  // 🔄 Services (Otimizados)
   getTables() {
     this.tableService.getTables().subscribe({
       next: (response) => {
         this.tables = response;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck(); // ✅ OnPush requer manual trigger
       },
       error: (e) =>
         this.notification.error(`Erro ao buscar mesas: ${e.error?.message || e.message}`),
@@ -271,7 +283,7 @@ export class TableManagement {
     this.tableService.getProducts().subscribe({
       next: (response) => {
         this.products = response;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
       error: (e) =>
         this.notification.error(`Erro ao buscar produtos: ${e.error?.message || e.message}`),
