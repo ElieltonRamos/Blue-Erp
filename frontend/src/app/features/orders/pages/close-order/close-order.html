@@ -1,0 +1,335 @@
+<!-- finish-order.component.html -->
+<div class="min-h-screen bg-linear-to-br from-purple-900 via-purple-800 to-purple-900 p-4">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-1 max-w-400 mx-auto">
+    <img src="/blue-erp.png" alt="Logo" class="h-16 rounded-xl" />
+    <div class="flex gap-3">
+      <button
+        (click)="goToMenu()"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-full font-medium transition-colors text-sm"
+      >
+        Voltar para menu
+      </button>
+      <input
+        type="text"
+        [(ngModel)]="customerSearchId"
+        placeholder="1"
+        class="w-16 bg-slate-700 text-white text-center rounded-lg px-2"
+      />
+      <button
+        (click)="searchCustomerById()"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
+      >
+        Buscar
+      </button>
+      <input
+        type="text"
+        [(ngModel)]="customerSearchName"
+        placeholder="Nome do cliente"
+        class="bg-slate-700 text-white rounded-lg px-4 py-2"
+      />
+      <button
+        (click)="searchCustomerByName()"
+        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
+      >
+        Buscar
+      </button>
+      <select [(ngModel)]="selectedCustomer" class="bg-slate-700 text-white rounded-lg px-4 py-2">
+        <option>Cliente: Avista</option>
+        <option>Cliente: A Prazo</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="max-w-400 mx-auto">
+    <div
+      class="h-[80vh] bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-2xl p-4 border border-slate-700/50"
+    >
+      <!-- Two Columns Layout -->
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Left Column - Products (Larger) -->
+        <div class="col-span-8 bg-slate-700/30 rounded-lg p-4">
+          <!-- Product Scanner Section -->
+          <div class="grid grid-cols-12 gap-3 mb-4">
+            <div class="col-span-5">
+              <h3 class="text-white font-bold text-sm mb-2">Leitor de Código de Barras</h3>
+              <input
+                type="text"
+                [(ngModel)]="searchCode"
+                (keyup.enter)="searchProduct()"
+                placeholder="Escaneie o produto"
+                class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+              />
+            </div>
+
+            <div class="col-span-5">
+              <h3 class="text-white font-bold text-sm mb-2">Buscar Produto</h3>
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  [(ngModel)]="searchName"
+                  placeholder="Nome"
+                  class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+                />
+                <button
+                  (click)="searchProduct()"
+                  class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium"
+                >
+                  Buscar
+                </button>
+              </div>
+            </div>
+
+            <div class="col-span-2">
+              <h3 class="text-white font-bold text-sm mb-2">&nbsp;</h3>
+              <button
+                (click)="addProduct()"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium text-sm"
+              >
+                Adicionar
+              </button>
+            </div>
+          </div>
+
+          <!-- Products Table -->
+          <div>
+            <h3 class="text-white font-bold text-sm mb-3">Produtos</h3>
+
+            <div class="overflow-x-auto" style="max-height: 420px; overflow-y: auto">
+              <table class="w-full text-sm">
+                <thead class="sticky top-0 bg-slate-700/50 backdrop-blur-sm">
+                  <tr class="border-b border-slate-600">
+                    <th class="text-left py-2 px-2 text-blue-400 text-xs font-semibold uppercase">
+                      Código
+                    </th>
+                    <th class="text-left py-2 px-2 text-blue-400 text-xs font-semibold uppercase">
+                      Produto
+                    </th>
+                    <th
+                      class="text-center py-2 px-2 text-yellow-400 text-xs font-semibold uppercase"
+                    >
+                      VLR. UN.
+                    </th>
+                    <th class="text-center py-2 px-2 text-cyan-400 text-xs font-semibold uppercase">
+                      QTD
+                    </th>
+                    <th
+                      class="text-center py-2 px-2 text-green-400 text-xs font-semibold uppercase"
+                    >
+                      Total
+                    </th>
+                    <th
+                      class="text-center py-2 px-2 text-slate-400 text-xs font-semibold uppercase"
+                    >
+                      Excluir
+                    </th>
+                    <th
+                      class="text-center py-2 px-2 text-purple-400 text-xs font-semibold uppercase"
+                    >
+                      Editar
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    *ngFor="let item of order.items"
+                    class="border-b border-slate-700/50 hover:bg-slate-700/20"
+                  >
+                    <td class="py-2 px-2 text-slate-300 text-xs">{{ item.code }}</td>
+                    <td class="py-2 px-2 text-white text-xs">{{ item.name }}</td>
+                    <td class="py-2 px-2 text-center text-slate-300 text-xs">
+                      {{ item.unitPrice.toFixed(2) }}
+                    </td>
+                    <td class="py-2 px-2 text-center text-cyan-400 font-bold text-xs">
+                      {{ item.quantity }}
+                    </td>
+                    <td class="py-2 px-2 text-center text-green-400 font-bold text-xs">
+                      {{ item.total.toFixed(2) }}
+                    </td>
+                    <td class="py-2 px-2 text-center">
+                      <button (click)="removeItem(item.id)" class="text-red-400 hover:text-red-300">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                      </button>
+                    </td>
+                    <td class="py-2 px-2 text-center">
+                      <button
+                        (click)="editItem(item.id)"
+                        class="text-indigo-400 hover:text-indigo-300"
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path
+                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                          ></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column - Payment Summary -->
+        <div class="col-span-4 bg-slate-700/30 rounded-lg p-3 space-y-2">
+          <h3 class="text-white font-bold text-xs mb-2">Resumo da Venda</h3>
+
+          <div class="bg-slate-800/50 rounded-lg p-2 border border-slate-600/30">
+            <p class="text-slate-400 text-[10px]">Valor Total:</p>
+            <p class="text-green-400 font-bold text-xl">R$ {{ order.subtotal.toFixed(2) }}</p>
+          </div>
+
+          <div>
+            <label class="text-white text-[10px] block mb-1">Desconto</label>
+            <input
+              type="number"
+              [(ngModel)]="order.discount"
+              (ngModelChange)="updateDiscount()"
+              step="0.01"
+              class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-center font-bold text-lg focus:outline-none focus:border-cyan-500"
+            />
+          </div>
+
+          <div class="bg-slate-800/50 rounded-lg p-2 border border-green-600/50">
+            <p class="text-slate-400 text-[10px]">Total Final:</p>
+            <p class="text-green-400 font-bold text-2xl">R$ {{ order.total.toFixed(2) }}</p>
+          </div>
+
+          <div>
+            <p class="text-white text-[10px] mb-1.5">Forma de Pagamento:</p>
+            <div class="grid grid-cols-4 gap-1.5">
+              <button
+                (click)="selectPaymentMethod('money')"
+                [class.bg-cyan-600]="selectedPaymentMethod === 'money'"
+                [class.bg-slate-700]="selectedPaymentMethod !== 'money'"
+                class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
+                title="Dinheiro"
+              >
+                <span class="text-lg">💵</span>
+              </button>
+              <button
+                (click)="selectPaymentMethod('credit')"
+                [class.bg-cyan-600]="selectedPaymentMethod === 'credit'"
+                [class.bg-slate-700]="selectedPaymentMethod !== 'credit'"
+                class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
+                title="Cartão"
+              >
+                <span class="text-lg">💳</span>
+              </button>
+              <button
+                (click)="selectPaymentMethod('pix')"
+                [class.bg-cyan-600]="selectedPaymentMethod === 'pix'"
+                [class.bg-slate-700]="selectedPaymentMethod !== 'pix'"
+                class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
+                title="Pix"
+              >
+                <span class="text-lg">📱</span>
+              </button>
+              <button
+                (click)="selectPaymentMethod('term')"
+                [class.bg-cyan-600]="selectedPaymentMethod === 'term'"
+                [class.bg-slate-700]="selectedPaymentMethod !== 'term'"
+                class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
+                title="A Prazo"
+              >
+                <span class="text-lg">📅</span>
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="selectedPaymentMethod === 'money'" class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-white text-[10px] block mb-1">Valor Recebido:</label>
+              <input
+                type="number"
+                [(ngModel)]="amountReceived"
+                step="0.01"
+                class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-center font-bold text-base focus:outline-none focus:border-cyan-500"
+              />
+            </div>
+            <div class="bg-slate-800/50 rounded-lg p-2 border border-slate-600/30">
+              <p class="text-slate-400 text-[10px] mb-0.5">Troco:</p>
+              <p
+                [class.text-green-400]="change >= 0"
+                [class.text-red-400]="change < 0"
+                class="font-bold text-base"
+              >
+                R$ {{ change >= 0 ? change.toFixed(2) : '0.00' }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="flex justify-between items-center mt-4 pt-4 border-t border-slate-700">
+        <div class="flex items-center gap-4">
+          <p class="text-white text-sm">
+            Vendedor: <span class="font-bold">{{ order.seller }}</span>
+          </p>
+
+          <!-- CFOP and CSOSN - Hidden in corner -->
+          <div class="flex gap-2 opacity-30 hover:opacity-100 transition-opacity">
+            <div class="flex items-center gap-1">
+              <label class="text-slate-400 text-[10px]">CFOP</label>
+              <select
+                [(ngModel)]="cfop"
+                class="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white text-[10px] w-16"
+              >
+                <option value="5102">5102</option>
+                <option value="5405">5405</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-1">
+              <label class="text-slate-400 text-[10px]">CSOSN</label>
+              <select
+                [(ngModel)]="csosn"
+                class="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white text-[10px] w-16"
+              >
+                <option value="102">102</option>
+                <option value="103">103</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <button
+            (click)="cancelOrder()"
+            class="bg-red-600 hover:bg-red-700 text-white px-8 py-2 rounded-lg font-medium transition-colors"
+          >
+            Cancelar Venda
+          </button>
+          <button
+            (click)="finishOrder()"
+            [disabled]="!isValidPayment"
+            [class.opacity-50]="!isValidPayment"
+            [class.cursor-not-allowed]="!isValidPayment"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-lg font-medium transition-colors disabled:hover:bg-blue-600"
+          >
+            Finalizar Venda
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -10,6 +10,8 @@ import { Company } from './features/company/pages/company';
 import { Reports } from './features/reports/pages/reports';
 import { Financial } from './features/financial/pages/financial';
 import { TableManagement } from './features/table-management/pages/table-management';
+import { ListOrders } from './features/orders/pages/list-orders/list-orders';
+import { CloseOrder } from './features/orders/pages/close-order/close-order';
 
 export const routes: Routes = [
   {
@@ -59,6 +61,16 @@ export const routes: Routes = [
   {
     path: 'mesas',
     component: TableManagement,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'comandas',
+    component: ListOrders,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'comandas/:id',
+    component: CloseOrder,
     canActivate: [authGuard],
   },
 ];
