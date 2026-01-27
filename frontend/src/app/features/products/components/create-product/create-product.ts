@@ -4,10 +4,11 @@ import { ProductService } from '../../services/product.service';
 import Product, { Unit } from '../../types/product';
 import { CommonModule } from '@angular/common';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
+import { ProductComposition, ProductCompositionComponent } from "../product-composition/product-composition";
 
 @Component({
   selector: 'app-create-product',
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule, CommonModule, ProductCompositionComponent],
   templateUrl: './create-product.html',
 })
 export class CreateProduct {
@@ -63,6 +64,11 @@ export class CreateProduct {
   ngOnInit() {
     this.getSugestionCode();
   }
+
+  onCompositionChange(composition: ProductComposition): void {
+  console.log('Composição atualizada:', composition);
+  // Salvar no formulário ou estado do componente
+}
 
   onSubmit() {
     const formValue = this.formCreateProduct.value;

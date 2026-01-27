@@ -239,6 +239,11 @@
     </div>
   </div>
 
+  <app-product-composition 
+  [productName]="'a'"
+  (compositionChange)="onCompositionChange($event)">
+  </app-product-composition>
+
   <!-- Seção: Informações Fiscais -->
   <div class="space-y-6 bg-white/5 p-6 rounded-xl border border-white/10">
     <h3 class="text-xl font-semibold text-yellow-400 flex items-center gap-2">

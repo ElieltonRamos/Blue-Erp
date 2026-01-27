@@ -2,10 +2,11 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CreateProduct } from "../components/create-product/create-product";
 import { ListProducts } from "../components/list-products/list-products";
+import { CreatePrimaryMaterial } from "../components/primary-material/create-primary-material";
 
 @Component({
   selector: 'app-products',
-  imports: [CreateProduct, ListProducts],
+  imports: [CreateProduct, ListProducts, CreatePrimaryMaterial],
   templateUrl: './products.html',
 })
 export class Products {
