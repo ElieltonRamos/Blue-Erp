@@ -1,0 +1,245 @@
+<form
+  (ngSubmit)="onSubmit()"
+  [formGroup]="formCreateOrder"
+  class="bg-[#1d2a3c] p-6 rounded-lg space-y-6"
+>
+  <!-- Tipo e Status lado a lado -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <label for="type" class="block text-white font-bold mb-2">Tipo do Pedido</label>
+      <select
+        id="type"
+        formControlName="type"
+        required
+        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold"
+      >
+        <option value="">Selecione o tipo</option>
+        <option value="dine_in">Mesa</option>
+        <option value="delivery">Entrega</option>
+      </select>
+      @if (formCreateOrder.get('type')?.touched && formCreateOrder.get('type')?.invalid) {
+        <p class="msg-error">Selecione o Tipo do Pedido!</p>
+      }
+    </div>
+    <div>
+      <label for="status" class="block text-white font-bold mb-2">Status</label>
+      <select
+        id="status"
+        formControlName="status"
+        required
+        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold"
+      >
+        <option value="">Selecione o status</option>
+        <option value="open">Aberto</option>
+        <option value="closed">Fechado</option>
+        <option value="canceled">Cancelado</option>
+      </select>
+      @if (formCreateOrder.get('status')?.touched && formCreateOrder.get('status')?.invalid) {
+        <p class="msg-error">Selecione o Status!</p>
+      }
+    </div>
+    <div>
+      <label for="table" class="block text-white font-bold mb-2">Mesa (opcional)</label>
+      <input
+        id="table"
+        formControlName="table"
+        type="text"
+        placeholder="ex: Mesa 5"
+        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+      />
+    </div>
+    <div>
+      <label for="customerName" class="block text-white font-bold mb-2">Nome do Cliente (opcional)</label>
+      <input
+        id="customerName"
+        formControlName="customerName"
+        type="text"
+        placeholder="Nome do cliente"
+        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+      />
+    </div>
+  </div>
+
+  <!-- Seção de Produtos -->
+  <div class="bg-slate-700/30 rounded-lg p-4">
+    <h3 class="text-white font-bold text-lg mb-4">Produtos do Pedido</h3>
+
+    <!-- Product Scanner Section -->
+    <div class="grid grid-cols-12 gap-3 mb-4">
+      <div class="col-span-3">
+        <label class="text-white font-bold text-sm mb-2 block">Código de Barras</label>
+        <input
+          type="text"
+          [(ngModel)]="searchCode"
+          [ngModelOptions]="{standalone: true}"
+          (keyup.enter)="searchProduct()"
+          placeholder="Código"
+          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+        />
+      </div>
+
+      <div class="col-span-4">
+        <label class="text-white font-bold text-sm mb-2 block">Nome do Produto</label>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            [(ngModel)]="searchName"
+            [ngModelOptions]="{standalone: true}"
+            placeholder="Nome"
+            class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+          />
+          <button
+            type="button"
+            (click)="searchProduct()"
+            class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium"
+          >
+            Buscar
+          </button>
+        </div>
+      </div>
+
+      <div class="col-span-2">
+        <label class="text-white font-bold text-sm mb-2 block">Quantidade</label>
+        <input
+          type="number"
+          [(ngModel)]="productQuantity"
+          [ngModelOptions]="{standalone: true}"
+          min="1"
+          step="1"
+          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm text-center focus:outline-none focus:border-cyan-500"
+        />
+      </div>
+
+      <div class="col-span-2">
+        <label class="text-white font-bold text-sm mb-2 block">Preço Unit.</label>
+        <input
+          type="number"
+          [(ngModel)]="productUnitPrice"
+          [ngModelOptions]="{standalone: true}"
+          min="0"
+          step="0.01"
+          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm text-center focus:outline-none focus:border-cyan-500"
+        />
+      </div>
+
+      <div class="col-span-1">
+        <label class="text-white font-bold text-sm mb-2 block">&nbsp;</label>
+        <button
+          type="button"
+          (click)="addProduct()"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium text-sm"
+        >
+          Add
+        </button>
+      </div>
+    </div>
+
+    <!-- Products Table -->
+    <div class="overflow-x-auto" style="max-height: 300px; overflow-y: auto">
+      <table class="w-full text-sm">
+        <thead class="sticky top-0 bg-slate-700/50 backdrop-blur-sm">
+          <tr class="border-b border-slate-600">
+            <th class="text-left py-2 px-2 text-blue-400 text-xs font-semibold uppercase">
+              Código
+            </th>
+            <th class="text-left py-2 px-2 text-blue-400 text-xs font-semibold uppercase">
+              Produto
+            </th>
+            <th class="text-center py-2 px-2 text-yellow-400 text-xs font-semibold uppercase">
+              VLR. UN.
+            </th>
+            <th class="text-center py-2 px-2 text-cyan-400 text-xs font-semibold uppercase">
+              QTD
+            </th>
+            <th class="text-center py-2 px-2 text-green-400 text-xs font-semibold uppercase">
+              Total
+            </th>
+            <th class="text-center py-2 px-2 text-slate-400 text-xs font-semibold uppercase">
+              Excluir
+            </th>
+            <th class="text-center py-2 px-2 text-purple-400 text-xs font-semibold uppercase">
+              Editar
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let item of orderItems"
+            class="border-b border-slate-700/50 hover:bg-slate-700/20"
+          >
+            <td class="py-2 px-2 text-slate-300 text-xs">{{ item.code }}</td>
+            <td class="py-2 px-2 text-white text-xs">{{ item.name }}</td>
+            <td class="py-2 px-2 text-center text-slate-300 text-xs">
+              {{ item.unitPrice.toFixed(2) }}
+            </td>
+            <td class="py-2 px-2 text-center text-cyan-400 font-bold text-xs">
+              {{ item.quantity }}
+            </td>
+            <td class="py-2 px-2 text-center text-green-400 font-bold text-xs">
+              {{ item.total.toFixed(2) }}
+            </td>
+            <td class="py-2 px-2 text-center">
+              <button
+                type="button"
+                (click)="removeItem(item.id)"
+                class="text-red-400 hover:text-red-300"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </td>
+            <td class="py-2 px-2 text-center">
+              <button
+                type="button"
+                (click)="editItem(item.id)"
+                class="text-indigo-400 hover:text-indigo-300"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <!-- Mensagem quando não há produtos -->
+      <div *ngIf="orderItems.length === 0" class="text-center py-8">
+        <p class="text-slate-400 text-sm">Nenhum produto adicionado</p>
+      </div>
+    </div>
+
+    <!-- Total -->
+    <div class="mt-4 bg-slate-800/50 rounded-lg p-3 border border-green-600/50">
+      <p class="text-slate-400 text-sm">Total do Pedido:</p>
+      <p class="text-green-400 font-bold text-2xl">R$ {{ calculatedTotal.toFixed(2) }}</p>
+    </div>
+  </div>
+
+  <!-- Botão -->
+  <div class="flex justify-center pt-4">
+    <button
+      type="submit"
+      class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold"
+    >
+      Criar Pedido
+    </button>
+  </div>
+</form>

@@ -17,4 +17,5 @@ interface Order {
   status: OrderStatus;      // estado atual
   total: number;            // total geral do pedido
   customerName?: string;    // nome do cliente (opcional)
+  table?: string
 }
