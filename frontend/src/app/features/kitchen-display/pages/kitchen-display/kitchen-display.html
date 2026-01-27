@@ -1,0 +1,372 @@
+<!-- kitchen-display.component.html -->
+<div class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 p-4">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-4 max-w-[1800px] mx-auto">
+    <div class="flex items-center gap-4">
+      <h1 class="text-white text-2xl font-bold">🍳 Cozinha</h1>
+      <div class="bg-slate-800/50 rounded-lg px-4 py-2 border border-slate-700/50">
+        <span class="text-slate-400 text-sm">Total de Pedidos: </span>
+        <span class="text-white font-bold text-lg">{{ orders.length }}</span>
+      </div>
+    </div>
+    <button
+      class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full font-medium transition-colors"
+    >
+      Voltar para menu
+    </button>
+  </div>
+
+  <!-- Main Container -->
+  <div class="max-w-[1800px] mx-auto">
+    <div class="grid grid-cols-3 gap-4">
+      <!-- Pending Orders Column -->
+      <div
+        class="bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-2xl p-4 border border-slate-700/50"
+      >
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-white font-bold text-lg flex items-center gap-2">
+            <span class="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></span>
+            Aguardando
+          </h2>
+          <span class="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-sm font-bold">
+            {{ pendingOrders.length }}
+          </span>
+        </div>
+
+        <div class="space-y-3 overflow-y-auto" style="max-height: calc(100vh - 180px)">
+          <div
+            *ngFor="let order of pendingOrders"
+            class="bg-slate-700/50 rounded-lg p-3 border-2 border-yellow-500/30 hover:border-yellow-500 transition-all cursor-pointer"
+          >
+            <!-- Order Header -->
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-white font-bold text-lg">{{ order.orderNumber }}</span>
+                <span
+                  *ngIf="order.type === 'dine_in'"
+                  class="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded text-xs font-semibold"
+                >
+                  🪑 {{ order.table }}
+                </span>
+                <span
+                  *ngIf="order.type === 'delivery'"
+                  class="bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded text-xs font-semibold"
+                >
+                  🚚 Delivery
+                </span>
+              </div>
+              <span
+                [class]="
+                  'px-2 py-1 rounded-full text-xs font-bold border ' +
+                  getTimeBadgeClass(order.elapsedMinutes)
+                "
+                [ngClass]="getTimeClass(order.elapsedMinutes)"
+              >
+                {{ order.elapsedMinutes }}min
+              </span>
+            </div>
+
+            <!-- Order Items -->
+            <div class="space-y-1.5 mb-3">
+              <div *ngFor="let item of order.items" class="bg-slate-800/50 rounded p-2">
+                <div class="flex items-center gap-2">
+                  <span
+                    class="bg-cyan-500 text-white font-bold text-xs w-6 h-6 flex items-center justify-center rounded"
+                  >
+                    {{ item.quantity }}x
+                  </span>
+                  <span class="text-white text-sm flex-1">{{ item.name }}</span>
+                  <button
+                    *ngIf="item.recipe"
+                    (click)="openRecipe(item.recipe)"
+                    class="bg-purple-600 hover:bg-purple-700 text-white p-1 rounded transition-colors"
+                    title="Ver receita"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                      <path
+                        d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+                      ></path>
+                    </svg>
+                  </button>
+                </div>
+                <p *ngIf="item.notes" class="text-yellow-400 text-xs mt-1 ml-8 italic">
+                  📝 {{ item.notes }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <button
+              (click)="startPreparing(order.id)"
+              class="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-2 rounded-lg font-semibold text-sm transition-colors"
+            >
+              Iniciar Preparo
+            </button>
+          </div>
+
+          <!-- Empty State -->
+          <div *ngIf="pendingOrders.length === 0" class="text-center py-12">
+            <p class="text-slate-500 text-sm">Nenhum pedido aguardando</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preparing Orders Column -->
+      <div
+        class="bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-2xl p-4 border border-slate-700/50"
+      >
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-white font-bold text-lg flex items-center gap-2">
+            <span class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></span>
+            Em Preparo
+          </h2>
+          <span class="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-sm font-bold">
+            {{ preparingOrders.length }}
+          </span>
+        </div>
+
+        <div class="space-y-3 overflow-y-auto" style="max-height: calc(100vh - 180px)">
+          <div
+            *ngFor="let order of preparingOrders"
+            class="bg-slate-700/50 rounded-lg p-3 border-2 border-blue-500/30 hover:border-blue-500 transition-all cursor-pointer"
+          >
+            <!-- Order Header -->
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-white font-bold text-lg">{{ order.orderNumber }}</span>
+                <span
+                  *ngIf="order.type === 'dine_in'"
+                  class="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded text-xs font-semibold"
+                >
+                  🪑 {{ order.table }}
+                </span>
+                <span
+                  *ngIf="order.type === 'delivery'"
+                  class="bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded text-xs font-semibold"
+                >
+                  🚚 Delivery
+                </span>
+              </div>
+              <span
+                [class]="
+                  'px-2 py-1 rounded-full text-xs font-bold border ' +
+                  getTimeBadgeClass(order.elapsedMinutes)
+                "
+                [ngClass]="getTimeClass(order.elapsedMinutes)"
+              >
+                {{ order.elapsedMinutes }}min
+              </span>
+            </div>
+
+            <!-- Order Items -->
+            <div class="space-y-1.5 mb-3">
+              <div *ngFor="let item of order.items" class="bg-slate-800/50 rounded p-2">
+                <div class="flex items-center gap-2">
+                  <span
+                    class="bg-cyan-500 text-white font-bold text-xs w-6 h-6 flex items-center justify-center rounded"
+                  >
+                    {{ item.quantity }}x
+                  </span>
+                  <span class="text-white text-sm flex-1">{{ item.name }}</span>
+                </div>
+                <p *ngIf="item.notes" class="text-yellow-400 text-xs mt-1 ml-8 italic">
+                  📝 {{ item.notes }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <button
+              (click)="markAsReady(order.id)"
+              class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-semibold text-sm transition-colors"
+            >
+              Marcar como Pronto
+            </button>
+          </div>
+
+          <!-- Empty State -->
+          <div *ngIf="preparingOrders.length === 0" class="text-center py-12">
+            <p class="text-slate-500 text-sm">Nenhum pedido em preparo</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ready Orders Column -->
+      <div
+        class="bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-2xl p-4 border border-slate-700/50"
+      >
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-white font-bold text-lg flex items-center gap-2">
+            <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+            Prontos
+          </h2>
+          <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-bold">
+            {{ readyOrders.length }}
+          </span>
+        </div>
+
+        <div class="space-y-3 overflow-y-auto" style="max-height: calc(100vh - 180px)">
+          <div
+            *ngFor="let order of readyOrders"
+            class="bg-slate-700/50 rounded-lg p-3 border-2 border-green-500/30 hover:border-green-500 transition-all cursor-pointer"
+          >
+            <!-- Order Header -->
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-white font-bold text-lg">{{ order.orderNumber }}</span>
+                <span
+                  *ngIf="order.type === 'dine_in'"
+                  class="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded text-xs font-semibold"
+                >
+                  🪑 {{ order.table }}
+                </span>
+                <span
+                  *ngIf="order.type === 'delivery'"
+                  class="bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded text-xs font-semibold"
+                >
+                  🚚 Delivery
+                </span>
+              </div>
+              <span
+                [class]="
+                  'px-2 py-1 rounded-full text-xs font-bold border ' +
+                  getTimeBadgeClass(order.elapsedMinutes)
+                "
+                [ngClass]="getTimeClass(order.elapsedMinutes)"
+              >
+                {{ order.elapsedMinutes }}min
+              </span>
+            </div>
+
+            <!-- Order Items -->
+            <div class="space-y-1.5 mb-3">
+              <div *ngFor="let item of order.items" class="bg-slate-800/50 rounded p-2">
+                <div class="flex items-center gap-2">
+                  <span
+                    class="bg-cyan-500 text-white font-bold text-xs w-6 h-6 flex items-center justify-center rounded"
+                  >
+                    {{ item.quantity }}x
+                  </span>
+                  <span class="text-white text-sm flex-1">{{ item.name }}</span>
+                </div>
+                <p *ngIf="item.notes" class="text-yellow-400 text-xs mt-1 ml-8 italic">
+                  📝 {{ item.notes }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <button
+              (click)="completeOrder(order.id)"
+              class="w-full bg-slate-600 hover:bg-slate-500 text-white py-2 rounded-lg font-semibold text-sm transition-colors"
+            >
+              Pedido Entregue
+            </button>
+          </div>
+
+          <!-- Empty State -->
+          <div *ngIf="readyOrders.length === 0" class="text-center py-12">
+            <p class="text-slate-500 text-sm">Nenhum pedido pronto</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recipe Modal -->
+  <div
+    *ngIf="showRecipeModal && selectedRecipe"
+    class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+    (click)="closeRecipeModal()"
+  >
+    <div
+      class="bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-700"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Modal Header -->
+      <div
+        class="sticky top-0 bg-slate-800 border-b border-slate-700 p-6 flex items-center justify-between"
+      >
+        <div>
+          <h2 class="text-white text-2xl font-bold mb-1">📖 {{ selectedRecipe.title }}</h2>
+          <p class="text-slate-400 text-sm">⏱️ Tempo de preparo: {{ selectedRecipe.prepTime }}</p>
+        </div>
+        <button
+          (click)="closeRecipeModal()"
+          class="text-slate-400 hover:text-white transition-colors"
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-6">
+        <!-- Ingredients -->
+        <div>
+          <h3 class="text-white text-lg font-bold mb-3 flex items-center gap-2">
+            <span class="text-2xl">🧂</span>
+            Ingredientes
+          </h3>
+          <ul class="space-y-2">
+            <li
+              *ngFor="let ingredient of selectedRecipe.ingredients"
+              class="bg-slate-700/50 rounded-lg p-3 text-slate-200 flex items-center gap-2"
+            >
+              <span class="text-cyan-400">✓</span>
+              {{ ingredient }}
+            </li>
+          </ul>
+        </div>
+
+        <!-- Steps -->
+        <div>
+          <h3 class="text-white text-lg font-bold mb-3 flex items-center gap-2">
+            <span class="text-2xl">👨‍🍳</span>
+            Modo de Preparo
+          </h3>
+          <ol class="space-y-3">
+            <li
+              *ngFor="let step of selectedRecipe.steps; let i = index"
+              class="bg-slate-700/50 rounded-lg p-3 flex gap-3"
+            >
+              <span
+                class="bg-purple-600 text-white font-bold text-sm w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0"
+              >
+                {{ i + 1 }}
+              </span>
+              <span class="text-slate-200 flex-1">{{ step }}</span>
+            </li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="sticky bottom-0 bg-slate-800 border-t border-slate-700 p-6">
+        <button
+          (click)="closeRecipeModal()"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition-colors"
+        >
+          Fechar Receita
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -12,6 +12,7 @@ import { Financial } from './features/financial/pages/financial';
 import { TableManagement } from './features/table-management/pages/table-management';
 import { ListOrders } from './features/orders/pages/list-orders/list-orders';
 import { CloseOrder } from './features/orders/pages/close-order/close-order';
+import { KitchenDisplay } from './features/kitchen-display/pages/kitchen-display/kitchen-display';
 
 export const routes: Routes = [
   {
@@ -71,6 +72,11 @@ export const routes: Routes = [
   {
     path: 'comandas/:id',
     component: CloseOrder,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'cozinha',
+    component: KitchenDisplay,
     canActivate: [authGuard],
   },
 ];
