@@ -3,7 +3,7 @@
   [formGroup]="formCreateOrder"
   class="bg-[#1d2a3c] p-6 rounded-lg space-y-6"
 >
-  <!-- Tipo e Status lado a lado -->
+  <!-- Tipo e Campos Específicos -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <div>
       <label for="type" class="block text-white font-bold mb-2">Tipo do Pedido</label>
@@ -13,7 +13,6 @@
         required
         class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold"
       >
-        <option value="">Selecione o tipo</option>
         <option value="dine_in">Mesa</option>
         <option value="delivery">Entrega</option>
       </select>
@@ -21,35 +20,11 @@
         <p class="msg-error">Selecione o Tipo do Pedido!</p>
       }
     </div>
+
     <div>
-      <label for="status" class="block text-white font-bold mb-2">Status</label>
-      <select
-        id="status"
-        formControlName="status"
-        required
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold"
-      >
-        <option value="">Selecione o status</option>
-        <option value="open">Aberto</option>
-        <option value="closed">Fechado</option>
-        <option value="canceled">Cancelado</option>
-      </select>
-      @if (formCreateOrder.get('status')?.touched && formCreateOrder.get('status')?.invalid) {
-        <p class="msg-error">Selecione o Status!</p>
-      }
-    </div>
-    <div>
-      <label for="table" class="block text-white font-bold mb-2">Mesa (opcional)</label>
-      <input
-        id="table"
-        formControlName="table"
-        type="text"
-        placeholder="ex: Mesa 5"
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
-      />
-    </div>
-    <div>
-      <label for="customerName" class="block text-white font-bold mb-2">Nome do Cliente (opcional)</label>
+      <label for="customerName" class="block text-white font-bold mb-2">
+        Nome do Cliente (opcional)
+      </label>
       <input
         id="customerName"
         formControlName="customerName"
@@ -57,6 +32,43 @@
         placeholder="Nome do cliente"
         class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
       />
+    </div>
+
+    <!-- Mesa - Mostrar apenas se type === 'dine_in' -->
+    <div *ngIf="formCreateOrder.get('type')?.value === 'dine_in'">
+      <label for="table" class="block text-white font-bold mb-2">
+        Mesa <span class="text-red-400">*</span>
+      </label>
+      <input
+        id="table"
+        formControlName="table"
+        type="text"
+        placeholder="ex: Mesa 5"
+        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+      />
+      @if (formCreateOrder.get('table')?.touched && formCreateOrder.get('table')?.invalid) {
+        <p class="msg-error">Informe a mesa!</p>
+      }
+    </div>
+
+    <!-- Endereço - Mostrar apenas se type === 'delivery' -->
+    <div
+      *ngIf="formCreateOrder.get('type')?.value === 'delivery'"
+      class="md:col-span-2"
+    >
+      <label for="address" class="block text-white font-bold mb-2">
+        Endereço de Entrega <span class="text-red-400">*</span>
+      </label>
+      <textarea
+        id="address"
+        formControlName="address"
+        rows="3"
+        placeholder="Rua, número, bairro, cidade..."
+        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500 resize-none"
+      ></textarea>
+      @if (formCreateOrder.get('address')?.touched && formCreateOrder.get('address')?.invalid) {
+        <p class="msg-error">Informe o endereço de entrega!</p>
+      }
     </div>
   </div>
 
@@ -74,7 +86,8 @@
           [ngModelOptions]="{standalone: true}"
           (keyup.enter)="searchProduct()"
           placeholder="Código"
-          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+          [disabled]="isSearching"
+          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 disabled:opacity-50"
         />
       </div>
 
@@ -86,14 +99,28 @@
             [(ngModel)]="searchName"
             [ngModelOptions]="{standalone: true}"
             placeholder="Nome"
-            class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+            [disabled]="isSearching"
+            class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 disabled:opacity-50"
           />
           <button
             type="button"
             (click)="searchProduct()"
-            class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium"
+            [disabled]="isSearching"
+            class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            Buscar
+            <svg
+              *ngIf="isSearching"
+              class="animate-spin"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+            </svg>
+            {{ isSearching ? 'Buscando...' : 'Buscar' }}
           </button>
         </div>
       </div>
@@ -128,8 +155,9 @@
           type="button"
           (click)="addProduct()"
           class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium text-sm"
+          title="Adicionar produto"
         >
-          Add
+          +
         </button>
       </div>
     </div>
@@ -170,19 +198,20 @@
             <td class="py-2 px-2 text-slate-300 text-xs">{{ item.code }}</td>
             <td class="py-2 px-2 text-white text-xs">{{ item.name }}</td>
             <td class="py-2 px-2 text-center text-slate-300 text-xs">
-              {{ item.unitPrice.toFixed(2) }}
+              R$ {{ item.unitPrice.toFixed(2) }}
             </td>
             <td class="py-2 px-2 text-center text-cyan-400 font-bold text-xs">
               {{ item.quantity }}
             </td>
             <td class="py-2 px-2 text-center text-green-400 font-bold text-xs">
-              {{ item.total.toFixed(2) }}
+              R$ {{ item.total.toFixed(2) }}
             </td>
             <td class="py-2 px-2 text-center">
               <button
                 type="button"
                 (click)="removeItem(item.id)"
                 class="text-red-400 hover:text-red-300"
+                title="Remover item"
               >
                 <svg
                   width="16"
@@ -202,6 +231,7 @@
                 type="button"
                 (click)="editItem(item.id)"
                 class="text-indigo-400 hover:text-indigo-300"
+                title="Editar item"
               >
                 <svg
                   width="16"
@@ -222,14 +252,30 @@
       
       <!-- Mensagem quando não há produtos -->
       <div *ngIf="orderItems.length === 0" class="text-center py-8">
+        <svg
+          class="mx-auto mb-3 text-slate-600"
+          width="40"
+          height="40"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="9" cy="21" r="1"></circle>
+          <circle cx="20" cy="21" r="1"></circle>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
         <p class="text-slate-400 text-sm">Nenhum produto adicionado</p>
+        <p class="text-slate-500 text-xs mt-1">Busque e adicione produtos ao pedido</p>
       </div>
     </div>
 
     <!-- Total -->
-    <div class="mt-4 bg-slate-800/50 rounded-lg p-3 border border-green-600/50">
-      <p class="text-slate-400 text-sm">Total do Pedido:</p>
-      <p class="text-green-400 font-bold text-2xl">R$ {{ calculatedTotal.toFixed(2) }}</p>
+    <div class="mt-4 bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-lg p-4 border border-green-500/50">
+      <div class="flex justify-between items-center">
+        <p class="text-slate-300 text-base font-medium">Total do Pedido:</p>
+        <p class="text-green-400 font-bold text-3xl">R$ {{ calculatedTotal.toFixed(2) }}</p>
+      </div>
     </div>
   </div>
 
@@ -237,7 +283,8 @@
   <div class="flex justify-center pt-4">
     <button
       type="submit"
-      class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold"
+      [disabled]="formCreateOrder.invalid || orderItems.length === 0"
+      class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
       Criar Pedido
     </button>

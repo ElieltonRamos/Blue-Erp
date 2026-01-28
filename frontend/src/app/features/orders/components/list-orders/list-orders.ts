@@ -1,61 +1,84 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { EditOrderModal } from '../edit-order-modal/edit-order-modal';
+import { OrderService } from '../../services/order.service';
 
 @Component({
   selector: 'app-list-orders',
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, EditOrderModal],
   templateUrl: './list-orders.html',
 })
-export class ListOrders {
+export class ListOrders implements OnInit {
   searchName: string = '';
   searchId: string = '';
   statusFilter: string = 'all';
   currentPage: number = 1;
+  itemsPerPage: number = 10;
+  totalPages: number = 1;
 
-  orders: Order[] = [
-    {
-      id: '#001',
-      type: 'dine_in',
-      customerName: 'João Silva',
-      items: [
-        { id: '1', name: 'Refrigerante Lata 350ml', quantity: 2, unitPrice: 5.5, total: 11.0 },
-        { id: '2', name: 'Hambúrguer Artesanal', quantity: 1, unitPrice: 25.0, total: 25.0 },
-      ],
-      status: 'open',
-      total: 36.0,
-      table: 'Mesa 5',
-    },
-    {
-      id: '#002',
-      type: 'delivery',
-      customerName: 'Maria Santos',
-      items: [
-        { id: '1', name: 'Pizza Margherita', quantity: 1, unitPrice: 45.0, total: 45.0 },
-        { id: '2', name: 'Refrigerante 2L', quantity: 1, unitPrice: 8.0, total: 8.0 },
-      ],
-      status: 'open',
-      total: 53.0,
-    },
-    {
-      id: '#003',
-      type: 'dine_in',
-      customerName: 'Carlos Oliveira',
-      items: [{ id: '1', name: 'Salada Caesar', quantity: 1, unitPrice: 18.0, total: 18.0 }],
-      status: 'closed',
-      total: 18.0,
-      table: 'Mesa 12',
-    },
-  ];
+  orders: Order[] = [];
+  filteredOrders: Order[] = [];
+  isLoading: boolean = false;
 
-  get filteredOrders(): Order[] {
-    return this.orders.filter((order) => {
+  // Modal state
+  isModalOpen: boolean = false;
+  selectedOrder: Order | null = null;
+
+  private orderService = inject(OrderService);
+  private router = inject(Router);
+
+  ngOnInit(): void {
+    this.loadOrders();
+  }
+
+  loadOrders(): void {
+    this.isLoading = true;
+
+    this.orderService
+      .getOrders({
+        searchName: this.searchName,
+        searchId: this.searchId,
+        status: this.statusFilter,
+        page: this.currentPage,
+        limit: this.itemsPerPage,
+      })
+      .subscribe({
+        next: (orders) => {
+          this.orders = orders;
+          this.applyFilters();
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Erro ao carregar pedidos:', error);
+          this.isLoading = false;
+        },
+      });
+  }
+
+  applyFilters(): void {
+    this.filteredOrders = this.orders.filter((order) => {
       const matchesName =
-        order.customerName?.toLowerCase().includes(this.searchName.toLowerCase()) ?? true;
-      const matchesId = order.id.toLowerCase().includes(this.searchId.toLowerCase());
+        !this.searchName ||
+        order.customerName?.toLowerCase().includes(this.searchName.toLowerCase());
+      const matchesId =
+        !this.searchId || order.id.toLowerCase().includes(this.searchId.toLowerCase());
       const matchesStatus = this.statusFilter === 'all' || order.status === this.statusFilter;
       return matchesName && matchesId && matchesStatus;
     });
+
+    this.totalPages = Math.ceil(this.filteredOrders.length / this.itemsPerPage);
+  }
+
+  onSearchChange(): void {
+    this.currentPage = 1;
+    this.applyFilters();
+  }
+
+  onStatusFilterChange(): void {
+    this.currentPage = 1;
+    this.loadOrders();
   }
 
   getStatusLabel(status: OrderStatus): string {
@@ -77,34 +100,73 @@ export class ListOrders {
   }
 
   editOrder(orderId: string): void {
-    console.log('Editar pedido:', orderId);
-    // Implementar lógica de edição
+    const order = this.orders.find((o) => o.id === orderId);
+    if (order) {
+      // Criar uma cópia profunda do pedido para edição
+      this.selectedOrder = JSON.parse(JSON.stringify(order));
+      this.isModalOpen = true;
+    }
+  }
+
+  closeModal(): void {
+    this.isModalOpen = false;
+    this.selectedOrder = null;
+  }
+
+  onOrderUpdated(updatedOrder: Order): void {
+    // Atualizar o pedido na lista
+    const index = this.orders.findIndex((o) => o.id === updatedOrder.id);
+    if (index !== -1) {
+      this.orders[index] = updatedOrder;
+      this.applyFilters();
+    }
   }
 
   finishOrder(orderId: string): void {
-    const order = this.orders.find((o) => o.id === orderId);
-    if (order) {
-      order.status = 'closed';
-      console.log('Pedido finalizado:', orderId);
+    if (confirm('Deseja realmente finalizar este pedido?')) {
+      this.orderService.finishOrder(orderId).subscribe({
+        next: (updatedOrder) => {
+          // Navegar para a página de comandas
+          this.router.navigate(['/comandas', orderId]);
+        },
+        error: (error) => {
+          console.error('Erro ao finalizar pedido:', error);
+          alert('Erro ao finalizar pedido. Tente novamente.');
+        },
+      });
     }
   }
 
   cancelOrder(orderId: string): void {
-    const order = this.orders.find((o) => o.id === orderId);
-    if (order) {
-      order.status = 'canceled';
-      console.log('Pedido cancelado:', orderId);
+    if (confirm('Deseja realmente cancelar este pedido? Esta ação não pode ser desfeita.')) {
+      this.orderService.cancelOrder(orderId).subscribe({
+        next: (updatedOrder) => {
+          const index = this.orders.findIndex((o) => o.id === updatedOrder.id);
+          if (index !== -1) {
+            this.orders[index] = updatedOrder;
+            this.applyFilters();
+          }
+          console.log('Pedido cancelado:', orderId);
+        },
+        error: (error) => {
+          console.error('Erro ao cancelar pedido:', error);
+          alert('Erro ao cancelar pedido. Tente novamente.');
+        },
+      });
     }
   }
 
   previousPage(): void {
     if (this.currentPage > 1) {
       this.currentPage--;
+      this.loadOrders();
     }
   }
 
   nextPage(): void {
-    // Implementar lógica de próxima página
-    this.currentPage++;
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.loadOrders();
+    }
   }
 }

@@ -21,8 +21,8 @@
           <i class="fas fa-users"></i> Relatorio de Vendas
         </button>
         <button
-          (click)="changeMenuContext('create')"
-          [attr.class]="menuContext === 'create' ? classBtnSelected : classBtnUnselected"
+          (click)="changeMenuContext('report-products')"
+          [attr.class]="menuContext === 'report-products' ? classBtnSelected : classBtnUnselected"
           class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-semibold"
         >
           <i class="fas fa-user-plus"></i> Relatorio de Produtos
@@ -34,7 +34,7 @@
     @if (menuContext === 'report-sales') {
       <app-report-sales />
     } @else if (menuContext === 'report-products') {
-      <!-- <app-report-products /> -->
+      <app-report-products />
     }
   </div>
 </div>
