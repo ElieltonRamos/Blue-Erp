@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import Product, { GetSugestionCode } from '../types/product';
+import Product, { CreateProductDTO, CreateProductResponse, GetSugestionCode } from '../types/product';
 import { environment } from '../../../core/services/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { PaginatedResponse } from '../../../core/guards/types/paginator';
@@ -11,7 +11,7 @@ import { PaginatedResponse } from '../../../core/guards/types/paginator';
 export class ProductService {
   private apiUrl = environment.apiUrl;
   private client = inject(HttpClient);
-  
+
   getProductByCode(code: string): Observable<Product> {
     return this.client.get<Product>(`${this.apiUrl}/product/code/${code}`);
   }
@@ -26,6 +26,14 @@ export class ProductService {
 
   createProduct(product: Product): Observable<Product> {
     return this.client.post<Product>(`${this.apiUrl}/product/register`, product);
+  }
+
+  /**
+   * Cria um novo produto com composição
+   * Este método envia tanto os dados do produto quanto sua composição
+   */
+  createProductWithComposition(productData: CreateProductDTO): Observable<CreateProductResponse> {
+    return this.client.post<CreateProductResponse>(`${this.apiUrl}/with-composition`, productData);
   }
 
   getAllProducts(

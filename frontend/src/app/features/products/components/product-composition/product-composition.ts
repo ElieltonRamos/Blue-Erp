@@ -1,36 +1,15 @@
 // product-composition.component.ts
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
-
-interface PrimaryMaterial {
-  id: string;
-  name: string;
-  code: string;
-  unit: string;
-  unitCost: number;
-  currentStock: number;
-}
-
-interface CompositionItem {
-  materialId: string;
-  materialName: string;
-  quantity: number;
-  unit: string;
-  unitCost: number;
-  totalCost: number;
-}
-
-interface PreparationStep {
-  order: number;
-  description: string;
-}
-
-export interface ProductComposition {
-  items: CompositionItem[];
-  preparationSteps: PreparationStep[];
-  totalCost: number;
-}
+import {
+  FormBuilder,
+  FormGroup,
+  FormArray,
+  ReactiveFormsModule,
+  Validators,
+  FormsModule,
+} from '@angular/forms';
+import { CompositionItem, PreparationStep, PrimaryMaterial, ProductComposition, ProductCompositionDTO } from '../../types/product';
 
 @Component({
   selector: 'app-product-composition',
@@ -46,16 +25,44 @@ export class ProductCompositionComponent implements OnInit {
   showMaterialSearch: boolean = false;
   searchTerm: string = '';
 
-  // Mock de matérias-primas disponíveis
+  // Mock de matérias-primas disponíveis (em produção, virá de um serviço)
   availableMaterials: PrimaryMaterial[] = [
-    { id: '1', name: 'Farinha de Trigo', code: 'MP-001', unit: 'KG', unitCost: 5.50, currentStock: 100 },
-    { id: '2', name: 'Açúcar Refinado', code: 'MP-002', unit: 'KG', unitCost: 4.20, currentStock: 50 },
-    { id: '3', name: 'Ovos', code: 'MP-003', unit: 'UN', unitCost: 0.60, currentStock: 200 },
-    { id: '4', name: 'Manteiga', code: 'MP-004', unit: 'KG', unitCost: 25.00, currentStock: 20 },
-    { id: '5', name: 'Leite Integral', code: 'MP-005', unit: 'L', unitCost: 4.50, currentStock: 30 },
-    { id: '6', name: 'Fermento em Pó', code: 'MP-006', unit: 'KG', unitCost: 15.00, currentStock: 10 },
-    { id: '7', name: 'Sal Refinado', code: 'MP-007', unit: 'KG', unitCost: 2.00, currentStock: 50 },
-    { id: '8', name: 'Chocolate em Pó', code: 'MP-008', unit: 'KG', unitCost: 18.00, currentStock: 15 }
+    {
+      id: '1',
+      name: 'Farinha de Trigo',
+      code: 'MP-001',
+      unit: 'KG',
+      unitCost: 5.5,
+      currentStock: 100,
+    },
+    {
+      id: '2',
+      name: 'Açúcar Refinado',
+      code: 'MP-002',
+      unit: 'KG',
+      unitCost: 4.2,
+      currentStock: 50,
+    },
+    { id: '3', name: 'Ovos', code: 'MP-003', unit: 'UN', unitCost: 0.6, currentStock: 200 },
+    { id: '4', name: 'Manteiga', code: 'MP-004', unit: 'KG', unitCost: 25.0, currentStock: 20 },
+    { id: '5', name: 'Leite Integral', code: 'MP-005', unit: 'L', unitCost: 4.5, currentStock: 30 },
+    {
+      id: '6',
+      name: 'Fermento em Pó',
+      code: 'MP-006',
+      unit: 'KG',
+      unitCost: 15.0,
+      currentStock: 10,
+    },
+    { id: '7', name: 'Sal Refinado', code: 'MP-007', unit: 'KG', unitCost: 2.0, currentStock: 50 },
+    {
+      id: '8',
+      name: 'Chocolate em Pó',
+      code: 'MP-008',
+      unit: 'KG',
+      unitCost: 18.0,
+      currentStock: 15,
+    },
   ];
 
   constructor(private fb: FormBuilder) {}
@@ -67,7 +74,7 @@ export class ProductCompositionComponent implements OnInit {
   initializeForm(): void {
     this.compositionForm = this.fb.group({
       compositionItems: this.fb.array([]),
-      preparationSteps: this.fb.array([])
+      preparationSteps: this.fb.array([]),
     });
 
     // Emitir mudanças sempre que o formulário mudar
@@ -88,27 +95,39 @@ export class ProductCompositionComponent implements OnInit {
     if (!this.searchTerm) {
       return this.availableMaterials;
     }
-    
+
     const term = this.searchTerm.toLowerCase();
-    return this.availableMaterials.filter(m => 
-      m.name.toLowerCase().includes(term) || 
-      m.code.toLowerCase().includes(term)
+    return this.availableMaterials.filter(
+      (m) => m.name.toLowerCase().includes(term) || m.code.toLowerCase().includes(term),
     );
   }
 
   addMaterial(material: PrimaryMaterial): void {
+    // Verificar se o material já foi adicionado
+    const existingItem = this.compositionItems.controls.find(
+      (control) => control.get('materialId')?.value === material.id,
+    );
+
+    if (existingItem) {
+      // Se já existe, apenas incrementa a quantidade
+      const currentQty = existingItem.get('quantity')?.value || 0;
+      existingItem.patchValue({ quantity: currentQty + 1 });
+      return;
+    }
+
     const itemGroup = this.fb.group({
       materialId: [material.id, Validators.required],
       materialName: [material.name, Validators.required],
       quantity: [1, [Validators.required, Validators.min(0.01)]],
       unit: [material.unit],
       unitCost: [material.unitCost],
-      totalCost: [material.unitCost]
+      totalCost: [material.unitCost],
     });
 
     // Atualizar custo total quando quantidade mudar
-    itemGroup.get('quantity')?.valueChanges.subscribe(qty => {
-      const total = 1 * material.unitCost;
+    itemGroup.get('quantity')?.valueChanges.subscribe((qty) => {
+      const unitCost = itemGroup.get('unitCost')?.value || 0;
+      const total = (qty || 0) * unitCost;
       itemGroup.patchValue({ totalCost: total }, { emitEvent: false });
       this.emitCompositionChange();
     });
@@ -125,7 +144,7 @@ export class ProductCompositionComponent implements OnInit {
   addPreparationStep(): void {
     const stepGroup = this.fb.group({
       order: [this.preparationSteps.length + 1, Validators.required],
-      description: ['', [Validators.required, Validators.minLength(5)]]
+      description: ['', [Validators.required, Validators.minLength(5)]],
     });
 
     this.preparationSteps.push(stepGroup);
@@ -133,7 +152,7 @@ export class ProductCompositionComponent implements OnInit {
 
   removePreparationStep(index: number): void {
     this.preparationSteps.removeAt(index);
-    
+
     // Reordenar os steps
     this.preparationSteps.controls.forEach((control, i) => {
       control.patchValue({ order: i + 1 });
@@ -145,7 +164,7 @@ export class ProductCompositionComponent implements OnInit {
       const step = this.preparationSteps.at(index);
       this.preparationSteps.removeAt(index);
       this.preparationSteps.insert(index - 1, step);
-      
+
       // Reordenar
       this.preparationSteps.controls.forEach((control, i) => {
         control.patchValue({ order: i + 1 });
@@ -158,7 +177,7 @@ export class ProductCompositionComponent implements OnInit {
       const step = this.preparationSteps.at(index);
       this.preparationSteps.removeAt(index);
       this.preparationSteps.insert(index + 1, step);
-      
+
       // Reordenar
       this.preparationSteps.controls.forEach((control, i) => {
         control.patchValue({ order: i + 1 });
@@ -176,7 +195,7 @@ export class ProductCompositionComponent implements OnInit {
     const composition: ProductComposition = {
       items: this.compositionItems.value,
       preparationSteps: this.preparationSteps.value,
-      totalCost: this.getTotalCost()
+      totalCost: this.getTotalCost(),
     };
 
     this.compositionChange.emit(composition);
@@ -187,5 +206,32 @@ export class ProductCompositionComponent implements OnInit {
     if (!this.showMaterialSearch) {
       this.searchTerm = '';
     }
+  }
+
+  // Método para obter dados formatados para o backend
+  getCompositionDTO(): ProductCompositionDTO {
+    return {
+      compositionItems: this.compositionItems.value.map((item: CompositionItem) => ({
+        materialId: item.materialId,
+        quantity: item.quantity,
+      })),
+      preparationSteps: this.preparationSteps.value.map((step: PreparationStep) => ({
+        order: step.order,
+        description: step.description,
+      })),
+    };
+  }
+
+  // Método para validar se a composição está válida
+  isCompositionValid(): boolean {
+    return this.compositionForm.valid && this.compositionItems.length > 0;
+  }
+
+  // Método para resetar o formulário
+  resetComposition(): void {
+    this.compositionItems.clear();
+    this.preparationSteps.clear();
+    this.showMaterialSearch = false;
+    this.searchTerm = '';
   }
 }

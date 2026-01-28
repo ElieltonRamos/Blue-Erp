@@ -114,6 +114,41 @@
         }
       </div>
     </div>
+
+    <!-- Tipo de Produto (nova linha) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      <div>
+        <label for="productType" class="block text-gray-300 font-medium mb-2 text-sm"
+          >Tipo de Produto <span class="text-red-400">*</span></label
+        >
+        <select
+          id="productType"
+          formControlName="productType"
+          required
+          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
+          style="
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            background-size: 1.2em;
+          "
+        >
+          <option value="manufactured">🏭 Produto Manufaturado (com composição)</option>
+          <option value="resale">📦 Produto de Revenda (sem composição)</option>
+        </select>
+        <p class="text-gray-400 text-xs mt-1">
+          Produtos manufaturados possuem composição de matérias-primas
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seção: Composição do Produto (apenas para produtos manufaturados) -->
+  <div *ngIf="isManufacturedProduct">
+    <app-product-composition
+      [productName]="productName"
+      (compositionChange)="onCompositionChange($event)"
+    ></app-product-composition>
   </div>
 
   <!-- Seção: Valores -->
@@ -159,13 +194,21 @@
         }
       </div>
 
-      <!-- Preço de Custo -->
+      <!-- Preço de Custo (Condicional baseado no tipo) -->
       <div class="relative">
         <label
           for="cost-price"
           class="block text-gray-300 font-medium mb-2 text-sm"
-          >Preço de Custo <span class="text-red-400">*</span></label
         >
+          <span *ngIf="isManufacturedProduct">
+            Custo de Produção 
+            <span class="text-blue-400 text-xs">(calculado)</span>
+          </span>
+          <span *ngIf="isResaleProduct">
+            Preço de Custo 
+            <span class="text-red-400">*</span>
+          </span>
+        </label>
         <div class="relative">
           <span
             class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold"
@@ -176,11 +219,22 @@
             formControlName="costPrice"
             type="number"
             step="0.01"
-            required
+            [required]="isResaleProduct"
             placeholder="0,00"
-            class="w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
+            [class]="isManufacturedProduct 
+              ? 'w-full pl-10 pr-3 py-3 rounded-lg bg-gray-200 text-gray-700 font-bold placeholder-gray-400 border-2 border-gray-300 cursor-not-allowed'
+              : 'w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none'"
+            [title]="isManufacturedProduct ? 'Este valor é calculado automaticamente com base na composição' : 'Digite o custo de compra do produto'"
           />
         </div>
+        <p class="text-gray-400 text-xs mt-1">
+          <span *ngIf="isManufacturedProduct">
+            Baseado na composição de matérias-primas
+          </span>
+          <span *ngIf="isResaleProduct">
+            Custo de compra para revenda
+          </span>
+        </p>
         @if (formCreateProduct.get('costPrice')?.touched &&
         formCreateProduct.get('costPrice')?.invalid) {
         <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
@@ -196,7 +250,29 @@
         }
       </div>
 
-      <!-- Quantidade -->
+      <!-- Margem de Lucro -->
+      <div class="relative">
+        <label class="block text-gray-300 font-medium mb-2 text-sm"
+          >Margem de Lucro</label
+        >
+        <div class="relative">
+          <span
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold"
+            >%</span
+          >
+          <input
+            type="text"
+            readonly
+            [value]="calculateProfitMargin()"
+            class="w-full pl-10 pr-3 py-3 rounded-lg bg-gray-200 text-gray-700 font-bold border-2 border-gray-300 cursor-not-allowed"
+          />
+        </div>
+        <p class="text-gray-400 text-xs mt-1">
+          {{ calculateProfitMargin() }}% sobre o custo
+        </p>
+      </div>
+
+      <!-- Quantidade em Estoque -->
       <div>
         <label
           for="quantity"
@@ -225,30 +301,14 @@
         </p>
         }
       </div>
-
-      <!-- Margem de Lucro (Calculado) - NOVO -->
-      <div class="bg-white/5 p-3 rounded-lg border border-green-400/30">
-        <label class="block text-gray-300 font-medium mb-2 text-sm"
-          >Margem de Lucro</label
-        >
-        <div class="text-2xl font-bold text-green-400">
-          {{ calculateProfitMargin() }}%
-        </div>
-        <p class="text-xs text-gray-400 mt-1">Calculado automaticamente</p>
-      </div>
     </div>
   </div>
 
-  <app-product-composition 
-  [productName]="'a'"
-  (compositionChange)="onCompositionChange($event)">
-  </app-product-composition>
-
   <!-- Seção: Informações Fiscais -->
-  <div class="space-y-6 bg-white/5 p-6 rounded-xl border border-white/10">
+  <div class="space-y-6">
     <h3 class="text-xl font-semibold text-yellow-400 flex items-center gap-2">
       <span class="w-1 h-6 bg-yellow-400 rounded"></span>
-      Informações Fiscais
+      Informações Fiscais (NFC-e)
     </h3>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -261,25 +321,11 @@
           id="ncm"
           formControlName="ncm"
           type="text"
-          required
           maxlength="8"
           placeholder="12345678"
           class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-mono font-medium placeholder-gray-400 border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none"
         />
         <p class="text-gray-400 text-xs mt-1">8 dígitos numéricos</p>
-        @if (formCreateProduct.get('ncm')?.touched &&
-        formCreateProduct.get('ncm')?.invalid) {
-        <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          NCM inválido (8 dígitos)
-        </p>
-        }
       </div>
 
       <!-- CEST -->

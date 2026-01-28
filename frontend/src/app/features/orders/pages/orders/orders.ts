@@ -7,7 +7,7 @@ import { CreateOrder } from "../../components/create-order/create-order";
 import { ListOrders } from "../../components/list-orders/list-orders";
 
 @Component({
-  selector: 'app-orders-listing',
+  selector: 'app-orders',
   standalone: true,
   imports: [CommonModule, FormsModule, CreateOrder, ListOrders],
   templateUrl: './orders.html',
@@ -21,6 +21,7 @@ export class Orders {
     'text-white hover:underline px-4 py-2 rounded-lg flex items-center gap-2 font-semibold';
 
   changeMenuContext(context: string): void {
+    console.log(context, 'contexto')
     this.menuContext = context;
   }
 

@@ -27,3 +27,100 @@ export enum Unit {
 export interface GetSugestionCode {
   code: number;
 }
+
+// Interface para resposta de código sugerido
+interface CodeSuggestionResponse {
+  code: number;
+}
+
+// Interface para composição do produto (backend)
+export interface ProductCompositionDTO {
+  compositionItems: {
+    materialId: string;
+    quantity: number;
+  }[];
+  preparationSteps: {
+    order: number;
+    description: string;
+  }[];
+}
+
+// Interface para criação de produto com composição
+export interface CreateProductDTO {
+  // Dados básicos do produto
+  name: string;
+  code: string;
+  productType: string; // 'manufactured' ou 'resale'
+  price: number;
+  costPrice: number;
+  ncm: string;
+  cest: string;
+  csosn: string;
+  unit: Unit;
+  origin: number;
+  quantity: number;
+  active: boolean;
+  
+  // Composição do produto (apenas para produtos manufaturados)
+  composition?: ProductCompositionDTO;
+}
+
+// Interface para resposta do backend após criar produto
+export interface CreateProductResponse {
+  id: string;
+  name: string;
+  code: string;
+  price: number;
+  costPrice: number;
+  ncm: string;
+  cest: string;
+  csosn: string;
+  unit: string;
+  origin: number;
+  quantity: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+
+export interface PrimaryMaterial {
+  id: string;
+  name: string;
+  code: string;
+  unit: string;
+  unitCost: number;
+  currentStock: number;
+}
+
+export interface CompositionItem {
+  materialId: string;
+  materialName: string;
+  quantity: number;
+  unit: string;
+  unitCost: number;
+  totalCost: number;
+}
+
+export interface PreparationStep {
+  order: number;
+  description: string;
+}
+
+export interface ProductComposition {
+  items: CompositionItem[];
+  preparationSteps: PreparationStep[];
+  totalCost: number;
+}
+
+// Interface para enviar ao backend
+export interface ProductCompositionDTO {
+  compositionItems: {
+    materialId: string;
+    quantity: number;
+  }[];
+  preparationSteps: {
+    order: number;
+    description: string;
+  }[];
+}
