@@ -1,230 +1,531 @@
-// finish-order.component.ts
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  inject,
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 
-interface OrderItem {
-  id: string;
-  name: string;
-  code: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
-}
+/* Services */
+import { OrderService } from '../../services/order.service';
+import { MockOrderService } from '../../services/order.mock.service';
+import { ClientService } from '../../../clients/services/client.service';
+import { NotificationService } from '../../../../shared/toastr/notification.service';
 
-type PaymentMethod = 'money' | 'credit' | 'debit' | 'pix' | 'term';
+/* Types */
+import { Order, OrderItem, Product, PaymentMethod, FinishOrderDto } from '../../types/order';
 
-interface Order {
-  id: string;
-  customerName: string;
-  seller: string;
-  items: OrderItem[];
-  subtotal: number;
-  discount: number;
-  total: number;
-}
+import Client from '../../../clients/types/clients';
 
 @Component({
-  selector: 'app-finish-order',
+  selector: 'app-close-order',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './close-order.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CloseOrder implements OnInit {
-  selectedPaymentMethod: PaymentMethod | null = null;
-  amountReceived: number = 0;
-  
-  // Product search fields
-  searchCode: string = '';
-  searchName: string = '';
-  
-  // Fiscal fields (hidden in corner)
-  cfop: string = '5102';
-  csosn: string = '102';
-  
-  // Customer search
-  customerSearchId: string = '1';
-  customerSearchName: string = '';
-  selectedCustomer: string = 'Cliente: Avista';
+  /* =====================================================
+   * INJECTIONS
+   * ===================================================== */
 
-  order: Order = {
-    id: '1',
-    customerName: 'João Silva',
-    seller: 'Elielton',
-    items: [
-      { id: '1', name: 'Refrigerante Lata 350ml', code: 'REF350', quantity: 2, unitPrice: 5.5, total: 11.0 },
-      { id: '2', name: 'Hambúrguer Artesanal', code: 'HAM001', quantity: 1, unitPrice: 25.0, total: 25.0 },
-      { id: '3', name: 'Batata Frita', code: 'BAT001', quantity: 1, unitPrice: 12.0, total: 12.0 },
-    ],
-    subtotal: 48.0,
-    discount: 0,
-    total: 48.0,
-  };
+  private readonly orderService = inject(MockOrderService);
+  private readonly clientService = inject(ClientService);
+  private readonly notification = inject(NotificationService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly cdr = inject(ChangeDetectorRef);
+
+  /* =====================================================
+   * ORDER
+   * ===================================================== */
+
+  order: Order | null = null;
+  orderId = '';
+
+  isLoading = false;
+  isFinishing = false;
+
+  /* =====================================================
+   * SELLER
+   * ===================================================== */
+
+  sellerName = 'Vendedor';
+
+  /* =====================================================
+   * PAYMENT
+   * ===================================================== */
+
+  selectedPaymentMethod: PaymentMethod | null = null;
+
+  subtotal = 0;
+  discount = 0;
+  total = 0;
+
+  amountReceived = 0;
 
   paymentMethods = [
     { id: 'money' as PaymentMethod, name: 'Dinheiro', icon: '💵' },
-    { id: 'credit' as PaymentMethod, name: 'Cartão de Crédito', icon: '💳' },
-    { id: 'debit' as PaymentMethod, name: 'Cartão de Débito', icon: '💳' },
+    { id: 'credit' as PaymentMethod, name: 'Crédito', icon: '💳' },
+    { id: 'debit' as PaymentMethod, name: 'Débito', icon: '💳' },
     { id: 'pix' as PaymentMethod, name: 'PIX', icon: '📱' },
-    { id: 'term' as PaymentMethod, name: 'A Prazo', icon: '📅' },
+    { id: 'term' as PaymentMethod, name: 'Prazo', icon: '📅' },
   ];
 
+  /* =====================================================
+   * PRODUCTS
+   * ===================================================== */
+
+  searchCode = '';
+  searchName = '';
+
+  isSearchingProduct = false;
+
+  /* =====================================================
+   * CLIENT
+   * ===================================================== */
+
+  customerSearchId = '';
+  customerSearchName = '';
+
+  customerName = 'Cliente Avista';
+
+  selectedClient: Client | null = {
+    id: 1,
+    name: 'Consumidor Final',
+  } as Client;
+
+  isSearchingClient = false;
+
+  searchResults: Client[] = [];
+  selectedClientId: number | null = null;
+
+  /* =====================================================
+   * FISCAL
+   * ===================================================== */
+
+  cfop = '5102';
+  csosn = '102';
+
+  /* =====================================================
+   * LIFE CYCLE
+   * ===================================================== */
+
   ngOnInit(): void {
-    this.calculateOrderTotals();
-  }
+    this.orderId = this.route.snapshot.paramMap.get('id') || '';
 
-  calculateOrderTotals(): void {
-    this.order.subtotal = this.order.items.reduce((sum, item) => sum + item.total, 0);
-    this.order.total = this.order.subtotal - this.order.discount;
-  }
-
-  selectPaymentMethod(method: PaymentMethod): void {
-    this.selectedPaymentMethod = method;
-    if (method !== 'money') {
-      this.amountReceived = this.order.total;
-    } else {
-      this.amountReceived = 0;
+    if (!this.orderId) {
+      this.notification.error('ID do pedido não informado');
+      this.router.navigate(['/pedidos']);
+      return;
     }
+
+    this.loadOrder();
   }
 
-  get change(): number {
-    return this.amountReceived - this.order.total;
+  /* =====================================================
+   * ORDER
+   * ===================================================== */
+
+  private loadOrder(): void {
+    this.isLoading = true;
+
+    this.orderService.getOrderById(this.orderId).subscribe({
+      next: (order) => {
+        this.order = order;
+
+        if (order.customerName) {
+          this.customerName = order.customerName;
+        }
+
+        this.calculateTotals();
+
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      },
+
+      error: (err) => {
+        this.notification.error('Erro ao carregar pedido');
+        this.isLoading = false;
+
+        this.router.navigate(['/pedidos']);
+      },
+    });
   }
 
-  get isValidPayment(): boolean {
-    if (!this.selectedPaymentMethod) return false;
-    if (this.selectedPaymentMethod === 'money') {
-      return this.amountReceived >= this.order.total;
+  /* =====================================================
+   * CLIENT
+   * ===================================================== */
+
+  searchCustomerById(): void {
+    if (!this.customerSearchId.trim()) {
+      this.notification.warning('Digite o ID do cliente');
+      return;
     }
-    return true;
+
+    const id = Number(this.customerSearchId);
+
+    if (isNaN(id)) {
+      this.notification.error('ID inválido');
+      return;
+    }
+
+    this.isSearchingClient = true;
+
+    this.clientService.findClientById(id).subscribe({
+      next: (client) => {
+        this.setClient(client);
+
+        this.isSearchingClient = false;
+        this.cdr.markForCheck();
+      },
+
+      error: () => {
+        this.notification.error('Cliente não encontrado');
+
+        this.isSearchingClient = false;
+        this.cdr.markForCheck();
+      },
+    });
   }
+
+  searchCustomerByName(): void {
+    const name = this.customerSearchName.trim();
+
+    if (!name) {
+      this.notification.warning('Digite um nome');
+      return;
+    }
+
+    this.isSearchingClient = true;
+
+    this.clientService.findClientByName(name).subscribe({
+      next: (clients) => {
+        this.searchResults = clients;
+
+        if (clients.length === 1) {
+          this.setClient(clients[0]);
+          this.clearSearchResults();
+        }
+
+        if (clients.length === 0) {
+          this.notification.warning('Nenhum cliente encontrado');
+          this.clearSearchResults();
+        }
+
+        if (clients.length > 1) {
+          this.selectedClientId = null;
+          this.notification.info('Selecione um cliente');
+        }
+
+        this.isSearchingClient = false;
+        this.cdr.markForCheck();
+      },
+
+      error: () => {
+        this.notification.error('Erro ao buscar cliente');
+
+        this.isSearchingClient = false;
+        this.clearSearchResults();
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  selectClientFromResults(): void {
+    const client = this.searchResults.find((c) => c.id === Number(this.selectedClientId));
+
+    if (!client) return;
+
+    this.setClient(client);
+    this.clearSearchResults();
+
+    this.cdr.markForCheck();
+  }
+
+  private setClient(client: Client): void {
+    if (!client.id) return;
+
+    this.selectedClient = { ...client };
+
+    this.customerName = client.name;
+
+    this.customerSearchId = String(client.id);
+    this.customerSearchName = client.name;
+
+    this.notification.success(`Cliente ${client.name} selecionado`);
+  }
+
+  clearCustomer(): void {
+    this.selectedClient = null;
+
+    this.customerName = 'Cliente Avista';
+    this.customerSearchId = '';
+    this.customerSearchName = '';
+
+    this.notification.info('Venda avista');
+  }
+
+  clearSearchResults(): void {
+    this.searchResults = [];
+    this.selectedClientId = null;
+  }
+
+  trackByClientId(_: number, client: Client): number {
+    return client.id!;
+  }
+
+  formatPhone(phone: string): string {
+    const cleaned = phone.replace(/\D/g, '');
+
+    if (cleaned.length === 11) {
+      return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+    }
+
+    return phone;
+  }
+
+  /* =====================================================
+   * PRODUCTS
+   * ===================================================== */
 
   searchProduct(): void {
-    console.log('Buscar produto:', this.searchCode || this.searchName);
-    // Simular busca de produto - em produção, chamar API
-    if (this.searchCode || this.searchName) {
-      // Exemplo: produto encontrado
-      // Aqui você faria a chamada para a API e retornaria o produto
-      const foundProduct = {
-        code: this.searchCode || 'PROD001',
-        name: this.searchName || 'Produto Encontrado',
-        quantity: 1,
-        unitPrice: 15.00,
-        total: 15.00
-      };
-      
-      // Adiciona automaticamente
-      this.addProductToOrder(foundProduct);
+    if (!this.searchCode && !this.searchName) {
+      this.notification.warning('Informe código ou nome');
+      return;
     }
+
+    this.isSearchingProduct = true;
+
+    if (this.searchCode) {
+      this.searchByCode();
+      return;
+    }
+
+    this.searchByName();
+  }
+
+  private searchByCode(): void {
+    this.orderService.getProductByCode(this.searchCode).subscribe({
+      next: (product) => {
+        this.addProductPrivate(product);
+
+        this.isSearchingProduct = false;
+        this.cdr.markForCheck();
+      },
+
+      error: () => {
+        this.searchByName();
+      },
+    });
+  }
+
+  private searchByName(): void {
+    this.orderService.searchProducts({ name: this.searchName }).subscribe({
+      next: (products) => {
+        if (!products.length) {
+          this.notification.warning('Nenhum produto encontrado');
+        } else {
+          this.addProductPrivate(products[0]);
+        }
+
+        this.isSearchingProduct = false;
+        this.cdr.markForCheck();
+      },
+
+      error: () => {
+        this.notification.error('Erro na busca');
+
+        this.isSearchingProduct = false;
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   addProduct(): void {
-    // Método manual para adicionar produto
-    if (this.searchCode || this.searchName) {
-      this.searchProduct();
-    }
+    this.searchProduct();
   }
 
-  addProductToOrder(product: { code: string; name: string; quantity: number; unitPrice: number; total: number }): void {
-    const newItem: OrderItem = {
-      id: String(this.order.items.length + 1),
+  private addProductPrivate(product: Product): void {
+    if (!this.order) return;
+
+    const item: OrderItem = {
+      id: Date.now().toString(),
       name: product.name,
       code: product.code,
-      quantity: product.quantity,
-      unitPrice: product.unitPrice,
-      total: product.total
+      quantity: 1,
+      unitPrice: product.price,
+      total: product.price,
     };
-    
-    this.order.items.push(newItem);
-    this.calculateOrderTotals();
+
+    this.order.items.push(item);
+
+    this.calculateTotals();
     this.clearProductForm();
-    
-    // Auto-update payment if not money
-    if (this.selectedPaymentMethod && this.selectedPaymentMethod !== 'money') {
-      this.amountReceived = this.order.total;
-    }
+
+    this.notification.success('Produto adicionado');
   }
 
-  clearProductForm(): void {
+  removeItem(id: string): void {
+    if (!this.order) return;
+
+    this.order.items = this.order.items.filter((i) => i.id !== id);
+
+    this.calculateTotals();
+
+    this.notification.success('Produto removido');
+  }
+
+  editItem(id: string): void {
+    if (!this.order) return;
+
+    const item = this.order.items.find((i) => i.id === id);
+
+    if (!item) return;
+
+    this.searchCode = item.code;
+    this.searchName = item.name;
+
+    this.removeItem(id);
+
+    this.notification.info('Produto em edição');
+  }
+
+  private clearProductForm(): void {
     this.searchCode = '';
     this.searchName = '';
   }
 
-  removeItem(itemId: string): void {
-    this.order.items = this.order.items.filter(item => item.id !== itemId);
-    this.calculateOrderTotals();
-    
-    // Auto-update payment if not money
-    if (this.selectedPaymentMethod && this.selectedPaymentMethod !== 'money') {
-      this.amountReceived = this.order.total;
-    }
-  }
+  /* =====================================================
+   * TOTALS
+   * ===================================================== */
 
-  editItem(itemId: string): void {
-    const item = this.order.items.find(i => i.id === itemId);
-    if (item) {
-      this.searchCode = item.code;
-      this.searchName = item.name;
-      this.removeItem(itemId);
-      // O usuário pode modificar e adicionar novamente
+  calculateTotals(): void {
+    if (!this.order) return;
+
+    this.subtotal = this.order.items.reduce((sum, i) => sum + i.total, 0);
+
+    this.total = this.subtotal - this.discount;
+
+    if (this.selectedPaymentMethod !== 'money') {
+      this.amountReceived = this.total;
     }
+
+    this.cdr.markForCheck();
   }
 
   updateDiscount(): void {
-    this.order.total = this.order.subtotal - this.order.discount;
-    
-    // Auto-update payment if not money
-    if (this.selectedPaymentMethod && this.selectedPaymentMethod !== 'money') {
-      this.amountReceived = this.order.total;
+    this.calculateTotals();
+  }
+
+  get change(): number {
+    return this.amountReceived - this.total;
+  }
+
+  get isValidPayment(): boolean {
+    if (!this.selectedPaymentMethod) return false;
+
+    if (this.selectedPaymentMethod === 'money') {
+      return this.amountReceived >= this.total;
     }
+
+    return true;
   }
 
-  searchCustomerById(): void {
-    console.log('Buscar cliente por ID:', this.customerSearchId);
-    // Implementar busca de cliente por ID
-    // API call aqui
+  /* =====================================================
+   * PAYMENT
+   * ===================================================== */
+
+  selectPaymentMethod(method: PaymentMethod): void {
+    if (method === 'term' && (!this.selectedClient || this.selectedClient.id === 1)) {
+      this.notification.warning('Venda a prazo apenas para clientes cadastrados');
+      return;
+    }
+
+    this.selectedPaymentMethod = method;
+
+    this.amountReceived = method === 'money' ? 0 : this.total;
+
+    this.cdr.markForCheck();
   }
 
-  searchCustomerByName(): void {
-    console.log('Buscar cliente por nome:', this.customerSearchName);
-    // Implementar busca de cliente por nome
-    // API call aqui
-  }
+  /* =====================================================
+   * FINISH
+   * ===================================================== */
 
   finishOrder(): void {
-    if (this.isValidPayment) {
-      console.log('Pedido finalizado:', {
-        orderId: this.order.id,
-        customer: this.selectedCustomer,
-        seller: this.order.seller,
-        items: this.order.items,
-        subtotal: this.order.subtotal,
-        discount: this.order.discount,
-        total: this.order.total,
-        paymentMethod: this.selectedPaymentMethod,
-        amountReceived: this.amountReceived,
-        change: this.change,
-        cfop: this.cfop,
-        csosn: this.csosn
-      });
-      
-      // Implementar lógica de finalização - chamar API
-      alert('Pedido finalizado com sucesso!');
-      
-      // Resetar formulário ou navegar
-      // this.router.navigate(['/orders']);
+    if (!this.isValidPayment) {
+      this.notification.error('Pagamento inválido');
+      return;
     }
+
+    if (!this.order?.items.length) {
+      this.notification.error('Pedido vazio');
+      return;
+    }
+
+    if (!this.selectedPaymentMethod) {
+      this.notification.error('Selecione pagamento');
+      return;
+    }
+
+    this.isFinishing = true;
+
+    const payload: FinishOrderDto = {
+      orderId: this.orderId,
+      clientName: this.customerName,
+      userOperator: this.sellerName,
+      paymentMethod: this.selectedPaymentMethod,
+
+      items: this.order.items,
+
+      subtotal: this.subtotal,
+      discount: this.discount,
+      total: this.total,
+
+      amountReceived: this.selectedPaymentMethod === 'money' ? this.amountReceived : this.total,
+
+      change: this.selectedPaymentMethod === 'money' ? this.change : 0,
+
+      cfop: this.cfop,
+      csosn: this.csosn,
+    };
+
+    this.orderService.finalizeSale(payload).subscribe({
+      next: (sale) => {
+        this.notification.success('Venda finalizada');
+
+        this.isFinishing = false;
+
+        setTimeout(() => {
+          this.router.navigate(['/vendas', sale.id]);
+        }, 500);
+      },
+
+      error: (err) => {
+        this.notification.error('Erro ao finalizar');
+
+        this.isFinishing = false;
+        this.cdr.markForCheck();
+      },
+    });
   }
 
+  /* =====================================================
+   * NAVIGATION
+   * ===================================================== */
+
   cancelOrder(): void {
-    console.log('Cancelar venda');
-    // Implementar navegação de volta
-    // this.router.navigate(['/orders']);
+    if (confirm('Cancelar venda?')) {
+      this.router.navigate(['/pedidos']);
+    }
   }
 
   goToMenu(): void {
-    console.log('Voltar para menu');
-    // Implementar navegação
-    // this.router.navigate(['/menu']);
+    this.router.navigate(['/dashboard']);
   }
 }

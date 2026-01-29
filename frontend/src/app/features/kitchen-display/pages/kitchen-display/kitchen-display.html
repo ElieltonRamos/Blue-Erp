@@ -1,15 +1,35 @@
 <!-- kitchen-display.component.html -->
-<div class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 p-4">
+<div class="min-h-screen bg-linear-to-br from-purple-900 via-purple-800 to-purple-900 p-4">
   <!-- Header -->
-  <div class="flex justify-between items-center mb-4 max-w-[1800px] mx-auto">
+  <div class="flex justify-between items-center mb-4 max-w-450 mx-auto">
     <div class="flex items-center gap-4">
       <h1 class="text-white text-2xl font-bold">🍳 Cozinha</h1>
       <div class="bg-slate-800/50 rounded-lg px-4 py-2 border border-slate-700/50">
         <span class="text-slate-400 text-sm">Total de Pedidos: </span>
         <span class="text-white font-bold text-lg">{{ orders.length }}</span>
       </div>
+      <button
+        (click)="refreshOrders()"
+        [disabled]="isLoading"
+        class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
+        title="Atualizar pedidos"
+      >
+        <svg
+          [class.animate-spin]="isLoading"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+        </svg>
+        {{ isLoading ? 'Atualizando...' : 'Atualizar' }}
+      </button>
     </div>
     <button
+      (click)="goToMenu()"
       class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full font-medium transition-colors"
     >
       Voltar para menu
@@ -17,7 +37,7 @@
   </div>
 
   <!-- Main Container -->
-  <div class="max-w-[1800px] mx-auto">
+  <div class="max-w-450 mx-auto">
     <div class="grid grid-cols-3 gap-4">
       <!-- Pending Orders Column -->
       <div
@@ -35,7 +55,7 @@
 
         <div class="space-y-3 overflow-y-auto" style="max-height: calc(100vh - 180px)">
           <div
-            *ngFor="let order of pendingOrders"
+            *ngFor="let order of pendingOrders; trackBy: trackById"
             class="bg-slate-700/50 rounded-lg p-3 border-2 border-yellow-500/30 hover:border-yellow-500 transition-all cursor-pointer"
           >
             <!-- Order Header -->
@@ -58,11 +78,11 @@
               <span
                 [class]="
                   'px-2 py-1 rounded-full text-xs font-bold border ' +
-                  getTimeBadgeClass(order.elapsedMinutes)
+                  getTimeBadgeClass(getElapsedMinutes(order))
                 "
-                [ngClass]="getTimeClass(order.elapsedMinutes)"
+                [ngClass]="getTimeClass(getElapsedMinutes(order))"
               >
-                {{ order.elapsedMinutes }}min
+                {{ getElapsedMinutes(order) }}min
               </span>
             </div>
 
@@ -135,7 +155,7 @@
 
         <div class="space-y-3 overflow-y-auto" style="max-height: calc(100vh - 180px)">
           <div
-            *ngFor="let order of preparingOrders"
+            *ngFor="let order of preparingOrders; trackBy: trackById"
             class="bg-slate-700/50 rounded-lg p-3 border-2 border-blue-500/30 hover:border-blue-500 transition-all cursor-pointer"
           >
             <!-- Order Header -->
@@ -158,11 +178,11 @@
               <span
                 [class]="
                   'px-2 py-1 rounded-full text-xs font-bold border ' +
-                  getTimeBadgeClass(order.elapsedMinutes)
+                  getTimeBadgeClass(getElapsedMinutes(order))
                 "
-                [ngClass]="getTimeClass(order.elapsedMinutes)"
+                [ngClass]="getTimeClass(getElapsedMinutes(order))"
               >
-                {{ order.elapsedMinutes }}min
+                {{ getElapsedMinutes(order) }}min
               </span>
             </div>
 
@@ -215,7 +235,7 @@
 
         <div class="space-y-3 overflow-y-auto" style="max-height: calc(100vh - 180px)">
           <div
-            *ngFor="let order of readyOrders"
+            *ngFor="let order of readyOrders; trackBy: trackById"
             class="bg-slate-700/50 rounded-lg p-3 border-2 border-green-500/30 hover:border-green-500 transition-all cursor-pointer"
           >
             <!-- Order Header -->
@@ -238,11 +258,11 @@
               <span
                 [class]="
                   'px-2 py-1 rounded-full text-xs font-bold border ' +
-                  getTimeBadgeClass(order.elapsedMinutes)
+                  getTimeBadgeClass(getElapsedMinutes(order))
                 "
-                [ngClass]="getTimeClass(order.elapsedMinutes)"
+                [ngClass]="getTimeClass(getElapsedMinutes(order))"
               >
-                {{ order.elapsedMinutes }}min
+                {{ getElapsedMinutes(order) }}min
               </span>
             </div>
 
@@ -348,7 +368,7 @@
               class="bg-slate-700/50 rounded-lg p-3 flex gap-3"
             >
               <span
-                class="bg-purple-600 text-white font-bold text-sm w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0"
+                class="bg-purple-600 text-white font-bold text-sm w-7 h-7 flex items-center justify-center rounded-full shrink-0"
               >
                 {{ i + 1 }}
               </span>
