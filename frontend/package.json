@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -24,6 +24,7 @@
   "packageManager": "npm@11.6.2",
   "dependencies": {
     "@angular/animations": "^21.1.1",
+    "@angular/cdk": "^21.1.2",
     "@angular/common": "^21.0.0",
     "@angular/compiler": "^21.0.0",
     "@angular/core": "^21.0.0",

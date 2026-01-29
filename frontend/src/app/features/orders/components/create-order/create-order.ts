@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { OrderService } from '../../services/order.service';
 import { OrderItem, CreateOrderDto, Product } from '../../types/order';
+import { MockOrderService } from '../../services/order.mock.service';
 
 @Component({
   selector: 'app-create-order',
@@ -14,7 +15,7 @@ import { OrderItem, CreateOrderDto, Product } from '../../types/order';
   standalone: true,
 })
 export class CreateOrder {
-  private orderService = inject(OrderService);
+  private orderService = inject(MockOrderService);
   private notification = inject(NotificationService);
   private router = inject(Router);
 

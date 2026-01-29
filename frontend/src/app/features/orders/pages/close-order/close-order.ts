@@ -77,27 +77,13 @@ export class CloseOrder implements OnInit {
   ];
 
   /* =====================================================
-   * PRODUCTS
-   * ===================================================== */
-
-  searchCode = '';
-  searchName = '';
-
-  isSearchingProduct = false;
-
-  /* =====================================================
-   * CLIENT
+   * CLIENT (CADASTRADO)
    * ===================================================== */
 
   customerSearchId = '';
   customerSearchName = '';
 
-  customerName = 'Cliente Avista';
-
-  selectedClient: Client | null = {
-    id: 1,
-    name: 'Consumidor Final',
-  } as Client;
+  selectedClient: Client | null = null;
 
   isSearchingClient = false;
 
@@ -137,11 +123,6 @@ export class CloseOrder implements OnInit {
     this.orderService.getOrderById(this.orderId).subscribe({
       next: (order) => {
         this.order = order;
-
-        if (order.customerName) {
-          this.customerName = order.customerName;
-        }
-
         this.calculateTotals();
 
         this.isLoading = false;
@@ -251,23 +232,14 @@ export class CloseOrder implements OnInit {
     if (!client.id) return;
 
     this.selectedClient = { ...client };
-
-    this.customerName = client.name;
-
-    this.customerSearchId = String(client.id);
-    this.customerSearchName = client.name;
-
     this.notification.success(`Cliente ${client.name} selecionado`);
   }
 
   clearCustomer(): void {
     this.selectedClient = null;
-
-    this.customerName = 'Cliente Avista';
     this.customerSearchId = '';
     this.customerSearchName = '';
-
-    this.notification.info('Venda avista');
+    this.notification.info('Cliente removido');
   }
 
   clearSearchResults(): void {
@@ -287,117 +259,6 @@ export class CloseOrder implements OnInit {
     }
 
     return phone;
-  }
-
-  /* =====================================================
-   * PRODUCTS
-   * ===================================================== */
-
-  searchProduct(): void {
-    if (!this.searchCode && !this.searchName) {
-      this.notification.warning('Informe código ou nome');
-      return;
-    }
-
-    this.isSearchingProduct = true;
-
-    if (this.searchCode) {
-      this.searchByCode();
-      return;
-    }
-
-    this.searchByName();
-  }
-
-  private searchByCode(): void {
-    this.orderService.getProductByCode(this.searchCode).subscribe({
-      next: (product) => {
-        this.addProductPrivate(product);
-
-        this.isSearchingProduct = false;
-        this.cdr.markForCheck();
-      },
-
-      error: () => {
-        this.searchByName();
-      },
-    });
-  }
-
-  private searchByName(): void {
-    this.orderService.searchProducts({ name: this.searchName }).subscribe({
-      next: (products) => {
-        if (!products.length) {
-          this.notification.warning('Nenhum produto encontrado');
-        } else {
-          this.addProductPrivate(products[0]);
-        }
-
-        this.isSearchingProduct = false;
-        this.cdr.markForCheck();
-      },
-
-      error: () => {
-        this.notification.error('Erro na busca');
-
-        this.isSearchingProduct = false;
-        this.cdr.markForCheck();
-      },
-    });
-  }
-
-  addProduct(): void {
-    this.searchProduct();
-  }
-
-  private addProductPrivate(product: Product): void {
-    if (!this.order) return;
-
-    const item: OrderItem = {
-      id: Date.now().toString(),
-      name: product.name,
-      code: product.code,
-      quantity: 1,
-      unitPrice: product.price,
-      total: product.price,
-    };
-
-    this.order.items.push(item);
-
-    this.calculateTotals();
-    this.clearProductForm();
-
-    this.notification.success('Produto adicionado');
-  }
-
-  removeItem(id: string): void {
-    if (!this.order) return;
-
-    this.order.items = this.order.items.filter((i) => i.id !== id);
-
-    this.calculateTotals();
-
-    this.notification.success('Produto removido');
-  }
-
-  editItem(id: string): void {
-    if (!this.order) return;
-
-    const item = this.order.items.find((i) => i.id === id);
-
-    if (!item) return;
-
-    this.searchCode = item.code;
-    this.searchName = item.name;
-
-    this.removeItem(id);
-
-    this.notification.info('Produto em edição');
-  }
-
-  private clearProductForm(): void {
-    this.searchCode = '';
-    this.searchName = '';
   }
 
   /* =====================================================
@@ -441,8 +302,8 @@ export class CloseOrder implements OnInit {
    * ===================================================== */
 
   selectPaymentMethod(method: PaymentMethod): void {
-    if (method === 'term' && (!this.selectedClient || this.selectedClient.id === 1)) {
-      this.notification.warning('Venda a prazo apenas para clientes cadastrados');
+    if (method === 'term' && !this.selectedClient) {
+      this.notification.warning('Venda a prazo requer cliente cadastrado');
       return;
     }
 
@@ -475,9 +336,11 @@ export class CloseOrder implements OnInit {
 
     this.isFinishing = true;
 
+    const clientName = this.selectedClient?.name || this.order.customerName || 'Cliente Avista';
+
     const payload: FinishOrderDto = {
       orderId: this.orderId,
-      clientName: this.customerName,
+      clientName: clientName,
       userOperator: this.sellerName,
       paymentMethod: this.selectedPaymentMethod,
 

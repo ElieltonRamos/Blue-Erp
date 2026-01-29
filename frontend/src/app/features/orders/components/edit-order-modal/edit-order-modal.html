@@ -1,15 +1,8 @@
-<!-- Modal Overlay -->
-<div
-  *ngIf="isOpen"
-  class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-  (click)="closeModal()"
->
-  <!-- Modal Content -->
+<ng-template cdkPortal>
   <div
-    class="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden"
-    (click)="$event.stopPropagation()"
+    class="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
+    (click)="onModalClick($event)"
   >
-    <!-- Modal Header -->
     <div
       class="bg-linear-to-r from-indigo-600 to-purple-600 px-6 py-4 flex justify-between items-center"
     >
@@ -20,6 +13,7 @@
       <button
         (click)="closeModal()"
         class="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+        aria-label="Fechar modal"
       >
         <svg
           width="24"
@@ -35,7 +29,6 @@
       </button>
     </div>
 
-    <!-- Modal Body -->
     <div class="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
       <form *ngIf="order" #orderForm="ngForm">
         <!-- Customer Name -->
@@ -51,8 +44,9 @@
           />
         </div>
 
-        <!-- Order Type and Table -->
-        <div class="grid grid-cols-2 gap-4 mb-6">
+        <!-- ✅ Order Type, Status and Table -->
+        <div class="grid grid-cols-3 gap-4 mb-6">
+          <!-- Tipo de Pedido -->
           <div>
             <label class="text-slate-300 text-sm font-medium mb-2 block">Tipo de Pedido</label>
             <select
@@ -66,6 +60,21 @@
             </select>
           </div>
 
+          <!-- Status do Pedido -->
+          <div>
+            <label class="text-slate-300 text-sm font-medium mb-2 block">Status</label>
+            <select
+              [(ngModel)]="order.status"
+              name="status"
+              class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
+            >
+              <option value="open">🔓 Aberto</option>
+              <option value="closed">✅ Fechado</option>
+              <option value="canceled">❌ Cancelado</option>
+            </select>
+          </div>
+
+          <!-- Mesa (condicional) -->
           <div *ngIf="order.type === 'dine_in'">
             <label class="text-slate-300 text-sm font-medium mb-2 block">Mesa</label>
             <input
@@ -78,14 +87,73 @@
           </div>
         </div>
 
-        <!-- Items -->
+        <!-- Buscar Produto -->
         <div class="mb-6">
-          <div class="flex justify-between items-center mb-3">
-            <label class="text-slate-300 text-sm font-medium">Itens do Pedido</label>
+          <label class="text-slate-300 text-sm font-medium mb-3 block">Buscar Produto</label>
+
+          <div class="grid grid-cols-12 gap-3">
+            <div class="col-span-4">
+              <input
+                type="text"
+                [(ngModel)]="searchCode"
+                name="searchCode"
+                (keyup.enter)="searchProduct()"
+                [disabled]="isSearchingProduct"
+                placeholder="Código de barras"
+                class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-200 text-sm focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+              />
+            </div>
+
+            <div class="col-span-6">
+              <input
+                type="text"
+                [(ngModel)]="searchName"
+                name="searchName"
+                (keyup.enter)="searchProduct()"
+                [disabled]="isSearchingProduct"
+                placeholder="Nome do produto"
+                class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-200 text-sm focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+              />
+            </div>
+
+            <div class="col-span-2">
+              <button
+                type="button"
+                (click)="searchProduct()"
+                [disabled]="isSearchingProduct || (!searchCode && !searchName)"
+                class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+              >
+                <svg
+                  *ngIf="isSearchingProduct"
+                  class="animate-spin"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                </svg>
+                {{ isSearchingProduct ? '...' : '🔍' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista de Resultados da Busca -->
+        <div
+          *ngIf="showSearchResults && searchResults.length > 0"
+          class="mb-6 bg-slate-700 border border-indigo-500 rounded-lg overflow-hidden shadow-lg"
+        >
+          <div class="px-4 py-2 bg-indigo-600 flex justify-between items-center">
+            <span class="text-white text-sm font-semibold">
+              {{ searchResults.length }} produto(s) encontrado(s) - Selecione:
+            </span>
             <button
               type="button"
-              (click)="addItem()"
-              class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+              (click)="closeSearchResults()"
+              class="text-white hover:bg-white/20 rounded p-1 transition-colors"
             >
               <svg
                 width="16"
@@ -95,11 +163,34 @@
                 stroke="currentColor"
                 stroke-width="2"
               >
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
-              Adicionar Item
             </button>
+          </div>
+
+          <div class="max-h-60 overflow-y-auto">
+            <button
+              *ngFor="let product of searchResults"
+              type="button"
+              (click)="selectProductFromResults(product)"
+              class="w-full px-4 py-3 hover:bg-slate-600 transition-colors flex justify-between items-center border-b border-slate-600 last:border-b-0 group"
+            >
+              <div class="text-left">
+                <div class="text-slate-200 font-medium group-hover:text-white">{{ product.name }}</div>
+                <div class="text-slate-400 text-xs mt-1">
+                  <span class="bg-slate-800 px-2 py-0.5 rounded">Cód: {{ product.code }}</span>
+                </div>
+              </div>
+              <div class="text-green-400 font-bold">R$ {{ product.price.toFixed(2) }}</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Itens do Pedido -->
+        <div class="mb-6">
+          <div class="flex justify-between items-center mb-3">
+            <label class="text-slate-300 text-sm font-medium">Itens do Pedido</label>
           </div>
 
           <div class="space-y-3">
@@ -108,16 +199,22 @@
               class="bg-slate-700/50 rounded-lg p-4 border border-slate-600"
             >
               <div class="grid grid-cols-12 gap-3">
-                <div class="col-span-5">
-                  <label class="text-slate-400 text-xs mb-1 block">Nome</label>
-                  <input
-                    type="text"
-                    [(ngModel)]="item.name"
-                    [name]="'itemName' + i"
-                    (ngModelChange)="calculateItemTotal(item)"
-                    class="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
-                    placeholder="Nome do item"
-                  />
+                <div class="col-span-2">
+                  <label class="text-slate-400 text-xs mb-1 block">Código</label>
+                  <div
+                    class="bg-slate-800 border border-slate-600 rounded px-3 py-2 text-slate-400 text-sm"
+                  >
+                    {{ item.code }}
+                  </div>
+                </div>
+
+                <div class="col-span-4">
+                  <label class="text-slate-400 text-xs mb-1 block">Produto</label>
+                  <div
+                    class="bg-slate-800 border border-slate-600 rounded px-3 py-2 text-slate-200 text-sm"
+                  >
+                    {{ item.name }}
+                  </div>
                 </div>
 
                 <div class="col-span-2">
@@ -145,12 +242,12 @@
                   />
                 </div>
 
-                <div class="col-span-2">
+                <div class="col-span-1">
                   <label class="text-slate-400 text-xs mb-1 block">Total</label>
                   <div
-                    class="bg-slate-800 border border-slate-600 rounded px-3 py-2 text-green-400 font-medium text-sm"
+                    class="bg-slate-800 border border-slate-600 rounded px-2 py-2 text-green-400 font-medium text-sm text-center"
                   >
-                    R$ {{ item.total.toFixed(2) }}
+                    {{ item.total.toFixed(2) }}
                   </div>
                 </div>
 
@@ -191,7 +288,6 @@
       </form>
     </div>
 
-    <!-- Modal Footer -->
     <div class="bg-slate-900 px-6 py-4 flex justify-end gap-3">
       <button
         (click)="closeModal()"
@@ -220,4 +316,4 @@
       </button>
     </div>
   </div>
-</div>
+</ng-template>

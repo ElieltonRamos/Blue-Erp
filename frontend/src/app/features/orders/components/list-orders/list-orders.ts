@@ -1,10 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { EditOrderModal } from '../edit-order-modal/edit-order-modal';
 import { Order, OrderStatus } from '../../types/order';
 import { OrderService } from '../../services/order.service';
+import { MockOrderService } from '../../services/order.mock.service';
+import { NotificationService } from '../../../../shared/toastr/notification.service';
+import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 
 @Component({
   selector: 'app-list-orders',
@@ -12,6 +15,8 @@ import { OrderService } from '../../services/order.service';
   templateUrl: './list-orders.html',
 })
 export class ListOrders implements OnInit {
+  private notification = inject(NotificationService);
+  private cdr = inject(ChangeDetectorRef);
   searchName: string = '';
   searchId: string = '';
   statusFilter: string = 'all';
@@ -27,7 +32,7 @@ export class ListOrders implements OnInit {
   isModalOpen: boolean = false;
   selectedOrder: Order | null = null;
 
-  private orderService = inject(OrderService);
+  private orderService = inject(MockOrderService);
   private router = inject(Router);
 
   ngOnInit(): void {
@@ -50,6 +55,7 @@ export class ListOrders implements OnInit {
           this.orders = orders;
           this.applyFilters();
           this.isLoading = false;
+          this.cdr.detectChanges();
         },
         error: (error) => {
           console.error('Erro ao carregar pedidos:', error);
@@ -123,23 +129,29 @@ export class ListOrders implements OnInit {
     }
   }
 
-  finishOrder(orderId: string): void {
-    if (confirm('Deseja realmente finalizar este pedido?')) {
+  async finishOrder(orderId: string): Promise<void> {
+    const confirmed = await alertConfirm('Deseja realmente finalizar este pedido?');
+
+    if (confirmed) {
       this.orderService.finishOrder(orderId).subscribe({
         next: (updatedOrder) => {
-          // Navegar para a página de comandas
           this.router.navigate(['/comandas', orderId]);
+          this.cdr.detectChanges(); 
         },
         error: (error) => {
           console.error('Erro ao finalizar pedido:', error);
-          alert('Erro ao finalizar pedido. Tente novamente.');
+          this.notification.error('Erro ao finalizar pedido. Tente novamente.');
         },
       });
     }
   }
 
-  cancelOrder(orderId: string): void {
-    if (confirm('Deseja realmente cancelar este pedido? Esta ação não pode ser desfeita.')) {
+  async cancelOrder(orderId: string): Promise<void> {
+    const confirmed = await alertConfirm(
+      'Deseja realmente cancelar este pedido? Esta ação não pode ser desfeita.',
+    );
+
+    if (confirmed) {
       this.orderService.cancelOrder(orderId).subscribe({
         next: (updatedOrder) => {
           const index = this.orders.findIndex((o) => o.id === updatedOrder.id);
@@ -147,11 +159,11 @@ export class ListOrders implements OnInit {
             this.orders[index] = updatedOrder;
             this.applyFilters();
           }
-          console.log('Pedido cancelado:', orderId);
+          this.cdr.detectChanges(); 
         },
         error: (error) => {
           console.error('Erro ao cancelar pedido:', error);
-          alert('Erro ao cancelar pedido. Tente novamente.');
+          this.notification.error('Erro ao cancelar pedido. Tente novamente.');
         },
       });
     }

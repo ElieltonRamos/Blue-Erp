@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import '@angular/cdk/overlay-prebuilt.css';
 
 @layer components {
   .msg-error {
@@ -14,4 +15,25 @@
 
 body {
   user-select: none;
+}
+
+/* Forçar estilos do backdrop CDK */
+.cdk-overlay-backdrop {
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* Classe customizada para seu modal específico */
+.modal-backdrop-dark {
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Animação de entrada/saída (opcional) */
+.cdk-overlay-backdrop {
+  opacity: 0;
+  transition: opacity 200ms ease-in-out;
+}
+
+.cdk-overlay-backdrop.cdk-overlay-backdrop-showing {
+  opacity: 1;
 }
