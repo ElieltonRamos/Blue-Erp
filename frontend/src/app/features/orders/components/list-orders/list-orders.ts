@@ -3,6 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { EditOrderModal } from '../edit-order-modal/edit-order-modal';
+import { Order, OrderStatus } from '../../types/order';
 import { OrderService } from '../../services/order.service';
 
 @Component({

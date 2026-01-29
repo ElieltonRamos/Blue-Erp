@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
-import { OrderService, OrderItem, CreateOrderDto, Product } from '../../services/order.service';
+import { OrderService } from '../../services/order.service';
+import { OrderItem, CreateOrderDto, Product } from '../../types/order';
 
 @Component({
   selector: 'app-create-order',

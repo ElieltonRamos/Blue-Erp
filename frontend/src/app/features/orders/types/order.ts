@@ -1,21 +1,53 @@
-interface OrderItem {
+// types/order.types.ts
+// Tipos centralizados para o sistema de pedidos
+
+export interface OrderItem {
   id: string;
+  code: string;
   name: string;
   quantity: number;
   unitPrice: number;
   total: number;
 }
 
-type OrderType = "dine_in" | "delivery";
+export type OrderStatus = 'open' | 'closed' | 'canceled';
+export type OrderType = 'dine_in' | 'delivery';
 
-type OrderStatus = "open" | "closed" | "canceled";
-
-interface Order {
+export interface Order {
   id: string;
-  type: OrderType;          // dine_in = mesa, delivery = entrega
-  items: OrderItem[];       // lista de itens do pedido
-  status: OrderStatus;      // estado atual
-  total: number;            // total geral do pedido
-  customerName?: string;    // nome do cliente (opcional)
-  table?: string
+  type: OrderType;
+  customerName?: string;
+  items: OrderItem[];
+  status: OrderStatus;
+  total: number;
+  table?: string;
+  address?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateOrderDto {
+  type: OrderType;
+  customerName?: string;
+  items: OrderItem[];
+  total: number;
+  table?: string;
+  address?: string;
+}
+
+export interface Product {
+  id: string;
+  code: string;
+  name: string;
+  price: number;
+  description?: string;
+  stock?: number;
+}
+
+export interface OrderFilters {
+  searchName?: string;
+  searchId?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
 }

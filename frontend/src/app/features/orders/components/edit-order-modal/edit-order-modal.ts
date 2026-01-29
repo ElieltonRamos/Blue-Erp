@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Order, OrderItem } from '../../types/order';
 import { OrderService } from '../../services/order.service';
 
 @Component({
@@ -32,6 +33,7 @@ export class EditOrderModal {
       quantity: 1,
       unitPrice: 0,
       total: 0,
+      code: ''
     };
 
     this.order.items.push(newItem);
