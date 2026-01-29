@@ -11,14 +11,14 @@ import {
 import { FormField, ModalEditEntity } from '../../../../shared/modal-edit-entity/modal-edit-entity';
 import { Table } from '../../types/table';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
-import { TableMockService } from '../../services/TableMockService';
+import { TableService } from '../../services/table.service';
 import { Observable } from 'rxjs';
 
 interface ModalConfig {
   title: string;
   fields: FormField[];
   validate: (table: Table) => boolean;
-  execute: (service: TableMockService, table: Table, tableId?: number) => Observable<any>;
+  execute: (service: TableService, table: Table, tableId?: number) => Observable<any>;
 }
 
 @Component({
@@ -47,7 +47,7 @@ export class TableModalComponent implements OnChanges {
 
   config: ModalConfig | null = null;
 
-  private tableService = inject(TableMockService);
+  private tableService = inject(TableService);
   private notification = inject(NotificationService);
 
   private readonly configs: Record<string, ModalConfig> = {
@@ -91,13 +91,13 @@ export class TableModalComponent implements OnChanges {
     },
   };
 
-  ngOnChanges(changes: SimpleChanges) {
+  ngOnChanges(changes: SimpleChanges): void {
     if (changes['type'] || changes['show'] || changes['entity']) {
       this.setupModal();
     }
   }
 
-  private setupModal() {
+  private setupModal(): void {
     if (!this.type || !this.configs[this.type]) {
       this.config = null;
       return;
@@ -135,10 +135,11 @@ export class TableModalComponent implements OnChanges {
         this.saved.emit(table);
         this.close.emit();
       },
-
-      error: (e: any) => {
-        console.error('Modal save error:', e);
-        this.notification.error(`Erro: ${e.message || e.error?.message || 'Tente novamente'}`);
+      error: (error: any) => {
+        console.error('Modal save error:', error);
+        this.notification.error(
+          `Erro: ${error.error?.message || error.message || 'Tente novamente'}`
+        );
       },
     });
   }

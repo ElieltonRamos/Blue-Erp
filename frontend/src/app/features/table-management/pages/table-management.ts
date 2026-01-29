@@ -2,8 +2,8 @@ import { Component, inject, ChangeDetectorRef, ChangeDetectionStrategy } from '@
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { NotificationService } from '../../../shared/toastr/notification.service';
-import { TableMockService } from '../services/TableMockService';
-import { ProductTable, Table, TableProduct } from '../types/table';
+import { TableService } from '../services/table.service';
+import { ProductTable, Table, TableProduct, TableStatus } from '../types/table';
 import { alertConfirm } from '../../../shared/alerts/custom-alerts';
 import { TableStats } from '../components/table-stats/table-stats';
 import { TableCard } from '../components/table-card/table-card';
@@ -16,11 +16,11 @@ import { TableProductModal } from '../components/table-product-modal/table-produ
   standalone: true,
   imports: [CommonModule, TableStats, TableCard, TableModalComponent, TabModal, TableProductModal],
   templateUrl: './table-management.html',
-  changeDetection: ChangeDetectionStrategy.OnPush, // ✅ FIX 1: OnPush elimina checks desnecessários
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TableManagement {
   private notification = inject(NotificationService);
-  private tableService = inject(TableMockService);
+  private tableService = inject(TableService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
@@ -33,159 +33,209 @@ export class TableManagement {
   selectedTable: Table | null = null;
   selectedTableForProducts: Table | null = null;
 
-  statusColors = {
+  statusColors: Record<TableStatus, string> = {
     available: 'bg-emerald-600 hover:bg-emerald-700',
     occupied: 'bg-rose-600 hover:bg-rose-700',
     reserved: 'bg-amber-600 hover:bg-amber-700',
   };
 
-  statusLabels = {
+  statusLabels: Record<TableStatus, string> = {
     available: 'Disponível',
     occupied: 'Ocupada',
     reserved: 'Reservada',
   };
 
   ngOnInit() {
+    this.loadInitialData();
+  }
+
+  // 🔄 Carrega dados iniciais
+  private loadInitialData(): void {
     this.getTables();
     this.getProducts();
   }
 
-  // 📊 Getters (OnPush-safe)
+  // 📊 Getters computados (OnPush-safe)
   get totalTables(): number {
     return this.tables.length;
   }
+
   get availableTables(): number {
     return this.tables.filter((t) => t.status === 'available').length;
   }
+
   get occupiedTables(): number {
     return this.tables.filter((t) => t.status === 'occupied').length;
   }
+
   get sortedTables(): Table[] {
     return [...this.tables].sort((a, b) => a.number - b.number);
   }
+
   get tabTotal(): number {
     return this.selectedTableForProducts?.products?.reduce((sum, p) => sum + p.totalPrice, 0) || 0;
   }
 
-  // 🔍 TrackBy para @for (obrigatório com OnPush)
-  trackById(index: number, table: Table): string | number {
+  // 🔍 TrackBy para otimização de performance
+  trackById(index: number, table: Table): number {
     return table.id!;
   }
 
-  // 🚪 Modal Operations
-  openTableModal(type: 'add' | 'edit' | 'reserve' | 'occupy', table?: Table) {
+  // 🚪 Gerenciamento de Modais
+  openTableModal(type: 'add' | 'edit' | 'reserve' | 'occupy', table?: Table): void {
     this.modalType = type;
     this.selectedTable = table || null;
     this.showModal = true;
-    this.cdr.markForCheck(); // ✅ Manual trigger
+    this.cdr.markForCheck();
   }
 
-  onTableModalSave(table: Table) {
-    this.getTables();
+  openModalAdd(): void {
+    this.openTableModal('add');
   }
 
-  closeModal() {
+  openModalEdit(table: Table): void {
+    this.openTableModal('edit', table);
+  }
+
+  openModalReserve(table: Table): void {
+    this.openTableModal('reserve', table);
+  }
+
+  openModalOccupy(table: Table): void {
+    this.openTableModal('occupy', table);
+  }
+
+  closeModal(): void {
     this.showModal = false;
     this.selectedTable = null;
     this.getTables();
   }
 
-  // Wrappers
-  openModalAdd() {
-    this.openTableModal('add');
-  }
-  openModalEdit(table: Table) {
-    this.openTableModal('edit', table);
-  }
-  openModalReserve(table: Table) {
-    this.openTableModal('reserve', table);
-  }
-  openModalOccupy(table: Table) {
-    this.openTableModal('occupy', table);
+  onTableModalSave(table: Table): void {
+    this.getTables();
   }
 
-  // 🆗 Event Handlers
-  handleOccupy(table: Table) {
-    this.openModalOccupy(table);
-  }
-
-  handleDelete(table: Table) {
-    alertConfirm('Excluir Mesa').then((result) => {
-      if (result) {
-        this.tableService.deleteTable(table.id!).subscribe({
-          next: () => {
-            this.notification.success('Mesa excluída!');
-            this.getTables();
-          },
-          error: (e) => this.notification.error(`Erro: ${e.error?.message || e.message}`),
-        });
-      }
-    });
-  }
-
-  handleRelease(table: Table) {
-    // ✅ VALIDAÇÃO: Bloqueia release se tem produtos
-    if (table.products && table.products.length > 0) {
-      this.notification.warning('❌ Pague a comanda primeiro!');
+  // 🛒 Modal de Produtos
+  openProductModal(table: Table): void {
+    if (!table.id) {
+      this.notification.error('Mesa inválida');
       return;
     }
 
-    this.tableService.releaseTable(table.id!).subscribe({
-      next: () => {
-        this.notification.success('Mesa liberada!');
-        this.getTables();
-      },
-      error: (e) => this.notification.error(`Erro: ${e.error?.message || e.message}`),
-    });
-  }
-
-  // 🛒 Product Modal
-  openProductModal(table: Table) {
-    this.tableService.getTableById(table.id!).subscribe({
+    this.tableService.getTableById(table.id).subscribe({
       next: (response) => {
         this.selectedTableForProducts = response;
         this.showProductModal = true;
-        this.cdr.markForCheck(); // ✅ Em vez de detectChanges()
-      },
-      error: (e) =>
-        this.notification.error(`Erro ao buscar mesa: ${e.error?.message || e.message}`),
-    });
-  }
-
-  // 📋 Tab Modal
-  openTabModal(table: Table) {
-    this.tableService.getTableById(table.id!).subscribe({
-      next: (response) => {
-        this.selectedTableForProducts = response;
-        this.showTabModal = true;
         this.cdr.markForCheck();
       },
-      error: (e) =>
-        this.notification.error(`Erro ao buscar mesa: ${e.error?.message || e.message}`),
+      error: (error) => {
+        this.notification.error(`Erro ao buscar mesa: ${error.error?.message || error.message}`);
+      },
     });
   }
 
-  closeProductModal() {
+  closeProductModal(): void {
     this.showProductModal = false;
     this.selectedTableForProducts = null;
     this.getTables();
   }
 
-  closeTabModal() {
+  // 📋 Modal de Comanda
+  openTabModal(table: Table): void {
+    if (!table.id) {
+      this.notification.error('Mesa inválida');
+      return;
+    }
+
+    this.tableService.getTableById(table.id).subscribe({
+      next: (response) => {
+        this.selectedTableForProducts = response;
+        this.showTabModal = true;
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        this.notification.error(`Erro ao buscar mesa: ${error.error?.message || error.message}`);
+      },
+    });
+  }
+
+  closeTabModal(): void {
     this.showTabModal = false;
     this.selectedTableForProducts = null;
     this.getTables();
   }
 
-  // 🛍️ Product Management
-  addProductToTable(productId: number) {
-    if (!this.selectedTableForProducts || !productId) return;
+  // 🎬 Ações de Mesa
+  handleOccupy(table: Table): void {
+    this.openModalOccupy(table);
+  }
+
+  handleDelete(table: Table): void {
+    if (!table.id) {
+      this.notification.error('Mesa inválida');
+      return;
+    }
+
+    alertConfirm('Tem certeza que deseja excluir esta mesa?').then((result) => {
+      if (result && table.id) {
+        this.tableService.deleteTable(table.id).subscribe({
+          next: () => {
+            this.notification.success('Mesa excluída com sucesso!');
+            this.getTables();
+          },
+          error: (error) => {
+            this.notification.error(
+              `Erro ao excluir mesa: ${error.error?.message || error.message}`,
+            );
+          },
+        });
+      }
+    });
+  }
+
+  handleRelease(table: Table): void {
+    if (!table.id) {
+      this.notification.error('Mesa inválida');
+      return;
+    }
+
+    // Validação: bloqueia release se tem produtos
+    if (table.products && table.products.length > 0) {
+      this.notification.warning('❌ Finalize a comanda antes de liberar a mesa!');
+      return;
+    }
+
+    alertConfirm('Tem certeza que deseja liberar esta mesa?').then((result) => {
+      if (result && table.id) {
+        this.tableService.releaseTable(table.id).subscribe({
+          next: () => {
+            this.notification.success('Mesa liberada com sucesso!');
+            this.getTables();
+          },
+          error: (error) => {
+            this.notification.error(
+              `Erro ao liberar mesa: ${error.error?.message || error.message}`,
+            );
+          },
+        });
+      }
+    });
+  }
+
+  // 🛍️ Gerenciamento de Produtos
+  addProductToTable(productId: number): void {
+    if (!this.selectedTableForProducts?.id || !productId) {
+      this.notification.error('Dados inválidos');
+      return;
+    }
 
     const product = this.products.find((p) => p.id === productId);
-    if (!product) return;
+    if (!product) {
+      this.notification.error('Produto não encontrado');
+      return;
+    }
 
     const tableProduct: TableProduct = {
-      id: Date.now(),
       productId: product.id,
       productName: product.name,
       quantity: 1,
@@ -193,104 +243,145 @@ export class TableManagement {
       totalPrice: product.price,
     };
 
-    this.tableService.addProductToTable(this.selectedTableForProducts.id!, tableProduct).subscribe({
+    this.tableService.addProductToTable(this.selectedTableForProducts.id, tableProduct).subscribe({
       next: (response) => {
         this.selectedTableForProducts = response;
-        this.notification.success('Produto adicionado!');
+        this.notification.success('Produto adicionado com sucesso!');
         this.cdr.markForCheck();
       },
-      error: (e) => this.notification.error(`Erro: ${e.error?.message || e.message}`),
+      error: (error) => {
+        this.notification.error(
+          `Erro ao adicionar produto: ${error.error?.message || error.message}`,
+        );
+      },
     });
   }
 
-  updateProductQuantity(productId: number, change: number) {
-    if (!this.selectedTableForProducts) return;
+  updateProductQuantity(productId: number, change: number): void {
+    if (!this.selectedTableForProducts?.id) {
+      this.notification.error('Mesa não selecionada');
+      return;
+    }
 
     const product = this.selectedTableForProducts.products?.find((p) => p.id === productId);
-    if (!product) return;
+    if (!product) {
+      this.notification.error('Produto não encontrado');
+      return;
+    }
 
     const newQuantity = product.quantity + change;
+
+    // Se quantidade for 0 ou negativa, remove o produto
     if (newQuantity <= 0) {
       this.removeProduct(productId);
       return;
     }
 
     this.tableService
-      .updateProductQuantity(this.selectedTableForProducts.id!, productId, newQuantity)
+      .updateProductQuantity(this.selectedTableForProducts.id, productId, newQuantity)
       .subscribe({
         next: (response) => {
           this.selectedTableForProducts = response;
           this.cdr.markForCheck();
         },
-        error: (e) => this.notification.error(`Erro: ${e.error?.message || e.message}`),
+        error: (error) => {
+          this.notification.error(
+            `Erro ao atualizar quantidade: ${error.error?.message || error.message}`,
+          );
+        },
       });
   }
 
-  removeProduct(productId: number) {
-    if (!this.selectedTableForProducts) return;
+  removeProduct(productId: number): void {
+    if (!this.selectedTableForProducts?.id) {
+      this.notification.error('Mesa não selecionada');
+      return;
+    }
 
-    alertConfirm('Remover Produto').then((result) => {
-      if (result) {
+    alertConfirm('Tem certeza que deseja remover este produto?').then((result) => {
+      if (result && this.selectedTableForProducts?.id) {
         this.tableService
-          .removeProductFromTable(this.selectedTableForProducts!.id!, productId)
+          .removeProductFromTable(this.selectedTableForProducts.id, productId)
           .subscribe({
             next: (response) => {
               this.selectedTableForProducts = response;
-              this.notification.success('Produto removido!');
+              this.notification.success('Produto removido com sucesso!');
               this.cdr.markForCheck();
             },
-            error: (e) => this.notification.error(`Erro: ${e.error?.message || e.message}`),
+            error: (error) => {
+              this.notification.error(
+                `Erro ao remover produto: ${error.error?.message || error.message}`,
+              );
+            },
           });
       }
     });
   }
 
-  closeTab() {
-    if (!this.selectedTableForProducts) return;
+  // 💰 Fechar Comanda
+  closeTab(): void {
+    if (!this.selectedTableForProducts?.id) {
+      this.notification.error('Mesa não selecionada');
+      return;
+    }
 
-    alertConfirm('Fechar Comanda e Liberar Mesa?').then((result) => {
-      if (result) {
-        this.tableService.closeTab(this.selectedTableForProducts!.id!).subscribe({
+    if (!this.selectedTableForProducts.products?.length) {
+      this.notification.warning('Não há produtos na comanda');
+      return;
+    }
+
+    alertConfirm('Confirma o fechamento da comanda e liberação da mesa?').then((result) => {
+      if (result && this.selectedTableForProducts?.id) {
+        this.tableService.closeTab(this.selectedTableForProducts.id).subscribe({
           next: (response) => {
+            this.notification.success('Comanda fechada e mesa liberada com sucesso!');
+            this.closeTabModal();
+            this.getTables();
+
+            // Navega para a página de vendas após fechar
             setTimeout(() => {
-              this.notification.success('Comanda fechada e mesa liberada!');
-              this.closeTabModal();
-              this.getTables();
               this.router.navigate(['/vendas', response.saleId]);
             }, 100);
           },
-          error: (e) => {
-            this.notification.error(`Erro: ${e.error?.message || e.message}`);
+          error: (error) => {
+            this.notification.error(
+              `Erro ao fechar comanda: ${error.error?.message || error.message}`,
+            );
           },
         });
       }
     });
   }
 
-  // 🔄 Services (Otimizados)
-  getTables() {
+  // 🔄 Serviços de Dados
+  getTables(): void {
     this.tableService.getTables().subscribe({
       next: (response) => {
         this.tables = response;
-        this.cdr.markForCheck(); // ✅ OnPush requer manual trigger
+        this.cdr.markForCheck();
       },
-      error: (e) =>
-        this.notification.error(`Erro ao buscar mesas: ${e.error?.message || e.message}`),
+      error: (error) => {
+        this.notification.error(`Erro ao buscar mesas: ${error.error?.message || error.message}`);
+      },
     });
   }
 
-  getProducts() {
+  getProducts(): void {
     this.tableService.getProducts().subscribe({
       next: (response) => {
         this.products = response;
         this.cdr.markForCheck();
       },
-      error: (e) =>
-        this.notification.error(`Erro ao buscar produtos: ${e.error?.message || e.message}`),
+      error: (error) => {
+        this.notification.error(
+          `Erro ao buscar produtos: ${error.error?.message || error.message}`,
+        );
+      },
     });
   }
 
-  goToMenu() {
+  // 🏠 Navegação
+  goToMenu(): void {
     this.router.navigate(['/dashboard']);
   }
 }
