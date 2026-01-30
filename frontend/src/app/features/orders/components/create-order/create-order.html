@@ -122,6 +122,20 @@
         </div>
       </div>
 
+      <!-- Select de produtos encontrados -->
+      <div *ngIf="searchResults.length > 0" class="col-span-12 mb-2">
+        <label class="text-white font-bold text-sm mb-2 block">Selecione o produto:</label>
+        <select
+          (change)="selectProduct(searchResults[$any($event.target).selectedIndex - 1])"
+          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+        >
+          <option value="">-- Escolha um produto --</option>
+          <option *ngFor="let product of searchResults" [value]="product.id">
+            {{ product.code }} - {{ product.name }} - R$ {{ product.price.toFixed(2) }}
+          </option>
+        </select>
+      </div>
+
       <div class="col-span-2">
         <label class="text-white font-bold text-sm mb-2 block">Quantidade</label>
         <input

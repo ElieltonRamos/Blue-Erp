@@ -3,6 +3,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { NgxMaskDirective, provideNgxMask } from 'ngx-mask';
 import { ClientService } from '../../services/client.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
+import { ClientMockService } from '../../services/client.mock.service';
 
 @Component({
   selector: 'app-create-client',
@@ -11,7 +12,7 @@ import { NotificationService } from '../../../../shared/toastr/notification.serv
   providers: [provideNgxMask()],
 })
 export class CreateClient {
-  private clientService = inject(ClientService);
+  private clientService = inject(ClientMockService);
   private notification = inject(NotificationService);
 
   formCreateClient = new FormGroup({

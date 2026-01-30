@@ -10,6 +10,7 @@ import { TableCard } from '../components/table-card/table-card';
 import { TableModalComponent } from '../components/table-modal/table.modal';
 import { TabModal } from '../components/tab-modal/tab-modal';
 import { TableProductModal } from '../components/table-product-modal/table-product-modal';
+import { TableMockService } from '../services/table.mock.service';
 
 @Component({
   selector: 'app-table-management',
@@ -20,7 +21,7 @@ import { TableProductModal } from '../components/table-product-modal/table-produ
 })
 export class TableManagement {
   private notification = inject(NotificationService);
-  private tableService = inject(TableService);
+  private tableService = inject(TableMockService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
@@ -87,6 +88,7 @@ export class TableManagement {
     this.selectedTable = table || null;
     this.showModal = true;
     this.cdr.markForCheck();
+    this.cdr.detectChanges();
   }
 
   openModalAdd(): void {

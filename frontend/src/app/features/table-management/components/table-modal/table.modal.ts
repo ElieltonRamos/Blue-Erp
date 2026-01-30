@@ -13,12 +13,13 @@ import { Table } from '../../types/table';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { TableService } from '../../services/table.service';
 import { Observable } from 'rxjs';
+import { TableMockService } from '../../services/table.mock.service';
 
 interface ModalConfig {
   title: string;
   fields: FormField[];
   validate: (table: Table) => boolean;
-  execute: (service: TableService, table: Table, tableId?: number) => Observable<any>;
+  execute: (service: TableMockService, table: Table, tableId?: number) => Observable<any>;
 }
 
 @Component({
@@ -47,7 +48,7 @@ export class TableModalComponent implements OnChanges {
 
   config: ModalConfig | null = null;
 
-  private tableService = inject(TableService);
+  private tableService = inject(TableMockService);
   private notification = inject(NotificationService);
 
   private readonly configs: Record<string, ModalConfig> = {

@@ -5,6 +5,7 @@ import { ClientService } from '../../services/client.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { PaginatorComponent } from '../../../../shared/paginator/paginator.component';
 import { FormField, ModalEditEntity } from '../../../../shared/modal-edit-entity/modal-edit-entity';
+import { ClientMockService } from '../../services/client.mock.service';
 
 @Component({
   selector: 'app-list-clients',
@@ -12,7 +13,7 @@ import { FormField, ModalEditEntity } from '../../../../shared/modal-edit-entity
   templateUrl: './list-clients.html',
 })
 export class ListClients {
-  private clientService = inject(ClientService);
+  private clientService = inject(ClientMockService);
   private notification = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef)
   listClients: Client[] = [];
