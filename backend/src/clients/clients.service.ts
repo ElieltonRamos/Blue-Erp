@@ -10,6 +10,7 @@ import { CreateClientDto } from './dto/create-client.dto.js';
 import { ClientResponseDto } from './dto/client-response.dto.js';
 import { PaginatedResponse } from 'src/common/paginated-response.js';
 import { UpdateClientDto } from './dto/update-client.dto.js';
+import { Prisma } from 'generated/prisma/client.js';
 
 @Injectable()
 export class ClientsService {
@@ -61,10 +62,11 @@ export class ClientsService {
 
     return new ClientResponseDto(client);
   }
-
   async findAll(
     page: number = 1,
     limit: number = 10,
+    name?: string,
+    active?: boolean,
   ): Promise<PaginatedResponse<ClientResponseDto>> {
     if (page < 1 || limit < 1 || isNaN(page) || isNaN(limit)) {
       throw new BadRequestException(
@@ -73,17 +75,34 @@ export class ClientsService {
     }
 
     const offset = (page - 1) * limit;
+    console.log(active, '=============');
 
-    // ✅ Tipagem explícita para evitar erro do ESLint
+    // Construir filtros dinamicamente
+    const where: Prisma.ClientWhereInput = {};
+
+    // Filtro de active: se não for fornecido, busca apenas ativos (comportamento padrão)
+    if (active !== undefined) {
+      where.active = active;
+    } else {
+      where.active = true;
+    }
+
+    // Filtro de nome: busca parcial case-insensitive
+    if (name) {
+      where.name = {
+        contains: name,
+      };
+    }
+
     const clients = await this.prisma.client.client.findMany({
-      where: { active: true },
-      orderBy: { name: 'asc' },
+      where,
+      orderBy: { id: 'asc' },
       skip: offset,
       take: limit,
     });
 
     const total = await this.prisma.client.client.count({
-      where: { active: true },
+      where,
     });
 
     const data = clients.map((client) => new ClientResponseDto(client));

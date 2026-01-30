@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../core/services/environment';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import Client from '../types/clients';
 import { PaginatedResponse } from '../../../core/guards/types/paginator';
 
@@ -12,27 +12,38 @@ export class ClientService {
   private client = inject(HttpClient);
 
   findClientById(id: number) {
-    return this.client.get<Client>(`${this.apiUrl}/client/${id}`);
+    return this.client.get<Client>(`${this.apiUrl}/clients/${id}`);
   }
 
   findClientByName(name: string) {
-    return this.client.get<Client[]>(`${this.apiUrl}/client/search/${name}`);
+    return this.client.get<Client[]>(`${this.apiUrl}/clients/search/${name}`);
   }
 
-  getClients(page: number, pageLimit: number) {
-    const params = { page: page.toString(), pageLimit: pageLimit.toString() };
-    return this.client.get<PaginatedResponse<Client>>(`${this.apiUrl}/client`, { params });
+  getClients(page: number, pageLimit: number, name?: string, status?: string) {
+    let params = new HttpParams().set('page', page.toString()).set('limit', pageLimit.toString()); // CORRIGIDO: 'limit' em vez de 'pageLimit'
+
+    if (name && name.trim() !== '') {
+      params = params.set('name', name.trim());
+    }
+
+    if (status && status !== 'all') {
+      params = params.set('filterStatus', status); // CORRIGIDO: envia 'active' ou 'inactive' diretamente
+    }
+
+    return this.client.get<PaginatedResponse<Client>>(`${this.apiUrl}/clients`, { params });
   }
 
   createClient(client: Client) {
-    return this.client.post<Client>(`${this.apiUrl}/client/register`, client);
+    const { id: _, createdAt, updatedAt, ...clientData } = client;
+    return this.client.post<Client>(`${this.apiUrl}/clients/`, clientData);
   }
 
   deleteClient(id: number) {
-    return this.client.delete(`${this.apiUrl}/client/delete/${id}`);
+    return this.client.delete(`${this.apiUrl}/clients/${id}`);
   }
 
   updateClient(id: number, client: Client) {
-    return this.client.patch<Client>(`${this.apiUrl}/client/update/${id}`, client);
+    const { id: _, createdAt, updatedAt, ...clientData } = client;
+    return this.client.patch<Client>(`${this.apiUrl}/clients/${id}`, clientData);
   }
 }

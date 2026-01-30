@@ -4,4 +4,7 @@ export default interface Client {
   phone: string;
   address: string;
   cpf: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

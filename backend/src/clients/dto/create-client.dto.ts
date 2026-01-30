@@ -9,7 +9,6 @@ import {
 } from 'class-validator';
 import { ValidationMessages } from '../../common/validation-messages.js';
 
-// backend ficara pausado ate o frontend estiver pronto
 export class CreateClientDto {
   @ApiProperty({ example: 'João Silva' })
   @IsString({ message: ValidationMessages.IS_STRING('Nome') })

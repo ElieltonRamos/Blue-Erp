@@ -53,6 +53,21 @@ export class ClientsController {
     example: 10,
     description: 'Quantidade de itens por página',
   })
+  @ApiQuery({
+    name: 'name',
+    required: false,
+    type: String,
+    description: 'Filtrar por nome (busca parcial case-insensitive)',
+    example: 'João',
+  })
+  @ApiQuery({
+    name: 'filterStatus',
+    required: false,
+    enum: ['all', 'active', 'inactive'],
+    description:
+      'Filtrar por status: all (todos), active (ativos), inactive (inativos)',
+    example: 'all',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Lista paginada de clientes retornada',
@@ -64,8 +79,21 @@ export class ClientsController {
   findAll(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
+    @Query('name') name?: string,
+    @Query('filterStatus') filterStatus: string = 'all',
   ) {
-    return this.clientsService.findAll(+page, +limit);
+    // Converter string para boolean ou undefined
+    let active: boolean | undefined;
+
+    if (filterStatus === 'active') {
+      active = true;
+    } else if (filterStatus === 'inactive') {
+      active = false;
+    } else {
+      active = undefined; // 'all' retorna todos (ativos e inativos)
+    }
+
+    return this.clientsService.findAll(+page, +limit, name, active);
   }
 
   @Get('search')
