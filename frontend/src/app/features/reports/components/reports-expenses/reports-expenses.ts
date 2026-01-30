@@ -1,8 +1,8 @@
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { FinancialService } from '../../services/financial.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
+import { ReportService } from '../../services/report.service';
 
 @Component({
   selector: 'app-reports-expenses',
@@ -10,7 +10,7 @@ import { NotificationService } from '../../../../shared/toastr/notification.serv
   templateUrl: './reports-expenses.html',
 })
 export class ReportsExpensesComponent {
-  private financialService = inject(FinancialService);
+  private reportService = inject(ReportService);
   private notification = inject(NotificationService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
@@ -67,7 +67,7 @@ export class ReportsExpensesComponent {
 
   async generateReport() {
     this.isLoading = true;
-    this.financialService.getExpensesReport(this.startDate, this.endDate).subscribe({
+    this.reportService.getExpensesReport(this.startDate, this.endDate).subscribe({
       next: (response) => {
         this.report = response;
         this.isLoading = false;

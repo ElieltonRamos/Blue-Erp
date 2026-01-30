@@ -28,13 +28,6 @@
           <i class="fas fa-user-plus"></i> Nova Despesa
         </button>
         <button
-          (click)="changeMenuContext('reportsExpenses')"
-          [attr.class]="menuContext === 'reportsExpenses' ? classBtnSelected : classBtnUnselected"
-          class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-semibold"
-        >
-          <i class="fas fa-user-plus"></i> Relatório de Despesas
-        </button>
-        <button
           (click)="changeMenuContext('promissoryNoteReceivable')"
           [attr.class]="
             menuContext === 'promissoryNoteReceivable' ? classBtnSelected : classBtnUnselected
@@ -51,8 +44,6 @@
       <app-create-expenses />
     } @else if (menuContext === 'listExpenses') {
       <app-list-expenses />
-    } @else if (menuContext === 'reportsExpenses') {
-      <app-reports-expenses />
     } @else if (menuContext === 'promissoryNoteReceivable') {
       <app-promissory-note-receivable />
     }

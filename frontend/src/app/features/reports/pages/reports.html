@@ -27,6 +27,20 @@
         >
           <i class="fas fa-user-plus"></i> Relatorio de Produtos
         </button>
+        <button
+          (click)="changeMenuContext('reports-expenses')"
+          [attr.class]="menuContext === 'reports-expenses' ? classBtnSelected : classBtnUnselected"
+          class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-semibold"
+        >
+          <i class="fas fa-user-plus"></i> Relatório de Despesas
+        </button>
+        <button
+          (click)="changeMenuContext('reports-orders')"
+          [attr.class]="menuContext === 'reports-orders' ? classBtnSelected : classBtnUnselected"
+          class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-semibold"
+        >
+          <i class="fas fa-user-plus"></i> Relatório de Comandas
+        </button>
       </div>
     </div>
 
@@ -35,6 +49,10 @@
       <app-report-sales />
     } @else if (menuContext === 'report-products') {
       <app-report-products />
+    } @else if (menuContext === 'reports-expenses') {
+      <app-reports-expenses />
+    } @else if (menuContext === 'reports-orders') {
+      <app-report-orders />
     }
   </div>
 </div>

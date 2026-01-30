@@ -7,19 +7,6 @@ export default interface Expense {
   status: 'Pago' | 'Pendente' | 'Atrasado';
 }
 
-export interface ReportExpense {
-  totalValue: number;
-  totalByStatus: {
-    pago: number;
-    pendente: number;
-    atrasado: number;
-  };
-  totalBySupplier: {
-    supplier: string;
-    total: number;
-  }[];
-}
-
 // interfaces/ExpenseFilters.ts
 export interface ExpenseFilters {
   supplier?: string;

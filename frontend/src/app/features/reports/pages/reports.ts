@@ -2,10 +2,12 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { ReportSales } from "../components/report-sales/report-sales";
 import { ReportProducts } from "../components/report-products/report-products";
+import { ReportsExpensesComponent } from "../components/reports-expenses/reports-expenses";
+import { ReportOrders } from "../components/report-orders/report-orders";
 
 @Component({
   selector: 'app-reports',
-  imports: [ReportSales, ReportProducts],
+  imports: [ReportSales, ReportProducts, ReportsExpensesComponent, ReportOrders],
   templateUrl: './reports.html',
 })
 export class Reports {

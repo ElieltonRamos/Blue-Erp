@@ -8,6 +8,7 @@ export interface OrderItem {
   quantity: number;
   unitPrice: number;
   total: number;
+  kitchenReadyAt?: string;
 }
 
 export type OrderStatus = 'open' | 'closed' | 'canceled';
@@ -25,6 +26,11 @@ export interface Order {
   address?: string;
   createdAt: string;
   updatedAt?: string;
+  kitchenSentAt?: string;   // Enviado para cozinha (opcional)
+  kitchenReadyAt?: string;  // Cozinha marcou como pronto
+  finishedAt?: string;      // Pedido finalizado/pago
+  deliveredAt?: string;     // Para delivery: entregue (opcional)
+  tableOccupiedUntil?: string; // Mesa liberada (opcional)
 }
 
 export interface CreateOrderDto {

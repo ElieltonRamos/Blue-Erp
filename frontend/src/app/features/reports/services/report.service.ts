@@ -4,6 +4,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { SalesReportSummary } from '../types/reportsSales';
 import { ProductReportSummary } from '../types/reportProducts';
+import { ReportExpense } from '../types/reportExpense';
+import { OrderReportSummary } from '../types/reportOrders';
 
 @Injectable({
   providedIn: 'root',
@@ -31,5 +33,22 @@ export class ReportService {
     const params = new HttpParams().set('startDate', startDate).set('endDate', endDate);
 
     return this.client.get<ProductReportSummary>(`${this.apiUrl}/reports/products`, { params });
+  }
+
+  getExpensesReport(startDate: string, endDate: string): Observable<ReportExpense> {
+    const params = { startDate, endDate };
+    return this.client.get<ReportExpense>(`${this.apiUrl}/expenses/reports`, { params });
+  }
+
+  /**
+   * Gera relatório de pedidos com base no período selecionado
+   * @param startDate - Data inicial no formato YYYY-MM-DD
+   * @param endDate - Data final no formato YYYY-MM-DD
+   * @returns Observable com os dados do relatório de pedidos
+   */
+  generateReportOrders(startDate: string, endDate: string): Observable<OrderReportSummary> {
+    const params = new HttpParams().set('startDate', startDate).set('endDate', endDate);
+
+    return this.client.get<OrderReportSummary>(`${this.apiUrl}/reports/orders`, { params });
   }
 }

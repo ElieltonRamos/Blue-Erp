@@ -5,6 +5,7 @@ import { interval, Subscription } from 'rxjs';
 import { KitchenService } from '../../services/kitchen-display.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { KitchenOrder, Recipe } from '../../types/kitchen-display';
+import { MockKitchenService } from '../../services/kitchen-mock.service';
 
 @Component({
   selector: 'app-kitchen-display',
@@ -14,7 +15,7 @@ import { KitchenOrder, Recipe } from '../../types/kitchen-display';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class KitchenDisplay implements OnInit, OnDestroy {
-  private kitchenService = inject(KitchenService);
+  private kitchenService = inject(MockKitchenService);
   private notification = inject(NotificationService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
