@@ -75,7 +75,6 @@ export class ClientsService {
     }
 
     const offset = (page - 1) * limit;
-    console.log(active, '=============');
 
     // Construir filtros dinamicamente
     const where: Prisma.ClientWhereInput = {};
