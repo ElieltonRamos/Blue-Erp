@@ -11,18 +11,19 @@ export class UserService {
   private client = inject(HttpClient);
 
   createUser(user: User) {
-    return this.client.post<User>(`${this.apiUrl}/user/create`, user);
+    return this.client.post<User>(`${this.apiUrl}/users`, user);
   }
 
   getUsers() {
-    return this.client.get<User[]>(`${this.apiUrl}/user`);
+    return this.client.get<User[]>(`${this.apiUrl}/users`);
   }
 
   editUser(id: number, user: User) {
-    return this.client.put<User>(`${this.apiUrl}/user/edit/${id}`, user);
+    const { id: _, createdAt, updatedAt, deletedAt, ...userData } = user;
+    return this.client.patch<User>(`${this.apiUrl}/users/${id}`, userData);
   }
 
   deleteUser(id: number) {
-    return this.client.delete<User>(`${this.apiUrl}/user/delete/${id}`);
+    return this.client.delete<User>(`${this.apiUrl}/users/${id}`);
   }
 }

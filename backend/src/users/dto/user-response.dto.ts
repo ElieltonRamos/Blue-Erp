@@ -1,10 +1,6 @@
 export class UserResponseDto {
   id: number;
   username: string;
-  email: string;
-  fullName: string;
-  cpf: string | null;
-  phone: string | null;
   role: string;
   active: boolean;
   createdAt: Date;

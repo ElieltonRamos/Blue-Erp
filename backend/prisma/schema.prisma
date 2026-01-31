@@ -28,11 +28,7 @@ model Company {
 model User {
   id       Int     @id @default(autoincrement())
   username String  @unique
-  email    String  @unique
   password String // Hash bcrypt
-  fullName String  @map("full_name")
-  cpf      String? @unique
-  phone    String?
   role     String  @default("USER") // ADMIN, MANAGER, WAITER, CASHIER, KITCHEN
   active   Boolean @default(true)
 

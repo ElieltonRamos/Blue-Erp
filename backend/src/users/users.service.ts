@@ -23,24 +23,6 @@ export class UsersService {
       throw new ConflictException('Nome de usuário já está em uso');
     }
 
-    // Verifica se email já existe
-    const existingEmail = await this.prisma.client.user.findUnique({
-      where: { email: createUserDto.email },
-    });
-    if (existingEmail) {
-      throw new ConflictException('Email já está em uso');
-    }
-
-    // Verifica se CPF já existe (se foi enviado)
-    if (createUserDto.cpf) {
-      const existingCpf = await this.prisma.client.user.findUnique({
-        where: { cpf: createUserDto.cpf },
-      });
-      if (existingCpf) {
-        throw new ConflictException('CPF já está cadastrado');
-      }
-    }
-
     // Hash da senha
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
@@ -81,22 +63,6 @@ export class UsersService {
 
     if (!user) {
       throw new NotFoundException('Usuário não encontrado');
-    }
-
-    const { password: _password, ...result } = user;
-    return new UserResponseDto(result);
-  }
-
-  async findByEmail(email: string): Promise<UserResponseDto | null> {
-    const user = await this.prisma.client.user.findFirst({
-      where: {
-        email,
-        deletedAt: null,
-      },
-    });
-
-    if (!user) {
-      return null;
     }
 
     const { password: _password, ...result } = user;
@@ -156,34 +122,6 @@ export class UsersService {
       }
     }
 
-    // Verifica se email já existe em outro usuário
-    if (updateUserDto.email && updateUserDto.email !== existingUser.email) {
-      const emailExists = await this.prisma.client.user.findFirst({
-        where: {
-          email: updateUserDto.email,
-          id: { not: id },
-          deletedAt: null,
-        },
-      });
-      if (emailExists) {
-        throw new ConflictException('Email já está em uso');
-      }
-    }
-
-    // Verifica se CPF já existe em outro usuário
-    if (updateUserDto.cpf && updateUserDto.cpf !== existingUser.cpf) {
-      const cpfExists = await this.prisma.client.user.findFirst({
-        where: {
-          cpf: updateUserDto.cpf,
-          id: { not: id },
-          deletedAt: null,
-        },
-      });
-      if (cpfExists) {
-        throw new ConflictException('CPF já está cadastrado');
-      }
-    }
-
     // Prepara os dados
     const data: Partial<CreateUserDto> = { ...updateUserDto };
 
@@ -231,12 +169,12 @@ export class UsersService {
   }
 
   async validateCredentials(
-    email: string,
+    username: string,
     password: string,
   ): Promise<UserResponseDto> {
     const user = await this.prisma.client.user.findFirst({
       where: {
-        email,
+        username,
         deletedAt: null,
         active: true,
       },

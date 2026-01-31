@@ -3,14 +3,9 @@ import { Exclude } from 'class-transformer';
 export class User {
   id: number;
   username: string;
-  email: string;
-
   @Exclude()
   password: string;
 
-  fullName: string;
-  cpf: string | null;
-  phone: string | null;
   role: string;
   active: boolean;
 
