@@ -19,11 +19,11 @@ export class Company {
   private notification = inject(NotificationService);
 
   companyForm: FormGroup;
-  companyId: number = 1;
   isLoading: boolean = false;
+  showValidationErrors: boolean = false;
 
   // ✅ Verificar plano
-  canAccessFiscalFeatures = this.licenseService.getCurrentPlan() !== 'basic';
+  canAccessFiscalFeatures = this.licenseService.getCurrentPlan() !== 'pro';
 
   // Campos para certificado
   selectedFileName: string = '';
@@ -36,28 +36,28 @@ export class Company {
 
   constructor() {
     this.companyForm = this.fb.group({
-      cnpj: ['', Validators.required],
-      razaoSocial: ['', Validators.required],
-      nomeFantasia: ['', Validators.required],
-      inscricaoEstadual: ['', Validators.required],
-      regimeTributario: ['1', Validators.required],
-      logradouro: ['', Validators.required],
-      numero: ['', Validators.required],
-      complemento: [''],
-      bairro: ['', Validators.required],
-      municipio: ['', Validators.required],
-      codigoMunicipio: ['', Validators.required],
-      uf: ['', Validators.required],
-      cep: ['', Validators.required],
-      telefone: ['', Validators.required],
-      email: ['', [Validators.email]],
-      nfceSerie: ['', Validators.required],
-      nfceNumeroAtual: [0, Validators.required],
-      nfceAmbiente: ['homologacao', Validators.required],
-      nfceCsc: ['', Validators.required],
-      nfceIdCsc: ['', Validators.required],
-      certificadoPath: ['', Validators.required],
-      certificadoSenha: ['', Validators.required],
+      cnpj: ['', Validators.required], // CNPJ da empresa
+      corporateName: ['', Validators.required], // Razão social
+      tradeName: ['', Validators.required], // Nome fantasia
+      stateRegistration: ['', Validators.required], // Inscrição estadual
+      taxRegime: ['1', Validators.required], // Regime tributário
+      street: ['', Validators.required], // Logradouro
+      number: ['', Validators.required], // Número
+      complement: [''], // Complemento
+      neighborhood: ['', Validators.required], // Bairro
+      city: ['', Validators.required], // Município
+      cityCode: ['', Validators.required], // Código do município
+      state: ['', Validators.required], // UF
+      zipCode: ['', Validators.required], // CEP
+      phone: ['', Validators.required], // Telefone
+      email: ['', [Validators.email]], // E-mail
+      nfceSeries: ['', Validators.required], // Série da NFC-e
+      nfceCurrentNumber: [0, Validators.required], // Número atual da NFC-e
+      nfceEnvironment: ['staging', Validators.required], // Ambiente da NFC-e
+      nfceCsc: ['', Validators.required], // CSC
+      nfceCscId: ['', Validators.required], // ID do CSC
+      certificatePath: ['', Validators.required], // Caminho do certificado
+      certificatePassword: ['', Validators.required], // Senha do certificado
     });
   }
 
@@ -67,11 +67,11 @@ export class Company {
 
   loadCompanyData(): void {
     this.isLoading = true;
-    this.companyService.getCompanyById(this.companyId).subscribe({
+    this.companyService.getCompanyInfo().subscribe({
       next: (company) => {
         this.companyForm.patchValue(company);
-        if (company.certificadoPath) {
-          this.selectedFileName = this.getFileName(company.certificadoPath);
+        if (company.certificatePath) {
+          this.selectedFileName = this.getFileName(company.certificatePath);
         }
         this.isLoading = false;
       },
@@ -97,7 +97,7 @@ export class Company {
       this.selectedFile = file;
       this.selectedFileName = file.name;
       this.companyForm.patchValue({
-        certificadoPath: file.name,
+        certificatePath: file.name,
       });
     }
   }
@@ -129,26 +129,24 @@ export class Company {
       return;
     }
 
-    const certificadoSenha = this.companyForm.get('certificadoSenha')?.value;
-    if (!certificadoSenha) {
+    const certificatePassword = this.companyForm.get('certificatePassword')?.value;
+    if (!certificatePassword) {
       this.notification.error('Informe a senha do certificado.');
       return;
     }
 
     this.isLoading = true;
-    this.companyService
-      .uploadCompanyCertificate(this.companyId, this.selectedFile, certificadoSenha)
-      .subscribe({
-        next: () => {
-          this.notification.success('Certificado enviado com sucesso!');
-          this.isLoading = false;
-        },
-        error: (err) => {
-          console.error('Erro ao enviar certificado', err);
-          this.notification.error('Erro ao enviar certificado.');
-          this.isLoading = false;
-        },
-      });
+    this.companyService.uploadCompanyCertificate(this.selectedFile, certificatePassword).subscribe({
+      next: () => {
+        this.notification.success('Certificado enviado com sucesso!');
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Erro ao enviar certificado', err);
+        this.notification.error('Erro ao enviar certificado.');
+        this.isLoading = false;
+      },
+    });
   }
 
   // ===== MÉTODOS PARA IBPT =====
@@ -219,8 +217,9 @@ export class Company {
   // ===== MÉTODOS GERAIS =====
   onSubmit(): void {
     if (this.companyForm.valid) {
+      this.showValidationErrors = false;
       this.isLoading = true;
-      this.companyService.updateCompany(this.companyId, this.companyForm.value).subscribe({
+      this.companyService.updateCompany(this.companyForm.value).subscribe({
         next: () => {
           this.notification.success('Empresa atualizada com sucesso!');
           this.isLoading = false;
@@ -231,8 +230,56 @@ export class Company {
         },
       });
     } else {
-      this.notification.error('Por favor, preencha todos os campos obrigatórios');
+      this.showValidationErrors = true;
+      this.markAllAsTouched();
+      const invalidFields = this.getInvalidFields();
+      this.notification.error(
+        `Por favor, preencha os campos obrigatórios: ${invalidFields.join(', ')}`
+      );
     }
+  }
+
+  markAllAsTouched(): void {
+    Object.keys(this.companyForm.controls).forEach(key => {
+      this.companyForm.get(key)?.markAsTouched();
+    });
+  }
+
+  getInvalidFields(): string[] {
+    const invalidFields: string[] = [];
+    const fieldLabels: { [key: string]: string } = {
+      cnpj: 'CNPJ',
+      corporateName: 'Razão Social',
+      tradeName: 'Nome Fantasia',
+      stateRegistration: 'Inscrição Estadual',
+      taxRegime: 'Regime Tributário',
+      street: 'Logradouro',
+      number: 'Número',
+      neighborhood: 'Bairro',
+      city: 'Município',
+      cityCode: 'Código do Município',
+      state: 'UF',
+      zipCode: 'CEP',
+      phone: 'Telefone',
+      email: 'E-mail',
+      nfceSeries: 'Série NFC-e',
+      nfceCurrentNumber: 'Número Atual NFC-e',
+      nfceEnvironment: 'Ambiente NFC-e',
+      nfceCsc: 'CSC',
+      nfceCscId: 'ID do CSC',
+      certificatePath: 'Certificado',
+      certificatePassword: 'Senha do Certificado',
+    };
+
+    Object.keys(this.companyForm.controls).forEach(key => {
+      const control = this.companyForm.get(key);
+      if (control?.invalid && control?.errors?.['required']) {
+        invalidFields.push(fieldLabels[key] || key);
+      }
+    });
+    console.log(invalidFields)
+
+    return invalidFields;
   }
 
   goToMenu(): void {

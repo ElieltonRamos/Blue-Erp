@@ -55,11 +55,11 @@
           </label>
           <input
             type="text"
-            formControlName="razaoSocial"
+            formControlName="corporateName"
             placeholder="Digite a razão social"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
-              companyForm.get('razaoSocial')?.invalid && companyForm.get('razaoSocial')?.touched
+              companyForm.get('corporateName')?.invalid && companyForm.get('corporateName')?.touched
             "
           />
         </div>
@@ -71,11 +71,11 @@
           </label>
           <input
             type="text"
-            formControlName="nomeFantasia"
+            formControlName="tradeName"
             placeholder="Digite o nome fantasia"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
-              companyForm.get('nomeFantasia')?.invalid && companyForm.get('nomeFantasia')?.touched
+              companyForm.get('tradeName')?.invalid && companyForm.get('tradeName')?.touched
             "
           />
         </div>
@@ -87,12 +87,12 @@
           </label>
           <input
             type="text"
-            formControlName="inscricaoEstadual"
+            formControlName="stateRegistration"
             placeholder="Digite a IE"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
-              companyForm.get('inscricaoEstadual')?.invalid &&
-              companyForm.get('inscricaoEstadual')?.touched
+              companyForm.get('stateRegistration')?.invalid &&
+              companyForm.get('stateRegistration')?.touched
             "
           />
         </div>
@@ -103,7 +103,7 @@
             Regime Tributário <span class="text-red-400">*</span>
           </label>
           <select
-            formControlName="regimeTributario"
+            formControlName="taxRegime"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
           >
             <option value="1">Simples Nacional</option>
@@ -119,11 +119,11 @@
           </label>
           <input
             type="text"
-            formControlName="telefone"
+            formControlName="phone"
             placeholder="(00) 0000-0000"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
-              companyForm.get('telefone')?.invalid && companyForm.get('telefone')?.touched
+              companyForm.get('phone')?.invalid && companyForm.get('phone')?.touched
             "
           />
         </div>
@@ -178,11 +178,11 @@
           </label>
           <input
             type="text"
-            formControlName="cep"
+            formControlName="zipCode"
             placeholder="00000-000"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
-              companyForm.get('cep')?.invalid && companyForm.get('cep')?.touched
+              companyForm.get('zipCode')?.invalid && companyForm.get('zipCode')?.touched
             "
           />
         </div>
@@ -194,11 +194,11 @@
           </label>
           <input
             type="text"
-            formControlName="logradouro"
+            formControlName="street"
             placeholder="Rua, Avenida, etc."
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
-              companyForm.get('logradouro')?.invalid && companyForm.get('logradouro')?.touched
+              companyForm.get('street')?.invalid && companyForm.get('street')?.touched
             "
           />
         </div>
@@ -210,11 +210,11 @@
           </label>
           <input
             type="text"
-            formControlName="numero"
+            formControlName="number"
             placeholder="123"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
-              companyForm.get('numero')?.invalid && companyForm.get('numero')?.touched
+              companyForm.get('number')?.invalid && companyForm.get('number')?.touched
             "
           />
         </div>
@@ -224,7 +224,7 @@
           <label class="block text-gray-300 font-medium mb-2 text-sm"> Complemento </label>
           <input
             type="text"
-            formControlName="complemento"
+            formControlName="complement"
             placeholder="Apto, Sala, etc."
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
           />
@@ -237,11 +237,11 @@
           </label>
           <input
             type="text"
-            formControlName="bairro"
+            formControlName="neighborhood"
             placeholder="Nome do bairro"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
-              companyForm.get('bairro')?.invalid && companyForm.get('bairro')?.touched
+              companyForm.get('neighborhood')?.invalid && companyForm.get('neighborhood')?.touched
             "
           />
         </div>
@@ -253,11 +253,11 @@
           </label>
           <input
             type="text"
-            formControlName="municipio"
+            formControlName="city"
             placeholder="Nome da cidade"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
-              companyForm.get('municipio')?.invalid && companyForm.get('municipio')?.touched
+              companyForm.get('city')?.invalid && companyForm.get('city')?.touched
             "
           />
         </div>
@@ -269,12 +269,12 @@
           </label>
           <input
             type="text"
-            formControlName="codigoMunicipio"
+            formControlName="cityCode"
             placeholder="0000000"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
-              companyForm.get('codigoMunicipio')?.invalid &&
-              companyForm.get('codigoMunicipio')?.touched
+              companyForm.get('cityCode')?.invalid &&
+              companyForm.get('cityCode')?.touched
             "
           />
         </div>
@@ -285,7 +285,7 @@
             UF <span class="text-red-400">*</span>
           </label>
           <select
-            formControlName="uf"
+            formControlName="state"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
           >
             <option value="">Selecione</option>
@@ -358,11 +358,11 @@
           </label>
           <input
             type="text"
-            formControlName="nfceSerie"
+            formControlName="nfceSeries"
             placeholder="1"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
-              companyForm.get('nfceSerie')?.invalid && companyForm.get('nfceSerie')?.touched
+              companyForm.get('nfceSeries')?.invalid && companyForm.get('nfceSeries')?.touched
             "
           />
         </div>
@@ -374,12 +374,12 @@
           </label>
           <input
             type="number"
-            formControlName="nfceNumeroAtual"
+            formControlName="nfceCurrentNumber"
             placeholder="0"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
-              companyForm.get('nfceNumeroAtual')?.invalid &&
-              companyForm.get('nfceNumeroAtual')?.touched
+              companyForm.get('nfceCurrentNumber')?.invalid &&
+              companyForm.get('nfceCurrentNumber')?.touched
             "
           />
         </div>
@@ -390,11 +390,11 @@
             Ambiente <span class="text-red-400">*</span>
           </label>
           <select
-            formControlName="nfceAmbiente"
+            formControlName="nfceEnvironment"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30 transition-all duration-200 outline-none"
           >
-            <option value="homologacao">Homologação</option>
-            <option value="producao">Produção</option>
+            <option value="staging">Homologação</option>
+            <option value="production">Produção</option>
           </select>
         </div>
 
@@ -421,11 +421,11 @@
           </label>
           <input
             type="text"
-            formControlName="nfceIdCsc"
+            formControlName="nfceCscId"
             placeholder="1"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
-              companyForm.get('nfceIdCsc')?.invalid && companyForm.get('nfceIdCsc')?.touched
+              companyForm.get('nfceCscId')?.invalid && companyForm.get('nfceCscId')?.touched
             "
           />
         </div>
@@ -493,10 +493,10 @@
           </button>
 
           <!-- mostra o arquivo atual salvo no banco quando não há novo selecionado -->
-          @if (companyForm.get('certificadoPath')?.value && !selectedFileName) {
+          @if (companyForm.get('certificatePath')?.value && !selectedFileName) {
             <p class="text-xs text-gray-400 mt-2">
               Arquivo atual:
-              {{ getFileName(companyForm.get('certificadoPath')?.value) }}
+              {{ getFileName(companyForm.get('certificatePath')?.value) }}
             </p>
           }
         </div>
@@ -508,12 +508,12 @@
           </label>
           <input
             type="password"
-            formControlName="certificadoSenha"
+            formControlName="certificatePassword"
             placeholder="Digite a senha"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
-              companyForm.get('certificadoSenha')?.invalid &&
-              companyForm.get('certificadoSenha')?.touched
+              companyForm.get('certificatePassword')?.invalid &&
+              companyForm.get('certificatePassword')?.touched
             "
           />
         </div>
@@ -524,12 +524,12 @@
         <button
           type="button"
           (click)="enviarCertificado()"
-          [disabled]="!selectedFile || !companyForm.get('certificadoSenha')?.value || isLoading"
+          [disabled]="!selectedFile || !companyForm.get('certificatePassword')?.value || isLoading"
           [class.opacity-50]="
-            !selectedFile || !companyForm.get('certificadoSenha')?.value || isLoading
+            !selectedFile || !companyForm.get('certificatePassword')?.value || isLoading
           "
           [class.cursor-not-allowed]="
-            !selectedFile || !companyForm.get('certificadoSenha')?.value || isLoading
+            !selectedFile || !companyForm.get('certificatePassword')?.value || isLoading
           "
           class="px-6 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-200 shadow-md flex items-center gap-2"
         >
@@ -718,6 +718,49 @@
 
   <!-- Botões de Ação Final -->
   <div class="bg-[#1d2a3c] rounded-xl shadow-lg p-6">
+    <!-- Alerta de Validação -->
+    @if (companyForm.invalid && showValidationErrors) {
+      <div class="mb-6 bg-red-500/10 border-2 border-red-500/50 rounded-lg p-4 animate-pulse">
+        <div class="flex gap-3">
+          <svg
+            class="w-6 h-6 text-red-400 shrink-0 mt-0.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <div class="flex-1">
+            <h3 class="text-red-400 font-semibold text-sm mb-2">
+              ⚠️ Campos obrigatórios não preenchidos
+            </h3>
+            <p class="text-gray-300 text-sm mb-3">
+              Os seguintes campos precisam ser preenchidos para salvar:
+            </p>
+            <ul class="space-y-1">
+              @for (field of getInvalidFields(); track field) {
+                <li class="text-red-300 text-sm flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  {{ field }}
+                </li>
+              }
+            </ul>
+          </div>
+        </div>
+      </div>
+    }
+
     <div class="flex justify-end gap-4">
       <button
         type="button"
@@ -732,11 +775,42 @@
         [disabled]="companyForm.invalid || isLoading"
         [class.opacity-50]="companyForm.invalid || isLoading"
         [class.cursor-not-allowed]="companyForm.invalid || isLoading"
-        class="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all duration-200 hover:scale-105 shadow-md flex items-center gap-2"
+        class="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all duration-200 hover:scale-105 shadow-md flex items-center gap-2 relative"
       >
+        @if (companyForm.invalid && !isLoading) {
+          <span
+            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-bounce"
+            title="Campos obrigatórios faltando"
+          >
+            {{ getInvalidFields().length }}
+          </span>
+        }
         @if (isLoading) {
+          <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
           <span>Salvando...</span>
         } @else {
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
           <span>Salvar Configurações</span>
         }
       </button>

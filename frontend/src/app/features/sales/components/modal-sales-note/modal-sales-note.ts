@@ -26,8 +26,8 @@ export class ModalSalesNote implements OnInit {
   private licenseService = inject(LicenseService);
   private nfceService = inject(NfceService);
   private companyService = inject(CompanyService);
-  private notification = inject(NotificationService)
-  private cdr = inject(ChangeDetectorRef)
+  private notification = inject(NotificationService);
+  private cdr = inject(ChangeDetectorRef);
 
   isRequestingNfce = false;
   nfceData: NfceEmissaoResponse | null = null;
@@ -40,26 +40,20 @@ export class ModalSalesNote implements OnInit {
   }
 
   loadCompanyData() {
-    // Substitua pelo ID da empresa logada (pode vir de um service de autenticação)
-    const companyId = 1;
-
-    this.companyService.getCompanyById(companyId).subscribe({
+    this.companyService.getCompanyInfo().subscribe({
       next: (company) => {
         this.companyData = company;
-        this.cdr.detectChanges(); 
+        this.cdr.detectChanges();
       },
       error: (_error) => {
-        this.notification.error('Erro ao carregar dados da empresa')
+        this.notification.error('Erro ao carregar dados da empresa');
       },
     });
   }
 
   formatCnpj(cnpj: string): string {
     if (!cnpj) return '';
-    return cnpj.replace(
-      /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
-      '$1.$2.$3/$4-$5'
-    );
+    return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
   }
 
   formatPhone(phone: string): string {
@@ -77,8 +71,7 @@ export class ModalSalesNote implements OnInit {
   }
 
   calculateDiscount(): number {
-    const discount =
-      this.saleData.totalProductsWithoutDiscount - this.saleData.total;
+    const discount = this.saleData.totalProductsWithoutDiscount - this.saleData.total;
     if (discount > 0) {
       return this.formatNumber(discount);
     }
@@ -101,7 +94,7 @@ export class ModalSalesNote implements OnInit {
   requestNfce() {
     if (!this.canEmitNfce) {
       this.notification.error(
-        'Recurso disponível apenas no plano Pro! Faça upgrade para emitir notas fiscais.'
+        'Recurso disponível apenas no plano Pro! Faça upgrade para emitir notas fiscais.',
       );
       return;
     }
@@ -122,7 +115,7 @@ export class ModalSalesNote implements OnInit {
           this.notification.success(
             `NFC-e autorizada com sucesso!\n\n` +
               `Chave: ${this.formatChave(response.chaveAcesso)}\n` +
-              `Protocolo: ${response.protocolo || 'N/A'}`
+              `Protocolo: ${response.protocolo || 'N/A'}`,
           );
           this.saleData.nfceStatus = 'emitida';
           this.saleData.nfceKey = response.chaveAcesso;
@@ -142,7 +135,7 @@ export class ModalSalesNote implements OnInit {
         this.notification.error(
           `Erro ao solicitar NFC-e:\n${
             error.error?.message || error.message || 'Erro desconhecido'
-          }`
+          }`,
         );
       },
     });
@@ -193,9 +186,7 @@ export class ModalSalesNote implements OnInit {
     const styles = Array.from(document.styleSheets)
       .map((style) => {
         try {
-          return style.href
-            ? `<link rel="stylesheet" href="${style.href}">`
-            : '';
+          return style.href ? `<link rel="stylesheet" href="${style.href}">` : '';
         } catch {
           return '';
         }

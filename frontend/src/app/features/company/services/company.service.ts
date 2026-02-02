@@ -15,41 +15,41 @@ export class CompanyService {
   }
 
   // GET /company/:id - Busca uma empresa pelo ID
-  getCompanyById(id: number) {
-    return this.client.get<Company>(`${this.apiUrl}/company/${id}`);
+  getCompanyInfo() {
+    return this.client.get<Company>(`${this.apiUrl}/company`);
   }
 
   // PUT /company/:id - Atualiza dados da empresa
-  updateCompany(id: number, company: Partial<Company>) {
-    return this.client.put<Company>(`${this.apiUrl}/company/${id}`, company);
+  updateCompany(company: Partial<Company>) {
+    return this.client.put<Company>(`${this.apiUrl}/company`, company);
   }
 
   // DELETE /company/:id - Deleta uma empresa pelo ID
-  deleteCompany(id: number) {
-    return this.client.delete<{ message: string }>(`${this.apiUrl}/company/${id}`);
+  deleteCompany() {
+    return this.client.delete<{ message: string }>(`${this.apiUrl}/company`);
   }
 
   // POST /company/nfceIncrement/:id - Incrementa e retorna o próximo número de NFC-e
-  incrementNfceNumber(id: number) {
-    return this.client.post<{ data: number }>(`${this.apiUrl}/company/nfceIncrement/${id}`, {});
+  incrementNfceNumber() {
+    return this.client.post<{ data: number }>(`${this.apiUrl}/company/nfceIncrement`, {});
   }
 
   // GET /company/certificado/:id - Consulta existência e info do certificado digital
-  getCertificadoConfig(id: number) {
+  getCertificadoConfig() {
     return this.client.get<{
       existe: boolean;
       certificadoInfo?: {
         temSenha: boolean;
       };
-    }>(`${this.apiUrl}/company/certificado/${id}`);
+    }>(`${this.apiUrl}/company/certificado`);
   }
 
-  uploadCompanyCertificate(id: number, file: File, certificadoSenha: string) {
+  uploadCompanyCertificate(file: File, certificadoSenha: string) {
     const formData = new FormData();
     formData.append('certificado', file); // mesmo nome do campo no multer
     formData.append('certificadoSenha', certificadoSenha);
 
-    return this.client.put<Company>(`${this.apiUrl}/company/${id}/certificate`, formData);
+    return this.client.put<Company>(`${this.apiUrl}/company/certificate`, formData);
   }
 
   importIbptFromCsv(file: File) {

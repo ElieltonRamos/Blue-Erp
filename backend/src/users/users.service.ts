@@ -78,7 +78,6 @@ export class UsersService {
     const user = await this.prisma.client.user.findFirst({
       where: {
         id,
-        deletedAt: null,
       },
     });
 
@@ -94,7 +93,6 @@ export class UsersService {
     const user = await this.prisma.client.user.findFirst({
       where: {
         username,
-        deletedAt: null,
       },
     });
 
@@ -118,7 +116,6 @@ export class UsersService {
     const existingUser = await this.prisma.client.user.findFirst({
       where: {
         id,
-        deletedAt: null,
       },
     });
 
@@ -135,7 +132,6 @@ export class UsersService {
         where: {
           username: updateUserDto.username,
           id: { not: id },
-          deletedAt: null,
         },
       });
       if (usernameExists) {
@@ -169,7 +165,6 @@ export class UsersService {
     const user = await this.prisma.client.user.findFirst({
       where: {
         id,
-        deletedAt: null,
       },
     });
 
@@ -196,7 +191,6 @@ export class UsersService {
     const user = await this.prisma.client.user.findFirst({
       where: {
         username,
-        deletedAt: null,
         active: true,
       },
     });

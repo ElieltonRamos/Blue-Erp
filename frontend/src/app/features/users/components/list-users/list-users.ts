@@ -38,7 +38,7 @@ export class ListUsers {
       options: ['admin', 'caixa', 'garcom'],
     },
     { name: 'workplace', label: 'Local de Trabalho', type: 'text' },
-    { name: 'active', label: 'Ativo', type: 'checkbox' },
+    { name: 'active', label: 'Status', type: 'select', options: ['Ativo', 'Inativo'] },
   ];
 
   ngOnInit() {
