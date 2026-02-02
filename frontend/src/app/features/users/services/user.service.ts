@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../core/services/environment';
-import { HttpClient } from '@angular/common/http';
-import User from '../../login/types/auth';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import User from '../types/user';
 
 @Injectable({
   providedIn: 'root',
@@ -14,8 +14,25 @@ export class UserService {
     return this.client.post<User>(`${this.apiUrl}/users`, user);
   }
 
-  getUsers() {
-    return this.client.get<User[]>(`${this.apiUrl}/users`);
+  getUsers(filters?: any) {
+    let params = new HttpParams();
+
+    if (filters) {
+      if (filters.username) {
+        params = params.set('username', filters.username);
+      }
+      if (filters.role) {
+        params = params.set('role', filters.role);
+      }
+      if (filters.workplace) {
+        params = params.set('workplace', filters.workplace);
+      }
+      if (filters.active !== '') {
+        params = params.set('active', filters.active);
+      }
+    }
+
+    return this.client.get<User[]>(`${this.apiUrl}/users`, { params });
   }
 
   editUser(id: number, user: User) {

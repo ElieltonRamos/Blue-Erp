@@ -21,6 +21,11 @@ export class CreateUserDto {
   @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Senha') })
   password: string;
 
+  @ApiProperty({ example: 'ComidaJaponesa', minLength: 6 })
+  @IsString({ message: ValidationMessages.IS_STRING('Local de trabalho') })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Local de trabalho') })
+  workplace: string;
+
   @ApiProperty({
     example: 'user',
     default: 'user',

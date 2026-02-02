@@ -5,9 +5,9 @@ import { CommonModule } from '@angular/common';
 import { PaginatorComponent } from '../../../../shared/paginator/paginator.component';
 import { ModalSalesNote } from '../../../sales/components/modal-sales-note/modal-sales-note';
 import { Sale } from '../../../sales/types/sale';
-import User from '../../../login/types/auth';
 import { FinancialService } from '../../services/financial.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
+import User from '../../../users/types/user';
 
 @Component({
   selector: 'app-promissory-note-receivable',

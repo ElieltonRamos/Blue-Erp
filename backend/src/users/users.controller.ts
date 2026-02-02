@@ -8,16 +8,19 @@ import {
   Param,
   Delete,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
+import { UserFiltersDto } from './dto/user-filter.dto.js';
 
 @ApiTags('users') // Agrupa endpoints
 @Controller('users')
@@ -39,14 +42,23 @@ export class UsersController {
   }
 
   @Get()
-  @ApiBearerAuth() // Indica que precisa de autenticação
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Listar todos os usuários' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Lista de usuários retornada',
+  @ApiQuery({ name: 'username', required: false })
+  @ApiQuery({
+    name: 'role',
+    required: false,
+    enum: ['caixa', 'garcom', 'admin'],
   })
-  findAll() {
-    return this.usersService.findAll();
+  @ApiQuery({
+    name: 'workplace',
+    required: false,
+    enum: ['local1', 'local2', 'local3'],
+  })
+  @ApiQuery({ name: 'active', required: false, enum: ['true', 'false'] })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Lista de usuários' })
+  findAll(@Query() filters?: UserFiltersDto) {
+    return this.usersService.findAll(filters);
   }
 
   @Get(':id')

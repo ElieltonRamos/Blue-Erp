@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import User from '../../features/login/types/auth';
+import User from '../../features/users/types/user';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {

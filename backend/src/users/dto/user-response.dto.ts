@@ -4,6 +4,7 @@ export class UserResponseDto {
   role: string;
   active: boolean;
   createdAt: Date;
+  workplace: string;
   updatedAt: Date;
   deletedAt: Date | null;
 

@@ -48,7 +48,7 @@
           formControlName="role"
           class="w-8 h-8 accent-blue-500"
         />
-        Operador
+        Caixa
       </label>
       <label class="flex items-center gap-3 text-base">
         <input
@@ -73,6 +73,46 @@
     </div>
     @if (formCreateUser.get('role')?.touched && formCreateUser.get('role')?.invalid) {
       <p class="msg-error">Escolha a função!</p>
+    }
+  </div>
+
+  <!-- Local de Trabalho (NOVA SEÇÃO) -->
+  <div class="text-white font-bold">
+    <label class="block mb-2">Local de Trabalho: </label>
+    <div class="flex gap-8">
+      <label class="flex items-center gap-3 text-base">
+        <input
+          type="radio"
+          name="workplace"
+          value="local1"
+          formControlName="workplace"
+          class="w-8 h-8 accent-blue-500"
+        />
+        Local 1
+      </label>
+      <label class="flex items-center gap-3 text-base">
+        <input
+          type="radio"
+          name="workplace"
+          value="local2"
+          formControlName="workplace"
+          class="w-8 h-8 accent-blue-500"
+        />
+        Local 2
+      </label>
+      <label class="flex items-center gap-3 text-base">
+        <input
+          type="radio"
+          name="workplace"
+          value="local3"
+          formControlName="workplace"
+          class="w-8 h-8 accent-blue-500"
+        />
+        Local 3
+      </label>
+    </div>
+    @if (formCreateUser.get('workplace')?.touched && formCreateUser.get('workplace')?.invalid) {
+      <p class="msg-error">Escolha o local de trabalho!</p>
     }
   </div>
 

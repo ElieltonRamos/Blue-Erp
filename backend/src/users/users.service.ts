@@ -9,6 +9,8 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UserResponseDto } from './dto/user-response.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
+import { UserFiltersDto } from './dto/user-filter.dto.js';
+import { Prisma } from 'generated/prisma/client.js';
 
 @Injectable()
 export class UsersService {
@@ -36,10 +38,29 @@ export class UsersService {
     const { password: _password, ...result } = user;
     return new UserResponseDto(result);
   }
+  async findAll(filters?: UserFiltersDto): Promise<UserResponseDto[]> {
+    const where: Prisma.UserWhereInput = {
+      active: true,
+    };
 
-  async findAll(): Promise<UserResponseDto[]> {
+    // Aplica filtros do frontend
+    if (filters?.username) {
+      where.username = {
+        contains: filters.username,
+      };
+    }
+    if (filters?.role) {
+      where.role = filters.role;
+    }
+    if (filters?.workplace) {
+      where.workplace = filters.workplace;
+    }
+    if (filters?.active !== undefined) {
+      where.active = filters.active; // sobrescreve o default se enviado
+    }
+
     const users = await this.prisma.client.user.findMany({
-      where: { deletedAt: null, active: true },
+      where,
       orderBy: { createdAt: 'desc' },
     });
 
