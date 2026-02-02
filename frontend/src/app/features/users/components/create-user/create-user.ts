@@ -2,7 +2,6 @@ import { Component, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UserService } from '../../services/user.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
-import User from '../../../login/types/auth';
 
 @Component({
   selector: 'app-create-user',
@@ -15,15 +14,17 @@ export class CreateUser {
     username: new FormControl('', [Validators.required]),
     password: new FormControl('', [Validators.required]),
     role: new FormControl('', [Validators.required]),
+    workplace: new FormControl('', [Validators.required]),
   });
   private userService = inject(UserService);
 
   onSubmit() {
-    const { password, role, username } = this.formCreateUser.value;
+    const { password, role, username, workplace } = this.formCreateUser.value;
     const newUser = {
       username: username || '',
       password: password || '',
       role: role || '',
+      workplace: workplace || ''
     };
 
     if (this.formCreateUser.valid) {

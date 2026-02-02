@@ -8,6 +8,7 @@ export class User {
 
   role: string;
   active: boolean;
+  workplace: string;
 
   createdAt: Date;
   updatedAt: Date;

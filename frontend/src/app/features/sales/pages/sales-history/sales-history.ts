@@ -2,12 +2,12 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { UserService } from '../../../users/services/user.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
-import User from '../../../login/types/auth';
 import { FormsModule } from '@angular/forms';
 import { PaginatorComponent } from '../../../../shared/paginator/paginator.component';
 import { SalesService } from '../../services/sales.service';
 import { ModalSalesNote } from '../../components/modal-sales-note/modal-sales-note';
 import { Sale } from '../../types/sale';
+import User from '../../../users/types/user';
 
 @Component({
   selector: 'app-sales-history',

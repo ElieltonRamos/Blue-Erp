@@ -1,26 +1,44 @@
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
-import User from '../../../login/types/auth';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import { UserService } from '../../services/user.service';
 import { alertConfirm, alertError } from '../../../../shared/alerts/custom-alerts';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { FormField, ModalEditEntity } from '../../../../shared/modal-edit-entity/modal-edit-entity';
+import User from '../../types/user';
 
 @Component({
   selector: 'app-list-users',
-  imports: [ModalEditEntity],
+  imports: [ModalEditEntity, FormsModule, CommonModule],
   templateUrl: './list-users.html',
 })
 export class ListUsers {
   private notification = inject(NotificationService);
   private userService = inject(UserService);
-  private cdr = inject(ChangeDetectorRef)
+  private cdr = inject(ChangeDetectorRef);
+
   listUsers: User[] = [];
   showModalEdit: boolean = false;
-  editUser: User = { id: 1, password: '', username: '', role: '' };
+  editUser: User = { id: 1, password: '', username: '', role: '', workplace: '' };
+
+  filters = {
+    username: '',
+    role: '',
+    workplace: '',
+    active: '',
+  };
+
   userFields: FormField[] = [
     { name: 'username', label: 'Nome', type: 'text' },
     { name: 'password', label: 'Senha', type: 'password' },
-    { name: 'role', label: 'Tipo de usuario', type: 'select', options: ['admin', 'caixa', 'garcom'] },
+    {
+      name: 'role',
+      label: 'Tipo de usuario',
+      type: 'select',
+      options: ['admin', 'caixa', 'garcom'],
+    },
+    { name: 'workplace', label: 'Local de Trabalho', type: 'text' },
+    { name: 'active', label: 'Ativo', type: 'checkbox' },
   ];
 
   ngOnInit() {
@@ -28,15 +46,19 @@ export class ListUsers {
   }
 
   getUsers() {
-    this.userService.getUsers().subscribe({
+    this.userService.getUsers(this.filters).subscribe({
       next: (response) => {
         this.listUsers = response;
-        this.cdr.detectChanges(); 
+        this.cdr.detectChanges();
       },
       error: (e) => {
         this.notification.error(`Erro ao buscar usuarios: ${e.error?.message || e.message}`);
       },
     });
+  }
+
+  applyFilters() {
+    this.getUsers();
   }
 
   deleteUser(user: User) {
@@ -61,7 +83,7 @@ export class ListUsers {
   }
 
   openModalEdit(user: User) {
-    this.editUser = user;
+    this.editUser = { ...user };
     this.showModalEdit = true;
   }
 
