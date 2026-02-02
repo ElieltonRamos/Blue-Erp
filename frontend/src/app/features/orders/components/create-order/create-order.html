@@ -51,6 +51,26 @@
       }
     </div>
 
+    <!-- Local - Mostrar apenas se type === 'dine_in' -->
+    <div *ngIf="formCreateOrder.get('type')?.value === 'dine_in'">
+      <label for="locationId" class="block text-white font-bold mb-2">
+        Local <span class="text-red-400">*</span>
+      </label>
+      <select
+        id="locationId"
+        formControlName="locationId"
+        required
+        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold"
+      >
+        <option value="local-01">Local 01</option>
+        <option value="local-02">Local 02</option>
+        <option value="local-03">Local 03</option>
+      </select>
+      @if (formCreateOrder.get('locationId')?.touched && formCreateOrder.get('locationId')?.invalid) {
+        <p class="msg-error">Selecione o local!</p>
+      }
+    </div>
+
     <!-- Endereço - Mostrar apenas se type === 'delivery' -->
     <div *ngIf="formCreateOrder.get('type')?.value === 'delivery'" class="md:col-span-2">
       <label for="address" class="block text-white font-bold mb-2">

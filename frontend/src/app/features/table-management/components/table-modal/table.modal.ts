@@ -9,7 +9,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { FormField, ModalEditEntity } from '../../../../shared/modal-edit-entity/modal-edit-entity';
-import { Table } from '../../types/table';
+import { Location, Table } from '../../types/table';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { TableService } from '../../services/table.service';
 import { Observable } from 'rxjs';
@@ -42,6 +42,7 @@ export class TableModalComponent implements OnChanges {
   @Input() type!: 'add' | 'edit' | 'reserve' | 'occupy';
   @Input() entity: Table | null = null;
   @Input() tableId?: number;
+  @Input() selectedLocation?: string;
 
   @Output() close = new EventEmitter<void>();
   @Output() saved = new EventEmitter<Table>();
@@ -57,6 +58,13 @@ export class TableModalComponent implements OnChanges {
       fields: [
         { name: 'number', label: 'Número da Mesa', type: 'number', required: true },
         { name: 'capacity', label: 'Capacidade', type: 'number', required: true },
+        {
+          name: 'locationId',
+          label: 'Local',
+          type: 'select',
+          required: true,
+          options: ['salao-01', 'salao-02', 'salao-03'], // ← NOVO CAMPO
+        },
       ],
       validate: (table) => !!(table.number && table.capacity),
       execute: (service, table) => service.createTable(table),
@@ -68,6 +76,13 @@ export class TableModalComponent implements OnChanges {
         { name: 'number', label: 'Número da Mesa', type: 'number', required: true },
         { name: 'capacity', label: 'Capacidade', type: 'number', required: true },
         { name: 'customer', label: 'Cliente', type: 'text' },
+        {
+          name: 'locationId',
+          label: 'Local',
+          type: 'select',
+          required: true,
+          options: ['salao-01', 'salao-02', 'salao-03'], // ← NOVO CAMPO
+        },
       ],
       validate: (table) => !!(table.number && table.capacity),
       execute: (service, table, tableId) => service.editTable(tableId!, table),
@@ -109,7 +124,10 @@ export class TableModalComponent implements OnChanges {
     if (!this.entity) {
       this.entity = {} as Table;
     } else {
-      this.entity = { ...this.entity };
+      this.entity = {
+        ...this.entity,
+        locationId: this.entity.locationId || this.selectedLocation || 'salao-01',
+      };
     }
 
     if (this.type !== 'add' && !this.tableId) {
@@ -139,7 +157,7 @@ export class TableModalComponent implements OnChanges {
       error: (error: any) => {
         console.error('Modal save error:', error);
         this.notification.error(
-          `Erro: ${error.error?.message || error.message || 'Tente novamente'}`
+          `Erro: ${error.error?.message || error.message || 'Tente novamente'}`,
         );
       },
     });

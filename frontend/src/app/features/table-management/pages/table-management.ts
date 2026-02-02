@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { NotificationService } from '../../../shared/toastr/notification.service';
 import { TableService } from '../services/table.service';
-import { ProductTable, Table, TableProduct, TableStatus } from '../types/table';
+import { ProductTable, Table, TableProduct, TableStatus, Location, LocationId } from '../types/table';
 import { alertConfirm } from '../../../shared/alerts/custom-alerts';
 import { TableStats } from '../components/table-stats/table-stats';
 import { TableCard } from '../components/table-card/table-card';
@@ -33,6 +33,13 @@ export class TableManagement {
   modalType: 'add' | 'edit' | 'reserve' | 'occupy' = 'add';
   selectedTable: Table | null = null;
   selectedTableForProducts: Table | null = null;
+  selectedLocation: LocationId = 'salao-01';
+
+  locations: Location[] = [
+    { id: 'salao-01', name: 'Mesas Do Local 01' },
+    { id: 'salao-02', name: 'Mesas Do Local 02' },
+    { id: 'salao-03', name: 'Mesas Do Local 03' },
+  ];
 
   statusColors: Record<TableStatus, string> = {
     available: 'bg-emerald-600 hover:bg-emerald-700',
@@ -57,20 +64,24 @@ export class TableManagement {
   }
 
   // 📊 Getters computados (OnPush-safe)
+  get filteredTables(): Table[] {
+    return this.tables.filter((t) => t.locationId === this.selectedLocation);
+  }
+
   get totalTables(): number {
-    return this.tables.length;
+    return this.filteredTables.length;
   }
 
   get availableTables(): number {
-    return this.tables.filter((t) => t.status === 'available').length;
+    return this.filteredTables.filter((t) => t.status === 'available').length;
   }
 
   get occupiedTables(): number {
-    return this.tables.filter((t) => t.status === 'occupied').length;
+    return this.filteredTables.filter((t) => t.status === 'occupied').length;
   }
 
   get sortedTables(): Table[] {
-    return [...this.tables].sort((a, b) => a.number - b.number);
+    return [...this.filteredTables].sort((a, b) => a.number - b.number);
   }
 
   get tabTotal(): number {
@@ -80,6 +91,12 @@ export class TableManagement {
   // 🔍 TrackBy para otimização de performance
   trackById(index: number, table: Table): number {
     return table.id!;
+  }
+
+  // 📍 Seleção de Localização
+  selectLocation(locationId: LocationId): void {
+    this.selectedLocation = locationId;
+    this.cdr.markForCheck();
   }
 
   // 🚪 Gerenciamento de Modais

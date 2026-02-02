@@ -12,6 +12,7 @@ import {
   OrderItem,
   OrderType,
   PaymentMethod,
+  OrderLocation,
 } from '../types/order';
 
 @Injectable({
@@ -78,6 +79,7 @@ export class MockOrderService {
         {
           id: 'order-1',
           type: 'dine_in',
+          locationId: 'local-01',
           customerName: 'João Silva',
           items: [
             { id: 'item1', code: '7891234567890', name: 'Coca-Cola 2L', quantity: 2, unitPrice: 8.50, total: 17.00 }
@@ -90,6 +92,7 @@ export class MockOrderService {
         {
           id: 'order-2',
           type: 'delivery',
+          locationId: 'delivery',
           customerName: 'Maria Santos',
           items: [
             { id: 'item2', code: '7896543210987', name: 'Hambúrguer Clássico', quantity: 1, unitPrice: 25.00, total: 25.00 },
@@ -99,6 +102,33 @@ export class MockOrderService {
           total: 40.00,
           address: 'Rua das Flores, 123 - Centro',
           createdAt: new Date(Date.now() - 1800000).toISOString()
+        },
+        {
+          id: 'order-3',
+          type: 'dine_in',
+          locationId: 'local-02',
+          customerName: 'Carlos Oliveira',
+          items: [
+            { id: 'item4', code: '7896543210987', name: 'Hambúrguer Clássico', quantity: 2, unitPrice: 25.00, total: 50.00 }
+          ],
+          status: 'open',
+          total: 50.00,
+          table: 'Mesa 3',
+          createdAt: new Date(Date.now() - 7200000).toISOString()
+        },
+        {
+          id: 'order-4',
+          type: 'dine_in',
+          locationId: 'local-03',
+          customerName: 'Ana Paula',
+          items: [
+            { id: 'item5', code: '1122334455667', name: 'Batata Frita Grande', quantity: 3, unitPrice: 15.00, total: 45.00 }
+          ],
+          status: 'closed',
+          total: 45.00,
+          table: 'Mesa 7',
+          createdAt: new Date(Date.now() - 10800000).toISOString(),
+          finishedAt: new Date(Date.now() - 9000000).toISOString()
         }
       ];
       localStorage.setItem(this.ordersKey, JSON.stringify(mockOrders));
@@ -126,6 +156,9 @@ export class MockOrderService {
       }
       if (filters.status && filters.status !== 'all') {
         filteredOrders = filteredOrders.filter(order => order.status === filters.status);
+      }
+      if (filters.location && filters.location !== 'all') {
+        filteredOrders = filteredOrders.filter(order => order.locationId === filters.location);
       }
     }
 

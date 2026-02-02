@@ -16,11 +16,14 @@
     >
       <!-- Tabs -->
       <div class="flex gap-2 mb-8">
-        <button
-          class="px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-md text-sm font-medium transition-colors"
-        >
-          Gerenciar Mesas
-        </button>
+        @for (location of locations; track location.id) {
+          <button
+            (click)="selectLocation(location.id)"
+            [class]="selectedLocation === location.id ? 'px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-md text-sm font-medium transition-colors' : 'px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm font-medium transition-colors'"
+          >
+            {{ location.name }}
+          </button>
+        }
       </div>
 
       <!-- Title -->
@@ -80,6 +83,7 @@
     [type]="modalType"
     [tableId]="selectedTable?.id"
     [entity]="selectedTable"
+    [selectedLocation]="selectedLocation"
     (close)="closeModal()"
     (saved)="onTableModalSave($event)"
   />

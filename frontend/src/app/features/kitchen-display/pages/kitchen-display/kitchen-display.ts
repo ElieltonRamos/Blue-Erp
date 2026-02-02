@@ -6,11 +6,13 @@ import { KitchenService } from '../../services/kitchen-display.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { KitchenOrder, Recipe } from '../../types/kitchen-display';
 import { MockKitchenService } from '../../services/kitchen-mock.service';
+import { FormField, ModalEditEntity } from '../../../../shared/modal-edit-entity/modal-edit-entity';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-kitchen-display',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ModalEditEntity],
   templateUrl: './kitchen-display.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -19,16 +21,36 @@ export class KitchenDisplay implements OnInit, OnDestroy {
   private notification = inject(NotificationService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private authService = inject(AuthService); // 🔐 Injeta AuthService
 
   orders: KitchenOrder[] = [];
   selectedRecipe: Recipe | null = null;
   showRecipeModal: boolean = false;
+  showKitchenConfigModal: boolean = false;
   isLoading: boolean = false;
-
+  
   private refreshSubscription?: Subscription;
   private timeUpdateSubscription?: Subscription;
 
+  // 🏪 Configuração de cozinha
+  private readonly KITCHEN_STORAGE_KEY = 'default_kitchen';
+  defaultKitchen: string | null = null;
+  
+  // Configuração do modal
+  kitchenConfigEntity: any = { kitchen: '' };
+  kitchenConfigFields: FormField[] = [
+    {
+      name: 'kitchen',
+      label: 'Cozinha Padrão',
+      type: 'select',
+      placeholder: 'Selecione a cozinha',
+      options: ['Todas as cozinhas', 'Cozinha 1', 'Cozinha 2', 'Cozinha 3'],
+      required: false
+    }
+  ];
+
   ngOnInit(): void {
+    this.loadKitchenConfig();
     this.loadOrders();
     this.setupAutoRefresh();
     this.setupTimeUpdates();
@@ -37,6 +59,12 @@ export class KitchenDisplay implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.refreshSubscription?.unsubscribe();
     this.timeUpdateSubscription?.unsubscribe();
+  }
+
+  // 🔐 Verifica se o usuário é admin
+  get isAdmin(): boolean {
+    const user = this.authService.getTokenPayload(); // Ou this.authService.getCurrentUser()
+    return user?.role === 'admin';
   }
 
   // 🔄 Configuração de atualização automática (a cada 30 segundos)
@@ -53,21 +81,80 @@ export class KitchenDisplay implements OnInit, OnDestroy {
     });
   }
 
+  // 🏪 Carrega configuração de cozinha do localStorage
+  private loadKitchenConfig(): void {
+    const saved = localStorage.getItem(this.KITCHEN_STORAGE_KEY);
+    this.defaultKitchen = saved || null;
+    this.kitchenConfigEntity.kitchen = saved || 'Todas as cozinhas';
+  }
+
+  // 💾 Salva configuração de cozinha no localStorage
+  saveKitchenConfig(data: any): void {
+    // 🔐 Verifica se é admin
+    if (!this.isAdmin) {
+      this.notification.error('Apenas administradores podem alterar a cozinha padrão');
+      this.closeKitchenConfigModal();
+      return;
+    }
+
+    const kitchen = data.kitchen;
+    
+    if (kitchen === 'Todas as cozinhas') {
+      this.defaultKitchen = null;
+      localStorage.removeItem(this.KITCHEN_STORAGE_KEY);
+      this.notification.success('Exibindo pedidos de todas as cozinhas');
+    } else {
+      this.defaultKitchen = kitchen;
+      localStorage.setItem(this.KITCHEN_STORAGE_KEY, kitchen);
+      this.notification.success(`Cozinha padrão definida: ${kitchen}`);
+    }
+    
+    this.closeKitchenConfigModal();
+    this.loadOrders();
+  }
+
+  // 🔧 Abre modal de configuração de cozinha
+  openKitchenConfigModal(): void {
+    // 🔐 Verifica se é admin antes de abrir o modal
+    if (!this.isAdmin) {
+      this.notification.error('Apenas administradores podem configurar a cozinha padrão');
+      return;
+    }
+
+    this.kitchenConfigEntity.kitchen = this.defaultKitchen || 'Todas as cozinhas';
+    this.showKitchenConfigModal = true;
+    this.cdr.markForCheck();
+  }
+
+  // ❌ Fecha modal de configuração de cozinha
+  closeKitchenConfigModal(): void {
+    this.showKitchenConfigModal = false;
+    this.cdr.markForCheck();
+  }
+
+  // 🔍 Filtra pedidos por cozinha (se configurada)
+  private filterOrdersByKitchen(orders: KitchenOrder[]): KitchenOrder[] {
+    if (!this.defaultKitchen) {
+      return orders;
+    }
+    return orders.filter(order => order.kitchen === this.defaultKitchen);
+  }
+
   // 📊 Getters computados
   get pendingOrders(): KitchenOrder[] {
-    return this.orders
+    return this.filterOrdersByKitchen(this.orders)
       .filter((o) => o.status === 'pending')
       .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   }
 
   get preparingOrders(): KitchenOrder[] {
-    return this.orders
+    return this.filterOrdersByKitchen(this.orders)
       .filter((o) => o.status === 'preparing')
       .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   }
 
   get readyOrders(): KitchenOrder[] {
-    return this.orders
+    return this.filterOrdersByKitchen(this.orders)
       .filter((o) => o.status === 'ready')
       .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   }
@@ -101,7 +188,6 @@ export class KitchenDisplay implements OnInit, OnDestroy {
   // 📥 Carrega pedidos do backend
   loadOrders(): void {
     this.isLoading = true;
-    
     this.kitchenService.getKitchenOrders().subscribe({
       next: (orders) => {
         this.orders = orders;
@@ -154,7 +240,6 @@ export class KitchenDisplay implements OnInit, OnDestroy {
   completeOrder(orderId: string): void {
     this.kitchenService.markAsDelivered(orderId).subscribe({
       next: () => {
-        // Remove o pedido da lista após ser entregue
         this.orders = this.orders.filter((o) => o.id !== orderId);
         this.notification.success('Pedido entregue!');
         this.cdr.markForCheck();

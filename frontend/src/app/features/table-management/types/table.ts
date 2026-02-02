@@ -12,11 +12,19 @@ export interface TableProduct {
 
 export type TableStatus = 'available' | 'occupied' | 'reserved';
 
+export type LocationId = 'salao-01' | 'salao-02' | 'salao-03';
+
+export interface Location {
+  id: LocationId;
+  name: string;
+}
+
 export interface Table {
   id?: number;
   number: number;
   capacity: number;
   status: TableStatus;
+  locationId: LocationId;
   customer?: string | null;
   time?: string | null;
   products?: TableProduct[];

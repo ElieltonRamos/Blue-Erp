@@ -1,13 +1,34 @@
 <!-- kitchen-display.component.html -->
 <div class="min-h-screen bg-linear-to-br from-purple-900 via-purple-800 to-purple-900 p-4">
-  <!-- Header -->
-  <div class="flex justify-between items-center mb-4 max-w-450 mx-auto">
-    <div class="flex items-center gap-4">
-      <h1 class="text-white text-2xl font-bold">🍳 Cozinha</h1>
-      <div class="bg-slate-800/50 rounded-lg px-4 py-2 border border-slate-700/50">
-        <span class="text-slate-400 text-sm">Total de Pedidos: </span>
-        <span class="text-white font-bold text-lg">{{ orders.length }}</span>
+  <!-- No cabeçalho, após o título -->
+  <div class="flex-1 flex justify-start gap-5 items-center mb-4">
+    <h1 class="text-white text-2xl font-bold">🍳 Cozinha</h1>
+    <div class="bg-slate-800/50 rounded-lg px-4 py-2 border border-slate-700/50">
+      <span class="text-slate-400 text-sm">Total de Pedidos: </span>
+      <span class="text-white font-bold text-lg">{{ orders.length }}</span>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <!-- Badge de cozinha atual -->
+      <div
+        *ngIf="defaultKitchen"
+        class="px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-lg"
+      >
+        <span class="text-blue-300 font-medium">📍 {{ defaultKitchen }}</span>
       </div>
+
+      <!-- Botão configurar cozinha -->
+      <button
+        *ngIf="isAdmin"
+        (click)="openKitchenConfigModal()"
+        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all shadow-lg hover:shadow-purple-500/20 flex items-center gap-2"
+        title="Configurar Cozinha"
+      >
+        <span>⚙️</span>
+        <span class="hidden sm:inline">Configurar Cozinha</span>
+      </button>
+
+      <!-- Botão atualizar -->
       <button
         (click)="refreshOrders()"
         [disabled]="isLoading"
@@ -23,17 +44,21 @@
           stroke="currentColor"
           stroke-width="2"
         >
-          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+          <path
+            d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"
+          />
         </svg>
         {{ isLoading ? 'Atualizando...' : 'Atualizar' }}
       </button>
+
+      <!-- Botão voltar -->
+      <button
+        (click)="goToMenu()"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full font-medium transition-colors"
+      >
+        Voltar para menu
+      </button>
     </div>
-    <button
-      (click)="goToMenu()"
-      class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full font-medium transition-colors"
-    >
-      Voltar para menu
-    </button>
   </div>
 
   <!-- Main Container -->
@@ -390,3 +415,24 @@
     </div>
   </div>
 </div>
+
+<app-modal-edit-entity
+  title="⚙️ Configurar Cozinha Padrão"
+  [show]="showKitchenConfigModal"
+  [entity]="kitchenConfigEntity"
+  [fields]="kitchenConfigFields"
+  (close)="closeKitchenConfigModal()"
+  (save)="saveKitchenConfig($event)"
+>
+  <p class="text-gray-300 mb-2">
+    Selecione a cozinha padrão para filtrar os pedidos. Se nenhuma cozinha for selecionada, todos os
+    pedidos serão exibidos.
+  </p>
+
+  <div class="p-2 bg-gray-700/50 rounded-lg border border-gray-600 mb-6">
+    <p class="text-sm text-gray-400 mb-1">Configuração atual:</p>
+    <p class="text-lg font-semibold text-white">
+      {{ defaultKitchen || 'Todas as cozinhas' }}
+    </p>
+  </div>
+</app-modal-edit-entity>

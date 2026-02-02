@@ -20,6 +20,7 @@ export class ListOrders implements OnInit {
   searchName: string = '';
   searchId: string = '';
   statusFilter: string = 'all';
+  locationFilter: string = 'all';
   currentPage: number = 1;
   itemsPerPage: number = 10;
   totalPages: number = 1;
@@ -47,6 +48,7 @@ export class ListOrders implements OnInit {
         searchName: this.searchName,
         searchId: this.searchId,
         status: this.statusFilter,
+        location: this.locationFilter,
         page: this.currentPage,
         limit: this.itemsPerPage,
       })
@@ -72,7 +74,8 @@ export class ListOrders implements OnInit {
       const matchesId =
         !this.searchId || order.id.toLowerCase().includes(this.searchId.toLowerCase());
       const matchesStatus = this.statusFilter === 'all' || order.status === this.statusFilter;
-      return matchesName && matchesId && matchesStatus;
+      const matchesLocation = this.locationFilter === 'all' || order.locationId === this.locationFilter;
+      return matchesName && matchesId && matchesStatus && matchesLocation;
     });
 
     this.totalPages = Math.ceil(this.filteredOrders.length / this.itemsPerPage);
@@ -84,6 +87,11 @@ export class ListOrders implements OnInit {
   }
 
   onStatusFilterChange(): void {
+    this.currentPage = 1;
+    this.loadOrders();
+  }
+
+  onLocationFilterChange(): void {
     this.currentPage = 1;
     this.loadOrders();
   }
@@ -104,6 +112,16 @@ export class ListOrders implements OnInit {
       canceled: 'bg-red-500/20 text-red-400 border border-red-500/30',
     };
     return styles[status];
+  }
+
+  getLocationLabel(locationId: string): string {
+    const labels: Record<string, string> = {
+      'local-01': 'Local 01',
+      'local-02': 'Local 02',
+      'local-03': 'Local 03',
+      'delivery': 'Delivery',
+    };
+    return labels[locationId] || locationId;
   }
 
   editOrder(orderId: string): void {

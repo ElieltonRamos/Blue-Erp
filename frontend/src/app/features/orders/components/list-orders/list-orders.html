@@ -84,6 +84,22 @@
         </select>
       </div>
     </div>
+
+    <!-- Location Filter Row -->
+    <div class="mt-4">
+      <label class="text-slate-300 text-sm mb-2 block">Local de Origem</label>
+      <select
+        [(ngModel)]="locationFilter"
+        (ngModelChange)="onLocationFilterChange()"
+        class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:border-cyan-500 transition-colors appearance-none cursor-pointer"
+      >
+        <option value="all">Todos os Locais</option>
+        <option value="local-01">Local 01</option>
+        <option value="local-02">Local 02</option>
+        <option value="local-03">Local 03</option>
+        <option value="delivery">Entregas</option>
+      </select>
+    </div>
   </div>
 
   <!-- Results Info -->
@@ -132,6 +148,11 @@
             class="text-left py-4 px-4 text-yellow-400 text-sm font-semibold uppercase tracking-wider"
           >
             Tipo
+          </th>
+          <th
+            class="text-left py-4 px-4 text-pink-400 text-sm font-semibold uppercase tracking-wider"
+          >
+            Local
           </th>
           <th
             class="text-left py-4 px-4 text-cyan-400 text-sm font-semibold uppercase tracking-wider"
@@ -187,6 +208,11 @@
             </span>
             <span *ngIf="order.type === 'delivery'" class="text-orange-400 text-sm font-medium">
               🚚 Delivery
+            </span>
+          </td>
+          <td class="py-4 px-4">
+            <span class="text-pink-400 text-sm font-medium">
+              {{ getLocationLabel(order.locationId) }}
             </span>
           </td>
           <td class="py-4 px-4">

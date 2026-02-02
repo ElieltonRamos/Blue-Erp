@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map, delay } from 'rxjs/operators';
+import { map, delay, take } from 'rxjs/operators';
 
-import { Table, TableProduct, ProductTable, CloseTabResponse, TableStatus } from '../types/table';
+import { Table, TableProduct, ProductTable, CloseTabResponse, TableStatus, LocationId } from '../types/table';
 import { environment } from '../../../core/services/environment';
 import { HttpClient } from '@angular/common/http';
 
@@ -50,8 +50,13 @@ export class TableMockService {
 
   private generateMockTables(count: number): Table[] {
     const tables: Table[] = [];
+    const locations: LocationId[] = ['salao-01', 'salao-02', 'salao-03'];
+    const tablesPerLocation = Math.ceil(count / 3);
 
     for (let i = 1; i <= count; i++) {
+      const locationIndex = Math.floor((i - 1) / tablesPerLocation);
+      const locationId = locations[locationIndex] || 'salao-03';
+      
       const status: TableStatus = i <= 3 ? 'occupied' : i <= 6 ? 'reserved' : 'available';
 
       tables.push({
@@ -59,14 +64,14 @@ export class TableMockService {
         number: i,
         capacity: 4,
         status,
-        customer:
-          status === 'occupied'
-            ? `Cliente ${i}`
-            : status === 'reserved'
-              ? `Cliente ${i} (reserva)`
-              : undefined,
+        customer: status === 'occupied'
+          ? `Cliente ${i}`
+          : status === 'reserved'
+            ? `Cliente ${i} (reserva)`
+            : undefined,
         time: status === 'reserved' ? '20:00' : undefined,
         products: [],
+        locationId
       });
     }
 
@@ -103,6 +108,7 @@ export class TableMockService {
 
   createTable(table: Table): Observable<Table> {
     return this.tablesSubject.pipe(
+      take(1), 
       map((tables) => {
         const maxId = Math.max(...tables.map((t) => t.id || 0), 0);
         const newId = maxId + 1;
@@ -123,6 +129,7 @@ export class TableMockService {
 
   editTable(id: number, updates: Partial<Table>): Observable<Table> {
     return this.tablesSubject.pipe(
+      take(1), 
       map((tables) => {
         const tableIndex = tables.findIndex((t) => t.id === id);
         if (tableIndex === -1) {
@@ -148,6 +155,7 @@ export class TableMockService {
 
   deleteTable(id: number): Observable<void> {
     return this.tablesSubject.pipe(
+      take(1), 
       map((tables) => {
         const filtered = tables.filter((t) => t.id !== id);
         this.tablesSubject.next(filtered);
@@ -159,12 +167,14 @@ export class TableMockService {
 
   occupyTable(id: number, customer: string): Observable<Table> {
     return this.tablesSubject.pipe(
+      take(1),
       map((tables) => {
         const table = tables.find((t) => t.id === id);
         if (!table || !(table as any).status) {
           throw new Error(`Table ${id} not found`);
         }
-        if (table.status === 'occupied' || table.status === 'reserved') {
+        if (table.status === 'occupied') {
+          console.log(table.status)
           throw new Error(`Table ${id} is not available`);
         }
 
@@ -187,6 +197,7 @@ export class TableMockService {
 
   releaseTable(id: number): Observable<Table> {
     return this.tablesSubject.pipe(
+      take(1),
       map((tables) => {
         const table = tables.find((t) => t.id === id);
         if (!table || !(table as any).status) {
@@ -213,6 +224,7 @@ export class TableMockService {
 
   reserveTable(id: number, customer: string, time: string): Observable<Table> {
     return this.tablesSubject.pipe(
+      take(1),
       map((tables) => {
         const table = tables.find((t) => t.id === id);
         if (!table || !(table as any).status) {

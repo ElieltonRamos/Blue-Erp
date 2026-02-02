@@ -13,11 +13,13 @@ export interface OrderItem {
 
 export type OrderStatus = 'open' | 'closed' | 'canceled';
 export type OrderType = 'dine_in' | 'delivery';
+export type OrderLocation = 'local-01' | 'local-02' | 'local-03' | 'delivery';
 export type PaymentMethod = 'money' | 'credit' | 'debit' | 'pix' | 'term';
 
 export interface Order {
   id: string;
   type: OrderType;
+  locationId: OrderLocation;
   customerName?: string;
   items: OrderItem[];
   status: OrderStatus;
@@ -35,6 +37,7 @@ export interface Order {
 
 export interface CreateOrderDto {
   type: OrderType;
+  locationId: OrderLocation;
   customerName?: string;
   items: OrderItem[];
   total: number;
@@ -59,6 +62,7 @@ export interface OrderFilters {
   searchName?: string;
   searchId?: string;
   status?: string;
+  location?: string;
   page?: number;
   limit?: number;
 }

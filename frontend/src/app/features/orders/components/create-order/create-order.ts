@@ -33,6 +33,7 @@ export class CreateOrder {
 
   formCreateOrder = new FormGroup({
     type: new FormControl<'dine_in' | 'delivery'>('dine_in', [Validators.required]),
+    locationId: new FormControl<string>('local-01', [Validators.required]),
     customerName: new FormControl<string>(''),
     table: new FormControl<string>(''),
     address: new FormControl<string>(''),
@@ -50,10 +51,16 @@ export class CreateOrder {
         // Para pedidos na mesa, o campo address não é necessário
         this.formCreateOrder.get('address')?.clearValidators();
         this.formCreateOrder.get('table')?.setValidators([Validators.required]);
+        // Se mudar para dine_in e locationId for delivery, volta para local-01
+        if (this.formCreateOrder.get('locationId')?.value === 'delivery') {
+          this.formCreateOrder.get('locationId')?.setValue('local-01');
+        }
       } else {
         // Para delivery, o campo address é obrigatório
         this.formCreateOrder.get('address')?.setValidators([Validators.required]);
         this.formCreateOrder.get('table')?.clearValidators();
+        // Se mudar para delivery, define locationId como delivery
+        this.formCreateOrder.get('locationId')?.setValue('delivery');
       }
       this.formCreateOrder.get('address')?.updateValueAndValidity();
       this.formCreateOrder.get('table')?.updateValueAndValidity();
@@ -206,6 +213,7 @@ export class CreateOrder {
 
       const newOrder: CreateOrderDto = {
         type: formValue.type!,
+        locationId: formValue.locationId as any,
         customerName: formValue.customerName || undefined,
         items: this.orderItems,
         total: this.calculatedTotal,
@@ -225,6 +233,7 @@ export class CreateOrder {
           // Resetar formulário
           this.formCreateOrder.reset({
             type: 'dine_in',
+            locationId: 'local-01',
           });
           this.orderItems = [];
           this.cdr.detectChanges();

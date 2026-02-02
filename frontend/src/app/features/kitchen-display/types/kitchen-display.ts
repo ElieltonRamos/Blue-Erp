@@ -26,6 +26,7 @@ export interface KitchenOrder {
   type: 'dine_in' | 'delivery';
   customerName?: string;
   items: KitchenOrderItem[];
+  kitchen?: string;
   status: KitchenOrderStatus;
   createdAt: string;
   startedAt?: string;
