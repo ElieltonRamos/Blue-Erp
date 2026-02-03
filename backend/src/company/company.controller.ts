@@ -1,9 +1,30 @@
 // src/company/company.controller.ts
-import { Controller, Get, Post, Body, Patch, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  HttpStatus,
+  Delete,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+} from '@nestjs/common';
+import { Express } from 'express';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CompanyService } from './company.service.js';
 import { CreateCompanyDto } from './dto/create-company.dto.js';
 import { UpdateCompanyDto } from './dto/update-company.dto.js';
+
+// Interface para arquivo uploaded (compatível com o service)
+interface UploadedFile {
+  originalname: string;
+  buffer: Buffer;
+  mimetype: string;
+  size: number;
+}
 
 @ApiTags('company')
 @Controller('company')
@@ -52,6 +73,16 @@ export class CompanyController {
     return this.companyService.update(updateCompanyDto);
   }
 
+  @Delete()
+  @ApiOperation({ summary: 'Deletar empresa (reset config)' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Empresa deletada com sucesso',
+  })
+  deleteCompany() {
+    return this.companyService.deleteCompany();
+  }
+
   @Get('configured')
   @ApiOperation({ summary: 'Verificar se empresa está configurada' })
   @ApiResponse({
@@ -61,5 +92,97 @@ export class CompanyController {
   async isConfigured() {
     const configured = await this.companyService.isCompanyConfigured();
     return { configured };
+  }
+
+  @Post('nfceIncrement')
+  @ApiOperation({ summary: 'Incrementa número NFC-e' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Número incrementado com sucesso',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Empresa não configurada',
+  })
+  incrementNfceNumber() {
+    return this.companyService.incrementNfceNumber();
+  }
+
+  @Get('certificado')
+  @ApiOperation({ summary: 'Status certificado digital' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Status do certificado',
+  })
+  getCertificadoConfig() {
+    return this.companyService.getCertificadoConfig();
+  }
+
+  @Get('certificado/buffer')
+  @ApiOperation({ summary: 'Obter buffer do certificado digital' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Buffer do certificado retornado',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Certificado não encontrado',
+  })
+  getCertificadoBuffer() {
+    return this.companyService.getCertificadoBuffer();
+  }
+
+  @Patch('certificate')
+  @ApiOperation({ summary: 'Upload certificado digital' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Certificado enviado com sucesso',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Arquivo inválido',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Empresa não configurada',
+  })
+  @UseInterceptors(FileInterceptor('certificado'))
+  uploadCompanyCertificate(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('certificadoSenha') certificadoSenha: string,
+    @Body('expirationDate') expirationDate?: string,
+  ) {
+    // Valida se o arquivo existe
+    if (!file) {
+      throw new BadRequestException('Arquivo não fornecido');
+    }
+
+    // Converte para o formato esperado pelo service
+    const uploadedFile = {
+      originalname: file.originalname as string,
+      buffer: file.buffer as Buffer,
+      mimetype: file.mimetype as string,
+      size: file.size as number,
+    };
+
+    return this.companyService.uploadCompanyCertificate(
+      uploadedFile,
+      certificadoSenha,
+      expirationDate ? new Date(expirationDate) : undefined,
+    );
+  }
+
+  @Delete('certificate')
+  @ApiOperation({ summary: 'Deletar certificado digital' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Certificado removido com sucesso',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Certificado não encontrado',
+  })
+  deleteCertificate() {
+    return this.companyService.deleteCertificate();
   }
 }

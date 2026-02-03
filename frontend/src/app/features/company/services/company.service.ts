@@ -21,7 +21,7 @@ export class CompanyService {
 
   // PUT /company/:id - Atualiza dados da empresa
   updateCompany(company: Partial<Company>) {
-    return this.client.put<Company>(`${this.apiUrl}/company`, company);
+    return this.client.patch<Company>(`${this.apiUrl}/company`, company);
   }
 
   // DELETE /company/:id - Deleta uma empresa pelo ID
@@ -49,7 +49,7 @@ export class CompanyService {
     formData.append('certificado', file); // mesmo nome do campo no multer
     formData.append('certificadoSenha', certificadoSenha);
 
-    return this.client.put<Company>(`${this.apiUrl}/company/certificate`, formData);
+    return this.client.patch<Company>(`${this.apiUrl}/company/certificate`, formData);
   }
 
   importIbptFromCsv(file: File) {

@@ -9,16 +9,34 @@ datasource db {
 }
 
 model Company {
-  id        Int      @id @default(autoincrement())
-  name      String
-  cnpj      String   @unique
-  phone     String?
-  email     String?
-  address   String?
-  city      String?
-  state     String?
-  zipCode   String?  @map("zip_code")
-  logo      String? // Logo URL
+  id                        Int       @id @default(autoincrement())
+  cnpj                      String    @unique // SEM formatação (12345678000190)
+  corporateName             String    @map("corporate_name") // Razão social
+  tradeName                 String    @map("trade_name") // Nome fantasia
+  stateRegistration         String    @map("state_registration") // Inscrição estadual
+  taxRegime                 String    @map("tax_regime")
+  street                    String
+  number                    String
+  complement                String?
+  neighborhood              String
+  city                      String
+  cityCode                  String    @map("city_code") // IBGE
+  state                     String // UF
+  zipCode                   String    @map("zip_code") // CEP
+  phone                     String
+  email                     String?
+  nfceSeries                String    @map("nfce_series")
+  nfceCurrentNumber         Int       @default(1) @map("nfce_current_number")
+  nfceEnvironment           String    @default("staging") @map("nfce_environment") // production|staging
+  nfceCsc                   String    @map("nfce_csc")
+  nfceCscId                 String    @map("nfce_csc_id")
+  certificatePath           String    @map("certificate_path")
+  certificatePassword       String    @map("certificate_password")
+  certificateExpirationDate DateTime? @map("certificate_expiration_date")
+  ibptVersion               String    @default("4.0") @map("ibpt_version")
+  licenseKey                String    @map("license_key")
+  licenseToken              String    @map("license_token")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

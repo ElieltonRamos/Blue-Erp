@@ -10,21 +10,21 @@
 
       @if (companyData) {
         <div class="mb-4 pb-3 border-b border-gray-300">
-          <p class="text-lg font-bold">{{ companyData.nomeFantasia }}</p>
-          <p><strong>Razão Social:</strong> {{ companyData.razaoSocial }}</p>
+          <p class="text-lg font-bold">{{ companyData.tradeName }}</p>
+          <p><strong>Razão Social:</strong> {{ companyData.corporateName }}</p>
           <p><strong>CNPJ:</strong> {{ formatCnpj(companyData.cnpj) }}</p>
           <p>
-            <strong>Endereço:</strong> {{ companyData.logradouro }}, {{ companyData.numero }}
-            @if (companyData.complemento) {
-              , {{ companyData.complemento }}
+            <strong>Endereço:</strong> {{ companyData.street }}, {{ companyData.number }}
+            @if (companyData.complement) {
+              , {{ companyData.complement }}
             }
           </p>
           <p>
-            {{ companyData.bairro }} - {{ companyData.municipio }}/{{ companyData.uf }} - CEP:
-            {{ companyData.cep }}
+            {{ companyData.neighborhood }} - {{ companyData.city }}/{{ companyData.state }} - CEP:
+            {{ companyData.cityCode }}
           </p>
-          @if (companyData.telefone) {
-            <p><strong>Tel:</strong> {{ formatPhone(companyData.telefone) }}</p>
+          @if (companyData.phone) {
+            <p><strong>Tel:</strong> {{ formatPhone(companyData.phone) }}</p>
           }
         </div>
       }
