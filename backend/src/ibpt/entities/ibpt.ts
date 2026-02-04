@@ -1,8 +1,10 @@
-export interface Ibpt {
+export class Ibpt {
   id?: number;
   ncm: string;
-  aliqFederal: number;
-  aliqEstadual: number;
-  aliqMunicipal: number;
+  federalTaxRate: number; // Mudou de aliqFederal
+  stateTaxRate: number; // Mudou de aliqEstadual
+  municipalTaxRate: number; // Mudou de aliqMunicipal
   version: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

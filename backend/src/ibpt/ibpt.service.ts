@@ -33,9 +33,9 @@ export class IbptService {
     const validSortKeys = [
       'id',
       'ncm',
-      'aliqFederal',
-      'aliqEstadual',
-      'aliqMunicipal',
+      'federalTaxRate',
+      'stateTaxRate',
+      'municipalTaxRate',
       'version',
     ];
     const validSortOrders = ['asc', 'desc'];
@@ -126,62 +126,14 @@ export class IbptService {
 
     return this.prisma.client.ibpt.create({
       data: {
-        ...data,
         ncm: cleanedNcm,
+        federalTaxRate: data.federalTaxRate,
+        stateTaxRate: data.stateTaxRate,
+        municipalTaxRate: data.municipalTaxRate,
+        version: data.version,
       },
     });
   }
-
-  // async updateAliqSale(saleId: number): Promise<void> {
-  //   // 1) Verifica se a venda existe
-  //   const sale = await this.prisma.client.sale.findUnique({
-  //     where: { id: saleId },
-  //   });
-
-  //   if (!sale) {
-  //     throw new NotFoundException('Venda não encontrada');
-  //   }
-
-  //   // 2) Busca itens da venda em sales_products
-  //   const itens = await this.prisma.client.salesProducts.findMany({
-  //     where: { saleId },
-  //   });
-
-  //   if (!itens || itens.length === 0) {
-  //     throw new NotFoundException('Venda sem itens');
-  //   }
-
-  //   // 3) Processa cada item
-  //   for (const item of itens) {
-  //     const ncm = this.cleanNcm(String(item.ncm || ''));
-
-  //     const aliquotas = await this.prisma.client.ibpt.findFirst({
-  //       where: { ncm },
-  //     });
-
-  //     if (!aliquotas) continue;
-
-  //     const qCom = this.toNumber(item.qCom, 4);
-  //     const vUnCom = this.toNumber(item.vUnCom, 4);
-  //     const vProd = qCom * vUnCom;
-
-  //     const aliqTotal =
-  //       aliquotas.aliqFederal +
-  //       aliquotas.aliqEstadual +
-  //       aliquotas.aliqMunicipal;
-  //     const vTotTrib = aliqTotal > 0 ? vProd * (aliqTotal / 100) : 0;
-
-  //     await this.prisma.client.salesProducts.update({
-  //       where: { id: item.id },
-  //       data: {
-  //         aliqFederal: aliquotas.aliqFederal,
-  //         aliqEstadual: aliquotas.aliqEstadual,
-  //         aliqMunicipal: aliquotas.aliqMunicipal,
-  //         vTotTrib,
-  //       },
-  //     });
-  //   }
-  // }
 
   async importFromCsv(csv: string): Promise<void> {
     const linhas = csv
@@ -199,7 +151,13 @@ export class IbptService {
       ? linhas.slice(1)
       : linhas;
 
-    const registros: Ibpt[] = [];
+    const registros: Array<{
+      ncm: string;
+      federalTaxRate: number;
+      stateTaxRate: number;
+      municipalTaxRate: number;
+      version: string;
+    }> = [];
 
     for (const linha of linhasDados) {
       const [
@@ -222,17 +180,18 @@ export class IbptService {
 
       if (!ncm.trim()) continue;
 
-      const aliqFederal =
+      const federalTaxRate =
         Number((nacionalFederal || '0').replace(',', '.')) || 0;
-      const aliqEstadual = Number((estadual || '0').replace(',', '.')) || 0;
-      const aliqMunicipal = Number((municipal || '0').replace(',', '.')) || 0;
+      const stateTaxRate = Number((estadual || '0').replace(',', '.')) || 0;
+      const municipalTaxRate =
+        Number((municipal || '0').replace(',', '.')) || 0;
       const version = (versao || '').trim();
 
       registros.push({
         ncm,
-        aliqFederal,
-        aliqEstadual,
-        aliqMunicipal,
+        federalTaxRate,
+        stateTaxRate,
+        municipalTaxRate,
         version,
       });
     }
