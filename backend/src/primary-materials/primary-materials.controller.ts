@@ -29,6 +29,7 @@ export class PrimaryMaterialsController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createPrimaryMaterialDto: CreatePrimaryMaterialDto) {
+    console.log(createPrimaryMaterialDto);
     return this.primaryMaterialsService.create(createPrimaryMaterialDto);
   }
 
@@ -75,7 +76,7 @@ export class PrimaryMaterialsController {
    * Buscar matéria-prima por ID
    */
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: number) {
     return this.primaryMaterialsService.findOne(id);
   }
 
@@ -94,7 +95,7 @@ export class PrimaryMaterialsController {
    */
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() updatePrimaryMaterialDto: UpdatePrimaryMaterialDto,
   ) {
     return this.primaryMaterialsService.update(id, updatePrimaryMaterialDto);
@@ -105,7 +106,7 @@ export class PrimaryMaterialsController {
    * Ajustar estoque da matéria-prima (entrada/saída/definir valor)
    */
   @Patch(':id/adjust-stock')
-  adjustStock(@Param('id') id: string, @Body() adjustStockDto: AdjustStockDto) {
+  adjustStock(@Param('id') id: number, @Body() adjustStockDto: AdjustStockDto) {
     return this.primaryMaterialsService.adjustStock(id, adjustStockDto);
   }
 
@@ -115,7 +116,7 @@ export class PrimaryMaterialsController {
    */
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: number) {
     return this.primaryMaterialsService.remove(id);
   }
 
@@ -126,7 +127,7 @@ export class PrimaryMaterialsController {
    */
   @Delete(':id/force')
   @HttpCode(HttpStatus.OK)
-  forceDelete(@Param('id') id: string) {
+  forceDelete(@Param('id') id: number) {
     return this.primaryMaterialsService.forceDelete(id);
   }
 }

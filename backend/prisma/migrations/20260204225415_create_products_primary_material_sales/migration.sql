@@ -5,7 +5,6 @@
   - You are about to drop the column `aliq_estadual` on the `ibpt` table. All the data in the column will be lost.
   - You are about to drop the column `aliq_federal` on the `ibpt` table. All the data in the column will be lost.
   - You are about to drop the column `aliq_municipal` on the `ibpt` table. All the data in the column will be lost.
-  - A unique constraint covering the columns `[ncm,version]` on the table `ibpt` will be added. If there are existing duplicate values, this will fail.
   - Added the required column `federal_tax_rate` to the `ibpt` table without a default value. This is not possible if the table is not empty.
   - Added the required column `municipal_tax_rate` to the `ibpt` table without a default value. This is not possible if the table is not empty.
   - Added the required column `state_tax_rate` to the `ibpt` table without a default value. This is not possible if the table is not empty.
@@ -128,7 +127,7 @@ CREATE TABLE `sale_items` (
 
 -- CreateTable
 CREATE TABLE `primary_materials` (
-    `id` VARCHAR(191) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
     `code` VARCHAR(191) NOT NULL,
     `unit` ENUM('UN', 'KG', 'LT', 'MT', 'CX', 'ML', 'GR', 'DZ') NOT NULL,
@@ -148,10 +147,10 @@ CREATE TABLE `primary_materials` (
 
 -- CreateTable
 CREATE TABLE `composition_items` (
-    `id` VARCHAR(191) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `quantity` DECIMAL(10, 3) NOT NULL,
     `product_id` INTEGER NOT NULL,
-    `material_id` VARCHAR(191) NOT NULL,
+    `material_id` INTEGER NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
@@ -163,7 +162,7 @@ CREATE TABLE `composition_items` (
 
 -- CreateTable
 CREATE TABLE `preparation_steps` (
-    `id` VARCHAR(191) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `order` INTEGER NOT NULL,
     `description` TEXT NOT NULL,
     `product_id` INTEGER NOT NULL,

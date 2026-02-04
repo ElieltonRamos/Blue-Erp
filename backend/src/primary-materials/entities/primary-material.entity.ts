@@ -7,6 +7,8 @@ export class PrimaryMaterial {
   unit: Unit;
   unitCost: number;
   currentStock: number;
+  minStock?: number;
+  expiryDate?: Date;
   active: boolean;
   ncm?: string | null;
   cfop?: string | null;

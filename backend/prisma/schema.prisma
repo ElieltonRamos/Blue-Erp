@@ -304,13 +304,15 @@ enum FiscalStatus {
 }
 
 model PrimaryMaterial {
-  id           String  @id @default(uuid())
+  id           Int       @id @default(autoincrement())
   name         String
-  code         String  @unique // Código interno
+  code         String    @unique // Código interno
   unit         Unit
-  unitCost     Decimal @map("unit_cost") @db.Decimal(10, 2)
-  currentStock Decimal @default(0) @map("current_stock") @db.Decimal(10, 3)
-  active       Boolean @default(true)
+  unitCost     Decimal   @map("unit_cost") @db.Decimal(10, 2)
+  currentStock Decimal   @default(0) @map("current_stock") @db.Decimal(10, 3)
+  minStock     Decimal?  @map("min_stock") @db.Decimal(10, 3) // Estoque mínimo
+  expiryDate   DateTime? @map("expiry_date") // Data de validade
+  active       Boolean   @default(true)
 
   // Informações fiscais básicas (matéria-prima também pode precisar)
   ncm  String?
@@ -327,12 +329,12 @@ model PrimaryMaterial {
 }
 
 model CompositionItem {
-  id       String  @id @default(uuid())
+  id       Int     @id @default(autoincrement())
   quantity Decimal @db.Decimal(10, 3)
 
   productId  Int             @map("product_id")
   product    Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
-  materialId String          @map("material_id")
+  materialId Int             @map("material_id")
   material   PrimaryMaterial @relation(fields: [materialId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -345,7 +347,7 @@ model CompositionItem {
 }
 
 model PreparationStep {
-  id          String @id @default(uuid())
+  id          Int    @id @default(autoincrement())
   order       Int
   description String @db.Text
 

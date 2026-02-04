@@ -1,342 +1,316 @@
-  <!-- Formulário -->
-  <form
-    (ngSubmit)="onSubmit()"
-    [formGroup]="formCreateMaterial"
-    class="bg-linear-to-br from-[#1d2a3c] to-[#2a3f5f] p-8 rounded-2xl shadow-2xl space-y-8"
-  >
-    <!-- Cabeçalho do Formulário -->
-    <div class="border-b border-gray-600 pb-4">
-      <h2 class="text-3xl font-bold text-white mb-2">Cadastro de Matéria-Prima</h2>
-      <p class="text-gray-300 text-sm">
-        Preencha as informações da matéria-prima para controle de estoque
-      </p>
+<!-- Formulário -->
+<form
+  (ngSubmit)="onSubmit()"
+  [formGroup]="formCreateMaterial"
+  class="bg-linear-to-br from-[#1d2a3c] to-[#2a3f5f] p-8 rounded-2xl shadow-2xl space-y-8"
+>
+  <!-- Cabeçalho do Formulário -->
+  <div class="border-b border-gray-600 pb-4">
+    <h2 class="text-3xl font-bold text-white mb-2">Cadastro de Matéria-Prima</h2>
+    <p class="text-gray-300 text-sm">
+      Preencha as informações da matéria-prima para controle de estoque
+    </p>
+  </div>
+
+  <!-- Seção: Informações Básicas -->
+  <div class="space-y-6">
+    <h3 class="text-xl font-semibold text-blue-400 flex items-center gap-2">
+      <span class="w-1 h-6 bg-blue-400 rounded"></span>
+      Informações Básicas
+    </h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Nome da Matéria-Prima - Ocupa mais espaço -->
+      <div class="md:col-span-2">
+        <label for="name" class="block text-gray-300 font-medium mb-2 text-sm"
+          >Nome da Matéria-Prima <span class="text-red-400">*</span></label
+        >
+        <input
+          id="name"
+          formControlName="name"
+          type="text"
+          required
+          placeholder="Ex: Farinha de Trigo"
+          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
+        />
+        <ng-container
+          *ngIf="formCreateMaterial.get('name')?.touched && formCreateMaterial.get('name')?.invalid"
+        >
+          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Digite o nome da matéria-prima (mínimo 3 caracteres)
+          </p>
+        </ng-container>
+      </div>
+
+      <!-- Código -->
+      <div>
+        <label for="code" class="block text-gray-300 font-medium mb-2 text-sm"
+          >Código <span class="text-red-400">*</span></label
+        >
+        <input
+          id="code"
+          formControlName="code"
+          type="text"
+          required
+          placeholder="Ex: MP-001"
+          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
+        />
+        <ng-container
+          *ngIf="formCreateMaterial.get('code')?.touched && formCreateMaterial.get('code')?.invalid"
+        >
+          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Digite o código
+          </p>
+        </ng-container>
+      </div>
     </div>
+  </div>
 
-    <!-- Seção: Informações Básicas -->
-    <div class="space-y-6">
-      <h3 class="text-xl font-semibold text-blue-400 flex items-center gap-2">
-        <span class="w-1 h-6 bg-blue-400 rounded"></span>
-        Informações Básicas
-      </h3>
+  <!-- Seção: Estoque e Custos -->
+  <div class="space-y-6">
+    <h3 class="text-xl font-semibold text-green-400 flex items-center gap-2">
+      <span class="w-1 h-6 bg-green-400 rounded"></span>
+      Estoque e Custos
+    </h3>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Nome da Matéria-Prima - Ocupa mais espaço -->
-        <div class="md:col-span-2">
-          <label for="name" class="block text-gray-300 font-medium mb-2 text-sm"
-            >Nome da Matéria-Prima <span class="text-red-400">*</span></label
-          >
-          <input
-            id="name"
-            formControlName="name"
-            type="text"
-            required
-            placeholder="Ex: Farinha de Trigo"
-            class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
-          />
-          <ng-container
-            *ngIf="
-              formCreateMaterial.get('name')?.touched && formCreateMaterial.get('name')?.invalid
-            "
-          >
-            <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fill-rule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              Digite o nome da matéria-prima (mínimo 3 caracteres)
-            </p>
-          </ng-container>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Unidade de Medida -->
+      <div>
+        <label for="unit" class="block text-gray-300 font-medium mb-2 text-sm"
+          >Unidade <span class="text-red-400">*</span></label
+        >
+        <select
+          id="unit"
+          formControlName="unit"
+          required
+          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
+          style="
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            background-size: 1.2em;
+          "
+        >
+          <option *ngFor="let unitOption of unitOptions" [value]="unitOption.value">
+            {{ unitOption.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Estoque Atual -->
+      <div>
+        <label for="currentStock" class="block text-gray-300 font-medium mb-2 text-sm"
+          >Estoque Atual <span class="text-red-400">*</span></label
+        >
+        <input
+          id="currentStock"
+          formControlName="currentStock"
+          type="number"
+          step="0.01"
+          required
+          placeholder="0"
+          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
+        />
+        <ng-container
+          *ngIf="
+            formCreateMaterial.get('currentStock')?.touched &&
+            formCreateMaterial.get('currentStock')?.invalid
+          "
+        >
+          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Digite o estoque atual
+          </p>
+        </ng-container>
+      </div>
+
+      <!-- Estoque Mínimo -->
+      <div>
+        <label for="minimumStock" class="block text-gray-300 font-medium mb-2 text-sm"
+          >Estoque Mínimo <span class="text-red-400">*</span></label
+        >
+        <input
+          id="minimumStock"
+          formControlName="minimumStock"
+          type="number"
+          step="0.01"
+          required
+          placeholder="0"
+          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none"
+        />
+        <ng-container
+          *ngIf="
+            formCreateMaterial.get('minimumStock')?.touched &&
+            formCreateMaterial.get('minimumStock')?.invalid
+          "
+        >
+          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Digite o estoque mínimo
+          </p>
+        </ng-container>
+      </div>
+
+      <!-- Status do Estoque (Calculado) -->
+      <div class="bg-white/5 p-3 rounded-lg border border-green-400/30">
+        <label class="block text-gray-300 font-medium mb-2 text-sm">Status do Estoque</label>
+        <div class="text-xl font-bold" [ngClass]="getStockStatus().class">
+          {{ getStockStatus().status }}
         </div>
-
-        <!-- Código -->
-        <div>
-          <label for="code" class="block text-gray-300 font-medium mb-2 text-sm"
-            >Código <span class="text-red-400">*</span></label
-          >
-          <input
-            id="code"
-            formControlName="code"
-            type="text"
-            required
-            placeholder="Ex: MP-001"
-            class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
-          />
-          <ng-container
-            *ngIf="
-              formCreateMaterial.get('code')?.touched && formCreateMaterial.get('code')?.invalid
-            "
-          >
-            <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fill-rule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              Digite o código
-            </p>
-          </ng-container>
-        </div>
+        <p class="text-xs text-gray-400 mt-1">Calculado automaticamente</p>
       </div>
     </div>
 
-    <!-- Seção: Estoque e Custos -->
-    <div class="space-y-6">
-      <h3 class="text-xl font-semibold text-green-400 flex items-center gap-2">
-        <span class="w-1 h-6 bg-green-400 rounded"></span>
-        Estoque e Custos
-      </h3>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Unidade de Medida -->
-        <div>
-          <label for="unit" class="block text-gray-300 font-medium mb-2 text-sm"
-            >Unidade <span class="text-red-400">*</span></label
-          >
-          <select
-            id="unit"
-            formControlName="unit"
-            required
-            class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
-            style="
-              background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
-              background-repeat: no-repeat;
-              background-position: right 0.7rem center;
-              background-size: 1.2em;
-            "
-          >
-            <option *ngFor="let unitOption of unitOptions" [value]="unitOption">
-              {{ unitOption }}
-            </option>
-          </select>
-          <ng-container
-            *ngIf="
-              formCreateMaterial.get('unit')?.touched && formCreateMaterial.get('unit')?.invalid
-            "
-          >
-            <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fill-rule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              Selecione a unidade
-            </p>
-          </ng-container>
-        </div>
-
-        <!-- Estoque Atual -->
-        <div>
-          <label for="currentStock" class="block text-gray-300 font-medium mb-2 text-sm"
-            >Estoque Atual <span class="text-red-400">*</span></label
-          >
-          <input
-            id="currentStock"
-            formControlName="currentStock"
-            type="number"
-            step="0.01"
-            required
-            placeholder="0"
-            class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
-          />
-          <ng-container
-            *ngIf="
-              formCreateMaterial.get('currentStock')?.touched &&
-              formCreateMaterial.get('currentStock')?.invalid
-            "
-          >
-            <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fill-rule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              Digite o estoque atual
-            </p>
-          </ng-container>
-        </div>
-
-        <!-- Estoque Mínimo -->
-        <div>
-          <label for="minimumStock" class="block text-gray-300 font-medium mb-2 text-sm"
-            >Estoque Mínimo <span class="text-red-400">*</span></label
-          >
-          <input
-            id="minimumStock"
-            formControlName="minimumStock"
-            type="number"
-            step="0.01"
-            required
-            placeholder="0"
-            class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none"
-          />
-          <ng-container
-            *ngIf="
-              formCreateMaterial.get('minimumStock')?.touched &&
-              formCreateMaterial.get('minimumStock')?.invalid
-            "
-          >
-            <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fill-rule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              Digite o estoque mínimo
-            </p>
-          </ng-container>
-        </div>
-
-        <!-- Status do Estoque (Calculado) -->
-        <div class="bg-white/5 p-3 rounded-lg border border-green-400/30">
-          <label class="block text-gray-300 font-medium mb-2 text-sm">Status do Estoque</label>
-          <div class="text-xl font-bold" [ngClass]="getStockStatus().class">
-            {{ getStockStatus().status }}
-          </div>
-          <p class="text-xs text-gray-400 mt-1">Calculado automaticamente</p>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Custo Unitário -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Custo Unitário -->
+      <div class="relative">
+        <label for="unitCost" class="block text-gray-300 font-medium mb-2 text-sm"
+          >Custo Unitário <span class="text-red-400">*</span></label
+        >
         <div class="relative">
-          <label for="unitCost" class="block text-gray-300 font-medium mb-2 text-sm"
-            >Custo Unitário <span class="text-red-400">*</span></label
-          >
-          <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">R$</span>
-            <input
-              id="unitCost"
-              formControlName="unitCost"
-              type="number"
-              step="0.01"
-              required
-              placeholder="0,00"
-              class="w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
-            />
-          </div>
-          <ng-container
-            *ngIf="
-              formCreateMaterial.get('unitCost')?.touched &&
-              formCreateMaterial.get('unitCost')?.invalid
-            "
-          >
-            <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fill-rule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              Digite o custo unitário
-            </p>
-          </ng-container>
-        </div>
-
-        <!-- Data de Validade -->
-        <div>
-          <label for="expiryDate" class="block text-gray-300 font-medium mb-2 text-sm"
-            >Data de Validade <span class="text-gray-400 text-xs">(opcional)</span></label
-          >
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">R$</span>
           <input
-            id="expiryDate"
-            formControlName="expiryDate"
-            type="date"
-            class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 outline-none"
+            id="unitCost"
+            formControlName="unitCost"
+            type="number"
+            step="0.01"
+            required
+            placeholder="0,00"
+            class="w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
           />
-          <p class="text-gray-400 text-xs mt-1">Deixe vazio se não houver validade</p>
         </div>
+        <ng-container
+          *ngIf="
+            formCreateMaterial.get('unitCost')?.touched &&
+            formCreateMaterial.get('unitCost')?.invalid
+          "
+        >
+          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Digite o custo unitário
+          </p>
+        </ng-container>
+      </div>
 
-        <!-- Valor Total em Estoque (Calculado) -->
-        <div class="bg-white/5 p-3 rounded-lg border border-green-400/30">
-          <label class="block text-gray-300 font-medium mb-2 text-sm">Valor Total em Estoque</label>
-          <div class="text-2xl font-bold text-green-400">R$ {{ calculateTotalValue() }}</div>
-          <p class="text-xs text-gray-400 mt-1">Estoque × Custo unitário</p>
-        </div>
+      <!-- Data de Validade -->
+      <div>
+        <label for="expiryDate" class="block text-gray-300 font-medium mb-2 text-sm"
+          >Data de Validade <span class="text-gray-400 text-xs">(opcional)</span></label
+        >
+        <input
+          id="expiryDate"
+          formControlName="expiryDate"
+          type="date"
+          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 outline-none"
+        />
+        <p class="text-gray-400 text-xs mt-1">Deixe vazio se não houver validade</p>
+      </div>
+
+      <!-- Valor Total em Estoque (Calculado) -->
+      <div class="bg-white/5 p-3 rounded-lg border border-green-400/30">
+        <label class="block text-gray-300 font-medium mb-2 text-sm">Valor Total em Estoque</label>
+        <div class="text-2xl font-bold text-green-400">R$ {{ calculateTotalValue() }}</div>
+        <p class="text-xs text-gray-400 mt-1">Estoque × Custo unitário</p>
       </div>
     </div>
+  </div>
 
-    <!-- Status Ativo -->
-    <div class="space-y-3">
-      <label class="block text-gray-300 font-medium text-sm">
-        Status <span class="text-red-400">*</span>
+  <!-- Status Ativo -->
+  <div class="space-y-3">
+    <label class="block text-gray-300 font-medium text-sm">
+      Status <span class="text-red-400">*</span>
+    </label>
+    <div class="grid grid-cols-2 gap-4">
+      <label class="relative cursor-pointer">
+        <input type="radio" formControlName="active" [value]="true" class="peer sr-only" />
+        <div
+          class="p-4 rounded-lg border-2 border-gray-600 bg-white/5 peer-checked:border-green-500 peer-checked:bg-green-500/10 transition-all duration-200 flex items-center justify-center gap-3"
+        >
+          <div
+            class="w-5 h-5 rounded-full border-2 border-gray-400 peer-checked:border-green-500 peer-checked:bg-green-500 flex items-center justify-center"
+          >
+            <svg
+              class="w-3 h-3 text-white hidden peer-checked:block"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+          <span class="text-white font-semibold">Ativo</span>
+        </div>
       </label>
-      <div class="grid grid-cols-2 gap-4">
-        <label class="relative cursor-pointer">
-          <input type="radio" formControlName="active" [value]="true" class="peer sr-only" />
-          <div
-            class="p-4 rounded-lg border-2 border-gray-600 bg-white/5 peer-checked:border-green-500 peer-checked:bg-green-500/10 transition-all duration-200 flex items-center justify-center gap-3"
-          >
-            <div
-              class="w-5 h-5 rounded-full border-2 border-gray-400 peer-checked:border-green-500 peer-checked:bg-green-500 flex items-center justify-center"
-            >
-              <svg
-                class="w-3 h-3 text-white hidden peer-checked:block"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </div>
-            <span class="text-white font-semibold">Ativo</span>
-          </div>
-        </label>
 
-        <label class="relative cursor-pointer">
-          <input type="radio" formControlName="active" [value]="false" class="peer sr-only" />
+      <label class="relative cursor-pointer">
+        <input type="radio" formControlName="active" [value]="false" class="peer sr-only" />
+        <div
+          class="p-4 rounded-lg border-2 border-gray-600 bg-white/5 peer-checked:border-red-500 peer-checked:bg-red-500/10 transition-all duration-200 flex items-center justify-center gap-3"
+        >
           <div
-            class="p-4 rounded-lg border-2 border-gray-600 bg-white/5 peer-checked:border-red-500 peer-checked:bg-red-500/10 transition-all duration-200 flex items-center justify-center gap-3"
+            class="w-5 h-5 rounded-full border-2 border-gray-400 peer-checked:border-red-500 peer-checked:bg-red-500 flex items-center justify-center"
           >
-            <div
-              class="w-5 h-5 rounded-full border-2 border-gray-400 peer-checked:border-red-500 peer-checked:bg-red-500 flex items-center justify-center"
+            <svg
+              class="w-3 h-3 text-white hidden peer-checked:block"
+              fill="currentColor"
+              viewBox="0 0 20 20"
             >
-              <svg
-                class="w-3 h-3 text-white hidden peer-checked:block"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </div>
-            <span class="text-white font-semibold">Inativo</span>
+              <path
+                fill-rule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                clip-rule="evenodd"
+              />
+            </svg>
           </div>
-        </label>
-      </div>
+          <span class="text-white font-semibold">Inativo</span>
+        </div>
+      </label>
     </div>
+  </div>
 
-    <!-- Botões -->
-    <div class="flex justify-end gap-4 pt-6 border-t border-gray-600">
-      <button
-        type="button"
-        (click)="onCancel()"
-        class="px-6 py-3 rounded-lg font-semibold text-gray-300 bg-gray-700 hover:bg-gray-600 transition-colors duration-200"
-      >
-        Cancelar
-      </button>
-      <button
-        type="submit"
-        class="px-8 py-3 rounded-lg font-semibold text-white bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-blue-500/50 transition-all duration-200 transform hover:scale-105"
-      >
-        Salvar Matéria-Prima
-      </button>
-    </div>
-  </form>
+  <!-- Botões -->
+  <div class="flex justify-end gap-4 pt-6 border-t border-gray-600">
+    <button
+      type="submit"
+      [disabled]="isSubmitting"
+      class="px-8 py-3 rounded-lg font-semibold text-white bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-blue-500/50 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {{ isSubmitting ? 'Salvando...' : 'Salvar Matéria-Prima' }}
+    </button>
+  </div>
+</form>

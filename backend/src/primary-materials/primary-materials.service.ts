@@ -43,6 +43,8 @@ export class PrimaryMaterialsService {
         active: createDto.active ?? true,
         ncm: createDto.ncm,
         cfop: createDto.cfop ?? '5102',
+        minStock: createDto.minStock,
+        expiryDate: createDto.expiryDate,
       },
     });
   }
@@ -86,7 +88,7 @@ export class PrimaryMaterialsService {
   /**
    * Buscar matéria-prima por ID
    */
-  async findOne(id: string) {
+  async findOne(id: number) {
     const material = await this.prisma.client.primaryMaterial.findUnique({
       where: { id },
       include: {
@@ -140,7 +142,7 @@ export class PrimaryMaterialsService {
   /**
    * Atualizar matéria-prima
    */
-  async update(id: string, updateDto: UpdatePrimaryMaterialDto) {
+  async update(id: number, updateDto: UpdatePrimaryMaterialDto) {
     // Verificar se existe
     await this.findOne(id);
 
@@ -167,7 +169,7 @@ export class PrimaryMaterialsService {
   /**
    * Remover matéria-prima (soft delete)
    */
-  async remove(id: string) {
+  async remove(id: number) {
     // Verificar se existe
     const material = await this.findOne(id);
 
@@ -188,7 +190,7 @@ export class PrimaryMaterialsService {
   /**
    * Deletar permanentemente (hard delete)
    */
-  async forceDelete(id: string) {
+  async forceDelete(id: number) {
     // Verificar se existe
     const material = await this.findOne(id);
 
@@ -207,7 +209,7 @@ export class PrimaryMaterialsService {
   /**
    * Ajustar estoque
    */
-  async adjustStock(id: string, adjustDto: AdjustStockDto) {
+  async adjustStock(id: number, adjustDto: AdjustStockDto) {
     const material = await this.prisma.client.primaryMaterial.findUnique({
       where: { id },
     });

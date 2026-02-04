@@ -1,19 +1,13 @@
-// primary-material-form.component.ts
-import { Component, OnInit } from '@angular/core';
+// create-primary-material.ts
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-
-interface PrimaryMaterial {
-  id?: string;
-  name: string;
-  code: string;
-  unit: string;
-  currentStock: number;
-  minimumStock: number;
-  unitCost: number;
-  expiryDate?: Date;
-  active: boolean;
-}
+import { Router } from '@angular/router';
+import {
+  CreatePrimaryMaterialDTO,
+  PrimaryMaterialService,
+} from '../../services/primary-material.service';
+import { NotificationService } from '../../../../shared/toastr/notification.service';
 
 @Component({
   selector: 'app-create-primary-material',
@@ -22,22 +16,24 @@ interface PrimaryMaterial {
   templateUrl: './create-primary-material.html',
 })
 export class CreatePrimaryMaterial implements OnInit {
+  private notification = inject(NotificationService);
   formCreateMaterial!: FormGroup;
+  isSubmitting = false;
 
   unitOptions = [
-    'UN - Unidade',
-    'KG - Quilograma',
-    'G - Grama',
-    'L - Litro',
-    'ML - Mililitro',
-    'M - Metro',
-    'CM - Centímetro',
-    'CX - Caixa',
-    'PC - Pacote',
-    'SC - Saco'
+    { label: 'UN - Unidade', value: 'UN' },
+    { label: 'KG - Quilograma', value: 'KG' },
+    { label: 'LT - Litro', value: 'LT' },
+    { label: 'MT - Metro', value: 'MT' },
+    { label: 'CX - Caixa', value: 'CX' },
+    { label: 'ML - Mililitro', value: 'ML' },
+    { label: 'GR - Grama', value: 'GR' },
+    { label: 'DZ - Dúzia', value: 'DZ' },
   ];
 
-  constructor(private fb: FormBuilder) {}
+  private fb = inject(FormBuilder);
+  private materialService = inject(PrimaryMaterialService);
+  private router = inject(Router);
 
   ngOnInit(): void {
     this.initializeForm();
@@ -45,14 +41,16 @@ export class CreatePrimaryMaterial implements OnInit {
 
   initializeForm(): void {
     this.formCreateMaterial = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(3)]],
-      code: ['', [Validators.required]],
-      unit: ['UN - Unidade', [Validators.required]],
+      name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+      code: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(50)]],
+      unit: ['UN', [Validators.required]],
       currentStock: [0, [Validators.required, Validators.min(0)]],
       minimumStock: [0, [Validators.required, Validators.min(0)]],
-      unitCost: [0, [Validators.required, Validators.min(0.01)]],
+      unitCost: [0, [Validators.required, Validators.min(0)]],
       expiryDate: [''],
-      active: [true, [Validators.required]]
+      active: [true, [Validators.required]],
+      ncm: ['', [Validators.minLength(8), Validators.maxLength(8)]],
+      cfop: ['', [Validators.minLength(4), Validators.maxLength(4)]],
     });
   }
 
@@ -77,26 +75,41 @@ export class CreatePrimaryMaterial implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.formCreateMaterial.valid) {
-      const material: PrimaryMaterial = this.formCreateMaterial.value;
-      console.log('Material cadastrado:', material);
-      
-      // Implementar lógica de salvamento
-      alert('Matéria-prima cadastrada com sucesso!');
-      
-      // Resetar formulário
-      // this.formCreateMaterial.reset({ unit: 'UN - Unidade', active: true });
+    if (this.formCreateMaterial.valid && !this.isSubmitting) {
+      this.isSubmitting = true;
+
+      const formValue = this.formCreateMaterial.value;
+
+      const material: CreatePrimaryMaterialDTO = {
+        name: formValue.name,
+        code: formValue.code,
+        unit: formValue.unit,
+        unitCost: Number(formValue.unitCost),
+        currentStock: Number(formValue.currentStock),
+        minStock: formValue.minimumStock ? Number(formValue.minimumStock) : undefined,
+        expiryDate: formValue.expiryDate ? new Date(formValue.expiryDate) : undefined,
+        active: formValue.active,
+        ncm: formValue.ncm || undefined,
+        cfop: formValue.cfop || undefined,
+      };
+
+      this.materialService.create(material).subscribe({
+        next: (response) => {
+          this.notification.success('Matéria-prima cadastrada com sucesso!');
+          this.router.navigate(['/materials']);
+        },
+        error: (error) => {
+          this.notification.error('Erro ao cadastrar matéria-prima');
+          this.isSubmitting = false;
+        },
+        complete: () => {
+          this.isSubmitting = false;
+        },
+      });
     } else {
-      // Marcar todos os campos como touched para mostrar erros
-      Object.keys(this.formCreateMaterial.controls).forEach(key => {
+      Object.keys(this.formCreateMaterial.controls).forEach((key) => {
         this.formCreateMaterial.get(key)?.markAsTouched();
       });
-    }
-  }
-
-  onCancel(): void {
-    if (confirm('Deseja cancelar o cadastro? Todas as informações serão perdidas.')) {
-      this.formCreateMaterial.reset({ unit: 'UN - Unidade', active: true });
     }
   }
 }
