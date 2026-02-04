@@ -34,7 +34,7 @@ export class FinancialService {
     return this.client.get<PaginatedResponse<Expense>>(`${this.apiUrl}/expenses`, { params });
   }
   deleteExpense(id: number): Observable<void> {
-    return this.client.delete<void>(`${this.apiUrl}/expenses/delete/${id}`);
+    return this.client.delete<void>(`${this.apiUrl}/expenses/${id}`);
   }
 
   createExpense(expense: Expense): Observable<Expense> {
@@ -42,7 +42,7 @@ export class FinancialService {
   }
 
   updateExpense(expense: Expense): Observable<Expense> {
-    return this.client.patch<Expense>(`${this.apiUrl}/expenses/update/${expense.id}`, expense);
+    return this.client.patch<Expense>(`${this.apiUrl}/expenses/${expense.id}`, expense);
   }
 
   markSaleReceived(salesId: number[]): Observable<any> {

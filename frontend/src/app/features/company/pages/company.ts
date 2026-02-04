@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CompanyService } from '../services/company.service';
@@ -17,6 +17,7 @@ export class Company {
   private companyService = inject(CompanyService);
   private licenseService = inject(LicenseService);
   private notification = inject(NotificationService);
+  private cdr = inject(ChangeDetectorRef);
 
   companyForm: FormGroup;
   isLoading: boolean = false;
@@ -74,6 +75,7 @@ export class Company {
           this.selectedFileName = this.getFileName(company.certificatePath);
         }
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Erro ao carregar empresa:', err);
@@ -140,6 +142,7 @@ export class Company {
       next: () => {
         this.notification.success('Certificado enviado com sucesso!');
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Erro ao enviar certificado', err);
@@ -205,6 +208,7 @@ export class Company {
           fileInput.value = '';
         }
         this.isUploadingIbpt = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Erro ao importar IBPT:', err);
@@ -223,6 +227,7 @@ export class Company {
         next: () => {
           this.notification.success('Empresa atualizada com sucesso!');
           this.isLoading = false;
+          this.cdr.detectChanges();
         },
         error: () => {
           this.notification.error('Erro ao atualizar empresa');

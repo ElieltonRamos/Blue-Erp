@@ -56,6 +56,6 @@ export class CompanyService {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.client.post<{ message: string }>(`${this.apiUrl}/ibpt/import`, formData);
+    return this.client.post<{ message: string }>(`${this.apiUrl}/ibpt/import-csv`, formData);
   }
 }

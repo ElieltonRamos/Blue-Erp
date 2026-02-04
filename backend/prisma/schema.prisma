@@ -76,3 +76,40 @@ model User {
   @@index([active])
   @@map("users")
 }
+
+
+model Ibpt {
+  id           Int     @id @default(autoincrement())
+  ncm          String
+  aliqFederal  Float   @map("aliq_federal")   // Alíquota Federal
+  aliqEstadual Float   @map("aliq_estadual")  // Alíquota Estadual  
+  aliqMunicipal Float  @map("aliq_municipal") // Alíquota Municipal
+  version      String  @default("4.0") @map("version") // Versão IBPT
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([ncm])
+  @@index([version])
+  @@map("ibpt")
+}
+
+model Expense {
+  id           Int      @id @default(autoincrement())
+  supplier     String   @map("supplier")         // Fornecedor
+  description  String?  @map("description")      // Descrição (opcional)
+  value        Decimal  @map("value")            // Valor (Decimal para precisão financeira)
+  datePayment  DateTime @map("date_payment")     // Data de pagamento
+  status       String   @map("status")           // 'Pago' | 'Pendente' | 'Atrasado'
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at") // Soft delete
+
+  @@index([supplier])
+  @@index([status])
+  @@index([datePayment])
+  @@map("expenses")
+}

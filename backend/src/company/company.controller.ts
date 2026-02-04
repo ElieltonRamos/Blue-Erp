@@ -159,10 +159,10 @@ export class CompanyController {
 
     // Converte para o formato esperado pelo service
     const uploadedFile = {
-      originalname: file.originalname as string,
-      buffer: file.buffer as Buffer,
-      mimetype: file.mimetype as string,
-      size: file.size as number,
+      originalname: file.originalname,
+      buffer: file.buffer,
+      mimetype: file.mimetype,
+      size: file.size,
     };
 
     return this.companyService.uploadCompanyCertificate(

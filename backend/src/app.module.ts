@@ -5,9 +5,11 @@ import { UsersModule } from './users/users.module';
 import { PrismaModule } from './database/prisma.module';
 import { CompanyModule } from './company/company.module';
 import { ClientsModule } from './clients/clients.module';
+import { IbptModule } from './ibpt/ibpt.module';
+import { ExpensesModule } from './expenses/expenses.module';
 
 @Module({
-  imports: [UsersModule, PrismaModule, CompanyModule, ClientsModule],
+  imports: [UsersModule, PrismaModule, CompanyModule, ClientsModule, IbptModule, ExpensesModule],
   controllers: [AppController],
   providers: [AppService],
 })
