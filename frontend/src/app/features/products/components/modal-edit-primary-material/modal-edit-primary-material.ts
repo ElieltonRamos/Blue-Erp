@@ -1,8 +1,9 @@
 import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
-import { PrimaryMaterial, PrimaryMaterialService } from '../../services/primary-material.service';
+import { PrimaryMaterialService } from '../../services/primary-material.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { PrimaryMaterial } from '../../types/primary-material';
 
 @Component({
   selector: 'app-modal-update-primary-material',

@@ -2,9 +2,8 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PaginatorComponent } from '../../../../shared/paginator/paginator.component';
-import Product, { Unit } from '../../types/product';
 import { ModalUpdateProduct } from '../modal-update-product/modal-update-product';
-import { ProductService } from '../../services/product.service';
+import { ProductService, Product, FilterProductParams } from '../../services/product.service';
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 
@@ -16,7 +15,7 @@ import { NotificationService } from '../../../../shared/toastr/notification.serv
 export class ListProducts {
   private notification = inject(NotificationService);
   private productService = inject(ProductService);
-  private cdr = inject(ChangeDetectorRef)
+  private cdr = inject(ChangeDetectorRef);
 
   listProducts: Product[] = [];
   page: number = 1;
@@ -24,30 +23,20 @@ export class ListProducts {
   totalPages: number = 0;
   totalItems: number = 0;
   showModalEdit: boolean = false;
-  editProduct: Product = {
-    name: '',
-    price: 0,
-    quantity: 0,
-    code: '0',
-    costPrice: 0,
-    active: true,
-    cest: '0',
-    csosn: '102',
-    ncm: '00000000',
-    origin: 0,
-    unit: Unit.UN,
-    id: 0,
-  };
-  searchTerm: string = '';
-  searchCode: string = '';
-  filterActive: string = 'active';
+  editProduct: Product | null = null;
 
-  // Propriedades de ordenação
-  sortKey: string = 'id';
+  // Filtros
+  searchTerm: string = '';
+  filterActive: string = 'active';
+  filterProductType: string = 'all'; // 'all' | 'MANUFACTURED' | 'RESALE'
+  filterLowStock: boolean = false;
+
+  // Ordenação
+  sortKey: string = 'name';
   sortAsc: boolean = true;
 
   ngOnInit() {
-    this.getAllProducts(this.page, this.limit);
+    this.loadProducts();
   }
 
   sortBy(key: string) {
@@ -58,101 +47,65 @@ export class ListProducts {
       this.sortAsc = true;
     }
 
-    // Resetar para primeira página ao ordenar
     this.page = 1;
-    this.getAllProducts(this.page, this.limit);
+    this.loadProducts();
   }
 
-  // Busca automática por nome (em tempo real)
-  onSearchName() {
-    if (this.searchTerm !== '') {
-      this.getProductByName();
-    } else {
-      this.getAllProducts(1, 20);
-    }
+  onSearchChange() {
+    this.page = 1;
+    this.loadProducts();
   }
 
-  // Busca por código apenas ao pressionar Enter
-  onSearchCodeKeydown(event: KeyboardEvent) {
-    if (event.key === 'Enter') {
-      this.searchByCode();
-    }
+  onFilterChange() {
+    this.page = 1;
+    this.loadProducts();
   }
 
-  searchByCode() {
-    if (this.searchCode !== '') {
-      this.getProductByCode();
-    } else {
-      this.getAllProducts(1, 20);
-    }
-  }
-
-  getProductByName() {
-    this.productService.getProductByName(this.searchTerm).subscribe({
-      next: (response) => {
-        this.listProducts = this.applyActiveFilter(response);
-        this.totalItems = this.listProducts.length;
-        this.page = 1;
-        this.limit = this.listProducts.length || 20;
-        this.totalPages = 1;
-        this.cdr.detectChanges(); 
-      },
-      error: (e) => {
-        this.notification.error(`Erro ao buscar produtos: ${e.error?.message || e.message}`);
-      },
-    });
-  }
-
-  getProductByCode() {
-    this.productService.getProductByCode(this.searchCode).subscribe({
-      next: (response) => {
-        // getProductByCode retorna um único produto, então criamos um array
-        this.listProducts = this.applyActiveFilter([response]);
-        this.totalItems = this.listProducts.length;
-        this.page = 1;
-        this.limit = 1;
-        this.totalPages = 1;
-        this.cdr.detectChanges(); 
-      },
-      error: (e) => {
-        this.notification.error(`Erro ao buscar produto: ${e.error?.message || e.message}`);
-        this.listProducts = [];
-        this.totalItems = 0;
-      },
-    });
-  }
-
-  clearSearch() {
+  clearFilters() {
     this.searchTerm = '';
-    this.searchCode = '';
-    this.getAllProducts(1, 20);
-  }
-
-  applyActiveFilter(products: Product[]): Product[] {
-    if (this.filterActive === 'active') {
-      return products.filter((p) => p.active === true);
-    } else if (this.filterActive === 'inactive') {
-      return products.filter((p) => p.active === false);
-    }
-    return products;
-  }
-
-  onFilterActiveChange() {
+    this.filterActive = 'active';
+    this.filterProductType = 'all';
+    this.filterLowStock = false;
     this.page = 1;
-    this.getAllProducts(this.page, this.limit);
+    this.loadProducts();
   }
 
-  getAllProducts(page: number, limit: number) {
+  loadProducts() {
     const sortOrder = this.sortAsc ? 'asc' : 'desc';
 
-    this.productService.getAllProducts(page, limit, this.sortKey, sortOrder).subscribe({
+    const filters: FilterProductParams = {};
+
+    // Busca por nome ou código
+    if (this.searchTerm) {
+      filters.search = this.searchTerm;
+    }
+
+    // Filtro de ativo/inativo
+    if (this.filterActive === 'active') {
+      filters.active = true;
+    } else if (this.filterActive === 'inactive') {
+      filters.active = false;
+    }
+    // Se 'all', não adiciona filtro
+
+    // Filtro de tipo de produto
+    if (this.filterProductType !== 'all') {
+      filters.productType = this.filterProductType as 'MANUFACTURED' | 'RESALE';
+    }
+
+    // Filtro de estoque baixo
+    if (this.filterLowStock) {
+      filters.lowStock = true;
+    }
+
+    this.productService.getAll(this.page, this.limit, filters, this.sortKey, sortOrder).subscribe({
       next: (response) => {
-        this.listProducts = this.applyActiveFilter(response.data);
+        this.listProducts = response.data;
         this.totalItems = response.total;
         this.page = response.page;
         this.limit = response.limit;
         this.totalPages = response.totalPages;
-        this.cdr.detectChanges(); 
+        this.cdr.detectChanges();
       },
       error: (e) => {
         this.notification.error(`Erro ao buscar produtos: ${e.error?.message || e.message}`);
@@ -166,15 +119,29 @@ export class ListProducts {
 
     alertConfirm(`Deseja ${action} o produto "${product.name}"?`).then((result) => {
       if (result) {
-        const updatedProduct = { ...product, active: !product.active };
-
-        this.productService.updateProduct(updatedProduct).subscribe({
+        this.productService.update(product.id, { active: !product.active }).subscribe({
           next: () => {
             this.notification.success(`Produto ${actionPast} com sucesso!`);
-            this.getAllProducts(this.page, this.limit);
+            this.loadProducts();
           },
           error: (e) => {
-            this.notification.error(`Erro ao buscar produtos: ${e.error?.message || e.message}`);
+            this.notification.error(`Erro ao atualizar produto: ${e.error?.message || e.message}`);
+          },
+        });
+      }
+    });
+  }
+
+  deleteProduct(product: Product) {
+    alertConfirm(`Deseja realmente deletar o produto "${product.name}"?`).then((result) => {
+      if (result) {
+        this.productService.delete(product.id).subscribe({
+          next: () => {
+            this.notification.success('Produto deletado com sucesso!');
+            this.loadProducts();
+          },
+          error: (e) => {
+            this.notification.error(`Erro ao deletar produto: ${e.error?.message || e.message}`);
           },
         });
       }
@@ -183,7 +150,8 @@ export class ListProducts {
 
   closeModalEdit() {
     this.showModalEdit = false;
-    this.getAllProducts(this.page, this.limit);
+    this.editProduct = null;
+    this.loadProducts();
   }
 
   openModalEdit(product: Product) {
@@ -203,15 +171,32 @@ export class ListProducts {
     return ((product.price - product.costPrice) / product.costPrice) * 100;
   }
 
-  getStockStatusClass(quantity: number): string {
-    if (quantity === 0) return 'bg-red-500/20 text-red-400 border border-red-500/50';
-    if (quantity <= 10) return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50';
+  getStockStatusClass(product: Product): string {
+    if (product.quantity === 0) return 'bg-red-500/20 text-red-400 border border-red-500/50';
+    if (product.minStock && product.quantity <= product.minStock) {
+      return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50';
+    }
     return 'bg-green-500/20 text-green-400 border border-green-500/50';
   }
 
-  getStockStatusText(quantity: number): string {
-    if (quantity === 0) return 'Sem Estoque';
-    if (quantity <= 10) return 'Baixo';
+  getStockStatusText(product: Product): string {
+    if (product.quantity === 0) return 'Sem Estoque';
+    if (product.minStock && product.quantity <= product.minStock) return 'Baixo';
     return 'Normal';
+  }
+
+  getProductTypeBadge(productType: string): string {
+    return productType === 'MANUFACTURED'
+      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
+      : 'bg-purple-500/20 text-purple-400 border border-purple-500/50';
+  }
+
+  getProductTypeText(productType: string): string {
+    return productType === 'MANUFACTURED' ? 'Manufaturado' : 'Revenda';
+  }
+
+  onPageChange(newPage: number) {
+    this.page = newPage;
+    this.loadProducts();
   }
 }

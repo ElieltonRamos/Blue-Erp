@@ -1,7 +1,7 @@
 import { Component, inject, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ProductService } from '../../services/product.service';
-import Product, { CreateProductDTO, ProductComposition, Unit } from '../../types/product';
+import { CreateProductDTO, ProductService } from '../../services/product.service';
+import { ProductComposition, Unit } from '../../types/product';
 import { CommonModule } from '@angular/common';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { ProductCompositionComponent } from '../product-composition/product-composition';
@@ -172,13 +172,15 @@ export class CreateProduct {
       return;
     }
 
-    const formValue = this.formCreateProduct.getRawValue(); // getRawValue() pega valores disabled também
+    const formValue = this.formCreateProduct.getRawValue();
 
     // Preparar DTO para envio ao backend
     const createProductDTO: CreateProductDTO = {
       name: formValue.name || '',
       code: formValue.code || '',
-      productType: formValue.productType || 'manufactured',
+      productType: (formValue.productType === 'manufactured' ? 'MANUFACTURED' : 'RESALE') as
+        | 'MANUFACTURED'
+        | 'RESALE',
       price: formValue.price ? parseFloat(formValue.price.toString()) : 0,
       costPrice: formValue.costPrice ? parseFloat(formValue.costPrice.toString()) : 0,
       ncm: formValue.ncm || '',
@@ -189,15 +191,27 @@ export class CreateProduct {
       quantity: formValue.quantity ? parseInt(formValue.quantity.toString(), 10) : 0,
       active: formValue.active ?? true,
       // Incluir composição apenas para produtos manufaturados
-      composition: this.isManufacturedProduct
-        ? this.compositionComponent.getCompositionDTO()
-        : undefined,
+      composition:
+        this.isManufacturedProduct && this.currentComposition
+          ? this.currentComposition.items.map((item) => ({
+              materialId: Number(item.materialId),
+              quantity: item.quantity,
+            }))
+          : undefined,
+      // Incluir passos de preparo
+      preparationSteps:
+        this.isManufacturedProduct && this.currentComposition
+          ? this.currentComposition.preparationSteps.map((step, index) => ({
+              order: index + 1,
+              description: step.description,
+            }))
+          : undefined,
     };
 
     console.log('Enviando produto para o backend:', createProductDTO);
 
     // Chamar o serviço para criar o produto
-    this.productService.createProductWithComposition(createProductDTO).subscribe({
+    this.productService.create(createProductDTO).subscribe({
       next: (response) => {
         this.notification.success(`Produto ${response.name} criado com sucesso!`);
         this.resetForm();
@@ -210,12 +224,11 @@ export class CreateProduct {
       },
     });
   }
-
   /**
    * Obtém sugestão de código do produto
    */
   getSugestionCode() {
-    this.productService.getSugestionCode().subscribe({
+    this.productService.getSuggestCode().subscribe({
       next: (response) => {
         this.formCreateProduct.patchValue({ code: response.code.toString() });
       },

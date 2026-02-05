@@ -1,3 +1,16 @@
+export const productionLocationOptions = [
+  'Cozinha Principal',
+  'Cozinha Secundária',
+  'Bar',
+  'Confeitaria',
+  'Pizzaria',
+  'Grill',
+  'Forno',
+  'Chapa',
+  'Fritura',
+  'Montagem',
+];
+
 export default interface Product {
   id?: number;
   name: string; // Descrição do produto para NFC-e

@@ -2,17 +2,19 @@
 <div class="space-y-6">
   <!-- Barra de Filtros e Busca -->
   <div class="bg-linear-to-r from-[#1d2a3c] to-[#2a3f5f] p-6 rounded-xl shadow-lg">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-      <!-- Busca por Nome -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+      <!-- Busca por Nome ou Código -->
       <div class="lg:col-span-2">
-        <label class="block text-gray-300 font-medium mb-2 text-sm"> Buscar por Nome </label>
+        <label class="block text-gray-300 font-medium mb-2 text-sm">
+          Buscar por Nome ou Código
+        </label>
         <div class="relative">
           <input
             type="text"
-            placeholder="Digite o nome do produto..."
+            placeholder="Digite o nome ou código do produto..."
             class="w-full pl-10 pr-10 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
             [(ngModel)]="searchTerm"
-            (ngModelChange)="onSearchName()"
+            (ngModelChange)="onSearchChange()"
           />
           <svg
             class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
@@ -29,53 +31,7 @@
           </svg>
           @if (searchTerm) {
             <button
-              (click)="searchTerm = ''; onSearchName()"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-              title="Limpar busca"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          }
-        </div>
-      </div>
-
-      <!-- Busca por Código -->
-      <div>
-        <label class="block text-gray-300 font-medium mb-2 text-sm">
-          Buscar por Código
-          <span class="text-gray-400 text-xs ml-1">(Pressione Enter)</span>
-        </label>
-        <div class="relative">
-          <input
-            type="text"
-            placeholder="Ex: PROD-001"
-            class="w-full pl-10 pr-10 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 outline-none"
-            [(ngModel)]="searchCode"
-            (keydown)="onSearchCodeKeydown($event)"
-          />
-          <svg
-            class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
-            />
-          </svg>
-          @if (searchCode) {
-            <button
-              (click)="searchCode = ''; clearSearch()"
+              (click)="searchTerm = ''; onSearchChange()"
               class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
               title="Limpar busca"
             >
@@ -97,7 +53,7 @@
         <label class="block text-gray-300 font-medium mb-2 text-sm"> Status </label>
         <select
           [(ngModel)]="filterActive"
-          (ngModelChange)="onFilterActiveChange()"
+          (ngModelChange)="onFilterChange()"
           class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
           style="
             background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
@@ -111,13 +67,49 @@
           <option value="inactive">Somente Inativos</option>
         </select>
       </div>
+
+      <!-- Filtro de Tipo de Produto -->
+      <div>
+        <label class="block text-gray-300 font-medium mb-2 text-sm"> Tipo </label>
+        <select
+          [(ngModel)]="filterProductType"
+          (ngModelChange)="onFilterChange()"
+          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
+          style="
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            background-size: 1.2em;
+          "
+        >
+          <option value="all">Todos</option>
+          <option value="MANUFACTURED">Manufaturado</option>
+          <option value="RESALE">Revenda</option>
+        </select>
+      </div>
+
+      <!-- Filtro de Estoque Baixo -->
+      <div>
+        <label class="block text-gray-300 font-medium mb-2 text-sm"> Estoque </label>
+        <label
+          class="flex items-center gap-3 p-3 rounded-lg bg-white/95 cursor-pointer hover:bg-white transition-colors"
+        >
+          <input
+            type="checkbox"
+            [(ngModel)]="filterLowStock"
+            (ngModelChange)="onFilterChange()"
+            class="w-5 h-5 text-yellow-500 border-gray-300 rounded focus:ring-yellow-500 focus:ring-2 cursor-pointer"
+          />
+          <span class="text-gray-900 font-medium text-sm">Apenas Baixo</span>
+        </label>
+      </div>
     </div>
 
     <!-- Botão Limpar Filtros -->
-    @if (searchTerm || searchCode || filterActive !== 'active') {
+    @if (searchTerm || filterActive !== 'active' || filterProductType !== 'all' || filterLowStock) {
       <div class="mt-4 flex justify-end">
         <button
-          (click)="clearSearch()"
+          (click)="clearFilters()"
           class="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors duration-200"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,7 +137,7 @@
         [itemsPerPage]="limit"
         [totalPages]="totalPages"
         [page]="page"
-        (pageChanged)="getAllProducts($event, limit)"
+        (pageChanged)="onPageChange($event)"
       />
     </div>
   </div>
@@ -195,6 +187,13 @@
               </div>
             </th>
 
+            <!-- Tipo - Não ordenável -->
+            <th
+              class="py-4 px-4 text-left text-xs font-semibold text-purple-400 uppercase tracking-wider"
+            >
+              Tipo
+            </th>
+
             <!-- Info Fiscais - Não ordenável -->
             <th
               class="py-4 px-4 text-left text-xs font-semibold text-yellow-400 uppercase tracking-wider"
@@ -235,17 +234,11 @@
               </div>
             </th>
 
-            <!-- Margem - Ordenável -->
+            <!-- Margem - Não ordenável -->
             <th
-              class="py-4 px-4 text-center text-xs font-semibold text-yellow-400 uppercase tracking-wider cursor-pointer select-none hover:bg-white/5 transition-colors"
-              (click)="sortBy('profitMargin')"
+              class="py-4 px-4 text-center text-xs font-semibold text-yellow-400 uppercase tracking-wider"
             >
-              <div class="flex items-center justify-center gap-2">
-                <span>Margem</span>
-                @if (sortKey === 'profitMargin') {
-                  <span class="text-yellow-300">{{ sortAsc ? '▲' : '▼' }}</span>
-                }
-              </div>
+              Margem
             </th>
 
             <!-- Estoque - Ordenável -->
@@ -287,6 +280,16 @@
                 <span class="font-mono text-sm bg-gray-800 px-2 py-1 rounded">{{
                   product.code
                 }}</span>
+              </td>
+
+              <!-- Tipo de Produto -->
+              <td class="py-4 px-4">
+                <span
+                  [class]="getProductTypeBadge(product.productType)"
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                >
+                  {{ getProductTypeText(product.productType) }}
+                </span>
               </td>
 
               <!-- Informações Fiscais (NCM, CEST, CSOSN, Status) -->
@@ -338,10 +341,12 @@
                   }
 
                   <!-- CSOSN -->
-                  <div class="text-xs text-gray-300">
-                    <span class="text-yellow-400 font-semibold">CSOSN:</span>
-                    <span class="font-mono ml-1">{{ product.csosn }}</span>
-                  </div>
+                  @if (product.csosn) {
+                    <div class="text-xs text-gray-300">
+                      <span class="text-yellow-400 font-semibold">CSOSN:</span>
+                      <span class="font-mono ml-1">{{ product.csosn }}</span>
+                    </div>
+                  }
                 </div>
               </td>
 
@@ -385,10 +390,10 @@
                 <div class="flex flex-col items-center gap-1">
                   <span class="font-bold text-white">{{ product.quantity }}</span>
                   <span
-                    [class]="getStockStatusClass(product.quantity)"
+                    [class]="getStockStatusClass(product)"
                     class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                   >
-                    {{ getStockStatusText(product.quantity) }}
+                    {{ getStockStatusText(product) }}
                   </span>
                 </div>
               </td>
@@ -450,7 +455,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="10" class="py-12 text-center">
+              <td colspan="11" class="py-12 text-center">
                 <div class="flex flex-col items-center gap-3">
                   <svg
                     class="w-16 h-16 text-gray-600"
@@ -480,6 +485,6 @@
 </div>
 
 <!-- Modal de Edição -->
-@if (showModalEdit) {
+@if (showModalEdit && editProduct) {
   <app-modal-update-product (closeModal)="closeModalEdit()" [product]="editProduct" />
 }

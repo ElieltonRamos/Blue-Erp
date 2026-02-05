@@ -2,10 +2,11 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PaginatorComponent } from '../../../../shared/paginator/paginator.component';
-import { PrimaryMaterial, PrimaryMaterialService } from '../../services/primary-material.service';
+import { PrimaryMaterialService } from '../../services/primary-material.service';
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { ModalUpdatePrimaryMaterial } from '../modal-edit-primary-material/modal-edit-primary-material';
+import { PrimaryMaterial } from '../../types/product';
 
 @Component({
   selector: 'app-list-primary-material',
