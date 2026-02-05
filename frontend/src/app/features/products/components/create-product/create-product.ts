@@ -196,6 +196,8 @@ export class CreateProduct {
           ? this.currentComposition.items.map((item) => ({
               materialId: Number(item.materialId),
               quantity: item.quantity,
+              materialName: item.materialName,
+              unitCost: item.unitCost
             }))
           : undefined,
       // Incluir passos de preparo

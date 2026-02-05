@@ -11,6 +11,7 @@ export interface Product {
   productionLocation?: string;
   price: number;
   costPrice: number;
+  extraCosts?: number;
   ncm: string;
   cest?: string;
   origin: number;
@@ -35,8 +36,10 @@ export interface Product {
 }
 
 export interface CompositionItem {
+  materialName: string;
   materialId: number;
   quantity: number;
+  unitCost: number;
 }
 
 export interface PreparationStep {
@@ -79,6 +82,7 @@ export interface UpdateProductDTO {
   productionLocation?: string;
   price?: number;
   costPrice?: number;
+  extraCosts?: number;
   ncm?: string;
   cest?: string;
   origin?: number;

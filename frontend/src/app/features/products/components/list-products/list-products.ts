@@ -2,14 +2,16 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PaginatorComponent } from '../../../../shared/paginator/paginator.component';
-import { ModalUpdateProduct } from '../modal-update-product/modal-update-product';
+import { ModalUpdateBasicProduct } from '../modal-update-basic-product/modal-update-basic-product';
+import { ModalUpdateMaterialsProduct } from '../modal-update-materials-product/modal-update-materials-product';
+import { ModalUpdatePreparationProduct } from '../modal-update-preparation-product/modal-update-preparation-product';
 import { ProductService, Product, FilterProductParams } from '../../services/product.service';
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 
 @Component({
   selector: 'app-list-products',
-  imports: [CommonModule, FormsModule, PaginatorComponent, ModalUpdateProduct],
+  imports: [CommonModule, FormsModule, PaginatorComponent, ModalUpdateBasicProduct, ModalUpdateMaterialsProduct, ModalUpdatePreparationProduct],
   templateUrl: './list-products.html',
 })
 export class ListProducts {
@@ -22,7 +24,9 @@ export class ListProducts {
   limit: number = 20;
   totalPages: number = 0;
   totalItems: number = 0;
-  showModalEdit: boolean = false;
+  showModalBasic: boolean = false;
+  showModalMaterials: boolean = false;
+  showModalPreparation: boolean = false;
   editProduct: Product | null = null;
 
   // Filtros
@@ -148,15 +152,37 @@ export class ListProducts {
     });
   }
 
-  closeModalEdit() {
-    this.showModalEdit = false;
+  closeModalBasic() {
+    this.showModalBasic = false;
     this.editProduct = null;
     this.loadProducts();
   }
 
-  openModalEdit(product: Product) {
+  closeModalMaterials() {
+    this.showModalMaterials = false;
+    this.editProduct = null;
+    this.loadProducts();
+  }
+
+  closeModalPreparation() {
+    this.showModalPreparation = false;
+    this.editProduct = null;
+    this.loadProducts();
+  }
+
+  openModalBasic(product: Product) {
     this.editProduct = product;
-    this.showModalEdit = true;
+    this.showModalBasic = true;
+  }
+
+  openModalMaterials(product: Product) {
+    this.editProduct = product;
+    this.showModalMaterials = true;
+  }
+
+  openModalPreparation(product: Product) {
+    this.editProduct = product;
+    this.showModalPreparation = true;
   }
 
   formatCurrency(value: number): string {

@@ -37,3 +37,15 @@ body {
 .cdk-overlay-backdrop.cdk-overlay-backdrop-showing {
   opacity: 1;
 }
+
+.action-btn {
+  @apply inline-flex items-center justify-center gap-1
+         w-full max-w-[140px]
+         px-2 py-1
+         text-xs font-medium
+         rounded
+         text-gray-50
+         transition-all duration-200
+         hover:scale-105
+         shadow-md;
+}
