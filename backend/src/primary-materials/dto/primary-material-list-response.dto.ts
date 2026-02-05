@@ -1,10 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Decimal } from '@prisma/client/runtime/client';
 import { Unit } from 'generated/prisma/client';
 
 export class PrimaryMaterialResponseDto {
   @ApiProperty({
     description: 'ID da matéria-prima',
-    example: '1',
+    example: 1,
   })
   id: number;
 
@@ -39,6 +40,20 @@ export class PrimaryMaterialResponseDto {
   })
   currentStock: number;
 
+  @ApiPropertyOptional({
+    description: 'Estoque mínimo',
+    example: 20,
+    nullable: true,
+  })
+  minStock?: number | null;
+
+  @ApiPropertyOptional({
+    description: 'Data de validade',
+    example: '2025-12-31T00:00:00.000Z',
+    nullable: true,
+  })
+  expiryDate?: Date | null;
+
   @ApiProperty({
     description: 'Status ativo/inativo',
     example: true,
@@ -70,4 +85,34 @@ export class PrimaryMaterialResponseDto {
     example: '2024-01-20T14:45:00.000Z',
   })
   updatedAt: Date;
+
+  constructor(material: {
+    id: number;
+    name: string;
+    code: string;
+    unit: Unit;
+    unitCost: Decimal;
+    currentStock: Decimal;
+    minStock: Decimal | null;
+    expiryDate: Date | null;
+    active: boolean;
+    ncm: string | null;
+    cfop: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }) {
+    this.id = material.id;
+    this.name = material.name;
+    this.code = material.code;
+    this.unit = material.unit;
+    this.unitCost = material.unitCost.toNumber();
+    this.currentStock = material.currentStock.toNumber();
+    this.minStock = material.minStock?.toNumber() ?? null;
+    this.expiryDate = material.expiryDate;
+    this.active = material.active;
+    this.ncm = material.ncm;
+    this.cfop = material.cfop;
+    this.createdAt = material.createdAt;
+    this.updatedAt = material.updatedAt;
+  }
 }

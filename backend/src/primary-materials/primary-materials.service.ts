@@ -12,24 +12,36 @@ import { MaterialSummaryResponseDto } from './dto/material-summary-response.dto'
 import { StockAlertResponseDto } from './dto/stock-alert-response.dto';
 import { PrismaService } from 'src/database/prisma.service';
 import { Prisma } from 'generated/prisma/client';
+import { PaginatedResponse } from 'src/common/paginated-response';
+import { PrimaryMaterialResponseDto } from './dto/primary-material-list-response.dto';
 
 @Injectable()
 export class PrimaryMaterialsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Criar nova matéria-prima
-   */
   async create(createDto: CreatePrimaryMaterialDto) {
-    // Verificar se o código já existe
-    const existingMaterial =
-      await this.prisma.client.primaryMaterial.findUnique({
-        where: { code: createDto.code },
-      });
+    const existingCode = await this.prisma.client.primaryMaterial.findUnique({
+      where: { code: createDto.code },
+    });
 
-    if (existingMaterial) {
+    if (existingCode) {
       throw new ConflictException(
         `Matéria-prima com código ${createDto.code} já existe`,
+      );
+    }
+
+    // Verificar se o nome já existe
+    const existingName = await this.prisma.client.primaryMaterial.findFirst({
+      where: {
+        name: {
+          equals: createDto.name,
+        },
+      },
+    });
+
+    if (existingName) {
+      throw new ConflictException(
+        `Matéria-prima com nome "${createDto.name}" já existe`,
       );
     }
 
@@ -49,15 +61,28 @@ export class PrimaryMaterialsService {
     });
   }
 
-  /**
-   * Listar todas as matérias-primas com filtros
-   */
-  async findAll(filters?: FilterPrimaryMaterialDto) {
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    filters?: FilterPrimaryMaterialDto,
+    sortKey: string = 'name',
+    sortOrder: string = 'asc',
+  ): Promise<PaginatedResponse<PrimaryMaterialResponseDto>> {
+    if (page < 1 || limit < 1 || isNaN(page) || isNaN(limit)) {
+      throw new BadRequestException(
+        'A página ou a quantidade de itens por página está incorreta',
+      );
+    }
+
+    const offset = (page - 1) * limit;
+
     const where: Prisma.PrimaryMaterialWhereInput = {};
 
-    // Filtro por ativo/inativo
+    // Filtro de active: se não for fornecido, busca apenas ativos
     if (filters?.active !== undefined) {
       where.active = filters.active;
+    } else {
+      where.active = true;
     }
 
     // Filtro por unidade
@@ -73,18 +98,46 @@ export class PrimaryMaterialsService {
       ];
     }
 
-    // Buscar materiais
+    // Filtro de estoque baixo
+    if (filters?.lowStock) {
+      where.AND = [
+        {
+          currentStock: {
+            lte: this.prisma.client.primaryMaterial.fields.minStock,
+          },
+        },
+        {
+          minStock: {
+            not: null,
+          },
+        },
+      ];
+    }
+
     const materials = await this.prisma.client.primaryMaterial.findMany({
       where,
-      orderBy: { name: 'asc' },
+      orderBy: { [sortKey]: sortOrder },
+      skip: offset,
+      take: limit,
     });
 
+    const total = await this.prisma.client.primaryMaterial.count({
+      where,
+    });
+
+    const data = materials.map(
+      (material) => new PrimaryMaterialResponseDto(material),
+    );
+    const totalPages = Math.ceil(total / limit);
+
     return {
-      data: materials,
-      total: materials.length,
+      data,
+      total,
+      page,
+      limit,
+      totalPages,
     };
   }
-
   /**
    * Buscar matéria-prima por ID
    */

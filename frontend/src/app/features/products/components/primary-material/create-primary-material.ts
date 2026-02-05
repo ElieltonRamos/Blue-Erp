@@ -1,13 +1,10 @@
-// create-primary-material.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import {
-  CreatePrimaryMaterialDTO,
-  PrimaryMaterialService,
-} from '../../services/primary-material.service';
+import { PrimaryMaterialService } from '../../services/primary-material.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
+import { CreatePrimaryMaterialDTO } from '../../types/primary-material';
 
 @Component({
   selector: 'app-create-primary-material',
@@ -19,6 +16,7 @@ export class CreatePrimaryMaterial implements OnInit {
   private notification = inject(NotificationService);
   formCreateMaterial!: FormGroup;
   isSubmitting = false;
+  isLoadingCode = false;
 
   unitOptions = [
     { label: 'UN - Unidade', value: 'UN' },
@@ -37,6 +35,7 @@ export class CreatePrimaryMaterial implements OnInit {
 
   ngOnInit(): void {
     this.initializeForm();
+    this.loadSuggestedCode();
   }
 
   initializeForm(): void {
@@ -51,6 +50,20 @@ export class CreatePrimaryMaterial implements OnInit {
       active: [true, [Validators.required]],
       ncm: ['', [Validators.minLength(8), Validators.maxLength(8)]],
       cfop: ['', [Validators.minLength(4), Validators.maxLength(4)]],
+    });
+  }
+
+  loadSuggestedCode(): void {
+    this.isLoadingCode = true;
+    this.materialService.getSuggestedCode().subscribe({
+      next: (response) => {
+        this.formCreateMaterial.patchValue({ code: response.code.toString() });
+        this.isLoadingCode = false;
+      },
+      error: (error) => {
+        this.notification.error('Erro ao carregar código sugerido');
+        this.isLoadingCode = false;
+      },
     });
   }
 

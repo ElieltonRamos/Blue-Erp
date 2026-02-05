@@ -3,74 +3,15 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../core/services/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { PaginatedResponse } from '../../../core/guards/types/paginator';
-
-// primary-material.service.ts
-export interface CreatePrimaryMaterialDTO {
-  name: string;
-  code: string;
-  unit: string;
-  unitCost: number;
-  currentStock?: number;
-  minStock?: number;
-  expiryDate?: Date;
-  active?: boolean;
-  ncm?: string;
-  cfop?: string;
-}
-
-export interface PrimaryMaterial {
-  id: string;
-  name: string;
-  code: string;
-  unit: string;
-  unitCost: number;
-  currentStock: number;
-  minStock?: number;
-  expiryDate?: Date;
-  active: boolean;
-  ncm?: string;
-  cfop?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface UpdatePrimaryMaterialDTO {
-  name?: string;
-  code?: string;
-  unit?: string;
-  unitCost?: number;
-  currentStock?: number;
-  active?: boolean;
-  ncm?: string;
-  cfop?: string;
-}
-
-export interface MaterialSummary {
-  totalMaterials: number;
-  activeMaterials: number;
-  inactiveMaterials: number;
-  totalStockValue: number;
-  materialsLowStock: number;
-  totalItems: number;
-}
-
-export interface StockAlert {
-  id: string;
-  name: string;
-  code: string;
-  unit: string;
-  currentStock: number;
-  minStock?: number;
-  unitCost: number;
-  estimatedValue: number;
-}
-
-export interface FilterPrimaryMaterialParams {
-  search?: string;
-  unit?: string;
-  active?: boolean;
-  lowStock?: boolean;
-}
+import {
+  CreatePrimaryMaterialDTO,
+  FilterPrimaryMaterialParams,
+  GetSuggestedCode,
+  MaterialSummary,
+  PrimaryMaterial,
+  StockAlert,
+  UpdatePrimaryMaterialDTO,
+} from '../types/primary-material';
 
 @Injectable({
   providedIn: 'root',
@@ -88,7 +29,7 @@ export class PrimaryMaterialService {
   ): Observable<PaginatedResponse<PrimaryMaterial>> {
     let params = new HttpParams()
       .set('page', page.toString())
-      .set('pageLimit', pageLimit.toString())
+      .set('limit', pageLimit.toString())
       .set('sortKey', sortKey)
       .set('sortOrder', sortOrder);
 
@@ -127,5 +68,9 @@ export class PrimaryMaterialService {
 
   delete(id: string): Observable<void> {
     return this.client.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  getSuggestedCode(): Observable<GetSuggestedCode> {
+    return this.client.get<GetSuggestedCode>(`${this.apiUrl}/suggested-code`);
   }
 }

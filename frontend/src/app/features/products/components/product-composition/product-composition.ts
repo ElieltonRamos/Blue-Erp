@@ -26,44 +26,7 @@ export class ProductCompositionComponent implements OnInit {
   searchTerm: string = '';
 
   // Mock de matérias-primas disponíveis (em produção, virá de um serviço)
-  availableMaterials: PrimaryMaterial[] = [
-    {
-      id: '1',
-      name: 'Farinha de Trigo',
-      code: 'MP-001',
-      unit: 'KG',
-      unitCost: 5.5,
-      currentStock: 100,
-    },
-    {
-      id: '2',
-      name: 'Açúcar Refinado',
-      code: 'MP-002',
-      unit: 'KG',
-      unitCost: 4.2,
-      currentStock: 50,
-    },
-    { id: '3', name: 'Ovos', code: 'MP-003', unit: 'UN', unitCost: 0.6, currentStock: 200 },
-    { id: '4', name: 'Manteiga', code: 'MP-004', unit: 'KG', unitCost: 25.0, currentStock: 20 },
-    { id: '5', name: 'Leite Integral', code: 'MP-005', unit: 'L', unitCost: 4.5, currentStock: 30 },
-    {
-      id: '6',
-      name: 'Fermento em Pó',
-      code: 'MP-006',
-      unit: 'KG',
-      unitCost: 15.0,
-      currentStock: 10,
-    },
-    { id: '7', name: 'Sal Refinado', code: 'MP-007', unit: 'KG', unitCost: 2.0, currentStock: 50 },
-    {
-      id: '8',
-      name: 'Chocolate em Pó',
-      code: 'MP-008',
-      unit: 'KG',
-      unitCost: 18.0,
-      currentStock: 15,
-    },
-  ];
+  availableMaterials: PrimaryMaterial[] = []
 
   constructor(private fb: FormBuilder) {}
 

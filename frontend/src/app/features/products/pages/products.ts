@@ -3,10 +3,11 @@ import { Router } from '@angular/router';
 import { CreateProduct } from "../components/create-product/create-product";
 import { ListProducts } from "../components/list-products/list-products";
 import { CreatePrimaryMaterial } from "../components/primary-material/create-primary-material";
+import { ListPrimaryMaterial } from "../components/list-primary-material/list-primary-material";
 
 @Component({
   selector: 'app-products',
-  imports: [CreateProduct, ListProducts, CreatePrimaryMaterial],
+  imports: [CreateProduct, ListProducts, CreatePrimaryMaterial, ListPrimaryMaterial],
   templateUrl: './products.html',
 })
 export class Products {
