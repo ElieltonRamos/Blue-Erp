@@ -9,6 +9,7 @@ export class Product {
   // Preços
   price: number;
   costPrice: number;
+  extraCosts?: number;
 
   // Informações fiscais
   ncm: string;

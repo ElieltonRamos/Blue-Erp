@@ -1,5 +1,13 @@
 // update-composition.dto.ts
-import { IsInt, IsNumber, Min, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsInt,
+  IsNumber,
+  Min,
+  IsArray,
+  ValidateNested,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -19,8 +27,16 @@ export class CompositionItemDto {
   @IsNumber({}, { message: 'Quantidade deve ser um número' })
   @Min(0.001, { message: 'Quantidade deve ser maior que zero' })
   quantity: number;
-}
 
+  @ApiProperty({ required: false })
+  @IsNumber()
+  unitCost: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  materialName?: string;
+}
 export class UpdateCompositionDto {
   @ApiProperty({
     description: 'Lista de matérias-primas da composição',

@@ -245,6 +245,11 @@ export class ProductService {
       take: limit,
       include: {
         category: true,
+        compositionItems: {
+          include: {
+            material: true,
+          },
+        },
       },
     });
 
@@ -252,16 +257,68 @@ export class ProductService {
       where,
     });
 
-    const data = products.map((product) => new ProductResponseDto(product));
+    // Sincronizar e atualizar estoque de produtos manufaturados
+    const updatedProducts = await Promise.all(
+      products.map(async (product) => {
+        // Se for produto manufaturado, calcular e atualizar estoque
+        if (
+          product.productType === 'MANUFACTURED' &&
+          product.compositionItems.length > 0
+        ) {
+          const availableStock = this.calculateAvailableStock(
+            product.compositionItems,
+          );
+
+          // Sempre sobrescrever o estoque
+          if (product.quantity.toNumber() !== availableStock) {
+            await this.prisma.client.product.update({
+              where: { id: product.id },
+              data: { quantity: availableStock },
+            });
+
+            // Atualizar o objeto product com o novo estoque
+            product.quantity = new Prisma.Decimal(availableStock);
+          }
+        }
+
+        return new ProductResponseDto(product);
+      }),
+    );
+
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data,
+      data: updatedProducts,
       total,
       page,
       limit,
       totalPages,
     };
+  }
+
+  /**
+   * Calcular quantas unidades do produto podem ser produzidas com o estoque atual de matérias-primas
+   */
+  private calculateAvailableStock(compositionItems: any[]): number {
+    if (compositionItems.length === 0) {
+      return 0;
+    }
+
+    // Calcular quantas unidades podem ser produzidas com cada matéria-prima
+    const possibleQuantities = compositionItems.map((item) => {
+      const materialStock = item.material.currentStock.toNumber();
+      const requiredQuantity = item.quantity.toNumber();
+
+      if (requiredQuantity === 0) {
+        return 0;
+      }
+
+      // Quantas unidades do produto podem ser feitas com o estoque desta matéria-prima
+      return Math.floor(materialStock / requiredQuantity);
+    });
+
+    // O estoque disponível é limitado pela matéria-prima com menor disponibilidade
+    return Math.min(...possibleQuantities);
   }
 
   /**
@@ -285,6 +342,25 @@ export class ProductService {
 
     if (!product) {
       throw new NotFoundException(`Produto com ID ${id} não encontrado`);
+    }
+
+    // Sincronizar estoque se for manufaturado
+    if (
+      product.productType === 'MANUFACTURED' &&
+      product.compositionItems.length > 0
+    ) {
+      const availableStock = this.calculateAvailableStock(
+        product.compositionItems,
+      );
+
+      if (product.quantity.toNumber() !== availableStock) {
+        await this.prisma.client.product.update({
+          where: { id },
+          data: { quantity: availableStock },
+        });
+
+        product.quantity = new Prisma.Decimal(availableStock);
+      }
     }
 
     return product;
@@ -311,6 +387,25 @@ export class ProductService {
 
     if (!product) {
       throw new NotFoundException(`Produto com código ${code} não encontrado`);
+    }
+
+    // Sincronizar estoque se for manufaturado
+    if (
+      product.productType === 'MANUFACTURED' &&
+      product.compositionItems.length > 0
+    ) {
+      const availableStock = this.calculateAvailableStock(
+        product.compositionItems,
+      );
+
+      if (product.quantity.toNumber() !== availableStock) {
+        await this.prisma.client.product.update({
+          where: { id: product.id },
+          data: { quantity: availableStock },
+        });
+
+        product.quantity = new Prisma.Decimal(availableStock);
+      }
     }
 
     return product;
@@ -414,6 +509,7 @@ export class ProductService {
       },
     });
   }
+
   /**
    * Atualizar composição do produto
    */
@@ -426,7 +522,6 @@ export class ProductService {
       );
     }
 
-    // Verificar se todas as matérias-primas existem
     const materialIds = compositionDto.composition.map(
       (item) => item.materialId,
     );
@@ -438,7 +533,17 @@ export class ProductService {
       throw new BadRequestException('Uma ou mais matérias-primas não existem');
     }
 
-    // Deletar composição atual e criar nova
+    // Calcular preço de custo
+    const costPrice = compositionDto.composition.reduce((total, item) => {
+      const material = materials.find((m) => m.id === item.materialId);
+      if (!material) {
+        throw new BadRequestException(
+          `Material ${item.materialId} não encontrado`,
+        );
+      }
+      return total + Number(material.unitCost) * item.quantity;
+    }, 0);
+
     await this.prisma.client.$transaction([
       this.prisma.client.compositionItem.deleteMany({
         where: { productId: id },
@@ -449,6 +554,10 @@ export class ProductService {
           materialId: item.materialId,
           quantity: item.quantity,
         })),
+      }),
+      this.prisma.client.product.update({
+        where: { id },
+        data: { costPrice },
       }),
     ]);
 

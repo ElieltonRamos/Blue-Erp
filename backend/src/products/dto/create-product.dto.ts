@@ -68,6 +68,15 @@ export class CreateProductDto {
   costPrice: number;
 
   @ApiProperty({
+    description: 'Custo Extra',
+    minimum: 0,
+    example: 25.0,
+  })
+  @IsNumber({}, { message: 'Custo extra deve ser um número' })
+  @Min(0, { message: 'Custo extra não pode ser negativo' })
+  extraCosts: number;
+
+  @ApiProperty({
     description: 'NCM (Nomenclatura Comum do Mercosul)',
     minLength: 8,
     maxLength: 8,

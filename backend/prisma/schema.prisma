@@ -152,6 +152,7 @@ model Product {
   // Preços padrão
   price     Decimal @db.Decimal(10, 2) // Preço padrão de venda
   costPrice Decimal @map("cost_price") @db.Decimal(10, 2) // Custo do produto
+  extraCosts Decimal @map("extra_costs") @db.Decimal(10, 2) @default(0) // Custos extras
 
   // Informações fiscais FIXAS do produto
   ncm    String // NCM - NCM obrigatório (8 dígitos)

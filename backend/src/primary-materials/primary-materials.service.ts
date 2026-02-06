@@ -138,9 +138,7 @@ export class PrimaryMaterialsService {
       totalPages,
     };
   }
-  /**
-   * Buscar matéria-prima por ID
-   */
+
   async findOne(id: number) {
     const material = await this.prisma.client.primaryMaterial.findUnique({
       where: { id },
@@ -175,9 +173,6 @@ export class PrimaryMaterialsService {
     };
   }
 
-  /**
-   * Buscar matéria-prima por código
-   */
   async findByCode(code: string) {
     const material = await this.prisma.client.primaryMaterial.findUnique({
       where: { code },
@@ -192,36 +187,100 @@ export class PrimaryMaterialsService {
     return material;
   }
 
-  /**
-   * Atualizar matéria-prima
-   */
   async update(id: number, updateDto: UpdatePrimaryMaterialDto) {
-    // Verificar se existe
     await this.findOne(id);
 
-    // Se estiver alterando o código, verificar se não está duplicado
     if (updateDto.code) {
-      const existingMaterial =
-        await this.prisma.client.primaryMaterial.findUnique({
-          where: { code: updateDto.code },
-        });
+      const existingCode = await this.prisma.client.primaryMaterial.findFirst({
+        where: {
+          code: updateDto.code,
+          id: { not: id },
+        },
+      });
 
-      if (existingMaterial && existingMaterial.id !== id) {
+      if (existingCode) {
         throw new ConflictException(
           `Matéria-prima com código ${updateDto.code} já existe`,
         );
       }
     }
 
-    return this.prisma.client.primaryMaterial.update({
+    // Verificar nome duplicado (se estiver sendo alterado)
+    if (updateDto.name) {
+      const existingName = await this.prisma.client.primaryMaterial.findFirst({
+        where: {
+          name: {
+            equals: updateDto.name,
+          },
+          id: { not: id },
+        },
+      });
+
+      if (existingName) {
+        throw new ConflictException(
+          `Matéria-prima com nome "${updateDto.name}" já existe`,
+        );
+      }
+    }
+
+    // Atualizar matéria-prima
+    const updatedMaterial = await this.prisma.client.primaryMaterial.update({
       where: { id },
       data: updateDto,
     });
+
+    // Se o custo unitário foi alterado, atualizar produtos que usam esta matéria-prima
+    if (updateDto.unitCost !== undefined) {
+      await this.updateProductsCost(id);
+    }
+
+    return updatedMaterial;
   }
 
-  /**
-   * Remover matéria-prima (soft delete)
-   */
+  private async updateProductsCost(materialId: number) {
+    const compositionItems = await this.prisma.client.compositionItem.findMany({
+      where: { materialId },
+      include: {
+        product: {
+          include: {
+            compositionItems: {
+              include: {
+                material: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Atualizar o custo de cada produto
+    const updates = compositionItems.map(async (item) => {
+      const product = item.product;
+
+      // Calcular novo custo baseado em todas as matérias-primas
+      const totalCost = product.compositionItems.reduce((sum, compItem) => {
+        const materialCost = compItem.material.unitCost.toNumber();
+        const quantity = compItem.quantity.toNumber();
+        return sum + materialCost * quantity;
+      }, 0);
+
+      // Atualizar custo do produto
+      return this.prisma.client.product.update({
+        where: { id: product.id },
+        data: { costPrice: totalCost },
+      });
+    });
+
+    await Promise.all(updates);
+
+    // Log informativo
+    if (compositionItems.length > 0) {
+      console.log(
+        `Custos atualizados para ${compositionItems.length} produto(s) que usam a matéria-prima #${materialId}`,
+      );
+    }
+  }
+
   async remove(id: number) {
     // Verificar se existe
     const material = await this.findOne(id);
@@ -240,9 +299,6 @@ export class PrimaryMaterialsService {
     });
   }
 
-  /**
-   * Deletar permanentemente (hard delete)
-   */
   async forceDelete(id: number) {
     // Verificar se existe
     const material = await this.findOne(id);
@@ -259,9 +315,6 @@ export class PrimaryMaterialsService {
     });
   }
 
-  /**
-   * Ajustar estoque
-   */
   async adjustStock(id: number, adjustDto: AdjustStockDto) {
     const material = await this.prisma.client.primaryMaterial.findUnique({
       where: { id },
@@ -317,9 +370,6 @@ export class PrimaryMaterialsService {
     };
   }
 
-  /**
-   * Obter sugestão de código (próximo número disponível)
-   */
   async getSuggestedCode() {
     const lastMaterial = await this.prisma.client.primaryMaterial.findFirst({
       orderBy: { createdAt: 'desc' },
@@ -337,9 +387,6 @@ export class PrimaryMaterialsService {
     return { code: 1 };
   }
 
-  /**
-   * Obter resumo/estatísticas
-   */
   async getSummary(): Promise<MaterialSummaryResponseDto> {
     const materials = await this.prisma.client.primaryMaterial.findMany({
       select: {
@@ -376,9 +423,6 @@ export class PrimaryMaterialsService {
     };
   }
 
-  /**
-   * Listar alertas de estoque baixo
-   */
   async getStockAlerts(): Promise<StockAlertResponseDto[]> {
     const materials = await this.prisma.client.primaryMaterial.findMany({
       where: {

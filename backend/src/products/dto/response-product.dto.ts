@@ -35,6 +35,12 @@ export class ProductResponseDto {
   price: number;
 
   @ApiProperty({
+    description: 'Custo Extra',
+    example: 45.9,
+  })
+  extraCosts: number;
+
+  @ApiProperty({
     description: 'Custo do produto',
     example: 25.0,
   })

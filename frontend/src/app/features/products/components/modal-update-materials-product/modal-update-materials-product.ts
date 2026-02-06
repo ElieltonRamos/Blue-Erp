@@ -101,10 +101,12 @@ export class ModalUpdateMaterialsProduct implements OnInit {
   }
 
   addCompositionItem() {
-    if (this.selectedMaterial && this.newCompositionItem.quantity > 0) {
+    const quantity = Number(this.newCompositionItem.quantity);
+
+    if (this.selectedMaterial && quantity > 0) {
       this.composition.push({
         materialId: this.newCompositionItem.materialId,
-        quantity: this.newCompositionItem.quantity,
+        quantity: quantity,
         materialName: this.newCompositionItem.materialName,
         unitCost: this.selectedMaterial.unitCost,
       });
@@ -113,7 +115,9 @@ export class ModalUpdateMaterialsProduct implements OnInit {
       this.searchTerm = '';
       this.searchResults = [];
     } else {
-      this.notification.warning('Selecione uma matéria-prima e informe a quantidade');
+      this.notification.warning(
+        'Selecione uma matéria-prima e informe a quantidade válida (maior que zero)',
+      );
     }
   }
 
@@ -140,12 +144,22 @@ export class ModalUpdateMaterialsProduct implements OnInit {
   }
 
   onSave() {
+    const validComposition = this.composition.filter((item) => {
+      const qty = Number(item.quantity);
+      return !isNaN(qty) && qty > 0;
+    });
+
+    if (validComposition.length === 0) {
+      this.notification.warning('Adicione pelo menos uma matéria-prima com quantidade válida');
+      return;
+    }
+
     const compositionDto: UpdateCompositionDTO = {
-      composition: this.composition.map((item) => ({
+      composition: validComposition.map((item) => ({
         materialId: item.materialId,
-        quantity: item.quantity,
+        quantity: Number(item.quantity),
         materialName: item.materialName,
-        unitCost: item.unitCost
+        unitCost: Number(item.unitCost)
       })),
     };
 
