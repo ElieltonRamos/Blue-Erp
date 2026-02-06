@@ -14,6 +14,7 @@ export class OrderFiltersDto {
 
   @ApiPropertyOptional({ description: 'Buscar por ID do pedido', example: 1 })
   @IsInt()
+  @Type(() => Number)
   @IsOptional()
   searchId?: number;
 
@@ -48,6 +49,22 @@ export class OrderFiltersDto {
   @IsString()
   @IsOptional()
   table?: string;
+
+  @ApiPropertyOptional({
+    description: 'Data de início (formato: YYYY-MM-DD)',
+    example: '2025-02-06',
+  })
+  @IsString()
+  @IsOptional()
+  startDate?: string;
+
+  @ApiPropertyOptional({
+    description: 'Data de fim (formato: YYYY-MM-DD)',
+    example: '2025-02-06',
+  })
+  @IsString()
+  @IsOptional()
+  endDate?: string;
 
   @ApiPropertyOptional({
     description: 'Número da página',

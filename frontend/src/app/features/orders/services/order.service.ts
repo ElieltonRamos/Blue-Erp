@@ -38,6 +38,8 @@ export class OrderService {
       if (filters.location) params = params.set('location', filters.location);
       if (filters.type) params = params.set('type', filters.type);
       if (filters.table) params = params.set('table', filters.table);
+      if (filters.startDate) params = params.set('startDate', filters.startDate);
+      if (filters.endDate) params = params.set('endDate', filters.endDate);
       if (filters.page) params = params.set('page', filters.page.toString());
       if (filters.limit) params = params.set('limit', filters.limit.toString());
     }

@@ -8,7 +8,7 @@
     >
       <div>
         <h2 class="text-2xl font-bold text-white">Editar Pedido</h2>
-        <p class="text-indigo-200 text-sm mt-1">{{ order?.id }}</p>
+        <p class="text-indigo-200 text-sm mt-1">#{{ order?.id }}</p>
       </div>
       <button
         (click)="closeModal()"
@@ -31,22 +31,20 @@
 
     <div class="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
       <form *ngIf="order" #orderForm="ngForm">
-        <!-- Customer Name -->
-        <div class="mb-6">
-          <label class="text-slate-300 text-sm font-medium mb-2 block">Nome do Cliente</label>
-          <input
-            type="text"
-            [(ngModel)]="order.customerName"
-            name="customerName"
-            required
-            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-            placeholder="Digite o nome do cliente"
-          />
-        </div>
-
-        <!-- ✅ Order Type, Status and Table -->
+        <!-- Customer Name, Type and Status -->
         <div class="grid grid-cols-3 gap-4 mb-6">
-          <!-- Tipo de Pedido -->
+          <div>
+            <label class="text-slate-300 text-sm font-medium mb-2 block">Nome do Cliente</label>
+            <input
+              type="text"
+              [(ngModel)]="order.customerName"
+              name="customerName"
+              required
+              class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+              placeholder="Digite o nome do cliente"
+            />
+          </div>
+
           <div>
             <label class="text-slate-300 text-sm font-medium mb-2 block">Tipo de Pedido</label>
             <select
@@ -55,12 +53,11 @@
               (change)="onTypeChange()"
               class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
             >
-              <option value="dine_in">🪑 Comer no Local</option>
-              <option value="delivery">🚚 Delivery</option>
+              <option value="DINE_IN">🪑 Mesa</option>
+              <option value="DELIVERY">🚚 Delivery</option>
             </select>
           </div>
 
-          <!-- Status do Pedido -->
           <div>
             <label class="text-slate-300 text-sm font-medium mb-2 block">Status</label>
             <select
@@ -68,23 +65,34 @@
               name="status"
               class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
             >
-              <option value="open">🔓 Aberto</option>
-              <option value="closed">✅ Fechado</option>
-              <option value="canceled">❌ Cancelado</option>
+              <option value="OPEN">📖 Aberto</option>
+              <option value="CLOSED">✅ Fechado</option>
+              <option value="CANCELED">❌ Cancelado</option>
             </select>
           </div>
+        </div>
 
-          <!-- Mesa (condicional) -->
-          <!-- <div *ngIf="order.type === 'dine_in'">
-            <label class="text-slate-300 text-sm font-medium mb-2 block">Mesa</label>
-            <input
-              type="text"
-              [(ngModel)]="order.table"
-              name="table"
-              class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-              placeholder="Ex: Mesa 5"
-            />
-          </div> -->
+        <!-- Mesa ou Endereço (condicional) -->
+        <div class="mb-6" *ngIf="order.type === 'DINE_IN'">
+          <label class="text-slate-300 text-sm font-medium mb-2 block">Mesa</label>
+          <input
+            type="text"
+            [(ngModel)]="order.table"
+            name="table"
+            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+            placeholder="Ex: Mesa 5"
+          />
+        </div>
+
+        <div class="mb-6" *ngIf="order.type === 'DELIVERY'">
+          <label class="text-slate-300 text-sm font-medium mb-2 block">Endereço de Entrega</label>
+          <input
+            type="text"
+            [(ngModel)]="order.address"
+            name="address"
+            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+            placeholder="Endereço completo"
+          />
         </div>
 
         <!-- Buscar Produto -->
@@ -96,7 +104,7 @@
               <input
                 type="text"
                 [(ngModel)]="searchCode"
-                name="searchCode"
+                [ngModelOptions]="{ standalone: true }"
                 (keyup.enter)="searchProduct()"
                 [disabled]="isSearchingProduct"
                 placeholder="Código de barras"
@@ -108,7 +116,7 @@
               <input
                 type="text"
                 [(ngModel)]="searchName"
-                name="searchName"
+                [ngModelOptions]="{ standalone: true }"
                 (keyup.enter)="searchProduct()"
                 [disabled]="isSearchingProduct"
                 placeholder="Nome do produto"
@@ -139,51 +147,19 @@
               </button>
             </div>
           </div>
-        </div>
 
-        <!-- Lista de Resultados da Busca -->
-        <div
-          *ngIf="showSearchResults && searchResults.length > 0"
-          class="mb-6 bg-slate-700 border border-indigo-500 rounded-lg overflow-hidden shadow-lg"
-        >
-          <div class="px-4 py-2 bg-indigo-600 flex justify-between items-center">
-            <span class="text-white text-sm font-semibold">
-              {{ searchResults.length }} produto(s) encontrado(s) - Selecione:
-            </span>
-            <button
-              type="button"
-              (click)="closeSearchResults()"
-              class="text-white hover:bg-white/20 rounded p-1 transition-colors"
+          <!-- Select de produtos encontrados -->
+          <div *ngIf="searchResults.length > 0" class="mt-3">
+            <label class="text-slate-300 text-sm mb-2 block">Selecione o produto:</label>
+            <select
+              (change)="selectProduct($event)"
+              class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          </div>
-
-          <div class="max-h-60 overflow-y-auto">
-            <button
-              *ngFor="let product of searchResults"
-              type="button"
-              (click)="selectProductFromResults(product)"
-              class="w-full px-4 py-3 hover:bg-slate-600 transition-colors flex justify-between items-center border-b border-slate-600 last:border-b-0 group"
-            >
-              <div class="text-left">
-                <div class="text-slate-200 font-medium group-hover:text-white">{{ product.name }}</div>
-                <div class="text-slate-400 text-xs mt-1">
-                  <span class="bg-slate-800 px-2 py-0.5 rounded">Cód: {{ product.code }}</span>
-                </div>
-              </div>
-              <div class="text-green-400 font-bold">R$ {{ product.price.toFixed(2) }}</div>
-            </button>
+              <option value="">-- Escolha um produto --</option>
+              <option *ngFor="let product of searchResults; let i = index" [value]="i">
+                {{ product.code }} - {{ product.name }} - R$ {{ product.price.toFixed(2) }}
+              </option>
+            </select>
           </div>
         </div>
 
@@ -208,7 +184,7 @@
                   </div>
                 </div>
 
-                <div class="col-span-4">
+                <div class="col-span-5">
                   <label class="text-slate-400 text-xs mb-1 block">Produto</label>
                   <div
                     class="bg-slate-800 border border-slate-600 rounded px-3 py-2 text-slate-200 text-sm"
@@ -217,29 +193,24 @@
                   </div>
                 </div>
 
-                <div class="col-span-2">
+                <div class="col-span-1">
                   <label class="text-slate-400 text-xs mb-1 block">Qtd</label>
                   <input
                     type="number"
-                    [(ngModel)]="item.quantity"
-                    [name]="'itemQty' + i"
-                    (ngModelChange)="calculateItemTotal(item)"
+                    [value]="item.quantity"
+                    (change)="updateQuantity(item, +$any($event.target).value)"
                     min="1"
-                    class="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
+                    class="w-full bg-slate-800 border border-slate-600 rounded px-2 py-2 text-slate-200 text-sm text-center focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
                 <div class="col-span-2">
-                  <label class="text-slate-400 text-xs mb-1 block">Preço</label>
-                  <input
-                    type="number"
-                    [(ngModel)]="item.unitPrice"
-                    [name]="'itemPrice' + i"
-                    (ngModelChange)="calculateItemTotal(item)"
-                    step="0.01"
-                    min="0"
-                    class="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
-                  />
+                  <label class="text-slate-400 text-xs mb-1 block">Preço Un.</label>
+                  <div
+                    class="bg-slate-800 border border-slate-600 rounded px-2 py-2 text-slate-300 text-sm text-center"
+                  >
+                    R$ {{ item.unitPrice.toFixed(2) }}
+                  </div>
                 </div>
 
                 <div class="col-span-1">
@@ -273,6 +244,24 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Empty State -->
+          <div *ngIf="order.items.length === 0" class="text-center py-8 bg-slate-700/30 rounded-lg">
+            <svg
+              class="mx-auto mb-3 text-slate-600"
+              width="40"
+              height="40"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            <p class="text-slate-400 text-sm">Nenhum item no pedido</p>
           </div>
         </div>
 

@@ -3,8 +3,8 @@
   [formGroup]="formCreateOrder"
   class="bg-[#1d2a3c] p-6 rounded-lg space-y-6"
 >
-  <!-- Tipo e Nome do Cliente -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <!-- Tipo, Local e Nome do Cliente -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <div>
       <label for="type" class="block text-white font-bold mb-2">Tipo do Pedido</label>
       <select
@@ -22,9 +22,27 @@
     </div>
 
     <div>
-      <label for="customerName" class="block text-white font-bold mb-2">
-        Nome do Cliente (opcional)
-      </label>
+      <label for="locationId" class="block text-white font-bold mb-2">Local de Origem</label>
+      <select
+        id="locationId"
+        formControlName="locationId"
+        required
+        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold"
+      >
+        <option value="LOCAL_01">Local 01</option>
+        <option value="LOCAL_02">Local 02</option>
+        <option value="LOCAL_03">Local 03</option>
+        <option value="DELIVERY">Delivery</option>
+      </select>
+      @if (
+        formCreateOrder.get('locationId')?.touched && formCreateOrder.get('locationId')?.invalid
+      ) {
+        <p class="msg-error">Selecione o Local!</p>
+      }
+    </div>
+
+    <div>
+      <label for="customerName" class="block text-white font-bold mb-2"> Nome do Cliente </label>
       <input
         id="customerName"
         formControlName="customerName"
@@ -32,6 +50,45 @@
         placeholder="Nome do cliente"
         class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
       />
+      @if (
+        formCreateOrder.get('customerName')?.touched && formCreateOrder.get('customerName')?.invalid
+      ) {
+        <p class="msg-error">Informe o nome do cliente!</p>
+      }
+    </div>
+  </div>
+
+  <!-- Mesa (apenas para DINE_IN) -->
+  <div *ngIf="formCreateOrder.get('type')?.value === 'DINE_IN'" class="grid grid-cols-1 gap-6">
+    <div>
+      <label for="table" class="block text-white font-bold mb-2">Mesa</label>
+      <input
+        id="table"
+        formControlName="table"
+        type="text"
+        placeholder="Número ou nome da mesa"
+        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+      />
+      @if (formCreateOrder.get('table')?.touched && formCreateOrder.get('table')?.invalid) {
+        <p class="msg-error">Informe a mesa!</p>
+      }
+    </div>
+  </div>
+
+  <!-- Endereço (apenas para DELIVERY) -->
+  <div *ngIf="formCreateOrder.get('type')?.value === 'DELIVERY'" class="grid grid-cols-1 gap-6">
+    <div>
+      <label for="address" class="block text-white font-bold mb-2">Endereço de Entrega</label>
+      <input
+        id="address"
+        formControlName="address"
+        type="text"
+        placeholder="Endereço completo"
+        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+      />
+      @if (formCreateOrder.get('address')?.touched && formCreateOrder.get('address')?.invalid) {
+        <p class="msg-error">Informe o endereço!</p>
+      }
     </div>
   </div>
 

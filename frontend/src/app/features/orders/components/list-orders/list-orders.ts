@@ -16,119 +16,125 @@ import { OrderService } from '../../services/order.service';
 export class ListOrders implements OnInit {
   private notification = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef);
+  private orderService = inject(OrderService);
+  private router = inject(Router);
+
   searchName: string = '';
   searchId: string = '';
   statusFilter: string = 'all';
   locationFilter: string = 'all';
+  startDate: string = '';
+  endDate: string = '';
   currentPage: number = 1;
   itemsPerPage: number = 10;
   totalPages: number = 1;
+  totalOrders: number = 0;
 
   orders: Order[] = [];
-  filteredOrders: Order[] = [];
   isLoading: boolean = false;
 
-  // Modal state
   isModalOpen: boolean = false;
   selectedOrder: Order | null = null;
 
-  private orderService = inject(OrderService);
-  private router = inject(Router);
-
   ngOnInit(): void {
+    this.setDefaultDates();
     this.loadOrders();
+  }
+
+  private setDefaultDates(): void {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+
+    this.startDate = `${year}-${month}-${day}`;
+    this.endDate = `${year}-${month}-${day}`;
   }
 
   loadOrders(): void {
     this.isLoading = true;
 
-    // this.orderService
-    //   .getOrders({
-    //     searchName: this.searchName,
-    //     searchId: this.searchId,
-    //     status: this.statusFilter,
-    //     location: this.locationFilter,
-    //     page: this.currentPage,
-    //     limit: this.itemsPerPage,
-    //   })
-    //   .subscribe({
-    //     next: (orders) => {
-    //       this.orders = orders;
-    //       this.applyFilters();
-    //       this.isLoading = false;
-    //       this.cdr.detectChanges();
-    //     },
-    //     error: (error) => {
-    //       console.error('Erro ao carregar pedidos:', error);
-    //       this.isLoading = false;
-    //     },
-    //   });
+    this.orderService
+      .getOrders({
+        searchName: this.searchName || undefined,
+        searchId: this.searchId ? parseInt(this.searchId) : undefined,
+        status: this.statusFilter !== 'all' ? (this.statusFilter as OrderStatus) : undefined,
+        location: this.locationFilter !== 'all' ? (this.locationFilter as any) : undefined,
+        startDate: this.startDate || undefined,
+        endDate: this.endDate || undefined,
+        page: this.currentPage,
+        limit: this.itemsPerPage,
+      })
+      .subscribe({
+        next: (response) => {
+          this.orders = response.data;
+          this.totalOrders = response.total;
+          this.totalPages = response.totalPages;
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Erro ao carregar pedidos:', error);
+          this.notification.error('Erro ao carregar pedidos');
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   applyFilters(): void {
-    this.filteredOrders = this.orders.filter((order) => {
-      const matchesName =
-        !this.searchName ||
-        order.customerName?.toLowerCase().includes(this.searchName.toLowerCase());
-      const matchesId = 0
-      const matchesStatus = this.statusFilter === 'all' || order.status === this.statusFilter;
-      const matchesLocation = this.locationFilter === 'all' || order.locationId === this.locationFilter;
-      return matchesName && matchesId && matchesStatus && matchesLocation;
-    });
-
-    this.totalPages = Math.ceil(this.filteredOrders.length / this.itemsPerPage);
-  }
-
-  onSearchChange(): void {
-    this.currentPage = 1;
-    this.applyFilters();
-  }
-
-  onStatusFilterChange(): void {
     this.currentPage = 1;
     this.loadOrders();
   }
 
-  onLocationFilterChange(): void {
+  clearFilters(): void {
+    this.searchName = '';
+    this.searchId = '';
+    this.statusFilter = 'all';
+    this.locationFilter = 'all';
+    this.setDefaultDates();
     this.currentPage = 1;
     this.loadOrders();
   }
 
-  getStatusLabel(status: OrderStatus) {
-    // const labels = {
-    //   open: 'Aberto',
-    //   closed: 'Fechado',
-    //   canceled: 'Cancelado',
-    // };
-    // return labels[status];
+  getStatusLabel(status: OrderStatus): string {
+    const labels: Record<OrderStatus, string> = {
+      OPEN: 'Aberto',
+      CLOSED: 'Fechado',
+      CANCELED: 'Cancelado',
+    };
+    return labels[status];
   }
 
-  getStatusClass(status: OrderStatus) {
-    // const styles = {
-    //   open: 'bg-green-500/20 text-green-400 border border-green-500/30',
-    //   closed: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
-    //   canceled: 'bg-red-500/20 text-red-400 border border-red-500/30',
-    // };
-    // return styles[status];
+  getStatusClass(status: OrderStatus): string {
+    const styles: Record<OrderStatus, string> = {
+      OPEN: 'bg-green-500/20 text-green-400 border border-green-500/30',
+      CLOSED: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
+      CANCELED: 'bg-red-500/20 text-red-400 border border-red-500/30',
+    };
+    return styles[status];
   }
 
   getLocationLabel(locationId: string): string {
     const labels: Record<string, string> = {
-      'local-01': 'Local 01',
-      'local-02': 'Local 02',
-      'local-03': 'Local 03',
-      'delivery': 'Delivery',
+      LOCAL_01: 'Local 01',
+      LOCAL_02: 'Local 02',
+      LOCAL_03: 'Local 03',
+      DELIVERY: 'Delivery',
     };
     return labels[locationId] || locationId;
   }
 
-  editOrder(orderId: string): void {
-    // const order = this.orders.find((o) => o.id === orderId);
-    // if (order) {
-    //   // Criar uma cópia profunda do pedido para edição
-    //   this.selectedOrder = JSON.parse(JSON.stringify(order));
-    //   this.isModalOpen = true;
-    // }
+  getTypeLabel(type: string): string {
+    return type === 'DINE_IN' ? 'Mesa' : 'Entrega';
+  }
+
+  editOrder(orderId: number): void {
+    const order = this.orders.find((o) => o.id === orderId);
+    if (order) {
+      this.selectedOrder = JSON.parse(JSON.stringify(order));
+      this.isModalOpen = true;
+    }
   }
 
   closeModal(): void {
@@ -137,52 +143,48 @@ export class ListOrders implements OnInit {
   }
 
   onOrderUpdated(updatedOrder: Order): void {
-    // Atualizar o pedido na lista
     const index = this.orders.findIndex((o) => o.id === updatedOrder.id);
     if (index !== -1) {
       this.orders[index] = updatedOrder;
-      this.applyFilters();
+    }
+    this.notification.success('Pedido atualizado com sucesso');
+    this.cdr.detectChanges();
+  }
+
+  async finishOrder(orderId: number): Promise<void> {
+    const confirmed = await alertConfirm('Deseja realmente finalizar este pedido?');
+
+    if (confirmed) {
+      this.orderService.finishOrder(orderId).subscribe({
+        next: () => {
+          this.notification.success('Pedido finalizado com sucesso');
+          this.loadOrders();
+        },
+        error: (error) => {
+          console.error('Erro ao finalizar pedido:', error);
+          this.notification.error('Erro ao finalizar pedido');
+        },
+      });
     }
   }
 
-  async finishOrder(orderId: string): Promise<void> {
-    const confirmed = await alertConfirm('Deseja realmente finalizar este pedido?');
-
-    // if (confirmed) {
-    //   this.orderService.finishOrder(orderId).subscribe({
-    //     next: (updatedOrder) => {
-    //       this.router.navigate(['/comandas', orderId]);
-    //       this.cdr.detectChanges(); 
-    //     },
-    //     error: (error) => {
-    //       console.error('Erro ao finalizar pedido:', error);
-    //       this.notification.error('Erro ao finalizar pedido. Tente novamente.');
-    //     },
-    //   });
-    // }
-  }
-
-  async cancelOrder(orderId: string): Promise<void> {
+  async cancelOrder(orderId: number): Promise<void> {
     const confirmed = await alertConfirm(
       'Deseja realmente cancelar este pedido? Esta ação não pode ser desfeita.',
     );
 
-    // if (confirmed) {
-    //   this.orderService.cancelOrder(orderId).subscribe({
-    //     next: (updatedOrder) => {
-    //       const index = this.orders.findIndex((o) => o.id === updatedOrder.id);
-    //       if (index !== -1) {
-    //         this.orders[index] = updatedOrder;
-    //         this.applyFilters();
-    //       }
-    //       this.cdr.detectChanges(); 
-    //     },
-    //     error: (error) => {
-    //       console.error('Erro ao cancelar pedido:', error);
-    //       this.notification.error('Erro ao cancelar pedido. Tente novamente.');
-    //     },
-    //   });
-    // }
+    if (confirmed) {
+      this.orderService.cancelOrder(orderId).subscribe({
+        next: () => {
+          this.notification.success('Pedido cancelado com sucesso');
+          this.loadOrders();
+        },
+        error: (error) => {
+          console.error('Erro ao cancelar pedido:', error);
+          this.notification.error('Erro ao cancelar pedido');
+        },
+      });
+    }
   }
 
   previousPage(): void {

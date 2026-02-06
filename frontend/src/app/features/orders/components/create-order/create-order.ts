@@ -29,8 +29,8 @@ export class CreateOrder {
   formCreateOrder = new FormGroup({
     type: new FormControl<'DINE_IN' | 'DELIVERY'>('DINE_IN', [Validators.required]),
     locationId: new FormControl<string>('LOCAL_01', [Validators.required]),
-    customerName: new FormControl<string>(''),
-    table: new FormControl<string>(''),
+    customerName: new FormControl<string>('', [Validators.required]),
+    table: new FormControl<string>('', [Validators.required]),
     address: new FormControl<string>(''),
   });
 
@@ -187,7 +187,14 @@ export class CreateOrder {
         type: formValue.type!,
         locationId: formValue.locationId as any,
         customerName: formValue.customerName || undefined,
-        items: this.orderItems,
+        items: this.orderItems.map((item) => ({
+          productId: item.productId,
+          code: item.code,
+          name: item.name,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          total: item.total,
+        })),
         total: this.calculatedTotal,
       };
 

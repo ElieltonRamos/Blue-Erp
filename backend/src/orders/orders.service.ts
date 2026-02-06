@@ -86,7 +86,6 @@ export class OrdersService {
       throw error;
     }
   }
-
   async findAll(filters: OrderFiltersDto) {
     const {
       page = 1,
@@ -97,6 +96,8 @@ export class OrdersService {
       table,
       searchName,
       searchId,
+      startDate,
+      endDate,
     } = filters;
     const skip = (page - 1) * limit;
 
@@ -107,6 +108,14 @@ export class OrdersService {
       ...(table && { table: { contains: table } }),
       ...(searchName && { customerName: { contains: searchName } }),
       ...(searchId && { id: searchId }),
+      ...(startDate || endDate
+        ? {
+            createdAt: {
+              ...(startDate && { gte: new Date(`${startDate}T00:00:00.000Z`) }),
+              ...(endDate && { lte: new Date(`${endDate}T23:59:59.999Z`) }),
+            },
+          }
+        : {}),
     };
 
     const [orders, total] = await Promise.all([
@@ -139,7 +148,6 @@ export class OrdersService {
       totalPages: Math.ceil(total / limit),
     };
   }
-
   async findOne(id: number): Promise<OrderEntity> {
     const order = await this.prisma.client.order.findUnique({
       where: { id },

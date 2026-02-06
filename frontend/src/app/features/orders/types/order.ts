@@ -66,6 +66,8 @@ export interface OrderFilters {
   location?: OrderLocation;
   type?: OrderType;
   table?: string;
+  startDate?: string;
+  endDate?: string;
   page?: number;
   limit?: number;
 }

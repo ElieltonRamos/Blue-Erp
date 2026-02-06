@@ -26,6 +26,10 @@ import { OrderService } from '../../services/order.service';
 })
 export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
   private notification = inject(NotificationService);
+  private orderService = inject(OrderService);
+  private overlay = inject(Overlay);
+  private cdr = inject(ChangeDetectorRef);
+
   @Input() isOpen: boolean = false;
   @Input() order: Order | null = null;
   @Output() close = new EventEmitter<void>();
@@ -34,21 +38,16 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
   @ViewChild(CdkPortal) portal!: CdkPortal;
 
   isSaving: boolean = false;
-  private orderService = inject(OrderService);
-  private overlay = inject(Overlay);
   private overlayRef: OverlayRef | null = null;
-  private cdr = inject(ChangeDetectorRef);
 
   searchCode = '';
   searchName = '';
   isSearchingProduct = false;
   searchResults: Product[] = [];
-  showSearchResults: boolean = false;
-  statusOptions: OrderStatus[] = [];
 
   private readonly overlayConfig = new OverlayConfig({
     hasBackdrop: true,
-    backdropClass: 'modal-backdrop-dark', // ✅ Use a classe definida no styles.scss
+    backdropClass: 'modal-backdrop-dark',
     panelClass: 'modal-panel',
     positionStrategy: this.overlay.position().global().centerHorizontally().centerVertically(),
     scrollStrategy: this.overlay.scrollStrategies.block(),
@@ -105,13 +104,16 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
   }
 
   onTypeChange(): void {
-    // if (this.order && this.order.type === 'delivery') {
-    //   this.order.table = undefined;
-    // }
+    if (this.order && this.order.type === 'DELIVERY') {
+      this.order.table = undefined;
+    } else if (this.order && this.order.type === 'DINE_IN') {
+      this.order.address = undefined;
+    }
   }
 
   searchProduct(): void {
     if (!this.searchCode && !this.searchName) {
+      this.notification.error('Digite um código ou nome para buscar');
       return;
     }
 
@@ -119,74 +121,93 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
 
     if (this.searchCode) {
       this.searchByCode();
-      return;
+    } else {
+      this.searchByName();
     }
-
-    this.searchByName();
   }
 
   private searchByCode(): void {
-    // this.orderService.getProductByCode(this.searchCode).subscribe({
-    //   next: (product) => {
-    //     this.addProductToOrder(product);
-    //     this.isSearchingProduct = false;
-    //     this.cdr.detectChanges();
-    //   },
-    //   error: () => {},
-    // });
+    this.orderService.getByCode(this.searchCode).subscribe({
+      next: (product: Product) => {
+        if (product) {
+          this.addProductToOrder(product);
+          this.searchCode = '';
+        } else {
+          this.notification.error('Produto não encontrado');
+        }
+        this.isSearchingProduct = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.notification.error('Produto não encontrado');
+        this.isSearchingProduct = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   private searchByName(): void {
-    // this.orderService.searchProducts({ name: this.searchName }).subscribe({
-    //   next: (products) => {
-    //     if (products.length === 0) {
-    //       // Nenhum produto encontrado
-    //       this.notification.error('Nenhum produto encontrado');
-    //       this.isSearchingProduct = false;
-    //     } else if (products.length === 1) {
-    //       // Apenas 1 produto: adiciona diretamente
-    //       this.addProductToOrder(products[0]);
-    //       this.isSearchingProduct = false;
-    //     } else {
-    //       // Múltiplos produtos: exibe lista para seleção
-    //       this.searchResults = products;
-    //       this.showSearchResults = true;
-    //       this.isSearchingProduct = false;
-    //     }
-    //     this.cdr.detectChanges();
-    //   },
-    //   error: () => {
-    //     this.isSearchingProduct = false;
-    //     this.notification.error('Erro ao buscar produto');
-    //   },
-    // });
+    this.orderService.getAll(1, 10, { search: this.searchName }).subscribe({
+      next: (response) => {
+        const products = response.data;
+
+        if (!products || products.length === 0) {
+          this.notification.error('Nenhum produto encontrado');
+          this.searchResults = [];
+        } else {
+          this.searchResults = products;
+        }
+        this.isSearchingProduct = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.notification.error('Erro ao buscar produto');
+        this.searchResults = [];
+        this.isSearchingProduct = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
-  selectProductFromResults(product: Product): void {
-    this.addProductToOrder(product);
-    this.closeSearchResults();
-  }
+  selectProduct(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    const selectedIndex = parseInt(select.value);
 
-  closeSearchResults(): void {
-    this.searchResults = [];
-    this.showSearchResults = false;
+    if (!isNaN(selectedIndex) && selectedIndex >= 0) {
+      const product = this.searchResults[selectedIndex];
+      this.addProductToOrder(product);
+      this.searchResults = [];
+      this.searchName = '';
+      select.selectedIndex = 0;
+    }
   }
 
   private addProductToOrder(product: Product): void {
     if (!this.order) return;
 
-    const newItem = {
-      id: Date.now().toString(),
-      code: product.code,
-      name: product.name,
-      quantity: 1,
-      unitPrice: product.price,
-      total: product.price,
-    };
+    const existingItem = this.order.items.find((item) => item.productId === product.id);
 
-    // this.order.items.push(newItem);
+    if (existingItem) {
+      existingItem.quantity += 1;
+      existingItem.total = existingItem.quantity * existingItem.unitPrice;
+      this.notification.success('Quantidade atualizada');
+    } else {
+      const newItem: OrderItem = {
+        id: Date.now().toString(),
+        productId: product.id,
+        code: product.code,
+        name: product.name,
+        quantity: 1,
+        unitPrice: product.price,
+        total: product.price,
+      };
+      this.order.items.push(newItem);
+      this.notification.success('Produto adicionado');
+    }
+
     this.calculateOrderTotal();
     this.clearProductForm();
+    this.cdr.detectChanges();
   }
 
   private clearProductForm(): void {
@@ -198,11 +219,16 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
     if (!this.order) return;
     this.order.items.splice(index, 1);
     this.calculateOrderTotal();
+    this.notification.success('Produto removido');
   }
 
-  calculateItemTotal(item: OrderItem): void {
-    item.total = item.quantity * item.unitPrice;
-    this.calculateOrderTotal();
+  updateQuantity(item: OrderItem, newQuantity: number): void {
+    if (newQuantity > 0) {
+      item.quantity = newQuantity;
+      item.total = item.quantity * item.unitPrice;
+      this.calculateOrderTotal();
+      this.cdr.detectChanges();
+    }
   }
 
   calculateOrderTotal(): void {
@@ -213,17 +239,60 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
   saveOrder(): void {
     if (!this.order || this.isSaving) return;
 
+    if (!this.order.customerName || this.order.customerName.trim() === '') {
+      this.notification.error('Nome do cliente é obrigatório');
+      return;
+    }
+
+    if (this.order.type === 'DINE_IN' && (!this.order.table || this.order.table.trim() === '')) {
+      this.notification.error('Mesa é obrigatória para pedidos no local');
+      return;
+    }
+
+    if (
+      this.order.type === 'DELIVERY' &&
+      (!this.order.address || this.order.address.trim() === '')
+    ) {
+      this.notification.error('Endereço é obrigatório para delivery');
+      return;
+    }
+
+    if (this.order.items.length === 0) {
+      this.notification.error('Adicione pelo menos um item ao pedido');
+      return;
+    }
+
     this.isSaving = true;
 
-    this.orderService.updateOrder(this.order.id, this.order).subscribe({
+    const updateDto = {
+      customerName: this.order.customerName,
+      table: this.order.type === 'DINE_IN' ? this.order.table : undefined,
+      address: this.order.type === 'DELIVERY' ? this.order.address : undefined,
+      status: this.order.status,
+      items: this.order.items.map((item) => ({
+        productId: item.productId,
+        code: item.code,
+        name: item.name,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        total: item.total,
+      })),
+      total: this.order.total,
+    };
+
+    this.orderService.updateOrder(this.order.id, updateDto).subscribe({
       next: (updatedOrder) => {
+        this.notification.success('Pedido atualizado com sucesso');
         this.isSaving = false;
         this.orderUpdated.emit(updatedOrder);
         this.closeModal();
+        this.cdr.detectChanges();
       },
       error: (error) => {
         this.isSaving = false;
-        console.error('Erro ao atualizar pedido:', error);
+        const errorMsg = error.error?.message || error.message || 'Erro ao atualizar pedido';
+        this.notification.error(`Erro: ${errorMsg}`);
+        this.cdr.detectChanges();
       },
     });
   }
