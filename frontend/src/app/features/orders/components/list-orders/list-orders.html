@@ -203,12 +203,12 @@
             </div>
           </td>
           <td class="py-4 px-4">
-            <span *ngIf="order.type === 'dine_in'" class="text-blue-400 text-sm font-medium">
+            <!-- <span *ngIf="order.type === 'dine_in'" class="text-blue-400 text-sm font-medium">
               🪑 {{ order.table }}
             </span>
             <span *ngIf="order.type === 'delivery'" class="text-orange-400 text-sm font-medium">
               🚚 Delivery
-            </span>
+            </span> -->
           </td>
           <td class="py-4 px-4">
             <span class="text-pink-400 text-sm font-medium">
@@ -235,7 +235,7 @@
           <td class="py-4 px-4">
             <div class="flex gap-2">
               <button
-                (click)="editOrder(order.id)"
+                (click)="editOrder('1')"
                 class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg transition-colors"
                 title="Editar"
               >
@@ -252,8 +252,8 @@
                 </svg>
               </button>
               <button
-                *ngIf="order.status === 'open'"
-                (click)="finishOrder(order.id)"
+                *ngIf="order.status === 'OPEN'"
+                (click)="finishOrder('order.id')"
                 class="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg transition-colors"
                 title="Finalizar"
               >
@@ -269,8 +269,8 @@
                 </svg>
               </button>
               <button
-                *ngIf="order.status === 'open'"
-                (click)="cancelOrder(order.id)"
+                *ngIf="order.status === 'OPEN'"
+                (click)="cancelOrder('')"
                 class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors"
                 title="Cancelar"
               >

@@ -4,10 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { EditOrderModal } from '../edit-order-modal/edit-order-modal';
 import { Order, OrderStatus } from '../../types/order';
-import { OrderService } from '../../services/order.service';
-import { MockOrderService } from '../../services/order.mock.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
+import { OrderService } from '../../services/order.service';
 
 @Component({
   selector: 'app-list-orders',
@@ -33,7 +32,7 @@ export class ListOrders implements OnInit {
   isModalOpen: boolean = false;
   selectedOrder: Order | null = null;
 
-  private orderService = inject(MockOrderService);
+  private orderService = inject(OrderService);
   private router = inject(Router);
 
   ngOnInit(): void {
@@ -43,27 +42,27 @@ export class ListOrders implements OnInit {
   loadOrders(): void {
     this.isLoading = true;
 
-    this.orderService
-      .getOrders({
-        searchName: this.searchName,
-        searchId: this.searchId,
-        status: this.statusFilter,
-        location: this.locationFilter,
-        page: this.currentPage,
-        limit: this.itemsPerPage,
-      })
-      .subscribe({
-        next: (orders) => {
-          this.orders = orders;
-          this.applyFilters();
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
-          console.error('Erro ao carregar pedidos:', error);
-          this.isLoading = false;
-        },
-      });
+    // this.orderService
+    //   .getOrders({
+    //     searchName: this.searchName,
+    //     searchId: this.searchId,
+    //     status: this.statusFilter,
+    //     location: this.locationFilter,
+    //     page: this.currentPage,
+    //     limit: this.itemsPerPage,
+    //   })
+    //   .subscribe({
+    //     next: (orders) => {
+    //       this.orders = orders;
+    //       this.applyFilters();
+    //       this.isLoading = false;
+    //       this.cdr.detectChanges();
+    //     },
+    //     error: (error) => {
+    //       console.error('Erro ao carregar pedidos:', error);
+    //       this.isLoading = false;
+    //     },
+    //   });
   }
 
   applyFilters(): void {
@@ -71,8 +70,7 @@ export class ListOrders implements OnInit {
       const matchesName =
         !this.searchName ||
         order.customerName?.toLowerCase().includes(this.searchName.toLowerCase());
-      const matchesId =
-        !this.searchId || order.id.toLowerCase().includes(this.searchId.toLowerCase());
+      const matchesId = 0
       const matchesStatus = this.statusFilter === 'all' || order.status === this.statusFilter;
       const matchesLocation = this.locationFilter === 'all' || order.locationId === this.locationFilter;
       return matchesName && matchesId && matchesStatus && matchesLocation;
@@ -96,22 +94,22 @@ export class ListOrders implements OnInit {
     this.loadOrders();
   }
 
-  getStatusLabel(status: OrderStatus): string {
-    const labels = {
-      open: 'Aberto',
-      closed: 'Fechado',
-      canceled: 'Cancelado',
-    };
-    return labels[status];
+  getStatusLabel(status: OrderStatus) {
+    // const labels = {
+    //   open: 'Aberto',
+    //   closed: 'Fechado',
+    //   canceled: 'Cancelado',
+    // };
+    // return labels[status];
   }
 
-  getStatusClass(status: OrderStatus): string {
-    const styles = {
-      open: 'bg-green-500/20 text-green-400 border border-green-500/30',
-      closed: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
-      canceled: 'bg-red-500/20 text-red-400 border border-red-500/30',
-    };
-    return styles[status];
+  getStatusClass(status: OrderStatus) {
+    // const styles = {
+    //   open: 'bg-green-500/20 text-green-400 border border-green-500/30',
+    //   closed: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
+    //   canceled: 'bg-red-500/20 text-red-400 border border-red-500/30',
+    // };
+    // return styles[status];
   }
 
   getLocationLabel(locationId: string): string {
@@ -125,12 +123,12 @@ export class ListOrders implements OnInit {
   }
 
   editOrder(orderId: string): void {
-    const order = this.orders.find((o) => o.id === orderId);
-    if (order) {
-      // Criar uma cópia profunda do pedido para edição
-      this.selectedOrder = JSON.parse(JSON.stringify(order));
-      this.isModalOpen = true;
-    }
+    // const order = this.orders.find((o) => o.id === orderId);
+    // if (order) {
+    //   // Criar uma cópia profunda do pedido para edição
+    //   this.selectedOrder = JSON.parse(JSON.stringify(order));
+    //   this.isModalOpen = true;
+    // }
   }
 
   closeModal(): void {
@@ -150,18 +148,18 @@ export class ListOrders implements OnInit {
   async finishOrder(orderId: string): Promise<void> {
     const confirmed = await alertConfirm('Deseja realmente finalizar este pedido?');
 
-    if (confirmed) {
-      this.orderService.finishOrder(orderId).subscribe({
-        next: (updatedOrder) => {
-          this.router.navigate(['/comandas', orderId]);
-          this.cdr.detectChanges(); 
-        },
-        error: (error) => {
-          console.error('Erro ao finalizar pedido:', error);
-          this.notification.error('Erro ao finalizar pedido. Tente novamente.');
-        },
-      });
-    }
+    // if (confirmed) {
+    //   this.orderService.finishOrder(orderId).subscribe({
+    //     next: (updatedOrder) => {
+    //       this.router.navigate(['/comandas', orderId]);
+    //       this.cdr.detectChanges(); 
+    //     },
+    //     error: (error) => {
+    //       console.error('Erro ao finalizar pedido:', error);
+    //       this.notification.error('Erro ao finalizar pedido. Tente novamente.');
+    //     },
+    //   });
+    // }
   }
 
   async cancelOrder(orderId: string): Promise<void> {
@@ -169,22 +167,22 @@ export class ListOrders implements OnInit {
       'Deseja realmente cancelar este pedido? Esta ação não pode ser desfeita.',
     );
 
-    if (confirmed) {
-      this.orderService.cancelOrder(orderId).subscribe({
-        next: (updatedOrder) => {
-          const index = this.orders.findIndex((o) => o.id === updatedOrder.id);
-          if (index !== -1) {
-            this.orders[index] = updatedOrder;
-            this.applyFilters();
-          }
-          this.cdr.detectChanges(); 
-        },
-        error: (error) => {
-          console.error('Erro ao cancelar pedido:', error);
-          this.notification.error('Erro ao cancelar pedido. Tente novamente.');
-        },
-      });
-    }
+    // if (confirmed) {
+    //   this.orderService.cancelOrder(orderId).subscribe({
+    //     next: (updatedOrder) => {
+    //       const index = this.orders.findIndex((o) => o.id === updatedOrder.id);
+    //       if (index !== -1) {
+    //         this.orders[index] = updatedOrder;
+    //         this.applyFilters();
+    //       }
+    //       this.cdr.detectChanges(); 
+    //     },
+    //     error: (error) => {
+    //       console.error('Erro ao cancelar pedido:', error);
+    //       this.notification.error('Erro ao cancelar pedido. Tente novamente.');
+    //     },
+    //   });
+    // }
   }
 
   previousPage(): void {

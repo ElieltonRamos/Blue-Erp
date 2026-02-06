@@ -8,63 +8,89 @@ datasource db {
   provider = "mysql"
 }
 
+enum Unit {
+  UN
+  KG
+  LT
+  MT
+  CX
+  ML
+  GR
+  DZ
+}
+
+enum ProductType {
+  MANUFACTURED
+  RESALE
+}
+
+enum FiscalStatus {
+  PENDENTE
+  EMITIDA
+  CANCELADA
+  ERRO
+}
+
+enum OrderStatus {
+  OPEN
+  CLOSED
+  CANCELED
+}
+
+enum OrderType {
+  DINE_IN
+  DELIVERY
+}
+
+enum OrderLocation {
+  LOCAL_01
+  LOCAL_02
+  LOCAL_03
+  DELIVERY
+}
+
 model Company {
-  id                Int    @id @default(autoincrement())
-  cnpj              String @unique // SEM formatação (12345678000190)
-  corporateName     String @map("corporate_name") // Razão social
-  tradeName         String @map("trade_name") // Nome fantasia
-  stateRegistration String @map("state_registration") // Inscrição estadual
-  taxRegime         String @map("tax_regime") // 1=Simples Nacional, 3=Regime Normal
-
-  // Endereço
-  street       String
-  number       String
-  complement   String?
-  neighborhood String
-  city         String
-  cityCode     String  @map("city_code") // Código IBGE
-  state        String // UF (2 caracteres)
-  zipCode      String  @map("zip_code") // CEP sem formatação
-
-  // Contato
-  phone String
-  email String?
-
-  // Configurações NFC-e
-  nfceSeries        String @map("nfce_series") // Série da nota (geralmente "1")
-  nfceCurrentNumber Int    @default(1) @map("nfce_current_number") // Número atual
-  nfceEnvironment   String @default("staging") @map("nfce_environment") // production|staging
-  nfceCsc           String @map("nfce_csc") // Código de Segurança do Contribuinte
-  nfceCscId         String @map("nfce_csc_id") // Identificador do CSC (geralmente "1")
-
-  // Certificado Digital A1
-  certificatePath           String    @map("certificate_path") // Caminho do arquivo .pfx
+  id                        Int       @id @default(autoincrement())
+  cnpj                      String    @unique
+  corporateName             String    @map("corporate_name")
+  tradeName                 String    @map("trade_name")
+  stateRegistration         String    @map("state_registration")
+  taxRegime                 String    @map("tax_regime")
+  street                    String
+  number                    String
+  complement                String?
+  neighborhood              String
+  city                      String
+  cityCode                  String    @map("city_code")
+  state                     String
+  zipCode                   String    @map("zip_code")
+  phone                     String
+  email                     String?
+  nfceSeries                String    @map("nfce_series")
+  nfceCurrentNumber         Int       @default(1) @map("nfce_current_number")
+  nfceEnvironment           String    @default("staging") @map("nfce_environment")
+  nfceCsc                   String    @map("nfce_csc")
+  nfceCscId                 String    @map("nfce_csc_id")
+  certificatePath           String    @map("certificate_path")
   certificatePassword       String    @map("certificate_password")
   certificateExpirationDate DateTime? @map("certificate_expiration_date")
-
-  // IBPT
-  ibptVersion String @default("4.0") @map("ibpt_version")
-
-  // Licença (se aplicável ao seu sistema)
-  licenseKey   String @map("license_key")
-  licenseToken String @map("license_token")
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  ibptVersion               String    @default("4.0") @map("ibpt_version")
+  licenseKey                String    @map("license_key")
+  licenseToken              String    @map("license_token")
+  createdAt                 DateTime  @default(now()) @map("created_at")
+  updatedAt                 DateTime  @updatedAt @map("updated_at")
 
   @@map("companies")
 }
 
 model Client {
-  id      Int     @id @default(autoincrement())
-  name    String
-  phone   String?
-  address String?
-  cpf     String? @unique // CPF sem formatação (apenas dígitos)
-  active  Boolean @default(true)
-
-  sales Sale[]
-
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String?
+  address   String?
+  cpf       String?  @unique
+  active    Boolean  @default(true)
+  sales     Sale[]
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -75,18 +101,17 @@ model Client {
 }
 
 model User {
-  id        Int     @id @default(autoincrement())
-  username  String  @unique
-  password  String // Hash bcrypt
-  role      String  @default("USER") // ADMIN, MANAGER, WAITER, CASHIER, KITCHEN
-  active    Boolean @default(true)
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String
+  role      String    @default("USER")
+  active    Boolean   @default(true)
   workplace String
-
-  sales Sale[]
-
+  sales     Sale[]
+  orders    Order[]
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at") // Soft delete
+  deletedAt DateTime? @map("deleted_at")
 
   @@index([role])
   @@index([active])
@@ -94,15 +119,14 @@ model User {
 }
 
 model Ibpt {
-  id               Int    @id @default(autoincrement())
-  ncm              String // NCM (8 dígitos)
-  federalTaxRate   Float  @map("federal_tax_rate") // Alíquota Federal
-  stateTaxRate     Float  @map("state_tax_rate") // Alíquota Estadual  
-  municipalTaxRate Float  @map("municipal_tax_rate") // Alíquota Municipal
-  version          String @default("4.0") // Versão IBPT
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id               Int      @id @default(autoincrement())
+  ncm              String
+  federalTaxRate   Float    @map("federal_tax_rate")
+  stateTaxRate     Float    @map("state_tax_rate")
+  municipalTaxRate Float    @map("municipal_tax_rate")
+  version          String   @default("4.0")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   @@index([ncm])
   @@index([version])
@@ -110,16 +134,15 @@ model Ibpt {
 }
 
 model Expense {
-  id          Int      @id @default(autoincrement())
-  supplier    String // Fornecedor
-  description String? // Descrição (opcional)
-  value       Decimal  @db.Decimal(10, 2) // Valor
-  datePayment DateTime @map("date_payment") // Data de pagamento
-  status      String // 'Pago' | 'Pendente' | 'Atrasado'
-
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at") // Soft delete
+  id          Int       @id @default(autoincrement())
+  supplier    String
+  description String?
+  value       Decimal   @db.Decimal(10, 2)
+  datePayment DateTime  @map("date_payment")
+  status      String
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
 
   @@index([supplier])
   @@index([status])
@@ -127,71 +150,40 @@ model Expense {
   @@map("expenses")
 }
 
-enum Unit {
-  UN // Unidade
-  KG // Quilograma
-  LT // Litro
-  MT // Metro
-  CX // Caixa
-  ML // Mililitro
-  GR // Grama
-  DZ // Dúzia
-}
-
-enum ProductType {
-  MANUFACTURED // Produto manufaturado
-  RESALE // Produto para revenda
-}
-
 model Product {
-  id   Int    @id @default(autoincrement())
-  name String // xProd - Descrição para NFC-e
-  code String @unique // cProd - Código interno/SKU/EAN/GTIN
-  productionLocation String? @map("production_location")
-
-  // Preços padrão
-  price     Decimal @db.Decimal(10, 2) // Preço padrão de venda
-  costPrice Decimal @map("cost_price") @db.Decimal(10, 2) // Custo do produto
-  extraCosts Decimal @map("extra_costs") @db.Decimal(10, 2) @default(0) // Custos extras
-
-  // Informações fiscais FIXAS do produto
-  ncm    String // NCM - NCM obrigatório (8 dígitos)
-  cest   String? // CEST - CEST (7 dígitos)
-  origin Int // orig - Origem 0-8 (0=nacional, 1=estrangeira importação direta, etc)
-
-  // Tributação padrão (Simples Nacional OU Regime Normal)
-  csosn    String? // CSOSN - CSOSN padrão (ex: '102', '500')
-  cst      String? // CST - CST ICMS padrão (regime normal)
-  icmsRate Decimal? @map("icms_rate") @db.Decimal(5, 2) // pICMS - Alíquota ICMS padrão
-
-  // PIS/COFINS padrão
-  cstPis     String?  @map("cst_pis") // CST - CST PIS padrão (ex: '49' para Simples)
-  pisRate    Decimal? @map("pis_rate") @db.Decimal(5, 2) // pPIS - Alíquota PIS
-  cstCofins  String?  @map("cst_cofins") // CST - CST COFINS padrão
-  cofinsRate Decimal? @map("cofins_rate") @db.Decimal(5, 2) // pCOFINS - Alíquota COFINS
-
-  // IBPT - Tributos aproximados (por NCM)
-  federalTaxRate   Decimal? @map("federal_tax_rate") @db.Decimal(5, 2) // Percentual tributos federais
-  stateTaxRate     Decimal? @map("state_tax_rate") @db.Decimal(5, 2) // Percentual tributos estaduais
-  municipalTaxRate Decimal? @map("municipal_tax_rate") @db.Decimal(5, 2) // Percentual tributos municipais
-
-  // Controle
-  unit        Unit // uCom - Unidade comercial padrão
-  quantity    Decimal     @default(0) @db.Decimal(10, 3) // Estoque atual
-  minStock    Decimal?    @map("min_stock") @db.Decimal(10, 3) // Estoque mínimo (alerta)
-  active      Boolean     @default(true)
-  productType ProductType @default(RESALE) @map("product_type")
-
-  categoryId Int?      @map("category_id")
-  category   Category? @relation(fields: [categoryId], references: [id])
-
-  // Relações
-  compositionItems CompositionItem[]
-  preparationSteps PreparationStep[]
-  saleItems        SaleItem[]
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id                 Int               @id @default(autoincrement())
+  name               String
+  code               String            @unique
+  productionLocation String?           @map("production_location")
+  price              Decimal           @db.Decimal(10, 2)
+  costPrice          Decimal           @map("cost_price") @db.Decimal(10, 2)
+  extraCosts         Decimal           @default(0) @map("extra_costs") @db.Decimal(10, 2)
+  ncm                String
+  cest               String?
+  origin             Int
+  csosn              String?
+  cst                String?
+  icmsRate           Decimal?          @map("icms_rate") @db.Decimal(5, 2)
+  cstPis             String?           @map("cst_pis")
+  pisRate            Decimal?          @map("pis_rate") @db.Decimal(5, 2)
+  cstCofins          String?           @map("cst_cofins")
+  cofinsRate         Decimal?          @map("cofins_rate") @db.Decimal(5, 2)
+  federalTaxRate     Decimal?          @map("federal_tax_rate") @db.Decimal(5, 2)
+  stateTaxRate       Decimal?          @map("state_tax_rate") @db.Decimal(5, 2)
+  municipalTaxRate   Decimal?          @map("municipal_tax_rate") @db.Decimal(5, 2)
+  unit               Unit
+  quantity           Decimal           @default(0) @db.Decimal(10, 3)
+  minStock           Decimal?          @map("min_stock") @db.Decimal(10, 3)
+  active             Boolean           @default(true)
+  productType        ProductType       @default(RESALE) @map("product_type")
+  categoryId         Int?              @map("category_id")
+  category           Category?         @relation(fields: [categoryId], references: [id])
+  compositionItems   CompositionItem[]
+  preparationSteps   PreparationStep[]
+  saleItems          SaleItem[]
+  orderItems         OrderItem[]
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
 
   @@index([code])
   @@index([ncm])
@@ -201,53 +193,95 @@ model Product {
 }
 
 model Category {
-  id       Int       @id @default(autoincrement())
-  name     String
-  active   Boolean   @default(true)
-  products Product[]
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id        Int       @id @default(autoincrement())
+  name      String
+  active    Boolean   @default(true)
+  products  Product[]
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
 
   @@map("categories")
 }
 
+// ============================================
+// PEDIDOS (ORDERS)
+// ============================================
+
+model Order {
+  id                Int           @id @default(autoincrement())
+  type              OrderType
+  locationId        OrderLocation
+  customerName      String?
+  table             String?
+  address           String?
+  status            OrderStatus   @default(OPEN)
+  total             Decimal       @db.Decimal(10, 2)
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+  kitchenSentAt     DateTime?     @map("kitchen_sent_at")
+  kitchenReadyAt    DateTime?     @map("kitchen_ready_at")
+  finishedAt        DateTime?     @map("finished_at")
+  deliveredAt       DateTime?     @map("delivered_at")
+  tableOccupiedUtil DateTime?     @map("table_occupied_until")
+  operatorId        Int?          @map("operator_id")
+  operator          User?         @relation(fields: [operatorId], references: [id])
+  items             OrderItem[]
+
+  @@index([status])
+  @@index([locationId])
+  @@index([type])
+  @@index([operatorId])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id             Int       @id @default(autoincrement())
+  code           String
+  name           String
+  quantity       Decimal   @db.Decimal(10, 3)
+  unitPrice      Decimal   @map("unit_price") @db.Decimal(10, 2)
+  total          Decimal   @db.Decimal(10, 2)
+  kitchenReadyAt DateTime? @map("kitchen_ready_at")
+  orderId        Int       @map("order_id")
+  order          Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId      Int       @map("product_id")
+  product        Product   @relation(fields: [productId], references: [id])
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+// ============================================
+// VENDAS (SALES)
+// ============================================
+
 model Sale {
-  id Int @id @default(autoincrement())
-
-  // Cliente
-  clientId Int    @map("client_id")
-  client   Client @relation(fields: [clientId], references: [id])
-
-  // Operador
-  userOperator String @map("user_operator") // Nome do operador
-  operatorId   Int?   @map("operator_id")
-  operator     User?  @relation(fields: [operatorId], references: [id])
-
-  // Dados comerciais
-  date                         DateTime @default(now())
-  paymentMethod                String   @map("payment_method")
-  totalProductsWithoutDiscount Decimal  @map("total_products_without_discount") @db.Decimal(10, 2)
-  discount                     Decimal  @default(0) @db.Decimal(10, 2)
-  total                        Decimal  @db.Decimal(10, 2)
-  profitSale                   Decimal  @map("profit_sale") @db.Decimal(10, 2)
-  isPaid                       Boolean  @default(false) @map("is_paid")
-
-  // CFOP padrão da venda (pode ser sobrescrito por item se necessário)
-  cfop String @default("5102") // CFOP - 5102 = Venda dentro do estado
-
-  // NFC-e
-  fiscalStatus   FiscalStatus @default(PENDENTE) @map("fiscal_status")
-  fiscalKey      String?      @map("fiscal_key") // chNFe - Chave de acesso da nota (44 dígitos)
-  fiscalProtocol String?      @map("fiscal_protocol") // nProt - Protocolo de autorização
-  fiscalEmitDate DateTime?    @map("fiscal_emit_date") // dhEmi - Data/hora de emissão da nota
-  fiscalXml      String?      @map("fiscal_xml") @db.LongText // XML completo da nota (para consulta posterior)
-
-  // Itens da venda
-  items SaleItem[]
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id                           Int          @id @default(autoincrement())
+  clientId                     Int          @map("client_id")
+  client                       Client       @relation(fields: [clientId], references: [id])
+  userOperator                 String       @map("user_operator")
+  operatorId                   Int?         @map("operator_id")
+  operator                     User?        @relation(fields: [operatorId], references: [id])
+  date                         DateTime     @default(now())
+  paymentMethod                String       @map("payment_method")
+  totalProductsWithoutDiscount Decimal      @map("total_products_without_discount") @db.Decimal(10, 2)
+  discount                     Decimal      @default(0) @db.Decimal(10, 2)
+  total                        Decimal      @db.Decimal(10, 2)
+  profitSale                   Decimal      @map("profit_sale") @db.Decimal(10, 2)
+  isPaid                       Boolean      @default(false) @map("is_paid")
+  cfop                         String       @default("5102")
+  fiscalStatus                 FiscalStatus @default(PENDENTE) @map("fiscal_status")
+  fiscalKey                    String?      @map("fiscal_key")
+  fiscalProtocol               String?      @map("fiscal_protocol")
+  fiscalEmitDate               DateTime?    @map("fiscal_emit_date")
+  fiscalXml                    String?      @map("fiscal_xml") @db.LongText
+  items                        SaleItem[]
+  createdAt                    DateTime     @default(now()) @map("created_at")
+  updatedAt                    DateTime     @updatedAt @map("updated_at")
 
   @@index([clientId])
   @@index([operatorId])
@@ -258,39 +292,25 @@ model Sale {
 }
 
 model SaleItem {
-  id         Int @id @default(autoincrement())
-  itemNumber Int @map("item_number") // nItem - Número sequencial do item na nota (1, 2, 3...)
-
-  // Relação com venda e produto
-  saleId    Int     @map("sale_id")
-  sale      Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  productId Int     @map("product_id")
-  product   Product @relation(fields: [productId], references: [id])
-
-  // Dados comerciais DO ITEM (podem diferir do padrão do produto)
-  quantity   Decimal @db.Decimal(10, 3) // qCom - Quantidade comercializada
-  unitPrice  Decimal @map("unit_price") @db.Decimal(10, 2) // vUnCom - Valor unitário
-  totalPrice Decimal @map("total_price") @db.Decimal(10, 2) // vProd - Valor total do produto (quantity * unitPrice)
-
-  // Unidade tributável (se diferente da comercial - raro)
-  taxUnit      String?  @map("tax_unit") // uTrib - Se null, usa product.unit
-  taxQuantity  Decimal? @map("tax_quantity") @db.Decimal(10, 3) // qTrib - Se null, usa quantity
-  taxUnitPrice Decimal? @map("tax_unit_price") @db.Decimal(10, 2) // vUnTrib - Se null, usa unitPrice
-
-  composesTotal Int @default(1) @map("composes_total") // indTot - 1 = compõe total da NF, 0 = não compõe
-
-  // CFOP específico do item (sobrescreve Sale.cfop se necessário)
-  cfop String? // CFOP - Se null, usa Sale.cfop
-
-  // Tributos calculados do item
-  totalTaxValue Decimal? @map("total_tax_value") @db.Decimal(10, 2) // vTotTrib - Valor aproximado tributos (Lei 12.741)
-
-  // Impostos específicos (normalmente zerados no Simples)
-  importTaxValue Decimal? @default(0) @map("import_tax_value") @db.Decimal(10, 2) // vII - Importação
-  iofValue       Decimal? @default(0) @map("iof_value") @db.Decimal(10, 2) // vIOF - IOF
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id             Int      @id @default(autoincrement())
+  itemNumber     Int      @map("item_number")
+  saleId         Int      @map("sale_id")
+  sale           Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId      Int      @map("product_id")
+  product        Product  @relation(fields: [productId], references: [id])
+  quantity       Decimal  @db.Decimal(10, 3)
+  unitPrice      Decimal  @map("unit_price") @db.Decimal(10, 2)
+  totalPrice     Decimal  @map("total_price") @db.Decimal(10, 2)
+  taxUnit        String?  @map("tax_unit")
+  taxQuantity    Decimal? @map("tax_quantity") @db.Decimal(10, 3)
+  taxUnitPrice   Decimal? @map("tax_unit_price") @db.Decimal(10, 2)
+  composesTotal  Int      @default(1) @map("composes_total")
+  cfop           String?
+  totalTaxValue  Decimal? @map("total_tax_value") @db.Decimal(10, 2)
+  importTaxValue Decimal? @default(0) @map("import_tax_value") @db.Decimal(10, 2)
+  iofValue       Decimal? @default(0) @map("iof_value") @db.Decimal(10, 2)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@unique([saleId, itemNumber])
   @@index([saleId])
@@ -298,32 +318,21 @@ model SaleItem {
   @@map("sale_items")
 }
 
-enum FiscalStatus {
-  PENDENTE // Aguardando emissão
-  EMITIDA // Nota emitida com sucesso
-  CANCELADA // Nota cancelada
-  ERRO // Erro na emissão
-}
-
 model PrimaryMaterial {
-  id           Int       @id @default(autoincrement())
-  name         String
-  code         String    @unique // Código interno
-  unit         Unit
-  unitCost     Decimal   @map("unit_cost") @db.Decimal(10, 2)
-  currentStock Decimal   @default(0) @map("current_stock") @db.Decimal(10, 3)
-  minStock     Decimal?  @map("min_stock") @db.Decimal(10, 3) // Estoque mínimo
-  expiryDate   DateTime? @map("expiry_date") // Data de validade
-  active       Boolean   @default(true)
-
-  // Informações fiscais básicas (matéria-prima também pode precisar)
-  ncm  String?
-  cfop String? @default("5102")
-
+  id               Int               @id @default(autoincrement())
+  name             String
+  code             String            @unique
+  unit             Unit
+  unitCost         Decimal           @map("unit_cost") @db.Decimal(10, 2)
+  currentStock     Decimal           @default(0) @map("current_stock") @db.Decimal(10, 3)
+  minStock         Decimal?          @map("min_stock") @db.Decimal(10, 3)
+  expiryDate       DateTime?         @map("expiry_date")
+  active           Boolean           @default(true)
+  ncm              String?
+  cfop             String?           @default("5102")
   compositionItems CompositionItem[]
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
 
   @@index([code])
   @@index([active])
@@ -331,16 +340,14 @@ model PrimaryMaterial {
 }
 
 model CompositionItem {
-  id       Int     @id @default(autoincrement())
-  quantity Decimal @db.Decimal(10, 3)
-
+  id         Int             @id @default(autoincrement())
+  quantity   Decimal         @db.Decimal(10, 3)
   productId  Int             @map("product_id")
   product    Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
   materialId Int             @map("material_id")
   material   PrimaryMaterial @relation(fields: [materialId], references: [id], onDelete: Restrict)
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
 
   @@unique([productId, materialId])
   @@index([productId])
@@ -349,15 +356,13 @@ model CompositionItem {
 }
 
 model PreparationStep {
-  id          Int    @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   order       Int
-  description String @db.Text
-
-  productId Int     @map("product_id")
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  description String   @db.Text
+  productId   Int      @map("product_id")
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@unique([productId, order])
   @@index([productId])

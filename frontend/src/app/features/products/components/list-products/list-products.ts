@@ -12,7 +12,14 @@ import { FilterProductParams, Product } from '../../types/product';
 
 @Component({
   selector: 'app-list-products',
-  imports: [CommonModule, FormsModule, PaginatorComponent, ModalUpdateBasicProduct, ModalUpdateMaterialsProduct, ModalUpdatePreparationProduct],
+  imports: [
+    CommonModule,
+    FormsModule,
+    PaginatorComponent,
+    ModalUpdateBasicProduct,
+    ModalUpdateMaterialsProduct,
+    ModalUpdatePreparationProduct,
+  ],
   templateUrl: './list-products.html',
 })
 export class ListProducts {
@@ -194,8 +201,11 @@ export class ListProducts {
   }
 
   calculateProfitMargin(product: Product): number {
-    if (product.costPrice === 0) return 0;
-    return ((product.price - product.costPrice) / product.costPrice) * 100;
+    const totalCost = product.costPrice + (product.extraCosts || 0);
+
+    if (totalCost === 0) return 0;
+
+    return ((product.price - totalCost) / totalCost) * 100;
   }
 
   getStockStatusClass(product: Product): string {

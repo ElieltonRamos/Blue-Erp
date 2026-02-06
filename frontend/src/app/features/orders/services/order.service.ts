@@ -1,116 +1,106 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
 import { environment } from '../../../core/services/environment';
 import {
   Order,
-  OrderStatus,
   CreateOrderDto,
-  Product,
+  UpdateOrderDto,
   OrderFilters,
-  FinishOrderDto,
-  Sale,
+  OrderPaginatedResponse,
 } from '../types/order';
-import Client from '../../clients/types/clients';
+import { FilterProductParams, Product } from '../../products/types/product';
+import { PaginatedResponse } from '../../../core/guards/types/paginator';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OrderService {
-  private apiUrl = environment.apiUrl;
+  private readonly apiUrl = `${environment.apiUrl}/orders`;
+  private readonly productsApiUrl = `${environment.apiUrl}/products`;
   private client = inject(HttpClient);
 
-  // ==================== ORDERS ====================
+  // ============================================
+  // ORDERS ENDPOINTS
+  // ============================================
 
-  // GET /orders - Lista todos os pedidos com filtros opcionais
-  getOrders(filters?: OrderFilters): Observable<Order[]> {
-    let params: any = {};
+  createOrder(dto: CreateOrderDto): Observable<Order> {
+    return this.client.post<Order>(this.apiUrl, dto);
+  }
+
+  getOrders(filters?: OrderFilters): Observable<OrderPaginatedResponse> {
+    let params = new HttpParams();
 
     if (filters) {
-      if (filters.searchName) params.customerName = filters.searchName;
-      if (filters.searchId) params.id = filters.searchId;
-      if (filters.status && filters.status !== 'all') params.status = filters.status;
-      if (filters.page) params.page = filters.page;
-      if (filters.limit) params.limit = filters.limit;
+      if (filters.searchName) params = params.set('searchName', filters.searchName);
+      if (filters.searchId) params = params.set('searchId', filters.searchId.toString());
+      if (filters.status) params = params.set('status', filters.status);
+      if (filters.location) params = params.set('location', filters.location);
+      if (filters.type) params = params.set('type', filters.type);
+      if (filters.table) params = params.set('table', filters.table);
+      if (filters.page) params = params.set('page', filters.page.toString());
+      if (filters.limit) params = params.set('limit', filters.limit.toString());
     }
 
-    return this.client.get<Order[]>(`${this.apiUrl}/orders`, { params });
+    return this.client.get<OrderPaginatedResponse>(this.apiUrl, { params });
   }
 
-  // GET /orders/:id - Busca um pedido específico
-  getOrderById(orderId: string): Observable<Order> {
-    return this.client.get<Order>(`${this.apiUrl}/orders/${orderId}`);
+  getOrderById(id: number): Observable<Order> {
+    return this.client.get<Order>(`${this.apiUrl}/${id}`);
   }
 
-  // POST /orders - Cria um novo pedido
-  createOrder(order: CreateOrderDto): Observable<Order> {
-    return this.client.post<Order>(`${this.apiUrl}/orders`, order);
+  updateOrder(id: number, dto: UpdateOrderDto): Observable<Order> {
+    return this.client.patch<Order>(`${this.apiUrl}/${id}`, dto);
   }
 
-  // PUT /orders/:id - Atualiza um pedido
-  updateOrder(orderId: string, order: Partial<Order>): Observable<Order> {
-    return this.client.put<Order>(`${this.apiUrl}/orders/${orderId}`, order);
+  deleteOrder(id: number): Observable<void> {
+    return this.client.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  // PATCH /orders/:id/status - Atualiza apenas o status do pedido
-  updateOrderStatus(orderId: string, status: OrderStatus): Observable<Order> {
-    return this.client.patch<Order>(`${this.apiUrl}/orders/${orderId}/status`, { status });
+  sendToKitchen(id: number): Observable<{ orderId: number; kitchenSentAt: Date; message: string }> {
+    return this.client.post<{ orderId: number; kitchenSentAt: Date; message: string }>(
+      `${this.apiUrl}/${id}/send-to-kitchen`,
+      {},
+    );
   }
 
-  // DELETE /orders/:id - Deleta um pedido
-  deleteOrder(orderId: string): Observable<void> {
-    return this.client.delete<void>(`${this.apiUrl}/orders/${orderId}`);
+  cancelOrder(id: number): Observable<Order> {
+    return this.client.patch<Order>(`${this.apiUrl}/${id}/cancel`, {});
   }
 
-  // PATCH /orders/:id/finish - Finaliza um pedido (muda status para 'closed')
-  finishOrder(orderId: string): Observable<Order> {
-    return this.updateOrderStatus(orderId, 'closed');
+  markReady(id: number): Observable<Order> {
+    return this.client.patch<Order>(`${this.apiUrl}/${id}/mark-ready`, {});
   }
 
-  // PATCH /orders/:id/cancel - Cancela um pedido (muda status para 'canceled')
-  cancelOrder(orderId: string): Observable<Order> {
-    return this.updateOrderStatus(orderId, 'canceled');
+  finishOrder(id: number): Observable<any> {
+    return this.client.post<any>(`${this.apiUrl}/${id}/finish`, {});
   }
 
-  // ==================== PRODUCTS ====================
-
-  // GET /products/search - Busca produtos por código ou nome
-  searchProducts(query: { code?: string; name?: string }): Observable<Product[]> {
-    let params: any = {};
-
-    if (query.code) params.code = query.code;
-    if (query.name) params.name = query.name;
-
-    return this.client.get<Product[]>(`${this.apiUrl}/products/search`, { params });
+  getByCode(code: string): Observable<Product> {
+    return this.client.get<Product>(`${this.productsApiUrl}/code/${code}`);
   }
 
-  // GET /products/:code - Busca produto por código de barras
-  getProductByCode(code: string): Observable<Product> {
-    return this.client.get<Product>(`${this.apiUrl}/products/code/${code}`);
-  }
+  getAll(
+    page: number = 1,
+    limit: number = 10,
+    filters?: FilterProductParams,
+    sortKey: string = 'name',
+    sortOrder: string = 'asc',
+  ): Observable<PaginatedResponse<Product>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString())
+      .set('sortKey', sortKey)
+      .set('sortOrder', sortOrder);
 
-  // GET /products - Lista todos os produtos
-  getProducts(): Observable<Product[]> {
-    return this.client.get<Product[]>(`${this.apiUrl}/products`);
-  }
+    if (filters?.search) params = params.set('search', filters.search);
+    if (filters?.productType) params = params.set('productType', filters.productType);
+    if (filters?.unit) params = params.set('unit', filters.unit);
+    if (filters?.active !== undefined) params = params.set('active', filters.active.toString());
+    if (filters?.lowStock !== undefined)
+      params = params.set('lowStock', filters.lowStock.toString());
+    if (filters?.categoryId) params = params.set('categoryId', filters.categoryId.toString());
 
-  // ==================== SALES ====================
-
-  // POST /sales - Finaliza pedido e cria venda
-  finalizeSale(saleData: FinishOrderDto): Observable<Sale> {
-    return this.client.post<Sale>(`${this.apiUrl}/sales`, saleData);
-  }
-
-  // GET /sales/:id - Busca venda por ID
-  getSaleById(saleId: string): Observable<Sale> {
-    return this.client.get<Sale>(`${this.apiUrl}/sales/${saleId}`);
-  }
-
-  findClientById(id: number) {
-    return this.client.get<Client>(`${this.apiUrl}/client/${id}`);
-  }
-
-  findClientByName(name: string) {
-    return this.client.get<Client[]>(`${this.apiUrl}/client/search/${name}`);
+    return this.client.get<PaginatedResponse<Product>>(this.productsApiUrl, { params });
   }
 }

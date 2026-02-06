@@ -16,9 +16,8 @@ import { FormsModule } from '@angular/forms';
 import { Overlay, OverlayConfig, OverlayRef } from '@angular/cdk/overlay';
 import { CdkPortal, PortalModule } from '@angular/cdk/portal';
 import { Order, OrderItem, OrderStatus, Product } from '../../types/order';
-import { OrderService } from '../../services/order.service';
-import { MockOrderService } from '../../services/order.mock.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
+import { OrderService } from '../../services/order.service';
 
 @Component({
   selector: 'app-edit-order-modal',
@@ -35,7 +34,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
   @ViewChild(CdkPortal) portal!: CdkPortal;
 
   isSaving: boolean = false;
-  private orderService = inject(MockOrderService);
+  private orderService = inject(OrderService);
   private overlay = inject(Overlay);
   private overlayRef: OverlayRef | null = null;
   private cdr = inject(ChangeDetectorRef);
@@ -45,7 +44,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
   isSearchingProduct = false;
   searchResults: Product[] = [];
   showSearchResults: boolean = false;
-  statusOptions: OrderStatus[] = ['canceled', 'closed', 'open'];
+  statusOptions: OrderStatus[] = [];
 
   private readonly overlayConfig = new OverlayConfig({
     hasBackdrop: true,
@@ -106,9 +105,9 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
   }
 
   onTypeChange(): void {
-    if (this.order && this.order.type === 'delivery') {
-      this.order.table = undefined;
-    }
+    // if (this.order && this.order.type === 'delivery') {
+    //   this.order.table = undefined;
+    // }
   }
 
   searchProduct(): void {
@@ -127,40 +126,40 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
   }
 
   private searchByCode(): void {
-    this.orderService.getProductByCode(this.searchCode).subscribe({
-      next: (product) => {
-        this.addProductToOrder(product);
-        this.isSearchingProduct = false;
-        this.cdr.detectChanges();
-      },
-      error: () => {},
-    });
+    // this.orderService.getProductByCode(this.searchCode).subscribe({
+    //   next: (product) => {
+    //     this.addProductToOrder(product);
+    //     this.isSearchingProduct = false;
+    //     this.cdr.detectChanges();
+    //   },
+    //   error: () => {},
+    // });
   }
 
   private searchByName(): void {
-    this.orderService.searchProducts({ name: this.searchName }).subscribe({
-      next: (products) => {
-        if (products.length === 0) {
-          // Nenhum produto encontrado
-          this.notification.error('Nenhum produto encontrado');
-          this.isSearchingProduct = false;
-        } else if (products.length === 1) {
-          // Apenas 1 produto: adiciona diretamente
-          this.addProductToOrder(products[0]);
-          this.isSearchingProduct = false;
-        } else {
-          // Múltiplos produtos: exibe lista para seleção
-          this.searchResults = products;
-          this.showSearchResults = true;
-          this.isSearchingProduct = false;
-        }
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.isSearchingProduct = false;
-        this.notification.error('Erro ao buscar produto');
-      },
-    });
+    // this.orderService.searchProducts({ name: this.searchName }).subscribe({
+    //   next: (products) => {
+    //     if (products.length === 0) {
+    //       // Nenhum produto encontrado
+    //       this.notification.error('Nenhum produto encontrado');
+    //       this.isSearchingProduct = false;
+    //     } else if (products.length === 1) {
+    //       // Apenas 1 produto: adiciona diretamente
+    //       this.addProductToOrder(products[0]);
+    //       this.isSearchingProduct = false;
+    //     } else {
+    //       // Múltiplos produtos: exibe lista para seleção
+    //       this.searchResults = products;
+    //       this.showSearchResults = true;
+    //       this.isSearchingProduct = false;
+    //     }
+    //     this.cdr.detectChanges();
+    //   },
+    //   error: () => {
+    //     this.isSearchingProduct = false;
+    //     this.notification.error('Erro ao buscar produto');
+    //   },
+    // });
   }
 
   selectProductFromResults(product: Product): void {
@@ -176,7 +175,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
   private addProductToOrder(product: Product): void {
     if (!this.order) return;
 
-    const newItem: OrderItem = {
+    const newItem = {
       id: Date.now().toString(),
       code: product.code,
       name: product.name,
@@ -185,7 +184,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
       total: product.price,
     };
 
-    this.order.items.push(newItem);
+    // this.order.items.push(newItem);
     this.calculateOrderTotal();
     this.clearProductForm();
   }

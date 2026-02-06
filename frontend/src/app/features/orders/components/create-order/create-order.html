@@ -3,7 +3,7 @@
   [formGroup]="formCreateOrder"
   class="bg-[#1d2a3c] p-6 rounded-lg space-y-6"
 >
-  <!-- Tipo e Campos Específicos -->
+  <!-- Tipo e Nome do Cliente -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <div>
       <label for="type" class="block text-white font-bold mb-2">Tipo do Pedido</label>
@@ -13,8 +13,8 @@
         required
         class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold"
       >
-        <option value="dine_in">Mesa</option>
-        <option value="delivery">Entrega</option>
+        <option value="DINE_IN">Mesa</option>
+        <option value="DELIVERY">Entrega</option>
       </select>
       @if (formCreateOrder.get('type')?.touched && formCreateOrder.get('type')?.invalid) {
         <p class="msg-error">Selecione o Tipo do Pedido!</p>
@@ -33,69 +33,16 @@
         class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
       />
     </div>
-
-    <!-- Mesa - Mostrar apenas se type === 'dine_in' -->
-    <div *ngIf="formCreateOrder.get('type')?.value === 'dine_in'">
-      <label for="table" class="block text-white font-bold mb-2">
-        Mesa <span class="text-red-400">*</span>
-      </label>
-      <input
-        id="table"
-        formControlName="table"
-        type="text"
-        placeholder="ex: Mesa 5"
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
-      />
-      @if (formCreateOrder.get('table')?.touched && formCreateOrder.get('table')?.invalid) {
-        <p class="msg-error">Informe a mesa!</p>
-      }
-    </div>
-
-    <!-- Local - Mostrar apenas se type === 'dine_in' -->
-    <div *ngIf="formCreateOrder.get('type')?.value === 'dine_in'">
-      <label for="locationId" class="block text-white font-bold mb-2">
-        Local <span class="text-red-400">*</span>
-      </label>
-      <select
-        id="locationId"
-        formControlName="locationId"
-        required
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold"
-      >
-        <option value="local-01">Local 01</option>
-        <option value="local-02">Local 02</option>
-        <option value="local-03">Local 03</option>
-      </select>
-      @if (formCreateOrder.get('locationId')?.touched && formCreateOrder.get('locationId')?.invalid) {
-        <p class="msg-error">Selecione o local!</p>
-      }
-    </div>
-
-    <!-- Endereço - Mostrar apenas se type === 'delivery' -->
-    <div *ngIf="formCreateOrder.get('type')?.value === 'delivery'" class="md:col-span-2">
-      <label for="address" class="block text-white font-bold mb-2">
-        Endereço de Entrega <span class="text-red-400">*</span>
-      </label>
-      <textarea
-        id="address"
-        formControlName="address"
-        rows="3"
-        placeholder="Rua, número, bairro, cidade..."
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500 resize-none"
-      ></textarea>
-      @if (formCreateOrder.get('address')?.touched && formCreateOrder.get('address')?.invalid) {
-        <p class="msg-error">Informe o endereço de entrega!</p>
-      }
-    </div>
   </div>
 
   <!-- Seção de Produtos -->
   <div class="bg-slate-700/30 rounded-lg p-4">
     <h3 class="text-white font-bold text-lg mb-4">Produtos do Pedido</h3>
 
-    <!-- Product Scanner Section -->
+    <!-- Campos de busca -->
     <div class="grid grid-cols-12 gap-3 mb-4">
-      <div class="col-span-3">
+      <!-- Campo Código -->
+      <div class="col-span-4">
         <label class="text-white font-bold text-sm mb-2 block">Código de Barras</label>
         <input
           type="text"
@@ -108,7 +55,8 @@
         />
       </div>
 
-      <div class="col-span-4">
+      <!-- Campo Nome -->
+      <div class="col-span-8">
         <label class="text-white font-bold text-sm mb-2 block">Nome do Produto</label>
         <div class="flex gap-2">
           <input
@@ -123,7 +71,7 @@
             type="button"
             (click)="searchProduct()"
             [disabled]="isSearching"
-            class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <svg
               *ngIf="isSearching"
@@ -143,53 +91,17 @@
       </div>
 
       <!-- Select de produtos encontrados -->
-      <div *ngIf="searchResults.length > 0" class="col-span-12 mb-2">
+      <div *ngIf="searchResults.length > 0" class="col-span-12">
         <label class="text-white font-bold text-sm mb-2 block">Selecione o produto:</label>
         <select
-          (change)="selectProduct(searchResults[$any($event.target).selectedIndex - 1])"
+          (change)="selectProduct($event)"
           class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
         >
           <option value="">-- Escolha um produto --</option>
-          <option *ngFor="let product of searchResults" [value]="product.id">
+          <option *ngFor="let product of searchResults; let i = index" [value]="i">
             {{ product.code }} - {{ product.name }} - R$ {{ product.price.toFixed(2) }}
           </option>
         </select>
-      </div>
-
-      <div class="col-span-2">
-        <label class="text-white font-bold text-sm mb-2 block">Quantidade</label>
-        <input
-          type="number"
-          [(ngModel)]="productQuantity"
-          [ngModelOptions]="{ standalone: true }"
-          min="1"
-          step="1"
-          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm text-center focus:outline-none focus:border-cyan-500"
-        />
-      </div>
-
-      <div class="col-span-2">
-        <label class="text-white font-bold text-sm mb-2 block">Preço Unit.</label>
-        <input
-          type="number"
-          [(ngModel)]="productUnitPrice"
-          [ngModelOptions]="{ standalone: true }"
-          min="0"
-          step="0.01"
-          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm text-center focus:outline-none focus:border-cyan-500"
-        />
-      </div>
-
-      <div class="col-span-1">
-        <label class="text-white font-bold text-sm mb-2 block">&nbsp;</label>
-        <button
-          type="button"
-          (click)="addProduct()"
-          class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium text-sm"
-          title="Adicionar produto"
-        >
-          +
-        </button>
       </div>
     </div>
 
@@ -214,9 +126,6 @@
             <th class="text-center py-2 px-2 text-slate-400 text-xs font-semibold uppercase">
               Excluir
             </th>
-            <th class="text-center py-2 px-2 text-purple-400 text-xs font-semibold uppercase">
-              Editar
-            </th>
           </tr>
         </thead>
         <tbody>
@@ -229,8 +138,14 @@
             <td class="py-2 px-2 text-center text-slate-300 text-xs">
               R$ {{ item.unitPrice.toFixed(2) }}
             </td>
-            <td class="py-2 px-2 text-center text-cyan-400 font-bold text-xs">
-              {{ item.quantity }}
+            <td class="py-2 px-2 text-center">
+              <input
+                type="number"
+                [value]="item.quantity"
+                (change)="updateQuantity(item.id!, +$any($event.target).value)"
+                min="1"
+                class="w-16 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-cyan-400 font-bold text-xs text-center focus:outline-none focus:border-cyan-500"
+              />
             </td>
             <td class="py-2 px-2 text-center text-green-400 font-bold text-xs">
               R$ {{ item.total.toFixed(2) }}
@@ -238,7 +153,7 @@
             <td class="py-2 px-2 text-center">
               <button
                 type="button"
-                (click)="removeItem(item.id)"
+                (click)="removeItem(item.id!)"
                 class="text-red-400 hover:text-red-300"
                 title="Remover item"
               >
@@ -252,26 +167,6 @@
                 >
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </td>
-            <td class="py-2 px-2 text-center">
-              <button
-                type="button"
-                (click)="editItem(item.id)"
-                class="text-indigo-400 hover:text-indigo-300"
-                title="Editar item"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                 </svg>
               </button>
             </td>

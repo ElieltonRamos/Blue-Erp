@@ -5,8 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { OrderService } from '../../services/order.service';
-import { OrderItem, CreateOrderDto, Product } from '../../types/order';
-import { MockOrderService } from '../../services/order.mock.service';
+import { OrderItem, CreateOrderDto } from '../../types/order';
+import { FilterProductParams, Product } from '../../../products/types/product';
 
 @Component({
   selector: 'app-create-order',
@@ -15,98 +15,95 @@ import { MockOrderService } from '../../services/order.mock.service';
   standalone: true,
 })
 export class CreateOrder {
-  private orderService = inject(MockOrderService);
+  private orderService = inject(OrderService);
   private notification = inject(NotificationService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
-  // Campos para busca e adição de produtos
   searchCode: string = '';
   searchName: string = '';
-  productQuantity: number = 1;
-  productUnitPrice: number = 0;
   isSearching: boolean = false;
   searchResults: Product[] = [];
-
-  // Array de itens do pedido
   orderItems: OrderItem[] = [];
 
   formCreateOrder = new FormGroup({
-    type: new FormControl<'dine_in' | 'delivery'>('dine_in', [Validators.required]),
-    locationId: new FormControl<string>('local-01', [Validators.required]),
+    type: new FormControl<'DINE_IN' | 'DELIVERY'>('DINE_IN', [Validators.required]),
+    locationId: new FormControl<string>('LOCAL_01', [Validators.required]),
     customerName: new FormControl<string>(''),
     table: new FormControl<string>(''),
     address: new FormControl<string>(''),
   });
 
-  // Calcula o total dos itens
   get calculatedTotal(): number {
     return this.orderItems.reduce((sum, item) => sum + item.total, 0);
   }
 
-  // Observa mudanças no tipo de pedido
   ngOnInit() {
     this.formCreateOrder.get('type')?.valueChanges.subscribe((type) => {
-      if (type === 'dine_in') {
-        // Para pedidos na mesa, o campo address não é necessário
+      if (type === 'DINE_IN') {
         this.formCreateOrder.get('address')?.clearValidators();
         this.formCreateOrder.get('table')?.setValidators([Validators.required]);
-        // Se mudar para dine_in e locationId for delivery, volta para local-01
-        if (this.formCreateOrder.get('locationId')?.value === 'delivery') {
-          this.formCreateOrder.get('locationId')?.setValue('local-01');
+
+        if (this.formCreateOrder.get('locationId')?.value === 'DELIVERY') {
+          this.formCreateOrder.get('locationId')?.setValue('LOCAL_01');
         }
       } else {
-        // Para delivery, o campo address é obrigatório
         this.formCreateOrder.get('address')?.setValidators([Validators.required]);
         this.formCreateOrder.get('table')?.clearValidators();
-        // Se mudar para delivery, define locationId como delivery
-        this.formCreateOrder.get('locationId')?.setValue('delivery');
+        this.formCreateOrder.get('locationId')?.setValue('DELIVERY');
       }
       this.formCreateOrder.get('address')?.updateValueAndValidity();
       this.formCreateOrder.get('table')?.updateValueAndValidity();
     });
   }
 
-  // Busca produto por código ou nome
   searchProduct() {
-    if (!this.searchCode && !this.searchName) {
+    const code = this.searchCode.trim();
+    const name = this.searchName.trim();
+
+    if (!code && !name) {
       this.notification.error('Digite um código ou nome para buscar');
       return;
     }
 
     this.isSearching = true;
 
-    // Buscar por código de barras primeiro se fornecido
-    if (this.searchCode) {
-      this.orderService.getProductByCode(this.searchCode).subscribe({
-        next: (product: Product) => {
-          this.fillProductData(product);
-          this.isSearching = false;
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
-          // Se não encontrar por código, tenta buscar por nome
-          if (this.searchName) {
-            this.searchByName();
-          } else {
-            this.notification.error('Produto não encontrado com esse código');
-            this.isSearching = false;
-          }
-        },
-      });
-    } else if (this.searchName) {
-      this.searchByName();
+    if (code) {
+      this.searchByCode(code);
+    } else {
+      this.searchByName(name);
     }
   }
 
-  private searchByName() {
-    this.orderService.searchProducts({ name: this.searchName }).subscribe({
-      next: (products: Product[]) => {
-        if (products.length === 0) {
+  private searchByCode(code: string) {
+    this.orderService.getByCode(code).subscribe({
+      next: (product: Product) => {
+        if (product) {
+          this.addProductToOrder(product);
+          this.searchCode = '';
+        } else {
+          this.notification.error('Produto não encontrado');
+        }
+        this.isSearching = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.notification.error('Produto não encontrado');
+        this.isSearching = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private searchByName(name: string) {
+    const filters: FilterProductParams = { search: name };
+
+    this.orderService.getAll(1, 10, filters).subscribe({
+      next: (response) => {
+        const products = response.data;
+
+        if (!products || products.length === 0) {
           this.notification.error('Nenhum produto encontrado');
-          this.searchResults = [];
-        } else if (products.length === 1) {
-          this.fillProductData(products[0]);
           this.searchResults = [];
         } else {
           this.searchResults = products;
@@ -114,90 +111,65 @@ export class CreateOrder {
         this.isSearching = false;
         this.cdr.detectChanges();
       },
-      error: (error) => {
+      error: () => {
         this.notification.error('Erro ao buscar produto');
         this.searchResults = [];
         this.isSearching = false;
+        this.cdr.detectChanges();
       },
     });
   }
 
-  private fillProductData(product: Product) {
-    this.searchCode = product.code;
-    this.searchName = product.name;
-    this.productUnitPrice = product.price;
-    this.notification.success('Produto encontrado! Configure a quantidade.');
-  }
+  selectProduct(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    const selectedIndex = parseInt(select.value);
 
-  selectProduct(product: Product) {
-    this.fillProductData(product);
-    this.searchResults = [];
-  }
-
-  // Adiciona produto à lista
-  addProduct() {
-    if (!this.searchName && !this.searchCode) {
-      this.notification.error('Busque um produto primeiro');
-      return;
+    if (!isNaN(selectedIndex) && selectedIndex >= 0) {
+      const product = this.searchResults[selectedIndex];
+      this.addProductToOrder(product);
+      this.searchResults = [];
+      this.searchName = '';
+      select.selectedIndex = 0;
     }
-
-    if (this.productQuantity <= 0) {
-      this.notification.error('Quantidade deve ser maior que zero');
-      return;
-    }
-
-    if (this.productUnitPrice <= 0) {
-      this.notification.error('Preço unitário deve ser maior que zero');
-      return;
-    }
-
-    const newItem: OrderItem = {
-      id: this.generateId(),
-      code: this.searchCode || 'N/A',
-      name: this.searchName || 'Produto sem nome',
-      quantity: this.productQuantity,
-      unitPrice: this.productUnitPrice,
-      total: this.productQuantity * this.productUnitPrice,
-    };
-
-    this.orderItems.push(newItem);
-    this.notification.success('Produto adicionado ao pedido');
-
-    // Limpar campos
-    this.clearProductFields();
   }
 
-  private clearProductFields() {
-    this.searchCode = '';
-    this.searchName = '';
-    this.productQuantity = 1;
-    this.productUnitPrice = 0;
-    this.searchResults = [];
+  private addProductToOrder(product: Product) {
+    const existingItem = this.orderItems.find((item) => item.productId === product.id);
+
+    if (existingItem) {
+      existingItem.quantity += 1;
+      existingItem.total = existingItem.quantity * existingItem.unitPrice;
+      this.notification.success('Quantidade atualizada');
+    } else {
+      const newItem: OrderItem = {
+        id: this.generateId(),
+        productId: product.id,
+        code: product.code,
+        name: product.name,
+        quantity: 1,
+        unitPrice: product.price,
+        total: product.price,
+      };
+      this.orderItems.push(newItem);
+      this.notification.success('Produto adicionado');
+    }
+    this.cdr.detectChanges();
   }
 
-  // Remove item da lista
+  updateQuantity(itemId: string, newQuantity: number) {
+    const item = this.orderItems.find((i) => i.id === itemId);
+    if (item && newQuantity > 0) {
+      item.quantity = newQuantity;
+      item.total = item.quantity * item.unitPrice;
+      this.cdr.detectChanges();
+    }
+  }
+
   removeItem(itemId: string) {
     this.orderItems = this.orderItems.filter((item) => item.id !== itemId);
     this.notification.success('Produto removido');
   }
 
-  // Edita item
-  editItem(itemId: string) {
-    const item = this.orderItems.find((i) => i.id === itemId);
-    if (item) {
-      // Preencher campos para edição
-      this.searchCode = item.code;
-      this.searchName = item.name;
-      this.productQuantity = item.quantity;
-      this.productUnitPrice = item.unitPrice;
-
-      // Remover item para re-adicionar editado
-      this.removeItem(itemId);
-      this.notification.info('Item carregado para edição');
-    }
-  }
-
-  // Gera ID único simples
   private generateId(): string {
     return Date.now().toString() + Math.random().toString(36).substr(2, 9);
   }
@@ -219,8 +191,7 @@ export class CreateOrder {
         total: this.calculatedTotal,
       };
 
-      // Adicionar campos específicos baseado no tipo
-      if (formValue.type === 'dine_in') {
+      if (formValue.type === 'DINE_IN') {
         newOrder.table = formValue.table || undefined;
       } else {
         newOrder.address = formValue.address || undefined;
@@ -228,22 +199,25 @@ export class CreateOrder {
 
       this.orderService.createOrder(newOrder).subscribe({
         next: (response) => {
-          this.notification.success(`Pedido ${response.id} criado com sucesso!`);
+          this.notification.success(`Pedido #${response.id} criado com sucesso!`);
 
-          // Resetar formulário
           this.formCreateOrder.reset({
-            type: 'dine_in',
-            locationId: 'local-01',
+            type: 'DINE_IN',
+            locationId: 'LOCAL_01',
           });
           this.orderItems = [];
+          this.searchCode = '';
+          this.searchName = '';
+          this.searchResults = [];
           this.cdr.detectChanges();
-          // Navegar para a lista de pedidos ou página de detalhes
+
           setTimeout(() => {
             this.router.navigate(['/pedidos']);
           }, 1500);
         },
         error: (error) => {
-          this.notification.error(`Erro ao criar pedido: ${error.error?.message || error.message}`);
+          const errorMsg = error.error?.message || error.message || 'Erro desconhecido';
+          this.notification.error(`Erro ao criar pedido: ${errorMsg}`);
         },
       });
     } else {

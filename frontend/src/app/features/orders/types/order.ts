@@ -1,23 +1,22 @@
-// types/order.types.ts
-// Tipos centralizados para o sistema de pedidos
+// Types para o módulo de Orders no Angular
 
 export interface OrderItem {
-  id: string;
+  id?: string;
+  productId: number;
   code: string;
   name: string;
   quantity: number;
   unitPrice: number;
   total: number;
-  kitchenReadyAt?: string;
+  kitchenReadyAt?: Date;
 }
 
-export type OrderStatus = 'open' | 'closed' | 'canceled';
-export type OrderType = 'dine_in' | 'delivery';
-export type OrderLocation = 'local-01' | 'local-02' | 'local-03' | 'delivery';
-export type PaymentMethod = 'money' | 'credit' | 'debit' | 'pix' | 'term';
+export type OrderStatus = 'OPEN' | 'CLOSED' | 'CANCELED';
+export type OrderType = 'DINE_IN' | 'DELIVERY';
+export type OrderLocation = 'LOCAL_01' | 'LOCAL_02' | 'LOCAL_03' | 'DELIVERY';
 
 export interface Order {
-  id: string;
+  id: number;
   type: OrderType;
   locationId: OrderLocation;
   customerName?: string;
@@ -26,13 +25,18 @@ export interface Order {
   total: number;
   table?: string;
   address?: string;
-  createdAt: string;
-  updatedAt?: string;
-  kitchenSentAt?: string;   // Enviado para cozinha (opcional)
-  kitchenReadyAt?: string;  // Cozinha marcou como pronto
-  finishedAt?: string;      // Pedido finalizado/pago
-  deliveredAt?: string;     // Para delivery: entregue (opcional)
-  tableOccupiedUntil?: string; // Mesa liberada (opcional)
+  createdAt: Date;
+  updatedAt: Date;
+  kitchenSentAt?: Date;
+  kitchenReadyAt?: Date;
+  finishedAt?: Date;
+  deliveredAt?: Date;
+  tableOccupiedUtil?: Date;
+  operatorId?: number;
+  operator?: {
+    id: number;
+    username: string;
+  };
 }
 
 export interface CreateOrderDto {
@@ -43,91 +47,67 @@ export interface CreateOrderDto {
   total: number;
   table?: string;
   address?: string;
+  operatorId?: number;
 }
 
-export interface Product {
-  id: string;
-  code: string;
-  name: string;
-  price: number;
-  description?: string;
-  stock?: number;
-  ncm?: string;
-  cfop?: string;
-  csosn?: string;
-  origem?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export interface UpdateOrderDto {
+  customerName?: string;
+  table?: string;
+  address?: string;
+  status?: OrderStatus;
+  items?: OrderItem[];
+  total?: number;
 }
 
 export interface OrderFilters {
   searchName?: string;
-  searchId?: string;
-  status?: string;
-  location?: string;
+  searchId?: number;
+  status?: OrderStatus;
+  location?: OrderLocation;
+  type?: OrderType;
+  table?: string;
   page?: number;
   limit?: number;
 }
 
-export interface SaleItem {
-  saleId?: number;
-  productId: number;
-  nItem: number;
-  cProd: string;
-  xProd: string;
+export interface OrderPaginatedResponse {
+  data: Order[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// Product types (para busca)
+export interface Product {
+  id: number;
+  code: string;
+  name: string;
+  price: number;
+  costPrice: number;
+  unit: string;
+  quantity: number;
+  active: boolean;
   ncm: string;
-  cfop: string;
-  csosn: string;
-  origem: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-  uCom: string;
-  qCom: number;
-  vUnCom: number;
-  indTot: 0 | 1;
-  uTrib?: string;
-  qTrib?: number;
-  vUnTrib?: number;
-  aliqFederal?: number;
-  aliqEstadual?: number;
-  aliqMunicipal?: number;
-  vTotTrib?: number;
-  pisCst?: string;
-  cofinsCst?: string;
-  iiValor?: number;
-  iofValor?: number;
+  cest?: string;
+  origin: number;
+  csosn?: string;
+  cst?: string;
+  cstPis?: string;
+  cstCofins?: string;
+  federalTaxRate?: number;
+  stateTaxRate?: number;
+  municipalTaxRate?: number;
+  productionLocation?: string;
+  categoryId?: number;
+  category?: {
+    id: number;
+    name: string;
+  };
 }
 
-export interface Sale {
-  id?: number;
-  clientId?: number;
-  clientName: string;
-  userOperator: string;
-  paymentMethod: string;
-  date: Date;
-  products?: SaleItem[];
-  totalProductsWithoutDiscount: number;
-  total: number;
-  isPaid: boolean;
-  discount: number;
-  profitSale: number;
-  cfop: string;
-  formattedDate?: string;
-  nfceStatus?: 'pendente' | 'emitida' | 'cancelada' | 'erro';
-  nfceKey?: string;
-  nfceProtocol?: string;
-  dateNfceEmit?: Date;
-  amountReceived?: number;
-  change?: number;
-}
-
-export interface FinishOrderDto {
-  orderId: string;
-  clientName: string;
-  userOperator: string;
-  paymentMethod: PaymentMethod;
-  items: OrderItem[];
-  subtotal: number;
-  discount: number;
-  total: number;
-  amountReceived?: number;
-  change?: number;
-  cfop: string;
-  csosn: string;
+export interface SearchProductDto {
+  code?: string;
+  name?: string;
+  limit?: number;
 }

@@ -11,15 +11,16 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 /* Services */
-import { OrderService } from '../../services/order.service';
-import { MockOrderService } from '../../services/order.mock.service';
 import { ClientService } from '../../../clients/services/client.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 
 /* Types */
-import { Order, OrderItem, Product, PaymentMethod, FinishOrderDto } from '../../types/order';
+import { Order, OrderItem, Product } from '../../types/order';
 
 import Client from '../../../clients/types/clients';
+import { OrderService } from '../../services/order.service';
+
+export type PaymentMethod = 'money' | 'credit' | 'debit' | 'pix' | 'term';
 
 @Component({
   selector: 'app-close-order',
@@ -33,7 +34,7 @@ export class CloseOrder implements OnInit {
    * INJECTIONS
    * ===================================================== */
 
-  private readonly orderService = inject(MockOrderService);
+  private readonly orderService = inject(OrderService);
   private readonly clientService = inject(ClientService);
   private readonly notification = inject(NotificationService);
   private readonly router = inject(Router);
@@ -45,7 +46,7 @@ export class CloseOrder implements OnInit {
    * ===================================================== */
 
   order: Order | null = null;
-  orderId = '';
+  orderId = 0;
 
   isLoading = false;
   isFinishing = false;
@@ -102,7 +103,7 @@ export class CloseOrder implements OnInit {
    * ===================================================== */
 
   ngOnInit(): void {
-    this.orderId = this.route.snapshot.paramMap.get('id') || '';
+    this.orderId = Number(this.route.snapshot.paramMap.get('id')) || 0;
 
     if (!this.orderId) {
       this.notification.error('ID do pedido não informado');
@@ -338,7 +339,7 @@ export class CloseOrder implements OnInit {
 
     const clientName = this.selectedClient?.name || this.order.customerName || 'Cliente Avista';
 
-    const payload: FinishOrderDto = {
+    const payload = {
       orderId: this.orderId,
       clientName: clientName,
       userOperator: this.sellerName,
@@ -358,24 +359,24 @@ export class CloseOrder implements OnInit {
       csosn: this.csosn,
     };
 
-    this.orderService.finalizeSale(payload).subscribe({
-      next: (sale) => {
-        this.notification.success('Venda finalizada');
+    // this.orderService.finalizeSale(payload).subscribe({
+    //   next: (sale) => {
+    //     this.notification.success('Venda finalizada');
 
-        this.isFinishing = false;
+    //     this.isFinishing = false;
 
-        setTimeout(() => {
-          this.router.navigate(['/vendas', sale.id]);
-        }, 500);
-      },
+    //     setTimeout(() => {
+    //       this.router.navigate(['/vendas', sale.id]);
+    //     }, 500);
+    //   },
 
-      error: (err) => {
-        this.notification.error('Erro ao finalizar');
+    //   error: (err) => {
+    //     this.notification.error('Erro ao finalizar');
 
-        this.isFinishing = false;
-        this.cdr.markForCheck();
-      },
-    });
+    //     this.isFinishing = false;
+    //     this.cdr.markForCheck();
+    //   },
+    // });
   }
 
   /* =====================================================
