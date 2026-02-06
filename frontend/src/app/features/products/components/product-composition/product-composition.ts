@@ -16,11 +16,11 @@ import {
   Validators,
   FormsModule,
 } from '@angular/forms';
-import { CompositionItem, PreparationStep, ProductComposition } from '../../types/product';
 import { PrimaryMaterial } from '../../types/primary-material';
 import { PrimaryMaterialService } from '../../services/primary-material.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { debounceTime, Subject } from 'rxjs';
+import { ProductComposition } from '../../types/product';
 
 @Component({
   selector: 'app-product-composition',

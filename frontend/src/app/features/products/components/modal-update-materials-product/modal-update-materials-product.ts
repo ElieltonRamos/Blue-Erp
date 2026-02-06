@@ -7,18 +7,14 @@ import {
   OnInit,
   ChangeDetectorRef,
 } from '@angular/core';
-import {
-  Product,
-  ProductService,
-  UpdateCompositionDTO,
-  CompositionItem,
-} from '../../services/product.service';
+import { ProductService } from '../../services/product.service';
 import { PrimaryMaterialService } from '../../services/primary-material.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { debounceTime, Subject } from 'rxjs';
 import { PrimaryMaterial } from '../../types/primary-material';
+import { CompositionItem, Product, UpdateCompositionDTO } from '../../types/product';
 
 @Component({
   selector: 'app-modal-update-materials-product',
@@ -35,7 +31,12 @@ export class ModalUpdateMaterialsProduct implements OnInit {
   @Output() closeModal = new EventEmitter<void>();
 
   composition: CompositionItem[] = [];
-  newCompositionItem: CompositionItem = { materialId: 0, quantity: 0, materialName: '', unitCost: 0 };
+  newCompositionItem: CompositionItem = {
+    materialId: 0,
+    quantity: 0,
+    materialName: '',
+    unitCost: 0,
+  };
 
   // Busca de matérias-primas
   searchTerm: string = '';
@@ -159,7 +160,7 @@ export class ModalUpdateMaterialsProduct implements OnInit {
         materialId: item.materialId,
         quantity: Number(item.quantity),
         materialName: item.materialName,
-        unitCost: Number(item.unitCost)
+        unitCost: Number(item.unitCost),
       })),
     };
 

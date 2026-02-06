@@ -1,13 +1,9 @@
 import { Component, EventEmitter, inject, Input, Output, OnInit, ChangeDetectorRef } from '@angular/core';
-import {
-  Product,
-  ProductService,
-  UpdatePreparationDTO,
-  PreparationStep,
-} from '../../services/product.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { PreparationStep, Product, UpdatePreparationDTO } from '../../types/product';
+import { ProductService } from '../../services/product.service';
 
 @Component({
   selector: 'app-modal-update-preparation-product',

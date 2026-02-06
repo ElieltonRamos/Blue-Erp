@@ -1,9 +1,9 @@
 import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
-import { Product, ProductService, UpdateProductDTO } from '../../services/product.service';
+import { ProductService } from '../../services/product.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { productionLocationOptions } from '../../types/product';
+import { Product, productionLocationOptions, UpdateProductDTO } from '../../types/product';
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 
 @Component({

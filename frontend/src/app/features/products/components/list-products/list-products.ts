@@ -5,9 +5,10 @@ import { PaginatorComponent } from '../../../../shared/paginator/paginator.compo
 import { ModalUpdateBasicProduct } from '../modal-update-basic-product/modal-update-basic-product';
 import { ModalUpdateMaterialsProduct } from '../modal-update-materials-product/modal-update-materials-product';
 import { ModalUpdatePreparationProduct } from '../modal-update-preparation-product/modal-update-preparation-product';
-import { ProductService, Product, FilterProductParams } from '../../services/product.service';
+import { ProductService } from '../../services/product.service';
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
+import { FilterProductParams, Product } from '../../types/product';
 
 @Component({
   selector: 'app-list-products',

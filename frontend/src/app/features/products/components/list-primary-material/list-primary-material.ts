@@ -6,7 +6,7 @@ import { PrimaryMaterialService } from '../../services/primary-material.service'
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { ModalUpdatePrimaryMaterial } from '../modal-edit-primary-material/modal-edit-primary-material';
-import { PrimaryMaterial } from '../../types/product';
+import { PrimaryMaterial } from '../../types/primary-material';
 
 @Component({
   selector: 'app-list-primary-material',

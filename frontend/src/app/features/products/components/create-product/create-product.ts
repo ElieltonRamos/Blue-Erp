@@ -1,7 +1,7 @@
 import { Component, inject, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CreateProductDTO, ProductService } from '../../services/product.service';
-import { ProductComposition, Unit } from '../../types/product';
+import { ProductService } from '../../services/product.service';
+import { CreateProductDTO, ProductComposition, Unit } from '../../types/product';
 import { CommonModule } from '@angular/common';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { ProductCompositionComponent } from '../product-composition/product-composition';

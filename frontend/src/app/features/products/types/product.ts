@@ -1,30 +1,9 @@
 export const productionLocationOptions = [
   'Cozinha Principal',
   'Cozinha Secundária',
+  'Cozinha Terciaria',
   'Bar',
-  'Confeitaria',
-  'Pizzaria',
-  'Grill',
-  'Forno',
-  'Chapa',
-  'Fritura',
-  'Montagem',
 ];
-
-export default interface Product {
-  id?: number;
-  name: string; // Descrição do produto para NFC-e
-  code: string; // Código interno ou SKU
-  price: number; // Preço unitário de venda
-  costPrice: number; // Custo do produto - usado para controle interno
-  ncm: string; // Código NCM obrigatório para emissão fiscal
-  cest: string; // Código CEST, se aplicável
-  csosn: string; // Código CSOSN do Simples Nacional para o produto
-  unit: Unit; // Unidade de medida (ex.: "UN", "CX", "LT")
-  origin: number; // Origem do produto (0-8 conforme tabela fiscal)
-  quantity: number; // Estoque atual do produto (opcional)
-  active: boolean; // Flag ativo/inativo
-}
 
 export enum Unit {
   UN = 'UN', // Unidade
@@ -37,93 +16,35 @@ export enum Unit {
   DZ = 'DZ', // Dúzia
 }
 
-export interface GetSugestionCode {
-  code: number;
-}
-
-// Interface para resposta de código sugerido
-interface CodeSuggestionResponse {
-  code: number;
-}
-
-// Interface para composição do produto (backend)
-export interface ProductCompositionDTO {
-  compositionItems: {
-    materialId: string;
-    quantity: number;
-  }[];
-  preparationSteps: {
-    order: number;
-    description: string;
-  }[];
-}
-
-// Interface para criação de produto com composição
-export interface CreateProductDTO {
-  // Dados básicos do produto
+export interface Product {
+  id: number;
   name: string;
   code: string;
-  productType: string; // 'manufactured' ou 'resale'
+  productionLocation?: string;
   price: number;
   costPrice: number;
+  extraCosts: number;
   ncm: string;
-  cest: string;
-  csosn: string;
-  unit: Unit;
+  cest?: string;
   origin: number;
-  quantity: number;
-  active: boolean;
-
-  // Composição do produto (apenas para produtos manufaturados)
-  composition?: ProductCompositionDTO;
-}
-
-// Interface para resposta do backend após criar produto
-export interface CreateProductResponse {
-  id: string;
-  name: string;
-  code: string;
-  price: number;
-  costPrice: number;
-  ncm: string;
-  cest: string;
-  csosn: string;
+  csosn?: string;
+  cst?: string;
+  icmsRate?: number;
+  cstPis?: string;
+  pisRate?: number;
+  cstCofins?: string;
+  cofinsRate?: number;
+  federalTaxRate?: number;
+  stateTaxRate?: number;
+  municipalTaxRate?: number;
   unit: string;
-  origin: number;
   quantity: number;
-  active: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PrimaryMaterial {
-  id: string;
-  name: string;
-  code: string;
-  unit: string;
-  unitCost: number;
-  currentStock: number;
   minStock?: number;
-  expiryDate?: Date;
   active: boolean;
-  ncm?: string;
-  cfop?: string;
+  productType: 'MANUFACTURED' | 'RESALE';
+  categoryId?: number;
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface CompositionItem {
-  materialId: string;
-  materialName: string;
-  quantity: number;
-  unit: string;
-  unitCost: number;
-  totalCost: number;
-}
-
-export interface PreparationStep {
-  order: number;
-  description: string;
 }
 
 export interface ProductComposition {
@@ -132,14 +53,113 @@ export interface ProductComposition {
   totalCost: number;
 }
 
-// Interface para enviar ao backend
-export interface ProductCompositionDTO {
-  compositionItems: {
-    materialId: string;
-    quantity: number;
-  }[];
-  preparationSteps: {
-    order: number;
-    description: string;
-  }[];
+export interface CompositionItem {
+  materialName: string;
+  materialId: number;
+  quantity: number;
+  unitCost: number;
+}
+
+export interface PreparationStep {
+  order: number;
+  description: string;
+}
+
+export interface CreateProductDTO {
+  name: string;
+  code: string;
+  productionLocation?: string;
+  price: number;
+  costPrice: number;
+  extraCosts: number;
+  ncm: string;
+  cest?: string;
+  origin: number;
+  csosn?: string;
+  cst?: string;
+  icmsRate?: number;
+  cstPis?: string;
+  pisRate?: number;
+  cstCofins?: string;
+  cofinsRate?: number;
+  federalTaxRate?: number;
+  stateTaxRate?: number;
+  municipalTaxRate?: number;
+  unit: string;
+  quantity?: number;
+  minStock?: number;
+  active?: boolean;
+  productType: 'MANUFACTURED' | 'RESALE';
+  categoryId?: number;
+  composition?: CompositionItem[];
+  preparationSteps?: PreparationStep[];
+}
+
+export interface UpdateProductDTO {
+  name?: string;
+  code?: string;
+  productionLocation?: string;
+  price?: number;
+  costPrice?: number;
+  extraCosts?: number;
+  ncm?: string;
+  cest?: string;
+  origin?: number;
+  csosn?: string;
+  cst?: string;
+  icmsRate?: number;
+  cstPis?: string;
+  pisRate?: number;
+  cstCofins?: string;
+  cofinsRate?: number;
+  federalTaxRate?: number;
+  stateTaxRate?: number;
+  municipalTaxRate?: number;
+  unit?: string;
+  quantity?: number;
+  minStock?: number;
+  active?: boolean;
+  productType?: 'MANUFACTURED' | 'RESALE';
+  categoryId?: number;
+}
+
+export interface UpdateCompositionDTO {
+  composition: CompositionItem[];
+}
+
+export interface UpdatePreparationDTO {
+  steps: PreparationStep[];
+}
+
+export interface ProduceProductDTO {
+  quantity: number;
+}
+
+export interface ProductSummary {
+  totalProducts: number;
+  activeProducts: number;
+  inactiveProducts: number;
+  totalStockValue: number;
+  productsLowStock: number;
+  totalItems: number;
+}
+
+export interface StockAlert {
+  id: number;
+  name: string;
+  code: string;
+  unit: string;
+  currentStock: number;
+  minStock?: number;
+  price: number;
+  estimatedValue: number;
+}
+
+export interface FilterProductParams {
+  search?: string;
+  productType?: 'MANUFACTURED' | 'RESALE';
+  unit?: string;
+  active?: boolean;
+  lowStock?: boolean;
+  categoryId?: number;
 }
