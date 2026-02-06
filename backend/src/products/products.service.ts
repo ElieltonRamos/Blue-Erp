@@ -117,6 +117,7 @@ export class ProductService {
         code: createDto.code,
         productionLocation: createDto.productionLocation,
         price: createDto.price,
+        extraCosts: createDto.extraCosts,
         costPrice: createDto.costPrice,
         ncm: createDto.ncm,
         cest: createDto.cest,

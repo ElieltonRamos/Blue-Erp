@@ -7,9 +7,7 @@
   <!-- Cabeçalho do Formulário -->
   <div class="border-b border-gray-600 pb-4">
     <h2 class="text-3xl font-bold text-white mb-2">Cadastro de Produto</h2>
-    <p class="text-gray-300 text-sm">
-      Preencha as informações do produto para emissão de NFC-e
-    </p>
+    <p class="text-gray-300 text-sm">Preencha as informações do produto para emissão de NFC-e</p>
   </div>
 
   <!-- Seção: Informações Básicas -->
@@ -19,9 +17,7 @@
       Informações Básicas
     </h3>
 
-    <div
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-    >
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       <!-- Nome do Produto - Ocupa mais espaço -->
       <div class="md:col-span-2 xl:col-span-2">
         <label for="name" class="block text-gray-300 font-medium mb-2 text-sm"
@@ -35,18 +31,17 @@
           placeholder="Ex: Picanha Bovina"
           class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
         />
-        @if (formCreateProduct.get('name')?.touched &&
-        formCreateProduct.get('name')?.invalid) {
-        <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          Digite o nome do produto
-        </p>
+        @if (formCreateProduct.get('name')?.touched && formCreateProduct.get('name')?.invalid) {
+          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Digite o nome do produto
+          </p>
         }
       </div>
 
@@ -63,18 +58,17 @@
           placeholder="Ex: PROD-001"
           class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
         />
-        @if (formCreateProduct.get('code')?.touched &&
-        formCreateProduct.get('code')?.invalid) {
-        <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          Digite o código
-        </p>
+        @if (formCreateProduct.get('code')?.touched && formCreateProduct.get('code')?.invalid) {
+          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Digite o código
+          </p>
         }
       </div>
 
@@ -99,23 +93,22 @@
             {{ unitOption }}
           </option>
         </select>
-        @if (formCreateProduct.get('unit')?.touched &&
-        formCreateProduct.get('unit')?.invalid) {
-        <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          Selecione a unidade
-        </p>
+        @if (formCreateProduct.get('unit')?.touched && formCreateProduct.get('unit')?.invalid) {
+          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Selecione a unidade
+          </p>
         }
       </div>
     </div>
 
-    <!-- Tipo de Produto (nova linha) -->
+    <!-- Tipo de Produto e Local de Produção -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
       <div>
         <label for="productType" class="block text-gray-300 font-medium mb-2 text-sm"
@@ -139,6 +132,45 @@
         <p class="text-gray-400 text-xs mt-1">
           Produtos manufaturados possuem composição de matérias-primas
         </p>
+      </div>
+
+      <!-- Local de Produção (apenas para produtos manufaturados) -->
+      <div *ngIf="isManufacturedProduct">
+        <label for="productionLocation" class="block text-gray-300 font-medium mb-2 text-sm"
+          >Local de Produção <span class="text-red-400">*</span></label
+        >
+        <select
+          id="productionLocation"
+          formControlName="productionLocation"
+          required
+          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
+          style="
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            background-size: 1.2em;
+          "
+        >
+          <option value="" disabled selected>Selecione o local</option>
+          <option *ngFor="let location of productionLocationOptions" [value]="location">
+            {{ location }}
+          </option>
+        </select>
+        @if (
+          formCreateProduct.get('productionLocation')?.touched &&
+          formCreateProduct.get('productionLocation')?.invalid
+        ) {
+          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Selecione o local de produção
+          </p>
+        }
       </div>
     </div>
   </div>
@@ -165,10 +197,7 @@
           >Preço de Venda <span class="text-red-400">*</span></label
         >
         <div class="relative">
-          <span
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold"
-            >R$</span
-          >
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">R$</span>
           <input
             id="price"
             formControlName="price"
@@ -179,41 +208,34 @@
             class="w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
           />
         </div>
-        @if (formCreateProduct.get('price')?.touched &&
-        formCreateProduct.get('price')?.invalid) {
-        <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          Digite o preço
-        </p>
+        @if (formCreateProduct.get('price')?.touched && formCreateProduct.get('price')?.invalid) {
+          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Digite o preço
+          </p>
         }
       </div>
 
       <!-- Preço de Custo (Condicional baseado no tipo) -->
       <div class="relative">
-        <label
-          for="cost-price"
-          class="block text-gray-300 font-medium mb-2 text-sm"
-        >
+        <label for="cost-price" class="block text-gray-300 font-medium mb-2 text-sm">
           <span *ngIf="isManufacturedProduct">
-            Custo de Produção 
+            Custo de Produção
             <span class="text-blue-400 text-xs">(calculado)</span>
           </span>
           <span *ngIf="isResaleProduct">
-            Preço de Custo 
+            Preço de Custo
             <span class="text-red-400">*</span>
           </span>
         </label>
         <div class="relative">
-          <span
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold"
-            >R$</span
-          >
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">R$</span>
           <input
             id="cost-price"
             formControlName="costPrice"
@@ -221,45 +243,63 @@
             step="0.01"
             [required]="isResaleProduct"
             placeholder="0,00"
-            [class]="isManufacturedProduct 
-              ? 'w-full pl-10 pr-3 py-3 rounded-lg bg-gray-200 text-gray-700 font-bold placeholder-gray-400 border-2 border-gray-300 cursor-not-allowed'
-              : 'w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none'"
-            [title]="isManufacturedProduct ? 'Este valor é calculado automaticamente com base na composição' : 'Digite o custo de compra do produto'"
+            [class]="
+              isManufacturedProduct
+                ? 'w-full pl-10 pr-3 py-3 rounded-lg bg-gray-200 text-gray-700 font-bold placeholder-gray-400 border-2 border-gray-300 cursor-not-allowed'
+                : 'w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none'
+            "
+            [title]="
+              isManufacturedProduct
+                ? 'Este valor é calculado automaticamente com base na composição'
+                : 'Digite o custo de compra do produto'
+            "
           />
         </div>
         <p class="text-gray-400 text-xs mt-1">
-          <span *ngIf="isManufacturedProduct">
-            Baseado na composição de matérias-primas
-          </span>
-          <span *ngIf="isResaleProduct">
-            Custo de compra para revenda
-          </span>
+          <span *ngIf="isManufacturedProduct"> Baseado na composição de matérias-primas </span>
+          <span *ngIf="isResaleProduct"> Custo de compra para revenda </span>
+          @if (
+            formCreateProduct.get('costPrice')?.touched &&
+            formCreateProduct.get('costPrice')?.invalid
+          ) {
+            <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              Digite o custo
+            </p>
+          }
         </p>
-        @if (formCreateProduct.get('costPrice')?.touched &&
-        formCreateProduct.get('costPrice')?.invalid) {
-        <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          Digite o custo
-        </p>
-        }
+      </div>
+
+      <!-- Custos Extras -->
+      <div class="relative">
+        <label for="extra-costs" class="block text-gray-300 font-medium mb-2 text-sm"
+          >Custos Extras <span class="text-gray-400 text-xs">(opcional)</span></label
+        >
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">R$</span>
+          <input
+            id="extra-costs"
+            formControlName="extraCosts"
+            type="number"
+            step="0.01"
+            placeholder="0,00"
+            class="w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
+          />
+        </div>
+        <p class="text-gray-400 text-xs mt-1">Embalagem, frete, impostos adicionais</p>
       </div>
 
       <!-- Margem de Lucro -->
       <div class="relative">
-        <label class="block text-gray-300 font-medium mb-2 text-sm"
-          >Margem de Lucro</label
-        >
+        <label class="block text-gray-300 font-medium mb-2 text-sm">Margem de Lucro</label>
         <div class="relative">
-          <span
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold"
-            >%</span
-          >
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">%</span>
           <input
             type="text"
             readonly
@@ -267,16 +307,12 @@
             class="w-full pl-10 pr-3 py-3 rounded-lg bg-gray-200 text-gray-700 font-bold border-2 border-gray-300 cursor-not-allowed"
           />
         </div>
-        <p class="text-gray-400 text-xs mt-1">
-          {{ calculateProfitMargin() }}% sobre o custo
-        </p>
+        <p class="text-gray-400 text-xs mt-1">{{ calculateProfitMargin() }}% sobre o custo</p>
       </div>
 
       <!-- Quantidade em Estoque -->
       <div>
-        <label
-          for="quantity"
-          class="block text-gray-300 font-medium mb-2 text-sm"
+        <label for="quantity" class="block text-gray-300 font-medium mb-2 text-sm"
           >Estoque Inicial <span class="text-red-400">*</span></label
         >
         <input
@@ -287,18 +323,19 @@
           placeholder="0"
           class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
         />
-        @if (formCreateProduct.get('quantity')?.touched &&
-        formCreateProduct.get('quantity')?.invalid) {
-        <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          Digite a quantidade
-        </p>
+        @if (
+          formCreateProduct.get('quantity')?.touched && formCreateProduct.get('quantity')?.invalid
+        ) {
+          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Digite a quantidade
+          </p>
         }
       </div>
     </div>
@@ -342,18 +379,17 @@
           class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-mono font-medium placeholder-gray-400 border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none"
         />
         <p class="text-gray-400 text-xs mt-1">7 dígitos numéricos</p>
-        @if (formCreateProduct.get('cest')?.touched &&
-        formCreateProduct.get('cest')?.invalid) {
-        <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          CEST inválido (7 dígitos)
-        </p>
+        @if (formCreateProduct.get('cest')?.touched && formCreateProduct.get('cest')?.invalid) {
+          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            CEST inválido (7 dígitos)
+          </p>
         }
       </div>
 
@@ -379,18 +415,17 @@
             {{ option.label }}
           </option>
         </select>
-        @if (formCreateProduct.get('csosn')?.touched &&
-        formCreateProduct.get('csosn')?.invalid) {
-        <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          Selecione o CSOSN
-        </p>
+        @if (formCreateProduct.get('csosn')?.touched && formCreateProduct.get('csosn')?.invalid) {
+          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Selecione o CSOSN
+          </p>
         }
       </div>
 
@@ -415,18 +450,17 @@
             {{ option.label }}
           </option>
         </select>
-        @if (formCreateProduct.get('origin')?.touched &&
-        formCreateProduct.get('origin')?.invalid) {
-        <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              fill-rule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          Selecione a origem
-        </p>
+        @if (formCreateProduct.get('origin')?.touched && formCreateProduct.get('origin')?.invalid) {
+          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Selecione a origem
+          </p>
         }
       </div>
     </div>
@@ -439,12 +473,7 @@
     </label>
     <div class="grid grid-cols-2 gap-4">
       <label class="relative cursor-pointer">
-        <input
-          type="radio"
-          formControlName="active"
-          [value]="true"
-          class="peer sr-only"
-        />
+        <input type="radio" formControlName="active" [value]="true" class="peer sr-only" />
         <div
           class="p-4 rounded-lg border-2 border-gray-600 bg-white/5 peer-checked:border-green-500 peer-checked:bg-green-500/10 transition-all duration-200 flex items-center justify-center gap-3"
         >
@@ -468,12 +497,7 @@
       </label>
 
       <label class="relative cursor-pointer">
-        <input
-          type="radio"
-          formControlName="active"
-          [value]="false"
-          class="peer sr-only"
-        />
+        <input type="radio" formControlName="active" [value]="false" class="peer sr-only" />
         <div
           class="p-4 rounded-lg border-2 border-gray-600 bg-white/5 peer-checked:border-red-500 peer-checked:bg-red-500/10 transition-all duration-200 flex items-center justify-center gap-3"
         >

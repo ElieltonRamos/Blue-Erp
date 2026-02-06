@@ -1,319 +1,237 @@
-<!-- product-composition.component.html -->
-<div [formGroup]="compositionForm" class="space-y-8">
-  <!-- Seção: Composição do Produto -->
-  <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <h3 class="text-xl font-semibold text-purple-400 flex items-center gap-2">
-        <span class="w-1 h-6 bg-purple-400 rounded"></span>
-        Composição do Produto
-        <span *ngIf="productName" class="text-sm text-gray-400 font-normal"
-          >- {{ productName }}</span
-        >
-      </h3>
-      <button
-        type="button"
-        (click)="toggleMaterialSearch()"
-        class="px-4 py-2 rounded-lg font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-colors duration-200 flex items-center gap-2"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-          ></path>
-        </svg>
-        Adicionar Matéria-Prima
-      </button>
-    </div>
+<div class="space-y-6">
+  <h3 class="text-xl font-semibold text-purple-400 flex items-center gap-2">
+    <span class="w-1 h-6 bg-purple-400 rounded"></span>
+    Composição do Produto
+  </h3>
 
-    <!-- Search Panel -->
-    <div
-      *ngIf="showMaterialSearch"
-      class="bg-white/5 p-4 rounded-xl border border-purple-400/30 space-y-4"
-    >
-      <div>
-        <label class="block text-gray-300 font-medium mb-2 text-sm">Buscar Matéria-Prima</label>
+  <!-- Totalizadores -->
+  <div class="grid grid-cols-2 gap-4">
+    <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+      <div class="text-blue-400 text-sm font-medium mb-1">Total de Matérias-Primas</div>
+      <div class="text-white text-2xl font-bold">{{ compositionItems.length }}</div>
+    </div>
+    <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+      <div class="text-green-400 text-sm font-medium mb-1">Custo Total</div>
+      <div class="text-white text-2xl font-bold">{{ formatCurrency(getTotalCost()) }}</div>
+    </div>
+  </div>
+
+  <!-- Lista de Matérias-Primas -->
+  <div class="space-y-2" [formGroup]="compositionForm">
+    <div formArrayName="compositionItems">
+      @for (item of compositionItems.controls; track $index) {
+        <div
+          [formGroupName]="$index"
+          class="flex items-center gap-4 p-4 bg-white/5 rounded-lg border border-white/10"
+        >
+          <div class="flex-1">
+            <span class="text-white font-medium">{{
+              compositionItems.at($index).get('materialName')?.value
+            }}</span>
+          </div>
+          <div class="w-32">
+            <input
+              type="number"
+              formControlName="quantity"
+              step="0.001"
+              min="0.001"
+              class="w-full p-2 rounded bg-white/10 text-white border border-white/20 focus:border-purple-400 outline-none"
+            />
+          </div>
+          <div class="text-gray-300 text-sm w-24">
+            {{ compositionItems.at($index).get('unit')?.value }}
+          </div>
+          <div class="text-gray-300 text-sm w-32">
+            Custo:
+            <span class="font-bold text-green-400">{{
+              formatCurrency(compositionItems.at($index).get('unitCost')?.value || 0)
+            }}</span>
+          </div>
+          <div class="text-gray-300 text-sm w-32">
+            Total:
+            <span class="font-bold text-green-400">{{
+              formatCurrency(compositionItems.at($index).get('totalCost')?.value || 0)
+            }}</span>
+          </div>
+          <button
+            type="button"
+            (click)="removeMaterial($index)"
+            class="px-3 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
+          >
+            Remover
+          </button>
+        </div>
+      } @empty {
+        <p class="text-gray-400 text-center py-8">
+          Nenhuma matéria-prima adicionada. Adicione abaixo.
+        </p>
+      }
+    </div>
+  </div>
+
+  <!-- Adicionar Matéria-Prima -->
+  <div class="bg-white/5 p-4 rounded-lg border border-purple-400/30">
+    <h4 class="text-white font-semibold mb-4">Adicionar Matéria-Prima</h4>
+    <div class="space-y-4">
+      <!-- Busca -->
+      <div class="relative">
         <input
           type="text"
           [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
           [ngModelOptions]="{ standalone: true }"
-          placeholder="Digite o nome ou código..."
-          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 outline-none"
+          placeholder="Buscar matéria-prima por nome..."
+          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-purple-500 outline-none"
         />
-      </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto">
-        <button
-          type="button"
-          *ngFor="let material of filteredMaterials"
-          (click)="addMaterial(material)"
-          class="text-left bg-slate-700/50 hover:bg-slate-700 p-3 rounded-lg border border-slate-600/30 hover:border-purple-500 transition-all duration-200"
-        >
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-white font-semibold text-sm">{{ material.name }}</span>
-            <span class="text-gray-400 text-xs">{{ material.code }}</span>
-          </div>
-          <div class="flex items-center gap-2 text-xs">
-            <span class="text-gray-400">{{ material.unit }}</span>
-            <span class="text-gray-500">•</span>
-            <span class="text-green-400">R$ {{ material.unitCost.toFixed(2) }}</span>
-            <span class="text-gray-500">•</span>
-            <span class="text-blue-400">Estoque: {{ material.currentStock }}</span>
-          </div>
-        </button>
-      </div>
-
-      <div class="flex justify-end">
-        <button
-          type="button"
-          (click)="toggleMaterialSearch()"
-          class="px-4 py-2 rounded-lg font-semibold text-gray-300 bg-gray-700 hover:bg-gray-600 transition-colors duration-200"
-        >
-          Fechar
-        </button>
-      </div>
-    </div>
-
-    <!-- Composition Items List -->
-    <div formArrayName="compositionItems">
-      <div
-        *ngIf="compositionItems.length === 0"
-        class="text-center py-8 bg-white/5 rounded-lg border border-dashed border-gray-600"
-      >
-        <svg
-          class="w-12 h-12 mx-auto mb-3 text-gray-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-          ></path>
-        </svg>
-        <p class="text-gray-400">Nenhuma matéria-prima adicionada</p>
-        <p class="text-gray-500 text-sm mt-1">Clique em "Adicionar Matéria-Prima" para começar</p>
-      </div>
-
-      <div class="space-y-3">
-        <div
-          *ngFor="let item of compositionItems.controls; let i = index"
-          [formGroupName]="i"
-          class="bg-slate-700/50 rounded-lg p-4 border border-slate-600/30"
-        >
-          <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-            <!-- Material Name -->
-            <div class="md:col-span-4">
-              <label class="block text-gray-400 text-xs mb-1">Matéria-Prima</label>
-              <p class="text-white font-semibold">{{ item.get('materialName')?.value }}</p>
-              <p class="text-gray-400 text-xs">
-                Custo unitário: R$ {{ item.get('unitCost')?.value?.toFixed(2) }}
-              </p>
-            </div>
-
-            <!-- Quantity -->
-            <div class="md:col-span-2">
-              <label class="block text-gray-400 text-xs mb-1">Quantidade</label>
-              <input
-                formControlName="quantity"
-                type="number"
-                step="0.01"
-                min="0.01"
-                class="w-full p-2 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 outline-none"
-              />
-            </div>
-
-            <!-- Unit -->
-            <div class="md:col-span-2">
-              <label class="block text-gray-400 text-xs mb-1">Unidade</label>
-              <p class="text-white font-semibold mt-2">{{ item.get('unit')?.value }}</p>
-            </div>
-
-            <!-- Total Cost -->
-            <div class="md:col-span-3">
-              <label class="block text-gray-400 text-xs mb-1">Custo Total</label>
-              <p class="text-green-400 font-bold text-lg mt-1">
-                R$ {{ item.get('totalCost')?.value?.toFixed(2) }}
-              </p>
-            </div>
-
-            <!-- Remove Button -->
-            <div class="md:col-span-1 flex items-end justify-end">
+        <!-- Dropdown de resultados -->
+        @if (searchResults.length > 0) {
+          <div
+            class="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg max-h-60 overflow-y-auto"
+          >
+            @for (material of searchResults; track material.id) {
               <button
                 type="button"
-                (click)="removeMaterial(i)"
-                class="p-2 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors duration-200"
-                title="Remover"
+                (click)="selectMaterial(material)"
+                class="w-full text-left px-4 py-3 hover:bg-purple-50 transition-colors border-b border-gray-100 last:border-b-0"
               >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  ></path>
-                </svg>
+                <div class="font-medium text-gray-900">{{ material.name }}</div>
+                <div class="text-sm text-gray-500 flex justify-between">
+                  <span>Código: {{ material.code }}</span>
+                  <span class="font-semibold text-green-600"
+                    >{{ formatCurrency(material.unitCost) }}/{{ material.unit }}</span
+                  >
+                </div>
               </button>
-            </div>
+            }
+          </div>
+        }
+
+        @if (isSearching) {
+          <div class="absolute right-3 top-1/2 -translate-y-1/2">
+            <svg class="animate-spin h-5 w-5 text-purple-500" fill="none" viewBox="0 0 24 24">
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+          </div>
+        }
+      </div>
+
+      <!-- Material selecionado -->
+      @if (selectedMaterial) {
+        <div class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
+          <div class="text-purple-300 text-sm mb-1">Material Selecionado:</div>
+          <div class="text-white font-semibold">{{ selectedMaterial.name }}</div>
+          <div class="text-gray-300 text-sm">
+            Custo: {{ formatCurrency(selectedMaterial.unitCost) }}/{{ selectedMaterial.unit }}
           </div>
         </div>
-      </div>
-    </div>
+      }
 
-    <!-- Total Cost Summary -->
-    <div
-      *ngIf="compositionItems.length > 0"
-      class="bg-linear-to-r from-green-900/20 to-green-800/20 p-4 rounded-lg border border-green-500/30"
-    >
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-gray-300 text-sm">Custo Total de Produção</p>
-          <p class="text-xs text-gray-400 mt-1">
-            {{ compositionItems.length }} item(ns) na composição
-          </p>
-        </div>
-        <div class="text-right">
-          <p class="text-green-400 font-bold text-3xl">R$ {{ getTotalCost().toFixed(2) }}</p>
-        </div>
+      <!-- Quantidade -->
+      <div class="flex gap-4">
+        <input
+          type="number"
+          [(ngModel)]="newQuantity"
+          [ngModelOptions]="{ standalone: true }"
+          step="0.001"
+          min="0"
+          placeholder="Quantidade"
+          class="flex-1 p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-purple-500 outline-none"
+        />
+        <button
+          type="button"
+          (click)="addMaterial()"
+          [disabled]="!selectedMaterial || !newQuantity"
+          class="px-6 py-3 bg-purple-500 hover:bg-purple-600 disabled:bg-gray-500 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-colors"
+        >
+          Adicionar
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Seção: Modo de Preparo (Opcional) -->
-  <div class="space-y-6 bg-white/5 p-6 rounded-xl border border-white/10">
-    <div class="flex items-center justify-between">
-      <h3 class="text-xl font-semibold text-orange-400 flex items-center gap-2">
-        <span class="w-1 h-6 bg-orange-400 rounded"></span>
-        Modo de Preparo
-        <span class="text-gray-400 text-xs font-normal">(opcional)</span>
-      </h3>
+  <!-- Passos de Preparação -->
+  <div class="space-y-4 mt-8" [formGroup]="compositionForm">
+    <div class="flex justify-between items-center">
+      <h4 class="text-lg font-semibold text-purple-400 flex items-center gap-2">
+        <span class="w-1 h-5 bg-purple-400 rounded"></span>
+        Passos de Preparação
+      </h4>
       <button
         type="button"
         (click)="addPreparationStep()"
-        class="px-4 py-2 rounded-lg font-semibold text-white bg-orange-600 hover:bg-orange-700 transition-colors duration-200 flex items-center gap-2"
+        class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition-colors"
       >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-          ></path>
-        </svg>
-        Adicionar Passo
+        + Adicionar Passo
       </button>
     </div>
 
-    <div formArrayName="preparationSteps">
-      <div
-        *ngIf="preparationSteps.length === 0"
-        class="text-center py-8 bg-white/5 rounded-lg border border-dashed border-gray-600"
-      >
-        <svg
-          class="w-12 h-12 mx-auto mb-3 text-gray-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-          ></path>
-        </svg>
-        <p class="text-gray-400">Nenhum passo de preparo adicionado</p>
-        <p class="text-gray-500 text-sm mt-1">Adicione instruções de preparo para a cozinha</p>
-      </div>
-
-      <div class="space-y-3">
+    <div class="space-y-2" formArrayName="preparationSteps">
+      @for (step of preparationSteps.controls; track $index) {
         <div
-          *ngFor="let step of preparationSteps.controls; let i = index"
-          [formGroupName]="i"
-          class="bg-slate-700/50 rounded-lg p-4 border border-slate-600/30"
+          [formGroupName]="$index"
+          class="flex items-start gap-4 p-4 bg-white/5 rounded-lg border border-white/10"
         >
-          <div class="flex gap-4">
-            <!-- Step Number -->
-            <div class="shrink-0">
-              <div
-                class="w-10 h-10 rounded-full bg-orange-600 text-white font-bold flex items-center justify-center text-lg"
-              >
-                {{ i + 1 }}
-              </div>
-            </div>
-
-            <!-- Step Description -->
-            <div class="flex-1">
-              <label class="block text-gray-400 text-xs mb-2">Descrição do Passo</label>
-              <textarea
-                formControlName="description"
-                rows="2"
-                placeholder="Ex: Misture todos os ingredientes secos em uma tigela..."
-                class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all duration-200 outline-none resize-none"
-              ></textarea>
-              <ng-container
-                *ngIf="step.get('description')?.touched && step.get('description')?.invalid"
-              >
-                <p class="text-red-400 text-xs mt-1">Mínimo 5 caracteres</p>
-              </ng-container>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex flex-col gap-2">
-              <button
-                type="button"
-                (click)="moveStepUp(i)"
-                [disabled]="i === 0"
-                class="p-2 rounded-lg text-gray-400 hover:bg-slate-600 hover:text-white transition-colors duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                title="Mover para cima"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M5 15l7-7 7 7"
-                  ></path>
-                </svg>
-              </button>
-              <button
-                type="button"
-                (click)="moveStepDown(i)"
-                [disabled]="i === preparationSteps.length - 1"
-                class="p-2 rounded-lg text-gray-400 hover:bg-slate-600 hover:text-white transition-colors duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                title="Mover para baixo"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 9l-7 7-7-7"
-                  ></path>
-                </svg>
-              </button>
-              <button
-                type="button"
-                (click)="removePreparationStep(i)"
-                class="p-2 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors duration-200"
-                title="Remover passo"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  ></path>
-                </svg>
-              </button>
-            </div>
+          <div class="flex flex-col gap-2">
+            <button
+              type="button"
+              (click)="moveStepUp($index)"
+              [disabled]="$index === 0"
+              class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              (click)="moveStepDown($index)"
+              [disabled]="$index === preparationSteps.length - 1"
+              class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              ↓
+            </button>
           </div>
+          <div class="shrink-0 w-12">
+            <span class="text-white font-bold text-lg">{{ $index + 1 }}.</span>
+          </div>
+          <div class="flex-1">
+            <textarea
+              formControlName="description"
+              rows="2"
+              placeholder="Descreva o passo de preparação..."
+              class="w-full p-3 rounded-lg bg-white/10 text-white placeholder-gray-400 border border-white/20 focus:border-purple-400 outline-none resize-none"
+            ></textarea>
+            @if (
+              preparationSteps.at($index).get('description')?.touched &&
+              preparationSteps.at($index).get('description')?.invalid
+            ) {
+              <p class="text-red-400 text-sm mt-1">Descrição deve ter pelo menos 5 caracteres</p>
+            }
+          </div>
+          <button
+            type="button"
+            (click)="removePreparationStep($index)"
+            class="px-3 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
+          >
+            Remover
+          </button>
         </div>
-      </div>
+      } @empty {
+        <p class="text-gray-400 text-center py-8">
+          Nenhum passo de preparação adicionado. Clique em "Adicionar Passo" acima.
+        </p>
+      }
     </div>
   </div>
 </div>

@@ -1,5 +1,12 @@
-// product-composition.component.ts
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  Output,
+  EventEmitter,
+  inject,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -9,7 +16,11 @@ import {
   Validators,
   FormsModule,
 } from '@angular/forms';
-import { CompositionItem, PreparationStep, PrimaryMaterial, ProductComposition, ProductCompositionDTO } from '../../types/product';
+import { CompositionItem, PreparationStep, ProductComposition } from '../../types/product';
+import { PrimaryMaterial } from '../../types/primary-material';
+import { PrimaryMaterialService } from '../../services/primary-material.service';
+import { NotificationService } from '../../../../shared/toastr/notification.service';
+import { debounceTime, Subject } from 'rxjs';
 
 @Component({
   selector: 'app-product-composition',
@@ -18,20 +29,27 @@ import { CompositionItem, PreparationStep, PrimaryMaterial, ProductComposition, 
   templateUrl: './product-composition.html',
 })
 export class ProductCompositionComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private primaryMaterialService = inject(PrimaryMaterialService);
+  private notification = inject(NotificationService);
+  private cdr = inject(ChangeDetectorRef);
+
   @Input() productName: string = '';
   @Output() compositionChange = new EventEmitter<ProductComposition>();
 
   compositionForm!: FormGroup;
-  showMaterialSearch: boolean = false;
+
+  // Busca de matérias-primas
   searchTerm: string = '';
-
-  // Mock de matérias-primas disponíveis (em produção, virá de um serviço)
-  availableMaterials: PrimaryMaterial[] = []
-
-  constructor(private fb: FormBuilder) {}
+  searchResults: PrimaryMaterial[] = [];
+  selectedMaterial: PrimaryMaterial | null = null;
+  searchSubject = new Subject<string>();
+  isSearching: boolean = false;
+  newQuantity: number = 0;
 
   ngOnInit(): void {
     this.initializeForm();
+    this.setupSearch();
   }
 
   initializeForm(): void {
@@ -40,9 +58,18 @@ export class ProductCompositionComponent implements OnInit {
       preparationSteps: this.fb.array([]),
     });
 
-    // Emitir mudanças sempre que o formulário mudar
     this.compositionForm.valueChanges.subscribe(() => {
       this.emitCompositionChange();
+    });
+  }
+
+  setupSearch(): void {
+    this.searchSubject.pipe(debounceTime(300)).subscribe((term) => {
+      if (term.length >= 2) {
+        this.searchMaterials(term);
+      } else {
+        this.searchResults = [];
+      }
     });
   }
 
@@ -54,50 +81,72 @@ export class ProductCompositionComponent implements OnInit {
     return this.compositionForm.get('preparationSteps') as FormArray;
   }
 
-  get filteredMaterials(): PrimaryMaterial[] {
-    if (!this.searchTerm) {
-      return this.availableMaterials;
-    }
-
-    const term = this.searchTerm.toLowerCase();
-    return this.availableMaterials.filter(
-      (m) => m.name.toLowerCase().includes(term) || m.code.toLowerCase().includes(term),
-    );
+  onSearchChange(): void {
+    this.searchSubject.next(this.searchTerm);
   }
 
-  addMaterial(material: PrimaryMaterial): void {
-    // Verificar se o material já foi adicionado
-    const existingItem = this.compositionItems.controls.find(
-      (control) => control.get('materialId')?.value === material.id,
-    );
+  searchMaterials(term: string): void {
+    this.isSearching = true;
+    this.primaryMaterialService.getAll(1, 20, { search: term, active: true }).subscribe({
+      next: (response) => {
+        this.searchResults = response.data;
+        this.isSearching = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.notification.error('Erro ao buscar matérias-primas');
+        this.isSearching = false;
+      },
+    });
+  }
 
-    if (existingItem) {
-      // Se já existe, apenas incrementa a quantidade
-      const currentQty = existingItem.get('quantity')?.value || 0;
-      existingItem.patchValue({ quantity: currentQty + 1 });
+  selectMaterial(material: PrimaryMaterial): void {
+    this.selectedMaterial = material;
+    this.searchTerm = material.name;
+    this.searchResults = [];
+  }
+
+  addMaterial(): void {
+    const quantity = Number(this.newQuantity);
+
+    if (!this.selectedMaterial || quantity <= 0) {
+      this.notification.warning('Selecione uma matéria-prima e informe a quantidade válida');
       return;
     }
 
-    const itemGroup = this.fb.group({
-      materialId: [material.id, Validators.required],
-      materialName: [material.name, Validators.required],
-      quantity: [1, [Validators.required, Validators.min(0.01)]],
-      unit: [material.unit],
-      unitCost: [material.unitCost],
-      totalCost: [material.unitCost],
-    });
+    // Verificar se material já existe
+    const existingIndex = this.compositionItems.controls.findIndex(
+      (control) => control.get('materialId')?.value === Number(this.selectedMaterial!.id),
+    );
 
-    // Atualizar custo total quando quantidade mudar
-    itemGroup.get('quantity')?.valueChanges.subscribe((qty) => {
-      const unitCost = itemGroup.get('unitCost')?.value || 0;
-      const total = (qty || 0) * unitCost;
-      itemGroup.patchValue({ totalCost: total }, { emitEvent: false });
-      this.emitCompositionChange();
-    });
+    if (existingIndex >= 0) {
+      const existingControl = this.compositionItems.at(existingIndex);
+      const currentQty = existingControl.get('quantity')?.value || 0;
+      existingControl.patchValue({ quantity: currentQty + quantity });
+    } else {
+      const itemGroup = this.fb.group({
+        materialId: [Number(this.selectedMaterial.id), Validators.required],
+        materialName: [this.selectedMaterial.name, Validators.required],
+        quantity: [quantity, [Validators.required, Validators.min(0.01)]],
+        unit: [this.selectedMaterial.unit],
+        unitCost: [this.selectedMaterial.unitCost],
+        totalCost: [this.selectedMaterial.unitCost * quantity],
+      });
 
-    this.compositionItems.push(itemGroup);
-    this.showMaterialSearch = false;
+      itemGroup.get('quantity')?.valueChanges.subscribe((qty) => {
+        const unitCost = itemGroup.get('unitCost')?.value || 0;
+        const total = (qty || 0) * unitCost;
+        itemGroup.patchValue({ totalCost: total }, { emitEvent: false });
+        this.emitCompositionChange();
+      });
+
+      this.compositionItems.push(itemGroup);
+    }
+
+    this.selectedMaterial = null;
     this.searchTerm = '';
+    this.newQuantity = 0;
+    this.searchResults = [];
   }
 
   removeMaterial(index: number): void {
@@ -116,7 +165,6 @@ export class ProductCompositionComponent implements OnInit {
   removePreparationStep(index: number): void {
     this.preparationSteps.removeAt(index);
 
-    // Reordenar os steps
     this.preparationSteps.controls.forEach((control, i) => {
       control.patchValue({ order: i + 1 });
     });
@@ -128,7 +176,6 @@ export class ProductCompositionComponent implements OnInit {
       this.preparationSteps.removeAt(index);
       this.preparationSteps.insert(index - 1, step);
 
-      // Reordenar
       this.preparationSteps.controls.forEach((control, i) => {
         control.patchValue({ order: i + 1 });
       });
@@ -141,7 +188,6 @@ export class ProductCompositionComponent implements OnInit {
       this.preparationSteps.removeAt(index);
       this.preparationSteps.insert(index + 1, step);
 
-      // Reordenar
       this.preparationSteps.controls.forEach((control, i) => {
         control.patchValue({ order: i + 1 });
       });
@@ -154,6 +200,13 @@ export class ProductCompositionComponent implements OnInit {
     }, 0);
   }
 
+  formatCurrency(value: number): string {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  }
+
   emitCompositionChange(): void {
     const composition: ProductComposition = {
       items: this.compositionItems.value,
@@ -164,37 +217,16 @@ export class ProductCompositionComponent implements OnInit {
     this.compositionChange.emit(composition);
   }
 
-  toggleMaterialSearch(): void {
-    this.showMaterialSearch = !this.showMaterialSearch;
-    if (!this.showMaterialSearch) {
-      this.searchTerm = '';
-    }
-  }
-
-  // Método para obter dados formatados para o backend
-  getCompositionDTO(): ProductCompositionDTO {
-    return {
-      compositionItems: this.compositionItems.value.map((item: CompositionItem) => ({
-        materialId: item.materialId,
-        quantity: item.quantity,
-      })),
-      preparationSteps: this.preparationSteps.value.map((step: PreparationStep) => ({
-        order: step.order,
-        description: step.description,
-      })),
-    };
-  }
-
-  // Método para validar se a composição está válida
   isCompositionValid(): boolean {
     return this.compositionForm.valid && this.compositionItems.length > 0;
   }
 
-  // Método para resetar o formulário
   resetComposition(): void {
     this.compositionItems.clear();
     this.preparationSteps.clear();
-    this.showMaterialSearch = false;
     this.searchTerm = '';
+    this.selectedMaterial = null;
+    this.newQuantity = 0;
+    this.searchResults = [];
   }
 }

@@ -18,18 +18,24 @@ export class CreateProduct {
   private productService = inject(ProductService);
 
   formCreateProduct = new FormGroup({
-    name: new FormControl('', [Validators.required]),
-    code: new FormControl('', [Validators.required]),
-    productType: new FormControl('manufactured', [Validators.required]), // 'manufactured' ou 'resale'
-    price: new FormControl(0, [Validators.required, Validators.min(0.01)]),
-    costPrice: new FormControl(0, [Validators.required, Validators.min(0)]),
-    ncm: new FormControl('', [Validators.pattern(/^\d{8}$/)]),
-    cest: new FormControl('', [Validators.pattern(/^\d{7}$/)]),
-    csosn: new FormControl('102', [Validators.required]),
-    unit: new FormControl(Unit.UN, [Validators.required]),
-    origin: new FormControl(0, [Validators.required, Validators.min(0), Validators.max(8)]),
-    quantity: new FormControl(0, [Validators.required, Validators.min(0)]),
-    active: new FormControl(true, [Validators.required]),
+    name: new FormControl<string>('', [Validators.required]),
+    code: new FormControl<string>('', [Validators.required]),
+    productType: new FormControl<string>('manufactured', [Validators.required]),
+    productionLocation: new FormControl<string>('', [Validators.required]),
+    price: new FormControl<number | null>(null, [Validators.required, Validators.min(0.01)]),
+    costPrice: new FormControl<number | null>(null, [Validators.required, Validators.min(0)]),
+    extraCosts: new FormControl<number | null>(null, [Validators.min(0)]),
+    ncm: new FormControl<string>('', [Validators.pattern(/^\d{8}$/)]),
+    cest: new FormControl<string>('', [Validators.pattern(/^\d{7}$/)]),
+    csosn: new FormControl<string>('102', [Validators.required]),
+    unit: new FormControl<Unit>(Unit.UN, [Validators.required]),
+    origin: new FormControl<number>(0, [
+      Validators.required,
+      Validators.min(0),
+      Validators.max(8),
+    ]),
+    quantity: new FormControl<number | null>(null, [Validators.required, Validators.min(0)]),
+    active: new FormControl<boolean>(true, [Validators.required]),
   });
 
   // Armazenar a composição atual
@@ -37,6 +43,20 @@ export class CreateProduct {
 
   // Expor o enum Unit para o template
   unitOptions = Object.values(Unit);
+
+  // Opções de local de produção
+  productionLocationOptions = [
+    'Cozinha Principal',
+    'Cozinha Secundária',
+    'Bar',
+    'Confeitaria',
+    'Pizzaria',
+    'Grill',
+    'Forno',
+    'Chapa',
+    'Fritura',
+    'Montagem',
+  ];
 
   // Opções de CSOSN válidas para NFC-e
   csosnOptions = [
@@ -77,15 +97,18 @@ export class CreateProduct {
    */
   private setupProductTypeListener(): void {
     const productTypeControl = this.formCreateProduct.get('productType');
+    const productionLocationControl = this.formCreateProduct.get('productionLocation');
 
     // Configuração inicial
     const initialValue = productTypeControl?.value ?? 'manufactured';
     this.updateCostPriceState(initialValue);
+    this.updateProductionLocationState(initialValue);
 
     // Listener para mudanças
     productTypeControl?.valueChanges.subscribe((type) => {
       const safeType = type ?? 'manufactured';
       this.updateCostPriceState(safeType);
+      this.updateProductionLocationState(safeType);
 
       // Limpar composição se mudar para revenda
       if (safeType === 'resale' && this.compositionComponent) {
@@ -93,6 +116,23 @@ export class CreateProduct {
         this.currentComposition = null;
       }
     });
+  }
+
+  /**
+   * Atualiza estado do campo productionLocation baseado no tipo de produto
+   */
+  private updateProductionLocationState(productType: string): void {
+    const productionLocationControl = this.formCreateProduct.get('productionLocation');
+
+    if (productType === 'manufactured') {
+      productionLocationControl?.enable();
+      productionLocationControl?.setValidators([Validators.required]);
+    } else {
+      productionLocationControl?.disable();
+      productionLocationControl?.clearValidators();
+      productionLocationControl?.setValue('');
+    }
+    productionLocationControl?.updateValueAndValidity();
   }
 
   /**
@@ -181,10 +221,14 @@ export class CreateProduct {
       productType: (formValue.productType === 'manufactured' ? 'MANUFACTURED' : 'RESALE') as
         | 'MANUFACTURED'
         | 'RESALE',
+      productionLocation: this.isManufacturedProduct
+        ? formValue.productionLocation || ''
+        : undefined,
       price: formValue.price ? parseFloat(formValue.price.toString()) : 0,
       costPrice: formValue.costPrice ? parseFloat(formValue.costPrice.toString()) : 0,
-      ncm: formValue.ncm || '',
-      cest: formValue.cest || '',
+      extraCosts: formValue.extraCosts ? parseFloat(formValue.extraCosts.toString()) : 0,
+      ncm: formValue.ncm || '00000000',
+      cest: formValue.cest || '0000000',
       csosn: formValue.csosn || '',
       unit: formValue.unit || Unit.UN,
       origin: formValue.origin ?? 0,
@@ -197,7 +241,7 @@ export class CreateProduct {
               materialId: Number(item.materialId),
               quantity: item.quantity,
               materialName: item.materialName,
-              unitCost: item.unitCost
+              unitCost: item.unitCost,
             }))
           : undefined,
       // Incluir passos de preparo
@@ -248,10 +292,12 @@ export class CreateProduct {
   calculateProfitMargin(): string {
     const price = this.formCreateProduct.get('price')?.value || 0;
     const costPrice = this.formCreateProduct.getRawValue().costPrice || 0;
+    const extraCosts = this.formCreateProduct.get('extraCosts')?.value || 0;
+    const totalCost = costPrice + extraCosts;
 
-    if (costPrice === 0) return '0.00';
+    if (totalCost === 0) return '0.00';
 
-    const margin = ((price - costPrice) / costPrice) * 100;
+    const margin = ((price - totalCost) / totalCost) * 100;
     return margin.toFixed(2);
   }
 
@@ -274,6 +320,7 @@ export class CreateProduct {
       quantity: 0,
       price: 0,
       costPrice: 0,
+      extraCosts: 0,
       csosn: '102',
     });
 
@@ -292,10 +339,12 @@ export class CreateProduct {
   calculateMarkup(): string {
     const price = this.formCreateProduct.get('price')?.value || 0;
     const costPrice = this.formCreateProduct.getRawValue().costPrice || 0;
+    const extraCosts = this.formCreateProduct.get('extraCosts')?.value || 0;
+    const totalCost = costPrice + extraCosts;
 
-    if (costPrice === 0) return '0.00';
+    if (totalCost === 0) return '0.00';
 
-    const markup = ((price - costPrice) / costPrice) * 100;
+    const markup = ((price - totalCost) / totalCost) * 100;
     return markup.toFixed(2);
   }
 
@@ -305,10 +354,12 @@ export class CreateProduct {
   calculateContributionMargin(): string {
     const price = this.formCreateProduct.get('price')?.value || 0;
     const costPrice = this.formCreateProduct.getRawValue().costPrice || 0;
+    const extraCosts = this.formCreateProduct.get('extraCosts')?.value || 0;
+    const totalCost = costPrice + extraCosts;
 
     if (price === 0) return '0.00';
 
-    const margin = ((price - costPrice) / price) * 100;
+    const margin = ((price - totalCost) / price) * 100;
     return margin.toFixed(2);
   }
 }

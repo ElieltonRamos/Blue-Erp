@@ -194,6 +194,7 @@ export class ProductResponseDto {
     productionLocation: string | null;
     price: Decimal;
     costPrice: Decimal;
+    extraCosts: Decimal;
     ncm: string;
     cest: string | null;
     origin: number;
@@ -222,6 +223,7 @@ export class ProductResponseDto {
     this.productionLocation = product.productionLocation;
     this.price = product.price.toNumber();
     this.costPrice = product.costPrice.toNumber();
+    this.extraCosts = product.extraCosts.toNumber();
     this.ncm = product.ncm;
     this.cest = product.cest;
     this.origin = product.origin;

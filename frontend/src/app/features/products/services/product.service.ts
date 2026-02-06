@@ -11,7 +11,7 @@ export interface Product {
   productionLocation?: string;
   price: number;
   costPrice: number;
-  extraCosts?: number;
+  extraCosts: number;
   ncm: string;
   cest?: string;
   origin: number;
@@ -53,6 +53,7 @@ export interface CreateProductDTO {
   productionLocation?: string;
   price: number;
   costPrice: number;
+  extraCosts: number;
   ncm: string;
   cest?: string;
   origin: number;

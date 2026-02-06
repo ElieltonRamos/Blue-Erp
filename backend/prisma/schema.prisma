@@ -147,7 +147,7 @@ model Product {
   id   Int    @id @default(autoincrement())
   name String // xProd - Descrição para NFC-e
   code String @unique // cProd - Código interno/SKU/EAN/GTIN
-  productionLocation String?
+  productionLocation String? @map("production_location")
 
   // Preços padrão
   price     Decimal @db.Decimal(10, 2) // Preço padrão de venda
