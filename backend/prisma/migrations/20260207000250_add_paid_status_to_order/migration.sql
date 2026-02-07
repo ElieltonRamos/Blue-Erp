@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `orders` MODIFY `status` ENUM('OPEN', 'CLOSED', 'CANCELED', 'PAID') NOT NULL DEFAULT 'OPEN';

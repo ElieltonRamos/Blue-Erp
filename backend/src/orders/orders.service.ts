@@ -6,10 +6,12 @@ import {
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderEntity } from './entities/order.entity';
-import { OrderStatus, Prisma } from 'generated/prisma/client';
+import { OrderStatus, Prisma, FiscalStatus } from 'generated/prisma/client';
 import { OrderFiltersDto } from './dto/order-filters.dto';
 import { SendToKitchenDto } from './dto/send-to-kitchen.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { Decimal } from '@prisma/client/runtime/client';
+import { ConvertOrderToSaleDto } from './dto/convert-order-to-sale';
 
 @Injectable()
 export class OrdersService {
@@ -86,6 +88,7 @@ export class OrdersService {
       throw error;
     }
   }
+
   async findAll(filters: OrderFiltersDto) {
     const {
       page = 1,
@@ -148,6 +151,7 @@ export class OrdersService {
       totalPages: Math.ceil(total / limit),
     };
   }
+
   async findOne(id: number): Promise<OrderEntity> {
     const order = await this.prisma.client.order.findUnique({
       where: { id },
@@ -352,31 +356,132 @@ export class OrdersService {
     return this.mapToEntity(readyOrder);
   }
 
-  async finish(id: number) {
-    const order = await this.findOne(id);
+  async convertToSale(
+    orderId: number,
+    dto: ConvertOrderToSaleDto,
+    userId: number,
+    username: string,
+  ) {
+    // Buscar pedido com itens
+    const order = await this.prisma.client.order.findUnique({
+      where: { id: orderId },
+      include: {
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                costPrice: true,
+                ncm: true,
+                unit: true,
+              },
+            },
+          },
+        },
+      },
+    });
 
-    if (order.status !== OrderStatus.OPEN) {
+    if (!order) {
+      throw new NotFoundException(`Pedido ${orderId} não encontrado`);
+    }
+
+    if (order.status !== OrderStatus.CLOSED) {
       throw new BadRequestException(
-        'Apenas pedidos abertos podem ser finalizados',
+        'Apenas pedidos fechados podem ser convertidos em venda',
       );
     }
 
-    if (!order.kitchenReadyAt) {
-      throw new BadRequestException(
-        'Pedido precisa estar pronto antes de finalizar',
-      );
+    // Validar cliente
+    const clientId = dto.clientId || 1;
+    const client = await this.prisma.client.client.findUnique({
+      where: { id: clientId },
+    });
+
+    if (!client) {
+      throw new BadRequestException(`Cliente ${clientId} não encontrado`);
     }
 
-    // TODO: Implementar conversão Order -> Sale
-    // 1. Buscar ou criar Client
-    // 2. Criar Sale com dados fiscais
-    // 3. Criar SaleItems com impostos
-    // 4. Atualizar Order.status = CLOSED
-    // 5. Atualizar Order.finishedAt
+    // Calcular valores
+    const discount = new Decimal(Number(dto.discount));
+    const totalProductsWithoutDiscount = new Decimal(order.total);
+    const total = totalProductsWithoutDiscount.minus(discount);
 
-    throw new BadRequestException(
-      'Conversão Order -> Sale ainda não implementada',
-    );
+    // Calcular lucro
+    const profitSale = order.items.reduce((acc, item) => {
+      const itemCost = new Decimal(item.product.costPrice).times(
+        new Decimal(item.quantity),
+      );
+      const itemRevenue = new Decimal(item.total);
+      return acc.plus(itemRevenue.minus(itemCost));
+    }, new Decimal(0));
+
+    // Criar venda em transação
+    const sale = await this.prisma.client.$transaction(async (tx) => {
+      // Criar venda
+      const createdSale = await tx.sale.create({
+        data: {
+          clientId,
+          userOperator: username,
+          operatorId: userId,
+          date: new Date(),
+          paymentMethod: dto.paymentMethod,
+          totalProductsWithoutDiscount,
+          discount,
+          total,
+          profitSale: profitSale.minus(discount),
+          isPaid: clientId !== 1,
+          cfop: dto.cfop,
+          fiscalStatus: FiscalStatus.PENDENTE,
+          items: {
+            create: order.items.map((item, index) => ({
+              itemNumber: index + 1,
+              productId: item.productId,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              totalPrice: item.total,
+              taxUnit: item.product.unit,
+              taxQuantity: item.quantity,
+              taxUnitPrice: item.unitPrice,
+              composesTotal: 1,
+              cfop: dto.cfop,
+              totalTaxValue: null,
+              importTaxValue: new Decimal(0),
+              iofValue: new Decimal(0),
+            })),
+          },
+        },
+        include: {
+          items: true,
+          client: true,
+          operator: {
+            select: {
+              id: true,
+              username: true,
+              role: true,
+            },
+          },
+        },
+      });
+
+      // Atualizar status do pedido
+      await tx.order.update({
+        where: { id: orderId },
+        data: {
+          status: OrderStatus.PAID,
+        },
+      });
+
+      return createdSale;
+    });
+
+    return {
+      saleId: sale.id,
+      orderId: order.id,
+      total: Number(sale.total),
+      profitSale: Number(sale.profitSale),
+      fiscalStatus: sale.fiscalStatus,
+      message: 'Pedido convertido em venda com sucesso',
+    };
   }
 
   // Helper para converter Prisma -> Entity

@@ -21,6 +21,7 @@ import { UsersService } from './users.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { UserFiltersDto } from './dto/user-filter.dto.js';
+import { LoginDto } from './dto/login.dto.js';
 
 @ApiTags('users') // Agrupa endpoints
 @Controller('users')
@@ -39,6 +40,25 @@ export class UsersController {
   })
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
+  }
+
+  @Post('login')
+  @ApiOperation({ summary: 'Autenticar usuário' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Login realizado com sucesso',
+    schema: {
+      example: {
+        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Credenciais inválidas ou usuário inativo',
+  })
+  login(@Body() loginDto: LoginDto) {
+    return this.usersService.login(loginDto);
   }
 
   @Get()

@@ -1,16 +1,21 @@
-// src/users/dto/login.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
-import { ValidationMessages } from '../../common/validation-messages.js';
+import { IsString, IsNotEmpty, MinLength } from 'class-validator';
 
 export class LoginDto {
-  @ApiProperty({ example: 'john_doe' })
-  @IsString({ message: ValidationMessages.IS_STRING('Nome de usuário') })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Nome de usuário') })
+  @ApiProperty({
+    description: 'Nome de usuário',
+    example: 'admin',
+  })
+  @IsString({ message: 'Nome de usuário deve ser uma string' })
+  @IsNotEmpty({ message: 'Nome de usuário é obrigatório' })
   username: string;
 
-  @ApiProperty({ example: 'senha123' })
-  @IsString({ message: ValidationMessages.IS_STRING('Senha') })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Senha') })
+  @ApiProperty({
+    description: 'Senha do usuário',
+    example: 'senha123',
+  })
+  @IsString({ message: 'Senha deve ser uma string' })
+  @IsNotEmpty({ message: 'Senha é obrigatória' })
+  @MinLength(6, { message: 'Senha deve ter no mínimo 6 caracteres' })
   password: string;
 }

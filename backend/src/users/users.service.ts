@@ -3,18 +3,24 @@ import {
   ConflictException,
   NotFoundException,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../database/prisma.service.js';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UserResponseDto } from './dto/user-response.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { UserFiltersDto } from './dto/user-filter.dto.js';
+import { LoginDto } from './dto/login.dto.js';
 import { Prisma } from 'generated/prisma/client.js';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jwtService: JwtService,
+  ) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserResponseDto> {
     // Verifica se username já existe
@@ -207,5 +213,37 @@ export class UsersService {
 
     const { password: _password, ...result } = user;
     return new UserResponseDto(result);
+  }
+
+  async login(loginDto: LoginDto): Promise<{ access_token: string }> {
+    const { username, password } = loginDto;
+
+    const user = await this.prisma.client.user.findUnique({
+      where: { username },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Credenciais inválidas');
+    }
+
+    if (!user.active) {
+      throw new UnauthorizedException('Usuário inativo');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Credenciais inválidas');
+    }
+
+    const payload = {
+      userId: user.id,
+      username: user.username,
+      role: user.role,
+    };
+
+    const access_token = await this.jwtService.signAsync(payload);
+
+    return { access_token };
   }
 }
