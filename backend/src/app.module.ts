@@ -10,9 +10,10 @@ import { ExpensesModule } from './expenses/expenses.module';
 import { PrimaryMaterialsModule } from './primary-materials/primary-materials.module';
 import { ProductsModule } from './products/products.module';
 import { OrdersModule } from './orders/orders.module';
+import { OrderProductionModule } from './order-production/order-production.module';
 
 @Module({
-  imports: [UsersModule, PrismaModule, CompanyModule, ClientsModule, IbptModule, ExpensesModule, PrimaryMaterialsModule, ProductsModule, OrdersModule],
+  imports: [UsersModule, PrismaModule, CompanyModule, ClientsModule, IbptModule, ExpensesModule, PrimaryMaterialsModule, ProductsModule, OrdersModule, OrderProductionModule],
   controllers: [AppController],
   providers: [AppService],
 })

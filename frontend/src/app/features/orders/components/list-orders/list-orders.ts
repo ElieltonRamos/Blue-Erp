@@ -102,6 +102,7 @@ export class ListOrders implements OnInit {
       OPEN: 'Aberto',
       CLOSED: 'Fechado',
       CANCELED: 'Cancelado',
+      PAID: 'Pago'
     };
     return labels[status];
   }
@@ -110,6 +111,7 @@ export class ListOrders implements OnInit {
     const styles: Record<OrderStatus, string> = {
       OPEN: 'bg-green-500/20 text-green-400 border border-green-500/30',
       CLOSED: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
+      PAID: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
       CANCELED: 'bg-red-500/20 text-red-400 border border-red-500/30',
     };
     return styles[status];
@@ -152,17 +154,18 @@ export class ListOrders implements OnInit {
   }
 
   async finishOrder(orderId: number): Promise<void> {
-    const confirmed = await alertConfirm('Deseja realmente finalizar este pedido?');
+    const confirmed = await alertConfirm('Deseja realmente fechar este pedido?');
 
     if (confirmed) {
-      this.orderService.finishOrder(orderId).subscribe({
+      this.orderService.updateOrder(orderId, { status: 'CLOSED' }).subscribe({
         next: () => {
-          this.notification.success('Pedido finalizado com sucesso');
+          this.notification.success('Pedido fechado com sucesso');
+          this.router.navigate(['/comandas', orderId]);
           this.loadOrders();
         },
         error: (error) => {
-          console.error('Erro ao finalizar pedido:', error);
-          this.notification.error('Erro ao finalizar pedido');
+          console.error('Erro ao fechar pedido:', error);
+          this.notification.error('Erro ao fechar pedido');
         },
       });
     }

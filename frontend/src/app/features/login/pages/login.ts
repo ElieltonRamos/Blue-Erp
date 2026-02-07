@@ -35,20 +35,16 @@ export class Login {
 
     this.loginService.login(username, password).subscribe({
       next: (response) => {
-        if ('token' in response) {
-          localStorage.setItem('token', response.token);
-          closeLoading();
-          this.notification.success(`Bem Vindo! 👋`);
-          this.route.navigate(['/dashboard']);
-        } else {
-          closeLoading();
-          this.notification.error(response.message);
-        }
+        localStorage.setItem('token', response.token);
+        closeLoading();
+        this.notification.success(`Bem Vindo! 👋`);
+        this.route.navigate(['/dashboard']);
       },
       error: (err) => {
         closeLoading();
         localStorage.removeItem('token');
-        this.notification.error('Erro de conexão');
+
+        this.notification.error(err.error?.message || 'Credenciais inválidas');
       },
     });
 

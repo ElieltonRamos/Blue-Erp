@@ -67,7 +67,7 @@ export class ModalSalesNote implements OnInit {
   }
 
   getQuantity(item: SaleItem): number {
-    return item.qCom ?? 0;
+    return Number(item.quantity) ?? 0;
   }
 
   calculateDiscount(): number {

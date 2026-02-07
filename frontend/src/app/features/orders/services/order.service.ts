@@ -11,6 +11,7 @@ import {
 } from '../types/order';
 import { FilterProductParams, Product } from '../../products/types/product';
 import { PaginatedResponse } from '../../../core/guards/types/paginator';
+import { ConvertOrderToSaleDto } from '../types/convert-order-sale';
 
 @Injectable({
   providedIn: 'root',
@@ -104,5 +105,9 @@ export class OrderService {
     if (filters?.categoryId) params = params.set('categoryId', filters.categoryId.toString());
 
     return this.client.get<PaginatedResponse<Product>>(this.productsApiUrl, { params });
+  }
+
+  convertToSale(orderId: number, dto: ConvertOrderToSaleDto): Observable<any> {
+    return this.client.post<any>(`${this.apiUrl}/${orderId}/convert-to-sale`, dto);
   }
 }

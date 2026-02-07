@@ -70,11 +70,18 @@
       <div
         class="flex items-center gap-1 h-9 bg-emerald-600/10 px-3 rounded-md border border-emerald-500/40 max-w-45"
       >
-        <span class="text-emerald-300 text-sm truncate" [title]="selectedClient?.name || 'Sem cliente cadastrado'">
+        <span
+          class="text-emerald-300 text-sm truncate"
+          [title]="selectedClient?.name || 'Sem cliente cadastrado'"
+        >
           {{ selectedClient?.name || 'Sem cliente' }}
         </span>
 
-        <button *ngIf="selectedClient" (click)="clearCustomer()" class="text-emerald-400 hover:text-emerald-200 text-xs">
+        <button
+          *ngIf="selectedClient"
+          (click)="clearCustomer()"
+          class="text-emerald-400 hover:text-emerald-200 text-xs"
+        >
           ✕
         </button>
       </div>
@@ -353,4 +360,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal de Venda -->
+  @if (showSaleModal && saleData) {
+    <app-modal-sales-note [saleData]="saleData" (closeModal)="closeSaleModal()" />
+  }
 </div>

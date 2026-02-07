@@ -215,7 +215,7 @@ export class UsersService {
     return new UserResponseDto(result);
   }
 
-  async login(loginDto: LoginDto): Promise<{ access_token: string }> {
+  async login(loginDto: LoginDto): Promise<{ token: string }> {
     const { username, password } = loginDto;
 
     const user = await this.prisma.client.user.findUnique({
@@ -242,8 +242,8 @@ export class UsersService {
       role: user.role,
     };
 
-    const access_token = await this.jwtService.signAsync(payload);
+    const token = await this.jwtService.signAsync(payload);
 
-    return { access_token };
+    return { token };
   }
 }

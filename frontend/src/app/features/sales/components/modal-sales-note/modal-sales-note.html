@@ -46,6 +46,7 @@
       }
 
       <h1 class="text-2xl font-bold mb-4 mt-4">Resumo da Venda</h1>
+      <!-- No modal-sales-note.html, substitua a tabela: -->
 
       <table class="table-auto w-full mt-4">
         <thead>
@@ -57,13 +58,13 @@
           </tr>
         </thead>
         <tbody>
-          @for (item of saleData.products; track item.productId) {
+          @for (item of saleData.items; track item.productId) {
             <tr>
               <td class="px-4 py-2 border-b">{{ item.xProd }}</td>
               <td class="px-4 py-2 border-b">{{ getQuantity(item) }}</td>
-              <td class="px-4 py-2 border-b">{{ formatNumber(item.vUnCom) }}</td>
+              <td class="px-4 py-2 border-b">{{ formatNumber(item.unitPrice) }}</td>
               <td class="px-4 py-2 border-b">
-                {{ formatNumber(item.vUnCom * getQuantity(item)) }}
+                {{ formatNumber(item.totalPrice) }}
               </td>
             </tr>
           }

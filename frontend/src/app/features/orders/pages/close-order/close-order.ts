@@ -10,30 +10,27 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
-/* Services */
 import { ClientService } from '../../../clients/services/client.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
-
-/* Types */
-import { Order, OrderItem, Product } from '../../types/order';
-
-import Client from '../../../clients/types/clients';
 import { OrderService } from '../../services/order.service';
+
+import { ModalSalesNote } from '../../../sales/components/modal-sales-note/modal-sales-note';
+
+import { Order } from '../../types/order';
+import Client from '../../../clients/types/clients';
+import { ConvertOrderToSaleDto } from '../../types/convert-order-sale';
+import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 
 export type PaymentMethod = 'money' | 'credit' | 'debit' | 'pix' | 'term';
 
 @Component({
   selector: 'app-close-order',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalSalesNote],
   templateUrl: './close-order.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CloseOrder implements OnInit {
-  /* =====================================================
-   * INJECTIONS
-   * ===================================================== */
-
   private readonly orderService = inject(OrderService);
   private readonly clientService = inject(ClientService);
   private readonly notification = inject(NotificationService);
@@ -41,34 +38,16 @@ export class CloseOrder implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
 
-  /* =====================================================
-   * ORDER
-   * ===================================================== */
-
   order: Order | null = null;
   orderId = 0;
-
   isLoading = false;
   isFinishing = false;
-
-  /* =====================================================
-   * SELLER
-   * ===================================================== */
-
   sellerName = 'Vendedor';
-
-  /* =====================================================
-   * PAYMENT
-   * ===================================================== */
-
   selectedPaymentMethod: PaymentMethod | null = null;
-
   subtotal = 0;
   discount = 0;
   total = 0;
-
   amountReceived = 0;
-
   paymentMethods = [
     { id: 'money' as PaymentMethod, name: 'Dinheiro', icon: '💵' },
     { id: 'credit' as PaymentMethod, name: 'Crédito', icon: '💳' },
@@ -77,30 +56,16 @@ export class CloseOrder implements OnInit {
     { id: 'term' as PaymentMethod, name: 'Prazo', icon: '📅' },
   ];
 
-  /* =====================================================
-   * CLIENT (CADASTRADO)
-   * ===================================================== */
-
   customerSearchId = '';
   customerSearchName = '';
-
   selectedClient: Client | null = null;
-
   isSearchingClient = false;
-
   searchResults: Client[] = [];
   selectedClientId: number | null = null;
-
-  /* =====================================================
-   * FISCAL
-   * ===================================================== */
-
   cfop = '5102';
   csosn = '102';
-
-  /* =====================================================
-   * LIFE CYCLE
-   * ===================================================== */
+  showSaleModal = false;
+  saleData: any = null;
 
   ngOnInit(): void {
     this.orderId = Number(this.route.snapshot.paramMap.get('id')) || 0;
@@ -113,10 +78,6 @@ export class CloseOrder implements OnInit {
 
     this.loadOrder();
   }
-
-  /* =====================================================
-   * ORDER
-   * ===================================================== */
 
   private loadOrder(): void {
     this.isLoading = true;
@@ -138,10 +99,6 @@ export class CloseOrder implements OnInit {
       },
     });
   }
-
-  /* =====================================================
-   * CLIENT
-   * ===================================================== */
 
   searchCustomerById(): void {
     if (!this.customerSearchId.trim()) {
@@ -262,10 +219,6 @@ export class CloseOrder implements OnInit {
     return phone;
   }
 
-  /* =====================================================
-   * TOTALS
-   * ===================================================== */
-
   calculateTotals(): void {
     if (!this.order) return;
 
@@ -298,10 +251,6 @@ export class CloseOrder implements OnInit {
     return true;
   }
 
-  /* =====================================================
-   * PAYMENT
-   * ===================================================== */
-
   selectPaymentMethod(method: PaymentMethod): void {
     if (method === 'term' && !this.selectedClient) {
       this.notification.warning('Venda a prazo requer cliente cadastrado');
@@ -314,10 +263,6 @@ export class CloseOrder implements OnInit {
 
     this.cdr.markForCheck();
   }
-
-  /* =====================================================
-   * FINISH
-   * ===================================================== */
 
   finishOrder(): void {
     if (!this.isValidPayment) {
@@ -337,55 +282,42 @@ export class CloseOrder implements OnInit {
 
     this.isFinishing = true;
 
-    const clientName = this.selectedClient?.name || this.order.customerName || 'Cliente Avista';
-
-    const payload = {
-      orderId: this.orderId,
-      clientName: clientName,
-      userOperator: this.sellerName,
-      paymentMethod: this.selectedPaymentMethod,
-
-      items: this.order.items,
-
-      subtotal: this.subtotal,
+    const dto: ConvertOrderToSaleDto = {
+      paymentMethod: this.selectedPaymentMethod.toUpperCase(),
+      clientId: this.selectedClient?.id || 1,
       discount: this.discount,
-      total: this.total,
-
-      amountReceived: this.selectedPaymentMethod === 'money' ? this.amountReceived : this.total,
-
-      change: this.selectedPaymentMethod === 'money' ? this.change : 0,
-
       cfop: this.cfop,
-      csosn: this.csosn,
     };
 
-    // this.orderService.finalizeSale(payload).subscribe({
-    //   next: (sale) => {
-    //     this.notification.success('Venda finalizada');
+    this.orderService.convertToSale(this.orderId, dto).subscribe({
+      next: (sale) => {
+        this.notification.success('Venda finalizada');
+        this.isFinishing = false;
 
-    //     this.isFinishing = false;
+        this.saleData = sale;
+        this.showSaleModal = true;
 
-    //     setTimeout(() => {
-    //       this.router.navigate(['/vendas', sale.id]);
-    //     }, 500);
-    //   },
+        this.cdr.markForCheck();
+      },
 
-    //   error: (err) => {
-    //     this.notification.error('Erro ao finalizar');
-
-    //     this.isFinishing = false;
-    //     this.cdr.markForCheck();
-    //   },
-    // });
+      error: (err) => {
+        this.notification.error(err?.error?.message || 'Erro ao finalizar');
+        this.isFinishing = false;
+        this.cdr.markForCheck();
+      },
+    });
   }
 
-  /* =====================================================
-   * NAVIGATION
-   * ===================================================== */
+  closeSaleModal(): void {
+    this.showSaleModal = false;
+    this.router.navigate(['/comandas']);
+  }
 
-  cancelOrder(): void {
-    if (confirm('Cancelar venda?')) {
-      this.router.navigate(['/pedidos']);
+  async cancelOrder(): Promise<void> {
+    const confirmed = await alertConfirm('Cancelar venda?');
+
+    if (confirmed) {
+      this.router.navigate(['/comandas']);
     }
   }
 

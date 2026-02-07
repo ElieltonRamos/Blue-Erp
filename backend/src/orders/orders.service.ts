@@ -178,7 +178,17 @@ export class OrdersService {
     id: number,
     updateOrderDto: UpdateOrderDto,
   ): Promise<OrderEntity> {
-    await this.findOne(id); // Valida se existe
+    const existingOrder = await this.findOne(id);
+
+    // Validar se está tentando reverter status PAID
+    if (
+      existingOrder.status === OrderStatus.PAID &&
+      updateOrderDto.status !== OrderStatus.PAID
+    ) {
+      throw new BadRequestException(
+        'Não é possível alterar o status de um pedido já pago',
+      );
+    }
 
     const { items, ...orderData } = updateOrderDto;
 
@@ -262,23 +272,56 @@ export class OrdersService {
       throw new BadRequestException('Pedido já foi enviado para cozinha');
     }
 
-    const updatedOrder = await this.prisma.client.order.update({
+    // Buscar pedido com produtos para pegar productionLocation
+    const orderWithProducts = await this.prisma.client.order.findUnique({
       where: { id },
-      data: {
-        kitchenSentAt: new Date(),
-      },
       include: {
-        items: true,
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                productionLocation: true,
+                productType: true,
+              },
+            },
+          },
+        },
       },
     });
 
-    // TODO: Criar OrderProduction aqui no futuro
-    // Para cada item, criar um registro em OrderProduction
-    // com productionLocation copiado de Product
+    await this.prisma.client.$transaction(async (tx) => {
+      // Atualizar pedido
+      await tx.order.update({
+        where: { id },
+        data: { kitchenSentAt: new Date() },
+      });
+
+      // Criar registros de produção para cada item MANUFATURADO
+
+      if (orderWithProducts === null) {
+        throw new BadRequestException('Lista de pedidos vazia');
+      }
+
+      for (const item of orderWithProducts.items) {
+        if (item.product.productType === 'MANUFACTURED') {
+          await tx.orderProduction.create({
+            data: {
+              orderItemId: item.id,
+              productionLocation: item.product.productionLocation || 'LOCAL_01',
+              status: 'PENDING',
+              quantityRequested: item.quantity,
+              quantityProduced: 0,
+              pendingAt: new Date(),
+            },
+          });
+        }
+      }
+    });
 
     return {
-      orderId: updatedOrder.id,
-      kitchenSentAt: updatedOrder.kitchenSentAt,
+      orderId: id,
+      kitchenSentAt: new Date(),
       message: 'Pedido enviado para cozinha com sucesso',
     };
   }
@@ -371,6 +414,7 @@ export class OrdersService {
             product: {
               select: {
                 id: true,
+                name: true,
                 costPrice: true,
                 ncm: true,
                 unit: true,
@@ -436,6 +480,7 @@ export class OrdersService {
             create: order.items.map((item, index) => ({
               itemNumber: index + 1,
               productId: item.productId,
+              xProd: item.product.name,
               quantity: item.quantity,
               unitPrice: item.unitPrice,
               totalPrice: item.total,
@@ -475,12 +520,8 @@ export class OrdersService {
     });
 
     return {
-      saleId: sale.id,
-      orderId: order.id,
-      total: Number(sale.total),
-      profitSale: Number(sale.profitSale),
-      fiscalStatus: sale.fiscalStatus,
-      message: 'Pedido convertido em venda com sucesso',
+      ...sale,
+      address: order.address,
     };
   }
 

@@ -11,7 +11,7 @@ export interface OrderItem {
   kitchenReadyAt?: Date;
 }
 
-export type OrderStatus = 'OPEN' | 'CLOSED' | 'CANCELED';
+export type OrderStatus = 'OPEN' | 'CLOSED' | 'CANCELED' | 'PAID';
 export type OrderType = 'DINE_IN' | 'DELIVERY';
 export type OrderLocation = 'LOCAL_01' | 'LOCAL_02' | 'LOCAL_03' | 'DELIVERY';
 
