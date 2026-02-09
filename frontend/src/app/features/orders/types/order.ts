@@ -41,7 +41,7 @@ export interface Order {
 
 export interface CreateOrderDto {
   type: OrderType;
-  locationId: OrderLocation;
+  locationId: string;
   customerName?: string;
   items: OrderItem[];
   total: number;

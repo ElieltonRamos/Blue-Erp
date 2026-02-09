@@ -43,13 +43,6 @@ enum OrderType {
   DELIVERY
 }
 
-enum OrderLocation {
-  LOCAL_01
-  LOCAL_02
-  LOCAL_03
-  DELIVERY
-}
-
 enum ProductionStatus {
   PENDING
   IN_PROGRESS
@@ -158,6 +151,21 @@ model Expense {
   @@map("expenses")
 }
 
+model ProductionLocation {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique
+  name        String
+  description String?
+  active      Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([active])
+  @@index([order])
+  @@map("production_locations")
+}
+
 model Product {
   id                 Int               @id @default(autoincrement())
   name               String
@@ -212,23 +220,23 @@ model Category {
 }
 
 model Order {
-  id                Int           @id @default(autoincrement())
+  id                Int         @id @default(autoincrement())
   type              OrderType
-  locationId        OrderLocation
+  locationId        String      @map("location_id")
   customerName      String?
   table             String?
   address           String?
-  status            OrderStatus   @default(OPEN)
-  total             Decimal       @db.Decimal(10, 2)
-  createdAt         DateTime      @default(now()) @map("created_at")
-  updatedAt         DateTime      @updatedAt @map("updated_at")
-  kitchenSentAt     DateTime?     @map("kitchen_sent_at")
-  kitchenReadyAt    DateTime?     @map("kitchen_ready_at")
-  finishedAt        DateTime?     @map("finished_at")
-  deliveredAt       DateTime?     @map("delivered_at")
-  tableOccupiedUtil DateTime?     @map("table_occupied_until")
-  operatorId        Int?          @map("operator_id")
-  operator          User?         @relation(fields: [operatorId], references: [id])
+  status            OrderStatus @default(OPEN)
+  total             Decimal     @db.Decimal(10, 2)
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+  kitchenSentAt     DateTime?   @map("kitchen_sent_at")
+  kitchenReadyAt    DateTime?   @map("kitchen_ready_at")
+  finishedAt        DateTime?   @map("finished_at")
+  deliveredAt       DateTime?   @map("delivered_at")
+  tableOccupiedUtil DateTime?   @map("table_occupied_until")
+  operatorId        Int?        @map("operator_id")
+  operator          User?       @relation(fields: [operatorId], references: [id])
   items             OrderItem[]
 
   @@index([status])

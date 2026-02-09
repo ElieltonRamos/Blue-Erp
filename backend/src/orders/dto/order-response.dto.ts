@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { OrderLocation, OrderStatus, OrderType } from 'generated/prisma/client';
+import { OrderStatus, OrderType } from 'generated/prisma/client';
 
 export class OrderItemResponseDto {
   @ApiProperty({ description: 'ID do item', example: 1 })
@@ -55,10 +55,9 @@ export class OrderResponseDto {
 
   @ApiProperty({
     description: 'Local do pedido',
-    enum: OrderLocation,
     example: 'LOCAL_01',
   })
-  locationId: OrderLocation;
+  locationId: string;
 
   @ApiPropertyOptional({
     description: 'Nome do cliente',

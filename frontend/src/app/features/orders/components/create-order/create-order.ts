@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,6 +7,7 @@ import { NotificationService } from '../../../../shared/toastr/notification.serv
 import { OrderService } from '../../services/order.service';
 import { OrderItem, CreateOrderDto } from '../../types/order';
 import { FilterProductParams, Product } from '../../../products/types/product';
+import { ProductionLocationsService } from '../../../users/services/location.service';
 
 @Component({
   selector: 'app-create-order',
@@ -14,21 +15,23 @@ import { FilterProductParams, Product } from '../../../products/types/product';
   templateUrl: './create-order.html',
   standalone: true,
 })
-export class CreateOrder {
+export class CreateOrder implements OnInit {
   private orderService = inject(OrderService);
   private notification = inject(NotificationService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private locationsService = inject(ProductionLocationsService);
 
   searchCode: string = '';
   searchName: string = '';
   isSearching: boolean = false;
   searchResults: Product[] = [];
   orderItems: OrderItem[] = [];
+  productionLocations: { code: string; name: string }[] = [];
 
   formCreateOrder = new FormGroup({
     type: new FormControl<'DINE_IN' | 'DELIVERY'>('DINE_IN', [Validators.required]),
-    locationId: new FormControl<string>('LOCAL_01', [Validators.required]),
+    locationId: new FormControl<string>('', [Validators.required]),
     customerName: new FormControl<string>('', [Validators.required]),
     table: new FormControl<string>('', [Validators.required]),
     address: new FormControl<string>(''),
@@ -39,15 +42,54 @@ export class CreateOrder {
   }
 
   ngOnInit() {
+    this.loadProductionLocations();
+    this.setupTypeChangeListener();
+  }
+
+  /**
+   * Carrega locais de produção do backend
+   */
+  loadProductionLocations() {
+    this.locationsService.getAll().subscribe({
+      next: (locations) => {
+        this.productionLocations = locations.map((loc) => ({
+          code: loc.code,
+          name: loc.name,
+        }));
+
+        // Define o primeiro local como padrão após carregar
+        if (this.productionLocations.length > 0 && !this.formCreateOrder.get('locationId')?.value) {
+          const firstNonDelivery = this.productionLocations.find((loc) => loc.code !== 'DELIVERY');
+          if (firstNonDelivery) {
+            this.formCreateOrder.patchValue({ locationId: firstNonDelivery.code });
+          }
+        }
+        this.cdr.detectChanges()
+      },
+      error: (e) => {
+        this.notification.error(`Erro ao carregar locais: ${e.error?.message || e.message}`);
+      },
+    });
+  }
+
+  /**
+   * Configura listener para mudanças no tipo de pedido
+   */
+  private setupTypeChangeListener() {
     this.formCreateOrder.get('type')?.valueChanges.subscribe((type) => {
       if (type === 'DINE_IN') {
         this.formCreateOrder.get('address')?.clearValidators();
         this.formCreateOrder.get('table')?.setValidators([Validators.required]);
 
+        // Se estava em DELIVERY, volta para o primeiro local não-delivery
         if (this.formCreateOrder.get('locationId')?.value === 'DELIVERY') {
-          this.formCreateOrder.get('locationId')?.setValue('LOCAL_01');
+          const firstNonDelivery = this.productionLocations.find((loc) => loc.code !== 'DELIVERY');
+          if (firstNonDelivery) {
+            this.formCreateOrder.get('locationId')?.setValue(firstNonDelivery.code);
+          }
         }
       } else {
+        // DELIVERY
         this.formCreateOrder.get('address')?.setValidators([Validators.required]);
         this.formCreateOrder.get('table')?.clearValidators();
         this.formCreateOrder.get('locationId')?.setValue('DELIVERY');
@@ -55,6 +97,21 @@ export class CreateOrder {
       this.formCreateOrder.get('address')?.updateValueAndValidity();
       this.formCreateOrder.get('table')?.updateValueAndValidity();
     });
+  }
+
+  /**
+   * Retorna locais disponíveis baseado no tipo de pedido
+   */
+  get availableLocations() {
+    const type = this.formCreateOrder.get('type')?.value;
+
+    if (type === 'DELIVERY') {
+      // Apenas DELIVERY
+      return this.productionLocations.filter((loc) => loc.code === 'DELIVERY');
+    } else {
+      // Todos exceto DELIVERY
+      return this.productionLocations.filter((loc) => loc.code !== 'DELIVERY');
+    }
   }
 
   searchProduct() {
@@ -185,7 +242,7 @@ export class CreateOrder {
 
       const newOrder: CreateOrderDto = {
         type: formValue.type!,
-        locationId: formValue.locationId as any,
+        locationId: formValue.locationId!,
         customerName: formValue.customerName || undefined,
         items: this.orderItems.map((item) => ({
           productId: item.productId,
@@ -208,9 +265,11 @@ export class CreateOrder {
         next: (response) => {
           this.notification.success(`Pedido #${response.id} criado com sucesso!`);
 
+          // Reset com primeiro local não-delivery
+          const firstNonDelivery = this.productionLocations.find((loc) => loc.code !== 'DELIVERY');
           this.formCreateOrder.reset({
             type: 'DINE_IN',
-            locationId: 'LOCAL_01',
+            locationId: firstNonDelivery?.code || '',
           });
           this.orderItems = [];
           this.searchCode = '';

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   Injectable,
   NotFoundException,
@@ -17,7 +16,13 @@ export class ProductionService {
    */
   async findByLocation(productionLocation: string) {
     const productions = await this.prisma.client.orderProduction.findMany({
-      where: { productionLocation },
+      where: {
+        productionLocation,
+        status: {
+          not: ProductionStatus.CANCELED, // Não mostrar canceladas
+        },
+        deliveredAt: null, // Não mostrar entregues
+      },
       include: {
         orderItem: {
           include: {
@@ -79,7 +84,6 @@ export class ProductionService {
       },
     }));
   }
-
   /**
    * Listar todas produções com filtros
    */

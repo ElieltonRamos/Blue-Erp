@@ -153,7 +153,7 @@
         >
           <option value="" disabled selected>Selecione o local</option>
           <option *ngFor="let location of productionLocationOptions" [value]="location">
-            {{ location }}
+            {{ location.name }}
           </option>
         </select>
         @if (

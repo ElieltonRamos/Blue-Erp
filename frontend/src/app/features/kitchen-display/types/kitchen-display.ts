@@ -1,5 +1,9 @@
-// types/kitchen.types.ts
-// Tipos centralizados para o sistema de cozinha
+export enum ProductionStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELED = 'CANCELED',
+}
 
 export interface Recipe {
   title: string;
@@ -9,32 +13,47 @@ export interface Recipe {
 }
 
 export interface KitchenOrderItem {
-  id: string;
-  productId: string;
+  id: number;
+  productId: number;
   name: string;
+  code: string;
   quantity: number;
   notes?: string;
   recipe?: Recipe;
+  // Dados da produção
+  productionId: number;
+  productionStatus: ProductionStatus;
+  pendingAt: Date;
+  startedAt?: Date | null;
+  completedAt?: Date | null;
+  pendingDuration?: number | null;
+  inProgressDuration?: number | null;
+  totalDuration?: number | null;
 }
 
-export type KitchenOrderStatus = 'pending' | 'preparing' | 'ready' | 'delivered';
+export type KitchenOrderStatus = 'pending' | 'preparing' | 'ready';
 
 export interface KitchenOrder {
-  id: string;
+  // Dados do pedido
+  orderId: number;
   orderNumber: string;
   table?: string;
   type: 'dine_in' | 'delivery';
   customerName?: string;
+  address?: string;
+  kitchen: string; // LOCAL_01, LOCAL_02, LOCAL_03, DELIVERY
+
+  // Items desta cozinha
   items: KitchenOrderItem[];
-  kitchen?: string;
+
+  // Status calculado (baseado nos items)
   status: KitchenOrderStatus;
+
+  // Timestamps
   createdAt: string;
-  startedAt?: string;
-  readyAt?: string;
-  deliveredAt?: string;
+  kitchenSentAt: string;
 }
 
-export interface UpdateKitchenOrderStatusDto {
-  status: KitchenOrderStatus;
-  timestamp?: string;
+export interface KitchenDisplayFilters {
+  productionLocation?: string; // LOCAL_01, LOCAL_02, etc
 }

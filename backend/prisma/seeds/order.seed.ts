@@ -27,7 +27,8 @@ export async function seedOrders(
             productId: products.hamburger.id,
             productions: {
               create: {
-                productionLocation: 'LOCAL_01',
+                productionLocation:
+                  products.hamburger.productionLocation || 'LOCAL_01',
                 status: 'IN_PROGRESS',
                 quantityRequested: 2,
                 quantityProduced: 1,
@@ -43,6 +44,7 @@ export async function seedOrders(
             unitPrice: 6.0,
             total: 6.0,
             productId: products.cocaCola.id,
+            // Coca-Cola é RESALE, não cria production
           },
         ],
       },
@@ -75,7 +77,8 @@ export async function seedOrders(
             productId: products.frangoCatupiry.id,
             productions: {
               create: {
-                productionLocation: 'LOCAL_01',
+                productionLocation:
+                  products.frangoCatupiry.productionLocation || 'LOCAL_01',
                 status: 'COMPLETED',
                 quantityRequested: 2,
                 quantityProduced: 2,
@@ -96,7 +99,8 @@ export async function seedOrders(
             productId: products.pudim.id,
             productions: {
               create: {
-                productionLocation: 'LOCAL_01',
+                productionLocation:
+                  products.pudim.productionLocation || 'LOCAL_01',
                 status: 'COMPLETED',
                 quantityRequested: 1,
                 quantityProduced: 1,
@@ -116,7 +120,7 @@ export async function seedOrders(
   const order3 = await prisma.order.create({
     data: {
       type: 'DINE_IN',
-      locationId: 'LOCAL_02',
+      locationId: 'LOCAL_01',
       customerName: 'Mesa 3',
       table: '3',
       status: 'OPEN',
@@ -132,6 +136,7 @@ export async function seedOrders(
             unitPrice: 3.5,
             total: 3.5,
             productId: products.aguaMineral.id,
+            // Água é RESALE, não cria production
           },
           {
             code: products.pudim.code,
@@ -142,7 +147,8 @@ export async function seedOrders(
             productId: products.pudim.id,
             productions: {
               create: {
-                productionLocation: 'LOCAL_01',
+                productionLocation:
+                  products.pudim.productionLocation || 'LOCAL_01',
                 status: 'PENDING',
                 quantityRequested: 1,
                 quantityProduced: 0,

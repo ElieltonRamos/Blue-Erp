@@ -94,8 +94,8 @@
               "
             >
               <option [value]="null">Nenhum</option>
-              <option *ngFor="let location of productionLocationOptions" [value]="location">
-                {{ location }}
+              <option *ngFor="let location of productionLocationOptions" [value]="location.code">
+                {{ location.name }}
               </option>
             </select>
             <p class="text-gray-400 text-xs mt-1">Onde este produto é preparado/produzido</p>

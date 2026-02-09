@@ -1,10 +1,11 @@
-import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { ProductService } from '../../services/product.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Product, productionLocationOptions, UpdateProductDTO } from '../../types/product';
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
+import { ProductionLocationsService } from '../../../users/services/location.service';
 
 @Component({
   selector: 'app-modal-update-basic-product',
@@ -14,13 +15,15 @@ import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 export class ModalUpdateBasicProduct {
   private notification = inject(NotificationService);
   private productService = inject(ProductService);
+  private locationsService = inject(ProductionLocationsService);
+    private cdr = inject(ChangeDetectorRef);
 
   @Input() product!: Product;
   @Output() closeModal = new EventEmitter<void>();
   @Output() productUpdated = new EventEmitter<Product>();
 
   editableProductType: 'MANUFACTURED' | 'RESALE' = 'RESALE';
-  productionLocationOptions = productionLocationOptions;
+  productionLocationOptions: { code: string; name: string }[] = [];
 
   unitOptions = ['UN', 'KG', 'LT', 'MT', 'CX', 'ML', 'GR', 'DZ'];
 
@@ -47,11 +50,28 @@ export class ModalUpdateBasicProduct {
 
   ngOnInit() {
     this.editableProductType = this.product.productType as 'MANUFACTURED' | 'RESALE';
-
+    this.loadProductionLocations();
     // Garante valor default
     if (this.product.extraCosts == null) {
       this.product.extraCosts = 0;
     }
+  }
+
+  loadProductionLocations() {
+    this.locationsService.getAll().subscribe({
+      next: (locations) => {
+        this.productionLocationOptions = locations.map((loc) => ({
+          code: loc.code,
+          name: loc.name,
+        }));
+        this.cdr.detectChanges();
+      },
+      error: (e) => {
+        this.notification.error(
+          `Erro ao carregar locais de produção: ${e.error?.message || e.message}`,
+        );
+      },
+    });
   }
 
   async onProductTypeChange() {
@@ -85,7 +105,7 @@ export class ModalUpdateBasicProduct {
       origin: this.product.origin,
       quantity: this.product.quantity,
       minStock: this.product.minStock || undefined,
-      productionLocation: this.product.productionLocation || undefined,
+      productionLocation: this.product.productionLocation,
       active: this.product.active,
       productType: this.editableProductType,
     };

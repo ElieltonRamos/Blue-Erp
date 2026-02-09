@@ -1,5 +1,4 @@
 import {
-  IsEnum,
   IsString,
   IsOptional,
   IsArray,
@@ -11,7 +10,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { OrderLocation, OrderType } from 'generated/prisma/client';
+import { OrderType } from 'generated/prisma/client';
 
 export class CreateOrderItemDto {
   @ApiProperty({ description: 'ID do produto', example: 1 })
@@ -51,16 +50,17 @@ export class CreateOrderDto {
     enum: OrderType,
     example: 'DINE_IN',
   })
-  @IsEnum(OrderType)
+  @IsString()
+  @IsNotEmpty()
   type: OrderType;
 
   @ApiProperty({
-    description: 'Local do pedido',
-    enum: OrderLocation,
+    description: 'Local do pedido (código)',
     example: 'LOCAL_01',
   })
-  @IsEnum(OrderLocation)
-  locationId: OrderLocation;
+  @IsString()
+  @IsNotEmpty()
+  locationId: string;
 
   @ApiPropertyOptional({
     description: 'Nome do cliente',

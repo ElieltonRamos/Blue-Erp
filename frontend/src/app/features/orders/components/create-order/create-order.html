@@ -29,10 +29,9 @@
         required
         class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold"
       >
-        <option value="LOCAL_01">Local 01</option>
-        <option value="LOCAL_02">Local 02</option>
-        <option value="LOCAL_03">Local 03</option>
-        <option value="DELIVERY">Delivery</option>
+        @for (location of availableLocations; track location.code) {
+          <option [value]="location.code">{{ location.name }}</option>
+        }
       </select>
       @if (
         formCreateOrder.get('locationId')?.touched && formCreateOrder.get('locationId')?.invalid

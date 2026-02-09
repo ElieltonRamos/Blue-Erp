@@ -1,0 +1,168 @@
+<div class="max-w-7xl mx-auto p-6">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-white mb-2">Locais de Produção</h1>
+    <p class="text-gray-400">Gerencie os locais de produção da sua cozinha</p>
+  </div>
+
+  <!-- Formulário de Criação -->
+  <div class="bg-[#1d2a3c] p-6 rounded-lg mb-8">
+    <h2 class="text-xl font-bold text-white mb-6">Adicionar Novo Local</h2>
+
+    <form [formGroup]="formCreate" (ngSubmit)="onSubmit()" class="space-y-6">
+      <!-- Inputs lado a lado -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label for="code" class="block text-white font-bold mb-2"> Código * </label>
+          <input
+            id="code"
+            formControlName="code"
+            type="text"
+            required
+            placeholder="Ex: LOCAL_04"
+            class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+          />
+          @if (formCreate.get('code')?.touched && formCreate.get('code')?.invalid) {
+            <p class="text-red-400 text-sm mt-1">Código é obrigatório (máx. 50 caracteres)</p>
+          }
+        </div>
+
+        <div>
+          <label for="name" class="block text-white font-bold mb-2"> Nome * </label>
+          <input
+            id="name"
+            formControlName="name"
+            type="text"
+            required
+            placeholder="Ex: Cozinha VIP"
+            class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+          />
+          @if (formCreate.get('name')?.touched && formCreate.get('name')?.invalid) {
+            <p class="text-red-400 text-sm mt-1">Nome é obrigatório (máx. 100 caracteres)</p>
+          }
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label for="description" class="block text-white font-bold mb-2"> Descrição </label>
+          <input
+            id="description"
+            formControlName="description"
+            type="text"
+            placeholder="Descrição opcional"
+            class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+          />
+        </div>
+
+        <div>
+          <label for="order" class="block text-white font-bold mb-2"> Ordem de Exibição * </label>
+          <input
+            id="order"
+            formControlName="order"
+            type="number"
+            required
+            min="0"
+            placeholder="0"
+            class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+          />
+          @if (formCreate.get('order')?.touched && formCreate.get('order')?.invalid) {
+            <p class="text-red-400 text-sm mt-1">Ordem deve ser maior ou igual a 0</p>
+          }
+        </div>
+      </div>
+
+      <!-- Botão -->
+      <div class="flex justify-center pt-4">
+        <button
+          type="submit"
+          [disabled]="formCreate.invalid"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Adicionar Local
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Listagem -->
+  <div class="bg-[#1d2a3c] p-6 rounded-lg">
+    <h2 class="text-xl font-bold text-white mb-6">Locais Cadastrados</h2>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-white text-left">
+        <thead class="bg-[#243447] text-sky-400 uppercase text-sm">
+          <tr>
+            <th class="py-3 px-4">Ordem</th>
+            <th class="py-3 px-4">Código</th>
+            <th class="py-3 px-4">Nome</th>
+            <th class="py-3 px-4">Descrição</th>
+            <th class="py-3 px-4">Status</th>
+            <th class="py-3 px-4">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-700">
+          @for (location of locations; track location.id) {
+            <tr class="hover:bg-[#243447] transition">
+              <td class="py-3 px-4">
+                <span class="font-bold text-sky-400">{{ location.order }}</span>
+              </td>
+              <td class="py-3 px-4">
+                <code class="bg-gray-700 px-2 py-1 rounded text-xs">{{ location.code }}</code>
+              </td>
+              <td class="py-3 px-4 font-semibold">{{ location.name }}</td>
+              <td class="py-3 px-4 text-gray-400">
+                {{ location.description || '-' }}
+              </td>
+              <td class="py-3 px-4">
+                <span
+                  class="px-2 py-1 rounded text-xs font-semibold"
+                  [class.bg-green-600]="location.active"
+                  [class.bg-red-600]="!location.active"
+                >
+                  {{ location.active ? 'Ativo' : 'Inativo' }}
+                </span>
+              </td>
+              <td class="py-3 px-4 space-x-2">
+                <button
+                  (click)="openModalEdit(location)"
+                  class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm"
+                >
+                  Editar
+                </button>
+                <button
+                  (click)="toggleActive(location)"
+                  class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                >
+                  {{ location.active ? 'Desativar' : 'Ativar' }}
+                </button>
+                <button
+                  (click)="deleteLocation(location)"
+                  class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+                >
+                  Excluir
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="py-8 px-4 text-center text-gray-400">
+                Nenhum local cadastrado
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal de Edição -->
+  <app-modal-edit-entity
+    [title]="'Editar Local de Produção'"
+    [show]="showModalEdit"
+    [entity]="editLocation"
+    [fields]="locationFields"
+    (close)="closeModalEdit()"
+    (save)="onSave($event)"
+  />
+</div>

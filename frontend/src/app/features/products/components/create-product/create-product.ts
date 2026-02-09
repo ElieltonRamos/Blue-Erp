@@ -1,21 +1,25 @@
-import { Component, inject, ViewChild } from '@angular/core';
+import { Component, inject, ViewChild, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
 import { CreateProductDTO, ProductComposition, Unit } from '../../types/product';
 import { CommonModule } from '@angular/common';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { ProductCompositionComponent } from '../product-composition/product-composition';
+import { ProductionLocationsService } from '../../../users/services/location.service';
 
 @Component({
   selector: 'app-create-product',
+  standalone: true,
   imports: [ReactiveFormsModule, CommonModule, ProductCompositionComponent],
   templateUrl: './create-product.html',
 })
-export class CreateProduct {
+export class CreateProduct implements OnInit {
   @ViewChild(ProductCompositionComponent) compositionComponent!: ProductCompositionComponent;
 
+  private cdr = inject(ChangeDetectorRef);
   private notification = inject(NotificationService);
   private productService = inject(ProductService);
+  private locationsService = inject(ProductionLocationsService);
 
   formCreateProduct = new FormGroup({
     name: new FormControl<string>('', [Validators.required]),
@@ -29,11 +33,7 @@ export class CreateProduct {
     cest: new FormControl<string>('', [Validators.pattern(/^\d{7}$/)]),
     csosn: new FormControl<string>('102', [Validators.required]),
     unit: new FormControl<Unit>(Unit.UN, [Validators.required]),
-    origin: new FormControl<number>(0, [
-      Validators.required,
-      Validators.min(0),
-      Validators.max(8),
-    ]),
+    origin: new FormControl<number>(0, [Validators.required, Validators.min(0), Validators.max(8)]),
     quantity: new FormControl<number | null>(null, [Validators.required, Validators.min(0)]),
     active: new FormControl<boolean>(true, [Validators.required]),
   });
@@ -44,19 +44,8 @@ export class CreateProduct {
   // Expor o enum Unit para o template
   unitOptions = Object.values(Unit);
 
-  // Opções de local de produção
-  productionLocationOptions = [
-    'Cozinha Principal',
-    'Cozinha Secundária',
-    'Bar',
-    'Confeitaria',
-    'Pizzaria',
-    'Grill',
-    'Forno',
-    'Chapa',
-    'Fritura',
-    'Montagem',
-  ];
+  // Opções de local de produção (carregadas dinamicamente)
+  productionLocationOptions: { code: string; name: string }[] = [];
 
   // Opções de CSOSN válidas para NFC-e
   csosnOptions = [
@@ -88,8 +77,29 @@ export class CreateProduct {
   ];
 
   ngOnInit() {
+    this.loadProductionLocations();
     this.getSugestionCode();
     this.setupProductTypeListener();
+  }
+
+  /**
+   * Carrega locais de produção do backend
+   */
+  loadProductionLocations() {
+    this.locationsService.getAll().subscribe({
+      next: (locations) => {
+        this.productionLocationOptions = locations.map((loc) => ({
+          code: loc.code,
+          name: loc.name,
+        }));
+        this.cdr.detectChanges(); 
+      },
+      error: (e) => {
+        this.notification.error(
+          `Erro ao carregar locais de produção: ${e.error?.message || e.message}`,
+        );
+      },
+    });
   }
 
   /**
@@ -270,6 +280,7 @@ export class CreateProduct {
       },
     });
   }
+
   /**
    * Obtém sugestão de código do produto
    */

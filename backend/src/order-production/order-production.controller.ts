@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   Controller,
   Get,
@@ -7,10 +6,15 @@ import {
   Param,
   Query,
   ParseIntPipe,
+  Body,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ProductionStatus } from 'generated/prisma/client';
 import { ProductionService } from './order-production.service';
+
+class BatchProductionDto {
+  productionIds: number[];
+}
 
 @ApiTags('Production')
 @Controller('production')
@@ -68,5 +72,68 @@ export class ProductionController {
   @ApiParam({ name: 'id', description: 'ID da produção' })
   cancelProduction(@Param('id', ParseIntPipe) id: number) {
     return this.productionService.cancelProduction(id);
+  }
+
+  // BATCH ENDPOINTS
+  @Post('batch/start')
+  @ApiOperation({ summary: 'Iniciar múltiplas produções' })
+  async batchStart(@Body() dto: BatchProductionDto) {
+    const results = await Promise.all(
+      dto.productionIds.map((id) => this.productionService.startProduction(id)),
+    );
+
+    return {
+      success: true,
+      count: results.length,
+      message: `${results.length} produções iniciadas`,
+    };
+  }
+
+  @Post('batch/complete')
+  @ApiOperation({ summary: 'Completar múltiplas produções' })
+  async batchComplete(@Body() dto: BatchProductionDto) {
+    const results = await Promise.all(
+      dto.productionIds.map((id) =>
+        this.productionService.completeProduction(id),
+      ),
+    );
+
+    return {
+      success: true,
+      count: results.length,
+      message: `${results.length} produções completadas`,
+    };
+  }
+
+  @Post('batch/deliver')
+  @ApiOperation({ summary: 'Entregar múltiplas produções' })
+  async batchDeliver(@Body() dto: BatchProductionDto) {
+    const results = await Promise.all(
+      dto.productionIds.map((id) =>
+        this.productionService.deliverProduction(id),
+      ),
+    );
+
+    return {
+      success: true,
+      count: results.length,
+      message: `${results.length} produções entregues`,
+    };
+  }
+
+  @Post('batch/cancel')
+  @ApiOperation({ summary: 'Cancelar múltiplas produções' })
+  async batchCancel(@Body() dto: BatchProductionDto) {
+    const results = await Promise.all(
+      dto.productionIds.map((id) =>
+        this.productionService.cancelProduction(id),
+      ),
+    );
+
+    return {
+      success: true,
+      count: results.length,
+      message: `${results.length} produções canceladas`,
+    };
   }
 }

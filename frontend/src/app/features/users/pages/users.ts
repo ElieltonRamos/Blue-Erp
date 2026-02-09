@@ -2,10 +2,11 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CreateUser } from "../components/create-user/create-user";
 import { ListUsers } from "../components/list-users/list-users";
+import { ManageProductionLocations } from "../components/manage-production-locations/manage-production-locations";
 
 @Component({
   selector: 'app-users',
-  imports: [CreateUser, ListUsers],
+  imports: [CreateUser, ListUsers, ManageProductionLocations],
   templateUrl: './users.html',
 })
 export class Users {

@@ -17,7 +17,7 @@
         class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
       />
       @if (formCreateUser.get('username')?.touched && formCreateUser.get('username')?.invalid) {
-        <p class="msg-error">Digite o usuario!</p>
+        <p class="msg-error">Digite o usuário!</p>
       }
     </div>
     <div>
@@ -58,7 +58,7 @@
           formControlName="role"
           class="w-8 h-8 accent-blue-500"
         />
-        Garcom
+        Garçom
       </label>
       <label class="flex items-center gap-3 text-base">
         <input
@@ -76,40 +76,22 @@
     }
   </div>
 
-  <!-- Local de Trabalho (NOVA SEÇÃO) -->
+  <!-- Local de Trabalho (DINÂMICO) -->
   <div class="text-white font-bold">
     <label class="block mb-2">Local de Trabalho: </label>
-    <div class="flex gap-8">
-      <label class="flex items-center gap-3 text-base">
-        <input
-          type="radio"
-          name="workplace"
-          value="local1"
-          formControlName="workplace"
-          class="w-8 h-8 accent-blue-500"
-        />
-        Local 1
-      </label>
-      <label class="flex items-center gap-3 text-base">
-        <input
-          type="radio"
-          name="workplace"
-          value="local2"
-          formControlName="workplace"
-          class="w-8 h-8 accent-blue-500"
-        />
-        Local 2
-      </label>
-      <label class="flex items-center gap-3 text-base">
-        <input
-          type="radio"
-          name="workplace"
-          value="local3"
-          formControlName="workplace"
-          class="w-8 h-8 accent-blue-500"
-        />
-        Local 3
-      </label>
+    <div class="flex gap-8 flex-wrap">
+      @for (location of productionLocations; track location.code) {
+        <label class="flex items-center gap-3 text-base">
+          <input
+            type="radio"
+            name="workplace"
+            [value]="location.code"
+            formControlName="workplace"
+            class="w-8 h-8 accent-blue-500"
+          />
+          {{ location.name }}
+        </label>
+      }
     </div>
     @if (formCreateUser.get('workplace')?.touched && formCreateUser.get('workplace')?.invalid) {
       <p class="msg-error">Escolha o local de trabalho!</p>

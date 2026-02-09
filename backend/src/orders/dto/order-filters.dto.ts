@@ -1,7 +1,7 @@
 import { IsEnum, IsString, IsOptional, IsInt, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
-import { OrderLocation, OrderStatus, OrderType } from 'generated/prisma/client';
+import { OrderStatus, OrderType } from 'generated/prisma/client';
 
 export class OrderFiltersDto {
   @ApiPropertyOptional({
@@ -29,12 +29,10 @@ export class OrderFiltersDto {
 
   @ApiPropertyOptional({
     description: 'Filtrar por local',
-    enum: OrderLocation,
     example: 'LOCAL_01',
   })
-  @IsEnum(OrderLocation)
   @IsOptional()
-  location?: OrderLocation;
+  location?: string;
 
   @ApiPropertyOptional({
     description: 'Filtrar por tipo',
