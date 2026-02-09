@@ -85,7 +85,7 @@ export class KitchenDisplay implements OnInit, OnDestroy {
     this.locationsService.getAll().subscribe({
       next: (locations) => {
         // Mapeia locais para nomes amigáveis
-        this.kitchenOptions = ['Todas as cozinhas', ...locations.map((loc) => loc.name)];
+        this.kitchenOptions = ['Todas as cozinhas', ...locations.map((loc) => loc.code)];
 
         // Atualiza opções do modal
         this.kitchenConfigFields[0].options = this.kitchenOptions;

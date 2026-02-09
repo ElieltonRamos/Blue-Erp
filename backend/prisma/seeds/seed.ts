@@ -1,16 +1,15 @@
 import 'dotenv/config';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import { PrismaClient } from '../../generated/prisma/client';
-import { seedCompany } from './company.seed';
-import { seedUsers } from './user.seed';
-import { seedIbpt } from './ibpt.seed';
-import { seedCategories } from './category.seed';
-import { seedPrimaryMaterials } from './primary-material.seed';
-import { seedClients } from './client.seed';
-import { seedExpenses } from './expense.seed';
-import { seedOrders } from './order.seed';
-import { seedSales } from './sale.seed';
-import { seedProducts } from './product.seed';
+import { seedCompany } from './company-seed';
+import { seedUsers } from './user-seed';
+import { seedIbpt } from './ibpt-seed';
+import { seedCategories } from './category-seed';
+import { seedProductionLocations } from './production-location-seed';
+import { seedPrimaryMaterials } from './primary-material-seed';
+import { seedClients } from './client-seed';
+import { seedExpenses } from './expense-seed';
+import { seedProducts } from './product-seed';
 
 const adapter = new PrismaMariaDb({
   host: process.env.DATABASE_HOST,
@@ -26,15 +25,14 @@ async function main() {
   console.log('🌱 Iniciando seed...');
 
   await seedCompany(prisma);
-  const users = await seedUsers(prisma);
+  await seedUsers(prisma);
   await seedIbpt(prisma);
   const categories = await seedCategories(prisma);
+  const locations = await seedProductionLocations(prisma);
   const materials = await seedPrimaryMaterials(prisma);
-  const products = await seedProducts(prisma, categories, materials);
-  const clients = await seedClients(prisma);
+  await seedProducts(prisma, categories, materials, locations);
+  await seedClients(prisma);
   await seedExpenses(prisma);
-  await seedOrders(prisma, users, products);
-  await seedSales(prisma, users, clients, products);
 
   console.log('✅ Seed concluído');
 }

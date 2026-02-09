@@ -9,9 +9,9 @@ export async function seedClients(prisma: PrismaClient) {
       phone: '11987654321',
       address: 'Rua das Acácias, 123 - Centro - São Paulo/SP',
       cpf: '12345678901',
-      active: true
-    }
-  })
+      active: true,
+    },
+  });
 
   const maria = await prisma.client.upsert({
     where: { cpf: '98765432109' },
@@ -21,19 +21,19 @@ export async function seedClients(prisma: PrismaClient) {
       phone: '11912345678',
       address: 'Av. Paulista, 1000 - Bela Vista - São Paulo/SP',
       cpf: '98765432109',
-      active: true
-    }
-  })
+      active: true,
+    },
+  });
 
   const consumidorFinal = await prisma.client.upsert({
     where: { id: 1 },
     update: {},
     create: {
       name: 'Consumidor Final',
-      active: true
-    }
-  })
-  
-  console.log('✓ Clients seed')
-  return { joao, maria, consumidorFinal }
+      active: true,
+    },
+  });
+
+  console.log('✓ Clients seed');
+  return { joao, maria, consumidorFinal };
 }
