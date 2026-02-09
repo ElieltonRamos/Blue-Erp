@@ -133,7 +133,7 @@
           @for (sale of listSales; track sale.id) {
             <tr class="hover:bg-[#243447] transition">
               <td class="py-3 px-4">{{ sale.id }}</td>
-              <td class="py-3 px-4">{{ sale.formattedDate }}</td>
+              <td class="py-3 px-4">{{ sale.date }}</td>
               <td class="py-3 px-4">{{ sale.client?.name }}</td>
               <td class="py-3 px-4">{{ sale.paymentMethod }}</td>
               <td class="py-3 px-4">{{ sale.operator?.username }}</td>
