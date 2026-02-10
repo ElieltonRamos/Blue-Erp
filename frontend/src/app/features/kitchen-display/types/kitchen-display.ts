@@ -23,12 +23,19 @@ export interface KitchenOrderItem {
   // Dados da produção
   productionId: number;
   productionStatus: ProductionStatus;
+  productionLocation: string;
   pendingAt: Date;
   startedAt?: Date | null;
   completedAt?: Date | null;
   pendingDuration?: number | null;
   inProgressDuration?: number | null;
   totalDuration?: number | null;
+  orderId: number;
+  orderNumber: string;
+  table: string;
+  customerName: string;
+  type: string;
+  kitchen: string;
 }
 
 export type KitchenOrderStatus = 'pending' | 'preparing' | 'ready';

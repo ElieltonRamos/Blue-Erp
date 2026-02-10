@@ -1,3 +1,4 @@
+// src/production/order-production.controller.ts (atualizado)
 import {
   Controller,
   Get,
@@ -11,15 +12,106 @@ import {
 import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ProductionStatus } from 'generated/prisma/client';
 import { ProductionService } from './order-production.service';
-
-class BatchProductionDto {
-  productionIds: number[];
-}
+import { BatchProductionDto } from './dto/batch-production.dto';
 
 @ApiTags('Production')
 @Controller('production')
 export class ProductionController {
   constructor(private readonly productionService: ProductionService) {}
+
+  @Post('batch/start')
+  @ApiOperation({ summary: 'Iniciar múltiplas produções' })
+  async batchStart(@Body() dto: BatchProductionDto) {
+    const results = await Promise.allSettled(
+      dto.productionIds.map((id) => this.productionService.startProduction(id)),
+    );
+
+    const succeeded = results.filter((r) => r.status === 'fulfilled');
+    const failed = results.filter((r) => r.status === 'rejected');
+
+    return {
+      success: failed.length === 0,
+      total: results.length,
+      succeeded: succeeded.length,
+      failed: failed.length,
+      message:
+        failed.length === 0
+          ? `${succeeded.length} produções iniciadas`
+          : `${succeeded.length} iniciadas, ${failed.length} falharam`,
+    };
+  }
+
+  @Post('batch/complete')
+  @ApiOperation({ summary: 'Completar múltiplas produções' })
+  async batchComplete(@Body() dto: BatchProductionDto) {
+    const results = await Promise.allSettled(
+      dto.productionIds.map((id) =>
+        this.productionService.completeProduction(id),
+      ),
+    );
+
+    const succeeded = results.filter((r) => r.status === 'fulfilled');
+    const failed = results.filter((r) => r.status === 'rejected');
+
+    return {
+      success: failed.length === 0,
+      total: results.length,
+      succeeded: succeeded.length,
+      failed: failed.length,
+      message:
+        failed.length === 0
+          ? `${succeeded.length} produções completadas`
+          : `${succeeded.length} completadas, ${failed.length} falharam`,
+    };
+  }
+
+  @Post('batch/deliver')
+  @ApiOperation({ summary: 'Entregar múltiplas produções' })
+  async batchDeliver(@Body() dto: BatchProductionDto) {
+    const results = await Promise.allSettled(
+      dto.productionIds.map((id) =>
+        this.productionService.deliverProduction(id),
+      ),
+    );
+
+    const succeeded = results.filter((r) => r.status === 'fulfilled');
+    const failed = results.filter((r) => r.status === 'rejected');
+
+    return {
+      success: failed.length === 0,
+      total: results.length,
+      succeeded: succeeded.length,
+      failed: failed.length,
+      message:
+        failed.length === 0
+          ? `${succeeded.length} produções entregues`
+          : `${succeeded.length} entregues, ${failed.length} falharam`,
+    };
+  }
+
+  @Post('batch/cancel')
+  @ApiOperation({ summary: 'Cancelar múltiplas produções' })
+  async batchCancel(@Body() dto: BatchProductionDto) {
+    const results = await Promise.allSettled(
+      dto.productionIds.map((id) =>
+        this.productionService.cancelProduction(id),
+      ),
+    );
+
+    const succeeded = results.filter((r) => r.status === 'fulfilled');
+    const failed = results.filter((r) => r.status === 'rejected');
+
+    return {
+      success: failed.length === 0,
+      total: results.length,
+      succeeded: succeeded.length,
+      failed: failed.length,
+      message:
+        failed.length === 0
+          ? `${succeeded.length} produções canceladas`
+          : `${succeeded.length} canceladas, ${failed.length} falharam`,
+    };
+  }
 
   @Get()
   @ApiOperation({ summary: 'Listar todas produções com filtros opcionais' })
@@ -72,68 +164,5 @@ export class ProductionController {
   @ApiParam({ name: 'id', description: 'ID da produção' })
   cancelProduction(@Param('id', ParseIntPipe) id: number) {
     return this.productionService.cancelProduction(id);
-  }
-
-  // BATCH ENDPOINTS
-  @Post('batch/start')
-  @ApiOperation({ summary: 'Iniciar múltiplas produções' })
-  async batchStart(@Body() dto: BatchProductionDto) {
-    const results = await Promise.all(
-      dto.productionIds.map((id) => this.productionService.startProduction(id)),
-    );
-
-    return {
-      success: true,
-      count: results.length,
-      message: `${results.length} produções iniciadas`,
-    };
-  }
-
-  @Post('batch/complete')
-  @ApiOperation({ summary: 'Completar múltiplas produções' })
-  async batchComplete(@Body() dto: BatchProductionDto) {
-    const results = await Promise.all(
-      dto.productionIds.map((id) =>
-        this.productionService.completeProduction(id),
-      ),
-    );
-
-    return {
-      success: true,
-      count: results.length,
-      message: `${results.length} produções completadas`,
-    };
-  }
-
-  @Post('batch/deliver')
-  @ApiOperation({ summary: 'Entregar múltiplas produções' })
-  async batchDeliver(@Body() dto: BatchProductionDto) {
-    const results = await Promise.all(
-      dto.productionIds.map((id) =>
-        this.productionService.deliverProduction(id),
-      ),
-    );
-
-    return {
-      success: true,
-      count: results.length,
-      message: `${results.length} produções entregues`,
-    };
-  }
-
-  @Post('batch/cancel')
-  @ApiOperation({ summary: 'Cancelar múltiplas produções' })
-  async batchCancel(@Body() dto: BatchProductionDto) {
-    const results = await Promise.all(
-      dto.productionIds.map((id) =>
-        this.productionService.cancelProduction(id),
-      ),
-    );
-
-    return {
-      success: true,
-      count: results.length,
-      message: `${results.length} produções canceladas`,
-    };
   }
 }

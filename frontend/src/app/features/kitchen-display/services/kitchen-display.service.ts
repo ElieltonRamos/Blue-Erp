@@ -11,77 +11,60 @@ export class KitchenService {
   private readonly apiUrl = `${environment.apiUrl}/production`;
   private client = inject(HttpClient);
 
+  // Armazenar mapeamento de locations
+  private locationMap: Map<string, string> = new Map();
+
+  /**
+   * Define o mapeamento de locations (name -> code)
+   */
+  setLocationMap(locations: Array<{ name: string; code: string }>): void {
+    this.locationMap.clear();
+    locations.forEach((loc) => {
+      this.locationMap.set(loc.name, loc.code);
+    });
+  }
+
   /**
    * Busca todas as produções e agrupa por pedido
    */
-  getKitchenOrders(productionLocation?: string): Observable<KitchenOrder[]> {
+  getKitchenOrders(productionLocation?: string): Observable<KitchenOrderItem[]> {
     let url = this.apiUrl;
 
     if (productionLocation && productionLocation !== 'Todas as cozinhas') {
-      // Mapeia nome amigável para código do backend
-      const locationMap: Record<string, string> = {
-        'Cozinha 1': 'LOCAL_01',
-        'Cozinha 2': 'LOCAL_02',
-        'Cozinha 3': 'LOCAL_03',
-      };
-
-      const location = locationMap[productionLocation] || productionLocation;
+      const location = this.locationMap.get(productionLocation) || productionLocation;
       url = `${this.apiUrl}/location/${location}`;
     }
 
     return this.client
       .get<any[]>(url)
-      .pipe(map((productions) => this.groupProductionsByOrder(productions)));
+      .pipe(map((productions) => this.mapProductionsToItems(productions)));
   }
-
   /**
    * Agrupa produções por pedido
    */
-  private groupProductionsByOrder(productions: any[]): KitchenOrder[] {
-    const ordersMap = new Map<number, KitchenOrder>();
-
-    for (const prod of productions) {
-      const orderId = prod.orderItem.order.id;
-
-      if (!ordersMap.has(orderId)) {
-        // Criar novo pedido
-        ordersMap.set(orderId, {
-          orderId: orderId,
-          orderNumber: `#${orderId}`,
-          table: prod.orderItem.order.table,
-          type: prod.orderItem.order.type,
-          customerName: prod.orderItem.order.customerName,
-          kitchen: this.formatKitchenName(prod.productionLocation),
-          items: [],
-          status: 'pending',
-          createdAt: prod.pendingAt,
-          kitchenSentAt: prod.pendingAt,
-        });
-      }
-
-      // Adicionar item ao pedido
-      const order = ordersMap.get(orderId)!;
-      order.items.push({
-        id: prod.orderItem.id,
-        productId: prod.orderItem.product.id,
-        name: prod.orderItem.name,
-        code: prod.orderItem.code,
-        quantity: prod.orderItem.quantity || prod.quantityRequested,
-        productionId: prod.id,
-        productionStatus: prod.status,
-        pendingAt: prod.pendingAt,
-        startedAt: prod.startedAt,
-        completedAt: prod.completedAt,
-        pendingDuration: prod.pendingDuration,
-        inProgressDuration: prod.inProgressDuration,
-        totalDuration: prod.totalDuration,
-      });
-    }
-
-    // Calcular status do pedido baseado nos items
-    return Array.from(ordersMap.values()).map((order) => ({
-      ...order,
-      status: this.calculateOrderStatus(order.items),
+  private mapProductionsToItems(productions: any[]): KitchenOrderItem[] {
+    return productions.map((prod) => ({
+      id: prod.orderItem.id,
+      productId: prod.orderItem.product.id,
+      name: prod.orderItem.name,
+      code: prod.orderItem.code,
+      quantity: prod.orderItem.quantity || prod.quantityRequested,
+      productionId: prod.id,
+      productionStatus: prod.status,
+      productionLocation: prod.productionLocation,
+      pendingAt: prod.pendingAt,
+      startedAt: prod.startedAt,
+      completedAt: prod.completedAt,
+      pendingDuration: prod.pendingDuration,
+      inProgressDuration: prod.inProgressDuration,
+      totalDuration: prod.totalDuration,
+      // Dados do pedido
+      orderId: prod.orderItem.order.id,
+      orderNumber: `#${prod.orderItem.order.id}`,
+      table: prod.orderItem.order.table,
+      customerName: prod.orderItem.order.customerName,
+      type: prod.orderItem.order.type,
+      kitchen: this.formatKitchenName(prod.productionLocation),
     }));
   }
 
@@ -124,20 +107,31 @@ export class KitchenService {
   /**
    * Inicia preparo de todos os items de um pedido
    */
-  startPreparing(orderId: number, items: KitchenOrderItem[]): Observable<any> {
-    // Iniciar todos os items pendentes
-    const pendingItems = items.filter((item) => item.productionStatus === ProductionStatus.PENDING);
+  startPreparing(
+    orderId: number,
+    items: KitchenOrderItem[],
+    productionLocation?: string,
+  ): Observable<any> {
+    let pendingItems = items.filter((item) => item.productionStatus === ProductionStatus.PENDING);
 
-    // Usar forkJoin para fazer todas as requisições em paralelo
-    const requests = pendingItems.map((item) => this.startPreparingItem(item.productionId));
+    // Filtrar apenas itens da cozinha atual
+    if (productionLocation && productionLocation !== 'Todas as cozinhas') {
+      const backendLocation = this.locationMap.get(productionLocation) || productionLocation;
 
-    // Se não houver items pendentes, retornar observable vazio
-    if (requests.length === 0) {
+      pendingItems = pendingItems.filter((item) => item.productionLocation === backendLocation);
+    }
+
+    if (pendingItems.length === 0) {
       return new Observable((observer) => {
-        observer.next({ message: 'Nenhum item pendente para iniciar' });
+        observer.next({ message: 'Nenhum item pendente para iniciar nesta cozinha' });
         observer.complete();
       });
     }
+
+    console.log(
+      pendingItems.map((item) => item.productionId),
+      'itens pendentes',
+    );
 
     return this.client.post(`${this.apiUrl}/batch/start`, {
       productionIds: pendingItems.map((item) => item.productionId),

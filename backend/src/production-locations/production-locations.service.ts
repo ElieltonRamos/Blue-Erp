@@ -1,19 +1,21 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateProductionLocationDto } from './dto/create-production-location.dto';
 import { UpdateProductionLocationDto } from './dto/update-production-location.dto';
+import { ProductionLocation } from 'generated/prisma/browser';
 
 @Injectable()
 export class ProductionLocationsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createDto: CreateProductionLocationDto) {
-    // Validar se código já existe
+  async create(
+    createDto: CreateProductionLocationDto,
+  ): Promise<ProductionLocation> {
     const existing = await this.prisma.client.productionLocation.findUnique({
       where: { code: createDto.code },
     });
@@ -28,23 +30,37 @@ export class ProductionLocationsService {
       data: createDto,
     });
 
+    if (!location) {
+      throw new InternalServerErrorException('Erro ao criar local de produção');
+    }
+
     return location;
   }
 
-  findAll() {
-    return this.prisma.client.productionLocation.findMany({
-      where: { active: true },
-      orderBy: { order: 'asc' },
-    });
+  async findAll(): Promise<ProductionLocation[]> {
+    const locations: ProductionLocation[] =
+      await this.prisma.client.productionLocation.findMany({
+        where: { active: true },
+        orderBy: { order: 'asc' },
+      });
+
+    if (!locations) {
+      return [];
+    }
+
+    return locations;
   }
 
-  findAllIncludingInactive() {
-    return this.prisma.client.productionLocation.findMany({
-      orderBy: { order: 'asc' },
-    });
+  async findAllIncludingInactive(): Promise<ProductionLocation[]> {
+    const locations: ProductionLocation[] =
+      await this.prisma.client.productionLocation.findMany({
+        orderBy: { order: 'asc' },
+      });
+
+    return locations;
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<ProductionLocation> {
     const location = await this.prisma.client.productionLocation.findUnique({
       where: { id },
     });
@@ -56,7 +72,7 @@ export class ProductionLocationsService {
     return location;
   }
 
-  async findByCode(code: string) {
+  async findByCode(code: string): Promise<ProductionLocation> {
     const location = await this.prisma.client.productionLocation.findUnique({
       where: { code },
     });
@@ -70,10 +86,10 @@ export class ProductionLocationsService {
     return location;
   }
 
-  async update(id: number, updateDto: UpdateProductionLocationDto) {
-    await this.findOne(id); // Valida se existe
-
-    // Se está alterando o código, validar se não existe outro com esse código
+  async update(
+    id: number,
+    updateDto: UpdateProductionLocationDto,
+  ): Promise<ProductionLocation> {
     if (updateDto.code) {
       const existing = await this.prisma.client.productionLocation.findUnique({
         where: { code: updateDto.code },
@@ -86,25 +102,33 @@ export class ProductionLocationsService {
       }
     }
 
-    const updated = await this.prisma.client.productionLocation.update({
-      where: { id },
-      data: updateDto,
-    });
+    try {
+      const updated = await this.prisma.client.productionLocation.update({
+        where: { id },
+        data: updateDto,
+      });
 
-    return updated;
+      if (!updated) {
+        throw new NotFoundException(`Local de produção ${id} não encontrado`);
+      }
+
+      return updated;
+    } catch {
+      throw new NotFoundException(`Local de produção ${id} não encontrado`);
+    }
   }
 
-  async remove(id: number) {
-    await this.findOne(id); // Valida se existe
+  async remove(id: number): Promise<{ message: string }> {
+    const location = await this.findOne(id);
 
-    // Verificar se está sendo usado
-    const usedInProducts = await this.prisma.client.product.count({
-      where: { productionLocation: (await this.findOne(id)).code },
-    });
-
-    const usedInProduction = await this.prisma.client.orderProduction.count({
-      where: { productionLocation: (await this.findOne(id)).code },
-    });
+    const [usedInProducts, usedInProduction] = await Promise.all([
+      this.prisma.client.product.count({
+        where: { productionLocation: location.code },
+      }),
+      this.prisma.client.orderProduction.count({
+        where: { productionLocation: location.code },
+      }),
+    ]);
 
     if (usedInProducts > 0 || usedInProduction > 0) {
       throw new BadRequestException(
@@ -119,13 +143,19 @@ export class ProductionLocationsService {
     return { message: 'Local de produção excluído com sucesso' };
   }
 
-  async toggleActive(id: number) {
+  async toggleActive(id: number): Promise<ProductionLocation> {
     const location = await this.findOne(id);
 
     const updated = await this.prisma.client.productionLocation.update({
       where: { id },
       data: { active: !location.active },
     });
+
+    if (!updated) {
+      throw new InternalServerErrorException(
+        'Erro ao atualizar local de produção',
+      );
+    }
 
     return updated;
   }

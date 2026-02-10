@@ -10,7 +10,12 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
-import { KitchenOrder, Recipe } from '../../types/kitchen-display';
+import {
+  KitchenOrder,
+  KitchenOrderItem,
+  ProductionStatus,
+  Recipe,
+} from '../../types/kitchen-display';
 import { FormField, ModalEditEntity } from '../../../../shared/modal-edit-entity/modal-edit-entity';
 import { AuthService } from '../../../../core/services/auth.service';
 import { KitchenService } from '../../services/kitchen-display.service';
@@ -31,7 +36,7 @@ export class KitchenDisplay implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private locationsService = inject(ProductionLocationsService);
 
-  orders: KitchenOrder[] = [];
+  orders: KitchenOrderItem[] = [];
   selectedRecipe: Recipe | null = null;
   showRecipeModal: boolean = false;
   showKitchenConfigModal: boolean = false;
@@ -84,16 +89,16 @@ export class KitchenDisplay implements OnInit, OnDestroy {
   private loadKitchenOptions(): void {
     this.locationsService.getAll().subscribe({
       next: (locations) => {
-        // Mapeia locais para nomes amigáveis
-        this.kitchenOptions = ['Todas as cozinhas', ...locations.map((loc) => loc.code)];
+        this.kitchenOptions = ['Todas as cozinhas', ...locations.map((loc) => loc.name)];
 
-        // Atualiza opções do modal
+        // Configurar mapeamento no service
+        this.kitchenService.setLocationMap(locations);
+
         this.kitchenConfigFields[0].options = this.kitchenOptions;
         this.cdr.markForCheck();
       },
       error: (e) => {
         this.notification.error(`Erro ao carregar locais: ${e.error?.message || e.message}`);
-        // Fallback para opções padrão em caso de erro
         this.kitchenOptions = ['Todas as cozinhas'];
         this.kitchenConfigFields[0].options = this.kitchenOptions;
       },
@@ -157,31 +162,31 @@ export class KitchenDisplay implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  get pendingOrders(): KitchenOrder[] {
+  get pendingOrders(): KitchenOrderItem[] {
     return this.orders
-      .filter((o) => o.status === 'pending')
-      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      .filter((item) => item.productionStatus === ProductionStatus.PENDING)
+      .sort((a, b) => new Date(a.pendingAt).getTime() - new Date(b.pendingAt).getTime());
   }
 
-  get preparingOrders(): KitchenOrder[] {
+  get preparingOrders(): KitchenOrderItem[] {
     return this.orders
-      .filter((o) => o.status === 'preparing')
-      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      .filter((item) => item.productionStatus === ProductionStatus.IN_PROGRESS)
+      .sort((a, b) => new Date(a.pendingAt).getTime() - new Date(b.pendingAt).getTime());
   }
 
-  get readyOrders(): KitchenOrder[] {
+  get readyOrders(): KitchenOrderItem[] {
     return this.orders
-      .filter((o) => o.status === 'ready')
-      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      .filter((item) => item.productionStatus === ProductionStatus.COMPLETED)
+      .sort((a, b) => new Date(a.pendingAt).getTime() - new Date(b.pendingAt).getTime());
   }
 
-  trackById(index: number, order: KitchenOrder): number {
-    return order.orderId;
+  trackById(index: number, item: KitchenOrderItem): number {
+    return item.productionId;
   }
 
-  getElapsedMinutes(order: KitchenOrder): number {
+  getElapsedMinutes(item: KitchenOrderItem): number {
     const now = new Date();
-    const created = new Date(order.createdAt);
+    const created = new Date(item.pendingAt);
     const diff = now.getTime() - created.getTime();
     return Math.floor(diff / 60000);
   }
@@ -216,8 +221,8 @@ export class KitchenDisplay implements OnInit, OnDestroy {
     });
   }
 
-  startPreparing(order: KitchenOrder): void {
-    this.kitchenService.startPreparing(order.orderId, order.items).subscribe({
+  startPreparing(item: KitchenOrderItem): void {
+    this.kitchenService.startPreparingItem(item.productionId).subscribe({
       next: () => {
         this.notification.success('Preparo iniciado!');
         this.loadOrders();
@@ -230,10 +235,10 @@ export class KitchenDisplay implements OnInit, OnDestroy {
     });
   }
 
-  markAsReady(order: KitchenOrder): void {
-    this.kitchenService.markAsReady(order.orderId, order.items).subscribe({
+  markAsReady(item: KitchenOrderItem): void {
+    this.kitchenService.completeItem(item.productionId).subscribe({
       next: () => {
-        this.notification.success('Pedido marcado como pronto!');
+        this.notification.success('Item marcado como pronto!');
         this.loadOrders();
       },
       error: (error) => {
@@ -244,10 +249,10 @@ export class KitchenDisplay implements OnInit, OnDestroy {
     });
   }
 
-  completeOrder(order: KitchenOrder): void {
-    this.kitchenService.markAsDelivered(order.orderId, order.items).subscribe({
+  completeOrder(item: KitchenOrderItem): void {
+    this.kitchenService.deliverItem(item.productionId).subscribe({
       next: () => {
-        this.notification.success('Pedido entregue!');
+        this.notification.success('Item entregue!');
         this.loadOrders();
       },
       error: (error) => {
@@ -258,20 +263,18 @@ export class KitchenDisplay implements OnInit, OnDestroy {
     });
   }
 
-  cancelOrder(order: KitchenOrder): void {
-    if (!confirm(`Cancelar pedido #${order.orderNumber}?`)) {
+  cancelOrder(item: KitchenOrderItem): void {
+    if (!confirm(`Cancelar item ${item.name} do pedido ${item.orderNumber}?`)) {
       return;
     }
 
-    this.kitchenService.cancelOrder(order.orderId, order.items).subscribe({
+    this.kitchenService.cancelProduction(item.productionId).subscribe({
       next: () => {
-        this.notification.success('Pedido cancelado!');
+        this.notification.success('Item cancelado!');
         this.loadOrders();
       },
       error: (error) => {
-        this.notification.error(
-          `Erro ao cancelar pedido: ${error.error?.message || error.message}`,
-        );
+        this.notification.error(`Erro ao cancelar item: ${error.error?.message || error.message}`);
       },
     });
   }

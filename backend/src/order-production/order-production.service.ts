@@ -167,6 +167,7 @@ export class ProductionService {
    * Iniciar produção (PENDING -> IN_PROGRESS)
    */
   async startProduction(productionId: number) {
+    console.log(productionId, 'teste');
     const production = await this.prisma.client.orderProduction.findUnique({
       where: { id: productionId },
     });
