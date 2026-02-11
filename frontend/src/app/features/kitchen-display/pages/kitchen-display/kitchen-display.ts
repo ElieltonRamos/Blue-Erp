@@ -11,10 +11,10 @@ import { Router } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import {
-  KitchenOrder,
   KitchenOrderItem,
   ProductionStatus,
   Recipe,
+  PreparationStep,
 } from '../../types/kitchen-display';
 import { FormField, ModalEditEntity } from '../../../../shared/modal-edit-entity/modal-edit-entity';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -38,7 +38,10 @@ export class KitchenDisplay implements OnInit, OnDestroy {
 
   orders: KitchenOrderItem[] = [];
   selectedRecipe: Recipe | null = null;
+  selectedPreparationSteps: PreparationStep[] | null = null;
+  selectedItemName: string | null = null;
   showRecipeModal: boolean = false;
+  showPreparationStepsModal: boolean = false;
   showKitchenConfigModal: boolean = false;
   isLoading: boolean = false;
 
@@ -60,7 +63,7 @@ export class KitchenDisplay implements OnInit, OnDestroy {
       label: 'Cozinha Padrão',
       type: 'select',
       placeholder: 'Selecione a cozinha',
-      options: [], // Será preenchido dinamicamente
+      options: [],
       required: false,
     },
   ];
@@ -68,7 +71,6 @@ export class KitchenDisplay implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadKitchenOptions();
     this.loadKitchenConfig();
-    this.loadOrders();
     this.setupAutoRefresh();
     this.setupTimeUpdates();
   }
@@ -83,19 +85,14 @@ export class KitchenDisplay implements OnInit, OnDestroy {
     return user?.role === 'admin';
   }
 
-  /**
-   * Carrega opções de cozinha do backend
-   */
   private loadKitchenOptions(): void {
     this.locationsService.getAll().subscribe({
       next: (locations) => {
         this.kitchenOptions = ['Todas as cozinhas', ...locations.map((loc) => loc.name)];
-
-        // Configurar mapeamento no service
         this.kitchenService.setLocationMap(locations);
-
         this.kitchenConfigFields[0].options = this.kitchenOptions;
         this.cdr.markForCheck();
+        this.loadOrders();
       },
       error: (e) => {
         this.notification.error(`Erro ao carregar locais: ${e.error?.message || e.message}`);
@@ -288,6 +285,20 @@ export class KitchenDisplay implements OnInit, OnDestroy {
   closeRecipeModal(): void {
     this.showRecipeModal = false;
     this.selectedRecipe = null;
+    this.cdr.markForCheck();
+  }
+
+  openPreparationSteps(item: KitchenOrderItem): void {
+    this.selectedPreparationSteps = item.preparationSteps || [];
+    this.selectedItemName = item.name;
+    this.showPreparationStepsModal = true;
+    this.cdr.markForCheck();
+  }
+
+  closePreparationStepsModal(): void {
+    this.showPreparationStepsModal = false;
+    this.selectedPreparationSteps = null;
+    this.selectedItemName = null;
     this.cdr.markForCheck();
   }
 

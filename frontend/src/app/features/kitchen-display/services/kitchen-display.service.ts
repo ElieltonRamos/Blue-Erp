@@ -65,6 +65,7 @@ export class KitchenService {
       customerName: prod.orderItem.order.customerName,
       type: prod.orderItem.order.type,
       kitchen: this.formatKitchenName(prod.productionLocation),
+      preparationSteps: prod.orderItem.product.preparationSteps ?? [],
     }));
   }
 

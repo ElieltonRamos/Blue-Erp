@@ -1,6 +1,6 @@
 <!-- kitchen-display.component.html -->
 <div class="min-h-screen bg-linear-to-br from-purple-900 via-purple-800 to-purple-900 p-4">
-  <!-- Cabeçalho - mantém igual -->
+  <!-- Cabeçalho -->
   <div class="flex-1 flex justify-start gap-5 items-center mb-4">
     <h1 class="text-white text-2xl font-bold">🍳 Cozinha</h1>
     <div class="bg-slate-800/50 rounded-lg px-4 py-2 border border-slate-700/50">
@@ -115,7 +115,26 @@
                 >
                   {{ item.quantity }}x
                 </span>
-                <span class="text-white font-medium">{{ item.name }}</span>
+                <span class="text-white font-medium flex-1">{{ item.name }}</span>
+                <button
+                  *ngIf="item.preparationSteps && item.preparationSteps.length > 0"
+                  (click)="openPreparationSteps(item)"
+                  class="bg-purple-600 hover:bg-purple-700 text-white p-1 rounded transition-colors"
+                  title="Ver passos de preparação"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M9 5H2v14h7"></path>
+                    <path d="M9 12h13"></path>
+                    <path d="M9 5l13 7-13 7"></path>
+                  </svg>
+                </button>
               </div>
               <div class="text-slate-400 text-xs ml-8">Código: {{ item.code }}</div>
             </div>
@@ -194,7 +213,26 @@
                 >
                   {{ item.quantity }}x
                 </span>
-                <span class="text-white font-medium">{{ item.name }}</span>
+                <span class="text-white font-medium flex-1">{{ item.name }}</span>
+                <button
+                  *ngIf="item.preparationSteps && item.preparationSteps.length > 0"
+                  (click)="openPreparationSteps(item)"
+                  class="bg-purple-600 hover:bg-purple-700 text-white p-1 rounded transition-colors"
+                  title="Ver passos de preparação"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M9 5H2v14h7"></path>
+                    <path d="M9 12h13"></path>
+                    <path d="M9 5l13 7-13 7"></path>
+                  </svg>
+                </button>
               </div>
               <div class="text-slate-400 text-xs ml-8">Código: {{ item.code }}</div>
             </div>
@@ -273,7 +311,26 @@
                 >
                   {{ item.quantity }}x
                 </span>
-                <span class="text-white font-medium">{{ item.name }}</span>
+                <span class="text-white font-medium flex-1">{{ item.name }}</span>
+                <button
+                  *ngIf="item.preparationSteps && item.preparationSteps.length > 0"
+                  (click)="openPreparationSteps(item)"
+                  class="bg-purple-600 hover:bg-purple-700 text-white p-1 rounded transition-colors"
+                  title="Ver passos de preparação"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M9 5H2v14h7"></path>
+                    <path d="M9 12h13"></path>
+                    <path d="M9 5l13 7-13 7"></path>
+                  </svg>
+                </button>
               </div>
               <div class="text-slate-400 text-xs ml-8">Código: {{ item.code }}</div>
             </div>
@@ -298,9 +355,86 @@
       </div>
     </div>
   </div>
+
+  <!-- Preparation Steps Modal -->
+  <div
+    *ngIf="showPreparationStepsModal && selectedPreparationSteps"
+    class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+    (click)="closePreparationStepsModal()"
+  >
+    <div
+      class="bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-700"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Modal Header -->
+      <div
+        class="sticky top-0 bg-slate-800 border-b border-slate-700 p-6 flex items-center justify-between"
+      >
+        <div>
+          <h2 class="text-white text-2xl font-bold mb-1">👨‍🍳 {{ selectedItemName }}</h2>
+          <p class="text-slate-400 text-sm">Passos de Preparação</p>
+        </div>
+        <button
+          (click)="closePreparationStepsModal()"
+          class="text-slate-400 hover:text-white transition-colors"
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-6">
+        <!-- Steps -->
+        <div>
+          <h3 class="text-white text-lg font-bold mb-3 flex items-center gap-2">
+            <span class="text-2xl">📋</span>
+            Modo de Preparo
+          </h3>
+          <ol class="space-y-3">
+            <li
+              *ngFor="let step of selectedPreparationSteps"
+              class="bg-slate-700/50 rounded-lg p-3 flex gap-3"
+            >
+              <span
+                class="bg-purple-600 text-white font-bold text-sm w-7 h-7 flex items-center justify-center rounded-full shrink-0"
+              >
+                {{ step.order }}
+              </span>
+              <span class="text-slate-200 flex-1">{{ step.description }}</span>
+            </li>
+          </ol>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="selectedPreparationSteps.length === 0" class="text-center py-12">
+          <p class="text-slate-400">Nenhum passo de preparação cadastrado</p>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="sticky bottom-0 bg-slate-800 border-t border-slate-700 p-6">
+        <button
+          (click)="closePreparationStepsModal()"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition-colors"
+        >
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Modal de configuração - mantém igual -->
+<!-- Modal de configuração -->
 <app-modal-edit-entity
   title="⚙️ Configurar Cozinha Padrão"
   [show]="showKitchenConfigModal"

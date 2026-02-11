@@ -5,6 +5,15 @@ export enum ProductionStatus {
   CANCELED = 'CANCELED',
 }
 
+export interface PreparationStep {
+  id: number;
+  order: number;
+  description: string;
+  productId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Recipe {
   title: string;
   prepTime: string;
@@ -20,6 +29,7 @@ export interface KitchenOrderItem {
   quantity: number;
   notes?: string;
   recipe?: Recipe;
+  preparationSteps?: PreparationStep[];
   // Dados da produção
   productionId: number;
   productionStatus: ProductionStatus;

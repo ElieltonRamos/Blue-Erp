@@ -409,7 +409,7 @@ export class ProductService {
       }
     }
 
-    return product;
+    return new ProductResponseDto(product);
   }
 
   /**

@@ -18,10 +18,8 @@ export class ProductionService {
     const productions = await this.prisma.client.orderProduction.findMany({
       where: {
         productionLocation,
-        status: {
-          not: ProductionStatus.CANCELED, // Não mostrar canceladas
-        },
-        deliveredAt: null, // Não mostrar entregues
+        status: { not: ProductionStatus.CANCELED },
+        deliveredAt: null,
       },
       include: {
         orderItem: {
@@ -39,14 +37,15 @@ export class ProductionService {
                 id: true,
                 name: true,
                 code: true,
+                preparationSteps: {
+                  orderBy: { order: 'asc' },
+                },
               },
             },
           },
         },
       },
-      orderBy: {
-        pendingAt: 'asc',
-      },
+      orderBy: { pendingAt: 'asc' },
     });
 
     return productions.map((prod) => ({
@@ -60,7 +59,6 @@ export class ProductionService {
       startedAt: prod.startedAt,
       completedAt: prod.completedAt,
       deliveredAt: prod.deliveredAt,
-      // Tempos calculados
       pendingDuration: this.calculateDuration(prod.pendingAt, prod.startedAt),
       inProgressDuration: this.calculateDuration(
         prod.startedAt,
@@ -74,13 +72,15 @@ export class ProductionService {
         prod.pendingAt,
         prod.deliveredAt || new Date(),
       ),
-      // Dados do item
       orderItem: {
         id: prod.orderItem.id,
         name: prod.orderItem.name,
         code: prod.orderItem.code,
         order: prod.orderItem.order,
-        product: prod.orderItem.product,
+        product: {
+          ...prod.orderItem.product,
+          preparationSteps: prod.orderItem.product.preparationSteps,
+        },
       },
     }));
   }
@@ -119,6 +119,9 @@ export class ProductionService {
                 id: true,
                 name: true,
                 code: true,
+                preparationSteps: {
+                  orderBy: { order: 'asc' },
+                },
               },
             },
           },
