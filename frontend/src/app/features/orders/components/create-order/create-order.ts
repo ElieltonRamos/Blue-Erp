@@ -265,10 +265,10 @@ export class CreateOrder implements OnInit {
       return;
     }
 
-    if (this.orderItems.length === 0) {
-      this.notification.error('Adicione pelo menos um produto ao pedido');
-      return;
-    }
+    // if (this.orderItems.length === 0) {
+    //   this.notification.error('Adicione pelo menos um produto ao pedido');
+    //   return;
+    // }
 
     const formValue = this.formCreateOrder.value;
 

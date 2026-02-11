@@ -193,7 +193,6 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
       this.notification.success('Quantidade atualizada');
     } else {
       const newItem: OrderItem = {
-        id: Date.now().toString(),
         productId: product.id,
         code: product.code,
         name: product.name,
@@ -257,10 +256,10 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
       return;
     }
 
-    if (this.order.items.length === 0) {
-      this.notification.error('Adicione pelo menos um item ao pedido');
-      return;
-    }
+    // if (this.order.items.length === 0) {
+    //   this.notification.error('Adicione pelo menos um item ao pedido');
+    //   return;
+    // }
 
     this.isSaving = true;
 
@@ -270,6 +269,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
       address: this.order.type === 'DELIVERY' ? this.order.address : undefined,
       status: this.order.status,
       items: this.order.items.map((item) => ({
+        ...(typeof item.id === 'number' && { id: item.id }),
         productId: item.productId,
         code: item.code,
         name: item.name,

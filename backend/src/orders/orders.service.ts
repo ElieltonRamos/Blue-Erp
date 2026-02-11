@@ -218,69 +218,266 @@ export class OrdersService {
 
     return this.mapToEntity(order);
   }
-
   async update(
     id: number,
     updateOrderDto: UpdateOrderDto,
   ): Promise<OrderEntity> {
-    const existingOrder = await this.findOne(id);
+    console.log('chegou para atualizar', updateOrderDto);
+    const existingOrder = await this.prisma.client.order.findUnique({
+      where: { id },
+      include: {
+        items: {
+          include: {
+            productions: true,
+            product: {
+              select: {
+                id: true,
+                productType: true,
+                productionLocation: true,
+              },
+            },
+          },
+        },
+        operator: {
+          select: {
+            id: true,
+            username: true,
+            role: true,
+          },
+        },
+      },
+    });
 
-    // Validar se está tentando reverter status PAID
-    if (
-      existingOrder.status === OrderStatus.PAID &&
-      updateOrderDto.status !== OrderStatus.PAID
-    ) {
+    if (!existingOrder) {
+      throw new NotFoundException(`Pedido ${id} não encontrado`);
+    }
+
+    console.log('antes de atualizar', existingOrder);
+
+    // 🚫 Pedido pago é imutável
+    if (existingOrder.status === OrderStatus.PAID) {
       throw new BadRequestException(
-        'Não é possível alterar o status de um pedido já pago',
+        'Pedido já foi pago e não pode ser alterado',
       );
     }
 
+    const isInProduction = !!existingOrder.kitchenSentAt;
     const { items, ...orderData } = updateOrderDto;
 
-    // Se items foi enviado, atualiza
-    const updateData: Prisma.OrderUpdateInput = {
-      ...orderData,
-    };
+    await this.prisma.client.$transaction(async (tx) => {
+      let totalPedido = 0;
 
-    if (items && items.length > 0) {
-      // Validar produtos se items foram enviados
-      const productIds = items
-        .map((item) => item.productId)
-        .filter((id): id is number => id !== undefined);
+      // ======================================================
+      // SE NÃO VIER ITENS → MANTÉM TOTAL
+      // ======================================================
+      if (!items) {
+        totalPedido = Number(existingOrder.total);
 
-      if (productIds.length > 0) {
-        const products = await this.prisma.client.product.findMany({
-          where: { id: { in: productIds } },
-          select: { id: true },
+        await tx.order.update({
+          where: { id },
+          data: { ...orderData, total: totalPedido },
         });
 
-        const foundIds = products.map((p) => p.id);
-        const missingIds = productIds.filter((id) => !foundIds.includes(id));
+        return;
+      }
 
-        if (missingIds.length > 0) {
+      const existingItems = existingOrder.items;
+      const incomingIds = items.filter((i) => i.id).map((i) => i.id!);
+
+      // ======================================================
+      // 🗑 REMOVER ITENS
+      // ======================================================
+      for (const item of existingItems) {
+        if (incomingIds.includes(item.id)) continue;
+
+        const producedQty = item.productions
+          .filter((p) => p.status !== 'CANCELED')
+          .reduce((sum, p) => sum + Number(p.quantityProduced), 0);
+
+        if (producedQty > 0) {
           throw new BadRequestException(
-            `Produtos não encontrados: ${missingIds.join(', ')}`,
+            `Item "${item.name}" já possui produção iniciada e não pode ser removido`,
           );
+        }
+
+        await tx.orderProduction.updateMany({
+          where: { orderItemId: item.id, status: 'PENDING' },
+          data: { status: 'CANCELED' },
+        });
+
+        await tx.orderItem.delete({ where: { id: item.id } });
+      }
+
+      // ======================================================
+      // ✏️ ATUALIZAR EXISTENTES
+      // ======================================================
+      for (const incoming of items.filter((i) => i.id)) {
+        const existing = existingItems.find((i) => i.id === incoming.id);
+        if (!existing) continue;
+
+        const novaQuantidade = Number(incoming.quantity);
+        const quantidadeAtual = Number(existing.quantity);
+        const novoPreco = Number(incoming.unitPrice);
+        const precoAtual = Number(existing.unitPrice);
+
+        // 🚫 Não pode alterar preço após envio à cozinha
+        if (isInProduction && novoPreco !== precoAtual) {
+          throw new BadRequestException(
+            `Não é permitido alterar o preço do item "${existing.name}" após envio à cozinha`,
+          );
+        }
+
+        // =============================
+        // ➕ AUMENTO
+        // =============================
+        if (novaQuantidade > quantidadeAtual) {
+          const diferenca = novaQuantidade - quantidadeAtual;
+
+          if (existing.product.productType === 'MANUFACTURED') {
+            await tx.orderProduction.create({
+              data: {
+                orderItemId: existing.id,
+                productionLocation:
+                  existing.product.productionLocation || 'LOCAL_01',
+                status: 'PENDING',
+                quantityRequested: diferenca,
+                quantityProduced: 0,
+                pendingAt: new Date(),
+              },
+            });
+          }
+        }
+
+        // =============================
+        // ➖ REDUÇÃO
+        // =============================
+        if (novaQuantidade < quantidadeAtual) {
+          const pendingProductions = existing.productions.filter(
+            (p) => p.status === 'PENDING',
+          );
+
+          let restanteParaCancelar = quantidadeAtual - novaQuantidade;
+
+          for (const prod of pendingProductions) {
+            if (restanteParaCancelar <= 0) break;
+
+            const qty = Number(prod.quantityRequested);
+
+            if (qty <= restanteParaCancelar) {
+              await tx.orderProduction.update({
+                where: { id: prod.id },
+                data: { status: 'CANCELED' },
+              });
+              restanteParaCancelar -= qty;
+            } else {
+              await tx.orderProduction.update({
+                where: { id: prod.id },
+                data: {
+                  quantityRequested: qty - restanteParaCancelar,
+                },
+              });
+              restanteParaCancelar = 0;
+            }
+          }
+
+          if (restanteParaCancelar > 0) {
+            throw new BadRequestException(
+              `Não é possível reduzir "${existing.name}" pois parte já está em produção`,
+            );
+          }
+        }
+
+        const totalItem = novaQuantidade * precoAtual;
+        totalPedido += totalItem;
+
+        await tx.orderItem.update({
+          where: { id: existing.id },
+          data: {
+            quantity: novaQuantidade,
+            total: totalItem,
+          },
+        });
+      }
+
+      // ======================================================
+      // ➕ CRIAR NOVOS ITENS
+      // ======================================================
+      const newItems = items.filter((i) => !i.id);
+
+      if (newItems.length > 0) {
+        const productIds = newItems.map((i) => i.productId);
+
+        const products = await tx.product.findMany({
+          where: { id: { in: productIds } },
+          select: {
+            id: true,
+            productType: true,
+            productionLocation: true,
+          },
+        });
+
+        for (const newItem of newItems) {
+          const product = products.find((p) => p.id === newItem.productId);
+
+          if (!product) {
+            throw new BadRequestException(
+              `Produto ${newItem.productId} não encontrado`,
+            );
+          }
+
+          if (
+            newItem.quantity === undefined ||
+            newItem.unitPrice === undefined
+          ) {
+            throw new BadRequestException(
+              `Produto ${newItem.productId} com erro de cadastro`,
+            );
+          }
+
+          const totalItem = newItem.quantity * newItem.unitPrice;
+          totalPedido += totalItem;
+
+          const createdItem = await tx.orderItem.create({
+            data: {
+              orderId: id,
+              productId: newItem.productId,
+              code: newItem.code!,
+              name: newItem.name!,
+              quantity: newItem.quantity,
+              unitPrice: newItem.unitPrice,
+              total: totalItem,
+            },
+          });
+
+          if (product.productType === 'MANUFACTURED') {
+            await tx.orderProduction.create({
+              data: {
+                orderItemId: createdItem.id,
+                productionLocation: product.productionLocation || 'LOCAL_01',
+                status: 'PENDING',
+                quantityRequested: createdItem.quantity,
+                quantityProduced: 0,
+                pendingAt: new Date(),
+              },
+            });
+          }
         }
       }
 
-      // Remove items antigos e cria novos
-      updateData.items = {
-        deleteMany: {},
-        create: items.map((item) => ({
-          productId: item.productId!,
-          code: item.code!,
-          name: item.name!,
-          quantity: item.quantity!,
-          unitPrice: item.unitPrice!,
-          total: item.total!,
-        })),
-      };
-    }
+      // ======================================================
+      // ATUALIZA PEDIDO
+      // ======================================================
+      await tx.order.update({
+        where: { id },
+        data: {
+          ...orderData,
+          total: totalPedido,
+        },
+      });
+    });
 
-    const order = await this.prisma.client.order.update({
+    const updated = await this.prisma.client.order.findUnique({
       where: { id },
-      data: updateData,
       include: {
         items: true,
         operator: {
@@ -293,7 +490,9 @@ export class OrdersService {
       },
     });
 
-    return this.mapToEntity(order);
+    console.log('apos atualizar', updated);
+
+    return this.mapToEntity(updated!);
   }
 
   async remove(id: number): Promise<void> {
