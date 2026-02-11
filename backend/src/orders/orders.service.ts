@@ -66,7 +66,17 @@ export class OrdersService {
           },
         },
         include: {
-          items: true,
+          items: {
+            include: {
+              product: {
+                select: {
+                  id: true,
+                  productionLocation: true,
+                  productType: true,
+                },
+              },
+            },
+          },
           operator: {
             select: {
               id: true,
@@ -76,6 +86,41 @@ export class OrdersService {
           },
         },
       });
+
+      // Enviar automaticamente para cozinha se tiver produtos MANUFACTURED
+      const hasManufacturedItems = order.items.some(
+        (item) => item.product.productType === 'MANUFACTURED',
+      );
+
+      if (hasManufacturedItems) {
+        await this.prisma.client.$transaction(async (tx) => {
+          // Atualizar pedido com kitchenSentAt
+          await tx.order.update({
+            where: { id: order.id },
+            data: { kitchenSentAt: new Date() },
+          });
+
+          // Criar registros de produção para cada item MANUFACTURED
+          for (const item of order.items) {
+            if (item.product.productType === 'MANUFACTURED') {
+              await tx.orderProduction.create({
+                data: {
+                  orderItemId: item.id,
+                  productionLocation:
+                    item.product.productionLocation || 'LOCAL_01',
+                  status: 'PENDING',
+                  quantityRequested: item.quantity,
+                  quantityProduced: 0,
+                  pendingAt: new Date(),
+                },
+              });
+            }
+          }
+        });
+
+        // Atualizar ordem local com kitchenSentAt
+        order.kitchenSentAt = new Date();
+      }
 
       return this.mapToEntity(order);
     } catch (error) {
