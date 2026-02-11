@@ -222,7 +222,6 @@ export class OrdersService {
     id: number,
     updateOrderDto: UpdateOrderDto,
   ): Promise<OrderEntity> {
-    console.log('chegou para atualizar', updateOrderDto);
     const existingOrder = await this.prisma.client.order.findUnique({
       where: { id },
       include: {
@@ -252,13 +251,32 @@ export class OrdersService {
       throw new NotFoundException(`Pedido ${id} não encontrado`);
     }
 
-    console.log('antes de atualizar', existingOrder);
-
-    // 🚫 Pedido pago é imutável
     if (existingOrder.status === OrderStatus.PAID) {
       throw new BadRequestException(
         'Pedido já foi pago e não pode ser alterado',
       );
+    }
+
+    console.log(updateOrderDto);
+
+    if (existingOrder.status === OrderStatus.CANCELED) {
+      const { status } = updateOrderDto;
+      if (!status || status === OrderStatus.CANCELED) {
+        throw new BadRequestException(
+          'Pedido cancelado só permite atualizar o status',
+        );
+      }
+
+      const updatedOrder = await this.prisma.client.order.update({
+        where: { id },
+        data: { status },
+        include: {
+          items: true,
+          operator: { select: { id: true, username: true, role: true } },
+        },
+      });
+
+      return this.mapToEntity(updatedOrder);
     }
 
     const isInProduction = !!existingOrder.kitchenSentAt;
@@ -267,9 +285,6 @@ export class OrdersService {
     await this.prisma.client.$transaction(async (tx) => {
       let totalPedido = 0;
 
-      // ======================================================
-      // SE NÃO VIER ITENS → MANTÉM TOTAL
-      // ======================================================
       if (!items) {
         totalPedido = Number(existingOrder.total);
 
@@ -284,9 +299,6 @@ export class OrdersService {
       const existingItems = existingOrder.items;
       const incomingIds = items.filter((i) => i.id).map((i) => i.id!);
 
-      // ======================================================
-      // 🗑 REMOVER ITENS
-      // ======================================================
       for (const item of existingItems) {
         if (incomingIds.includes(item.id)) continue;
 
@@ -310,7 +322,6 @@ export class OrdersService {
           );
         }
 
-        // Cancela apenas produções PENDING
         await tx.orderProduction.updateMany({
           where: { orderItemId: item.id, status: 'PENDING' },
           data: { status: 'CANCELED' },
@@ -319,9 +330,6 @@ export class OrdersService {
         await tx.orderItem.delete({ where: { id: item.id } });
       }
 
-      // ======================================================
-      // ✏️ ATUALIZAR EXISTENTES
-      // ======================================================
       for (const incoming of items.filter((i) => i.id)) {
         const existing = existingItems.find((i) => i.id === incoming.id);
         if (!existing) continue;
@@ -338,9 +346,6 @@ export class OrdersService {
           );
         }
 
-        // =============================
-        // ➕ AUMENTO
-        // =============================
         if (novaQuantidade > quantidadeAtual) {
           const diferenca = novaQuantidade - quantidadeAtual;
 
@@ -359,9 +364,6 @@ export class OrdersService {
           }
         }
 
-        // =============================
-        // ➖ REDUÇÃO
-        // =============================
         if (novaQuantidade < quantidadeAtual) {
           const pendingProductions = existing.productions.filter(
             (p) => p.status === 'PENDING',
@@ -410,9 +412,6 @@ export class OrdersService {
         });
       }
 
-      // ======================================================
-      // ➕ CRIAR NOVOS ITENS
-      // ======================================================
       const newItems = items.filter((i) => !i.id);
 
       if (newItems.length > 0) {
@@ -475,9 +474,6 @@ export class OrdersService {
         }
       }
 
-      // ======================================================
-      // ATUALIZA PEDIDO
-      // ======================================================
       await tx.order.update({
         where: { id },
         data: {
@@ -501,13 +497,11 @@ export class OrdersService {
       },
     });
 
-    console.log('apos atualizar', updated);
-
     return this.mapToEntity(updated!);
   }
 
   async remove(id: number): Promise<void> {
-    await this.findOne(id); // Valida se existe
+    await this.findOne(id);
 
     await this.prisma.client.order.delete({
       where: { id },
