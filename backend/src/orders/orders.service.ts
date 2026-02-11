@@ -290,16 +290,27 @@ export class OrdersService {
       for (const item of existingItems) {
         if (incomingIds.includes(item.id)) continue;
 
-        const producedQty = item.productions
-          .filter((p) => p.status !== 'CANCELED')
-          .reduce((sum, p) => sum + Number(p.quantityProduced), 0);
+        const hasInProgressProduction = item.productions.some(
+          (p) => p.status === 'IN_PROGRESS',
+        );
 
-        if (producedQty > 0) {
+        if (hasInProgressProduction) {
           throw new BadRequestException(
-            `Item "${item.name}" já possui produção iniciada e não pode ser removido`,
+            `Item "${item.name}" está em produção e não pode ser removido`,
           );
         }
 
+        const hasStartedProduction = item.productions.some(
+          (p) => p.status !== 'CANCELED' && Number(p.quantityProduced) > 0,
+        );
+
+        if (hasStartedProduction) {
+          throw new BadRequestException(
+            `Item "${item.name}" já iniciou produção e não pode ser removido`,
+          );
+        }
+
+        // Cancela apenas produções PENDING
         await tx.orderProduction.updateMany({
           where: { orderItemId: item.id, status: 'PENDING' },
           data: { status: 'CANCELED' },
@@ -571,7 +582,19 @@ export class OrdersService {
   }
 
   async cancel(id: number): Promise<OrderEntity> {
-    const order = await this.findOne(id);
+    const order = await this.prisma.client.order.findUnique({
+      where: { id },
+      include: {
+        items: {
+          include: { productions: true, product: true },
+        },
+        operator: { select: { id: true, username: true, role: true } },
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Pedido ${id} não encontrado`);
+    }
 
     if (order.status !== OrderStatus.OPEN) {
       throw new BadRequestException(
@@ -579,24 +602,44 @@ export class OrdersService {
       );
     }
 
-    const canceledOrder = await this.prisma.client.order.update({
+    await this.prisma.client.$transaction(async (tx) => {
+      for (const item of order.items) {
+        const pendingProductions = item.productions.filter(
+          (p) => p.status === 'PENDING',
+        );
+
+        const hasProduced = item.productions.some(
+          (p) => p.status === 'IN_PROGRESS' || Number(p.quantityProduced) > 0,
+        );
+
+        // Se houver produções PENDING e nada produzido, cancela as produções e remove o item
+        if (pendingProductions.length > 0 && !hasProduced) {
+          await tx.orderProduction.updateMany({
+            where: { orderItemId: item.id, status: 'PENDING' },
+            data: { status: 'CANCELED' },
+          });
+
+          await tx.orderItem.delete({ where: { id: item.id } });
+        }
+      }
+
+      // Atualiza status do pedido
+      await tx.order.update({
+        where: { id },
+        data: { status: OrderStatus.CANCELED },
+      });
+    });
+
+    // Retorna o pedido atualizado
+    const canceledOrder = await this.prisma.client.order.findUnique({
       where: { id },
-      data: {
-        status: OrderStatus.CANCELED,
-      },
       include: {
         items: true,
-        operator: {
-          select: {
-            id: true,
-            username: true,
-            role: true,
-          },
-        },
+        operator: { select: { id: true, username: true, role: true } },
       },
     });
 
-    return this.mapToEntity(canceledOrder);
+    return this.mapToEntity(canceledOrder!);
   }
 
   async markReady(id: number): Promise<OrderEntity> {

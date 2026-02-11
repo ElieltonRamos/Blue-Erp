@@ -218,7 +218,6 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
     if (!this.order) return;
     this.order.items.splice(index, 1);
     this.calculateOrderTotal();
-    this.notification.success('Produto removido');
   }
 
   updateQuantity(item: OrderItem, newQuantity: number): void {
@@ -256,11 +255,6 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
       return;
     }
 
-    // if (this.order.items.length === 0) {
-    //   this.notification.error('Adicione pelo menos um item ao pedido');
-    //   return;
-    // }
-
     this.isSaving = true;
 
     const updateDto = {
@@ -293,6 +287,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
         const errorMsg = error.error?.message || error.message || 'Erro ao atualizar pedido';
         this.notification.error(`Erro: ${errorMsg}`);
         this.cdr.detectChanges();
+        this.closeModal();
       },
     });
   }

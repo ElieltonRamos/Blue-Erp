@@ -173,7 +173,7 @@ export class ListOrders implements OnInit {
 
   async cancelOrder(orderId: number): Promise<void> {
     const confirmed = await alertConfirm(
-      'Deseja realmente cancelar este pedido? Esta ação não pode ser desfeita.',
+      'Deseja realmente cancelar este pedido?',
     );
 
     if (confirmed) {
