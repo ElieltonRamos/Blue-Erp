@@ -35,6 +35,10 @@ export class KitchenDisplay implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private authService = inject(AuthService);
   private locationsService = inject(ProductionLocationsService);
+  private notificationSound = new Audio('meme-galo-cego.mp3');
+  private refreshSubscription?: Subscription;
+  private timeUpdateSubscription?: Subscription;
+  private readonly KITCHEN_STORAGE_KEY = 'default_kitchen';
 
   orders: KitchenOrderItem[] = [];
   selectedRecipe: Recipe | null = null;
@@ -44,18 +48,8 @@ export class KitchenDisplay implements OnInit, OnDestroy {
   showPreparationStepsModal: boolean = false;
   showKitchenConfigModal: boolean = false;
   isLoading: boolean = false;
-
-  private refreshSubscription?: Subscription;
-  private timeUpdateSubscription?: Subscription;
-
-  // Configuração de cozinha
-  private readonly KITCHEN_STORAGE_KEY = 'default_kitchen';
   defaultKitchen: string | null = null;
-
-  // Opções de cozinha (carregadas dinamicamente)
   kitchenOptions: string[] = ['Todas as cozinhas'];
-
-  // Configuração do modal
   kitchenConfigEntity: any = { kitchen: '' };
   kitchenConfigFields: FormField[] = [
     {
@@ -69,6 +63,7 @@ export class KitchenDisplay implements OnInit, OnDestroy {
   ];
 
   ngOnInit(): void {
+    this.notificationSound.volume = 0.5;
     this.loadKitchenOptions();
     this.loadKitchenConfig();
     this.setupAutoRefresh();
@@ -200,10 +195,23 @@ export class KitchenDisplay implements OnInit, OnDestroy {
     return 'bg-red-500/20 border-red-500/30';
   }
 
+  private playNotificationSound(): void {
+    try {
+      this.notificationSound.play().catch((e) => {
+        console.log('Não foi possível reproduzir o som:', e);
+      });
+    } catch (error) {
+      console.log('Erro ao reproduzir som:', error);
+    }
+  }
+
   loadOrders(): void {
     this.isLoading = true;
     this.kitchenService.getKitchenOrders(this.defaultKitchen || undefined).subscribe({
       next: (orders) => {
+        if (this.orders.length > 0 && orders.length > this.orders.length) {
+          this.playNotificationSound();
+        }
         this.orders = orders;
         this.isLoading = false;
         this.cdr.markForCheck();

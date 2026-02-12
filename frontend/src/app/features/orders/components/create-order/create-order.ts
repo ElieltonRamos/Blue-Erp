@@ -8,6 +8,8 @@ import { OrderService } from '../../services/order.service';
 import { OrderItem, CreateOrderDto } from '../../types/order';
 import { FilterProductParams, Product } from '../../../products/types/product';
 import { ProductionLocationsService } from '../../../users/services/location.service';
+import { TableService } from '../../../table-management/services/table.service';
+import { Table } from '../../../table-management/types/table';
 
 @Component({
   selector: 'app-create-order',
@@ -21,13 +23,15 @@ export class CreateOrder implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private locationsService = inject(ProductionLocationsService);
+  private tableService = inject(TableService);
 
   searchCode: string = '';
   searchName: string = '';
   isSearching: boolean = false;
   searchResults: Product[] = [];
   orderItems: OrderItem[] = [];
-  productionLocations: { code: string; name: string }[] = [];
+  productionLocations: { id: number, code: string; name: string }[] = [];
+  availableTables: Table[] = [];
 
   formCreateOrder = new FormGroup({
     type: new FormControl<'DINE_IN' | 'DELIVERY'>('DINE_IN', [Validators.required]),
@@ -44,12 +48,40 @@ export class CreateOrder implements OnInit {
   ngOnInit() {
     this.loadProductionLocations();
     this.setupTypeChangeListener();
+    this.setupLocationChangeListener();
+  }
+
+  setupLocationChangeListener() {
+    this.formCreateOrder.get('locationId')?.valueChanges.subscribe((locationId) => {
+      if (locationId && this.formCreateOrder.get('type')?.value === 'DINE_IN') {
+        this.loadAvailableTables(locationId);
+      } else {
+        this.availableTables = [];
+      }
+    });
+  }
+
+  loadAvailableTables(locationCode: string) {
+    // Converter code para locationId ou ajustar backend
+    const location = this.productionLocations.find((l) => l.code === locationCode);
+    if (!location) return;
+
+    this.tableService.getTables(location.id).subscribe({
+      next: (tables) => {
+        this.availableTables = tables.filter((t) => t.status === 'AVAILABLE');
+        this.cdr.detectChanges();
+      },
+      error: (e) => {
+        this.notification.error('Erro ao carregar mesas');
+      },
+    });
   }
 
   loadProductionLocations() {
     this.locationsService.getAll().subscribe({
       next: (locations) => {
         this.productionLocations = locations.map((loc) => ({
+          id: loc.id,
           code: loc.code,
           name: loc.name,
         }));

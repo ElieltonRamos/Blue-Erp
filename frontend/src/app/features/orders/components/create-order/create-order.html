@@ -59,19 +59,16 @@
 
   <!-- Mesa (apenas para DINE_IN) -->
   <div *ngIf="formCreateOrder.get('type')?.value === 'DINE_IN'" class="grid grid-cols-1 gap-6">
-    <div>
-      <label for="table" class="block text-white font-bold mb-2">Mesa</label>
-      <input
-        id="table"
-        formControlName="table"
-        type="text"
-        placeholder="Número ou nome da mesa"
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
-      />
-      @if (formCreateOrder.get('table')?.touched && formCreateOrder.get('table')?.invalid) {
-        <p class="msg-error">Informe a mesa!</p>
-      }
-    </div>
+    <select
+      id="table"
+      formControlName="table"
+      class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold"
+    >
+      <option value="">Selecione uma mesa</option>
+      <option *ngFor="let table of availableTables" [value]="table.id">
+        Mesa {{ table.number }} ({{ table.capacity }} pessoas)
+      </option>
+    </select>
   </div>
 
   <!-- Endereço (apenas para DELIVERY) -->
