@@ -1,7 +1,7 @@
 // Types para o módulo de Orders no Angular
 
 export interface OrderItem {
-  id?: string;
+  id?: number;
   productId: number;
   code: string;
   name: string;

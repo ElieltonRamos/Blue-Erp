@@ -173,12 +173,6 @@ export class CreateProduct implements OnInit {
       this.formCreateProduct.patchValue({
         costPrice: totalCost,
       });
-
-      console.log('Composição atualizada:', {
-        totalItems: composition.items.length,
-        totalSteps: composition.preparationSteps.length,
-        totalCost: totalCost,
-      });
     }
   }
 
@@ -263,8 +257,6 @@ export class CreateProduct implements OnInit {
             }))
           : undefined,
     };
-
-    console.log('Enviando produto para o backend:', createProductDTO);
 
     // Chamar o serviço para criar o produto
     this.productService.create(createProductDTO).subscribe({

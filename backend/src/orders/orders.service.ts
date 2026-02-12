@@ -257,8 +257,6 @@ export class OrdersService {
       );
     }
 
-    console.log(updateOrderDto);
-
     if (existingOrder.status === OrderStatus.CANCELED) {
       const { status } = updateOrderDto;
       if (!status || status === OrderStatus.CANCELED) {

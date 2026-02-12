@@ -1,16 +1,22 @@
-import { Component, inject, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  inject,
+  ChangeDetectorRef,
+  ChangeDetectionStrategy,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { NotificationService } from '../../../shared/toastr/notification.service';
 import { TableService } from '../services/table.service';
-import { ProductTable, Table, TableProduct, TableStatus, Location, LocationId } from '../types/table';
+import { Table, TableStatus } from '../types/table';
 import { alertConfirm } from '../../../shared/alerts/custom-alerts';
 import { TableStats } from '../components/table-stats/table-stats';
 import { TableCard } from '../components/table-card/table-card';
 import { TableModalComponent } from '../components/table-modal/table.modal';
 import { TabModal } from '../components/tab-modal/tab-modal';
 import { TableProductModal } from '../components/table-product-modal/table-product-modal';
-import { TableMockService } from '../services/table.mock.service';
+import { ProductionLocation, ProductionLocationsService } from '../../users/services/location.service';
 
 @Component({
   selector: 'app-table-management',
@@ -19,52 +25,59 @@ import { TableMockService } from '../services/table.mock.service';
   templateUrl: './table-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TableManagement {
+export class TableManagement implements OnInit {
   private notification = inject(NotificationService);
-  private tableService = inject(TableMockService);
+  private tableService = inject(TableService);
+  private locationService = inject(ProductionLocationsService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
   tables: Table[] = [];
-  products: ProductTable[] = [];
+  locations: ProductionLocation[] = [];
   showModal = false;
   showProductModal = false;
   showTabModal = false;
   modalType: 'add' | 'edit' | 'reserve' | 'occupy' = 'add';
   selectedTable: Table | null = null;
   selectedTableForProducts: Table | null = null;
-  selectedLocation: LocationId = 'salao-01';
-
-  locations: Location[] = [
-    { id: 'salao-01', name: 'Mesas Do Local 01' },
-    { id: 'salao-02', name: 'Mesas Do Local 02' },
-    { id: 'salao-03', name: 'Mesas Do Local 03' },
-  ];
+  selectedLocation: number | null = null;
 
   statusColors: Record<TableStatus, string> = {
-    available: 'bg-emerald-600 hover:bg-emerald-700',
-    occupied: 'bg-rose-600 hover:bg-rose-700',
-    reserved: 'bg-amber-600 hover:bg-amber-700',
+    AVAILABLE: 'bg-emerald-600 hover:bg-emerald-700',
+    OCCUPIED: 'bg-rose-600 hover:bg-rose-700',
+    RESERVED: 'bg-amber-600 hover:bg-amber-700',
   };
 
   statusLabels: Record<TableStatus, string> = {
-    available: 'Disponível',
-    occupied: 'Ocupada',
-    reserved: 'Reservada',
+    AVAILABLE: 'Disponível',
+    OCCUPIED: 'Ocupada',
+    RESERVED: 'Reservada',
   };
 
   ngOnInit() {
-    this.loadInitialData();
+    this.loadLocations();
   }
 
-  // 🔄 Carrega dados iniciais
-  private loadInitialData(): void {
-    this.getTables();
-    this.getProducts();
+  private loadLocations(): void {
+    this.locationService.getAll().subscribe({
+      next: (locations) => {
+        this.locations = locations;
+        if (locations.length > 0) {
+          this.selectedLocation = locations[0].id;
+          this.getTables();
+        }
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        this.notification.error(
+          `Erro ao buscar localizações: ${error.error?.message || error.message}`,
+        );
+      },
+    });
   }
 
-  // 📊 Getters computados (OnPush-safe)
   get filteredTables(): Table[] {
+    if (!this.selectedLocation) return [];
     return this.tables.filter((t) => t.locationId === this.selectedLocation);
   }
 
@@ -73,11 +86,11 @@ export class TableManagement {
   }
 
   get availableTables(): number {
-    return this.filteredTables.filter((t) => t.status === 'available').length;
+    return this.filteredTables.filter((t) => t.status === 'AVAILABLE').length;
   }
 
   get occupiedTables(): number {
-    return this.filteredTables.filter((t) => t.status === 'occupied').length;
+    return this.filteredTables.filter((t) => t.status === 'OCCUPIED').length;
   }
 
   get sortedTables(): Table[] {
@@ -85,21 +98,17 @@ export class TableManagement {
   }
 
   get tabTotal(): number {
-    return this.selectedTableForProducts?.products?.reduce((sum, p) => sum + p.totalPrice, 0) || 0;
+    return (
+      this.selectedTableForProducts?.order?.items?.reduce((sum, item) => sum + item.total, 0) || 0
+    );
   }
 
-  // 🔍 TrackBy para otimização de performance
-  trackById(index: number, table: Table): number {
-    return table.id!;
-  }
-
-  // 📍 Seleção de Localização
-  selectLocation(locationId: LocationId): void {
+  selectLocation(locationId: number): void {
     this.selectedLocation = locationId;
-    this.cdr.markForCheck();
+    this.getTables();
   }
 
-  // 🚪 Gerenciamento de Modais
+  // Gerenciamento de Modais
   openTableModal(type: 'add' | 'edit' | 'reserve' | 'occupy', table?: Table): void {
     this.modalType = type;
     this.selectedTable = table || null;
@@ -130,11 +139,11 @@ export class TableManagement {
     this.getTables();
   }
 
-  onTableModalSave(table: Table): void {
+  onTableModalSave(): void {
     this.getTables();
   }
 
-  // 🛒 Modal de Produtos
+  // Modal de Produtos
   openProductModal(table: Table): void {
     if (!table.id) {
       this.notification.error('Mesa inválida');
@@ -159,7 +168,7 @@ export class TableManagement {
     this.getTables();
   }
 
-  // 📋 Modal de Comanda
+  // Modal de Comanda
   openTabModal(table: Table): void {
     if (!table.id) {
       this.notification.error('Mesa inválida');
@@ -184,7 +193,7 @@ export class TableManagement {
     this.getTables();
   }
 
-  // 🎬 Ações de Mesa
+  // Ações de Mesa
   handleOccupy(table: Table): void {
     this.openModalOccupy(table);
   }
@@ -218,9 +227,8 @@ export class TableManagement {
       return;
     }
 
-    // Validação: bloqueia release se tem produtos
-    if (table.products && table.products.length > 0) {
-      this.notification.warning('❌ Finalize a comanda antes de liberar a mesa!');
+    if (table.order?.items && table.order.items.length > 0) {
+      this.notification.warning('Finalize a comanda antes de liberar a mesa!');
       return;
     }
 
@@ -241,110 +249,14 @@ export class TableManagement {
     });
   }
 
-  // 🛍️ Gerenciamento de Produtos
-  addProductToTable(productId: number): void {
-    if (!this.selectedTableForProducts?.id || !productId) {
-      this.notification.error('Dados inválidos');
-      return;
-    }
-
-    const product = this.products.find((p) => p.id === productId);
-    if (!product) {
-      this.notification.error('Produto não encontrado');
-      return;
-    }
-
-    const tableProduct: TableProduct = {
-      productId: product.id,
-      productName: product.name,
-      quantity: 1,
-      unitPrice: product.price,
-      totalPrice: product.price,
-    };
-
-    this.tableService.addProductToTable(this.selectedTableForProducts.id, tableProduct).subscribe({
-      next: (response) => {
-        this.selectedTableForProducts = response;
-        this.notification.success('Produto adicionado com sucesso!');
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        this.notification.error(
-          `Erro ao adicionar produto: ${error.error?.message || error.message}`,
-        );
-      },
-    });
-  }
-
-  updateProductQuantity(productId: number, change: number): void {
-    if (!this.selectedTableForProducts?.id) {
-      this.notification.error('Mesa não selecionada');
-      return;
-    }
-
-    const product = this.selectedTableForProducts.products?.find((p) => p.id === productId);
-    if (!product) {
-      this.notification.error('Produto não encontrado');
-      return;
-    }
-
-    const newQuantity = product.quantity + change;
-
-    // Se quantidade for 0 ou negativa, remove o produto
-    if (newQuantity <= 0) {
-      this.removeProduct(productId);
-      return;
-    }
-
-    this.tableService
-      .updateProductQuantity(this.selectedTableForProducts.id, productId, newQuantity)
-      .subscribe({
-        next: (response) => {
-          this.selectedTableForProducts = response;
-          this.cdr.markForCheck();
-        },
-        error: (error) => {
-          this.notification.error(
-            `Erro ao atualizar quantidade: ${error.error?.message || error.message}`,
-          );
-        },
-      });
-  }
-
-  removeProduct(productId: number): void {
-    if (!this.selectedTableForProducts?.id) {
-      this.notification.error('Mesa não selecionada');
-      return;
-    }
-
-    alertConfirm('Tem certeza que deseja remover este produto?').then((result) => {
-      if (result && this.selectedTableForProducts?.id) {
-        this.tableService
-          .removeProductFromTable(this.selectedTableForProducts.id, productId)
-          .subscribe({
-            next: (response) => {
-              this.selectedTableForProducts = response;
-              this.notification.success('Produto removido com sucesso!');
-              this.cdr.markForCheck();
-            },
-            error: (error) => {
-              this.notification.error(
-                `Erro ao remover produto: ${error.error?.message || error.message}`,
-              );
-            },
-          });
-      }
-    });
-  }
-
-  // 💰 Fechar Comanda
+  // Fechar Comanda
   closeTab(): void {
     if (!this.selectedTableForProducts?.id) {
       this.notification.error('Mesa não selecionada');
       return;
     }
 
-    if (!this.selectedTableForProducts.products?.length) {
+    if (!this.selectedTableForProducts.order?.items?.length) {
       this.notification.warning('Não há produtos na comanda');
       return;
     }
@@ -357,9 +269,8 @@ export class TableManagement {
             this.closeTabModal();
             this.getTables();
 
-            // Navega para a página de vendas após fechar
             setTimeout(() => {
-              this.router.navigate(['/vendas', response.saleId]);
+              this.router.navigate(['/comandas', response.orderId]);
             }, 100);
           },
           error: (error) => {
@@ -372,9 +283,9 @@ export class TableManagement {
     });
   }
 
-  // 🔄 Serviços de Dados
+  // Serviços de Dados
   getTables(): void {
-    this.tableService.getTables().subscribe({
+    this.tableService.getTables(this.selectedLocation ?? undefined).subscribe({
       next: (response) => {
         this.tables = response;
         this.cdr.markForCheck();
@@ -385,21 +296,6 @@ export class TableManagement {
     });
   }
 
-  getProducts(): void {
-    this.tableService.getProducts().subscribe({
-      next: (response) => {
-        this.products = response;
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        this.notification.error(
-          `Erro ao buscar produtos: ${error.error?.message || error.message}`,
-        );
-      },
-    });
-  }
-
-  // 🏠 Navegação
   goToMenu(): void {
     this.router.navigate(['/dashboard']);
   }

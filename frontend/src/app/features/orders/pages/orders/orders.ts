@@ -21,7 +21,6 @@ export class Orders {
     'text-white hover:underline px-4 py-2 rounded-lg flex items-center gap-2 font-semibold';
 
   changeMenuContext(context: string): void {
-    console.log(context, 'contexto')
     this.menuContext = context;
   }
 

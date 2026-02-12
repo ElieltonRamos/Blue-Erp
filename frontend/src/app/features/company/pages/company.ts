@@ -282,7 +282,6 @@ export class Company {
         invalidFields.push(fieldLabels[key] || key);
       }
     });
-    console.log(invalidFields)
 
     return invalidFields;
   }

@@ -44,7 +44,6 @@ export class ListClients {
   getClients(page: number, limit: number) {
     this.clientService.getClients(page, limit, this.filterName, this.filterStatus).subscribe({
       next: (response) => {
-        console.log(response.data, 'lista')
         this.listClients = response.data;
         this.totalItems = response.total;
         this.page = response.page;

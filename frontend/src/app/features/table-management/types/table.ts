@@ -1,44 +1,56 @@
-// types/table.types.ts
-// Tipos centralizados para o sistema de mesas
+export type TableStatus = 'AVAILABLE' | 'OCCUPIED' | 'RESERVED';
 
-export interface TableProduct {
-  id?: number;
-  productId: number;
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-  totalPrice: number;
+export interface TableLocation {
+  id: number;
+  code: string;
+  name: string;
 }
 
-export type TableStatus = 'available' | 'occupied' | 'reserved';
-
-export type LocationId = 'salao-01' | 'salao-02' | 'salao-03';
-
-export interface Location {
-  id: LocationId;
+export interface OrderItem {
+  id: number;
+  code: string;
   name: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  productId: number;
+}
+
+export interface TableOrder {
+  id: number;
+  type: string;
+  locationId: string;
+  customerName: string | null;
+  status: string;
+  total: number;
+  items: OrderItem[];
+  createdAt: string;
 }
 
 export interface Table {
-  id?: number;
+  id: number;
   number: number;
   capacity: number;
   status: TableStatus;
-  locationId: LocationId;
-  customer?: string | null;
-  time?: string | null;
-  products?: TableProduct[];
+  customer: string | null;
+  time: string | null;
+  locationId: number;
+  location: TableLocation;
+  orderId: number | null;
+  order: TableOrder | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface ProductTable {
-  id: number;
-  name: string;
-  price: number;
-  category?: string;
+export class UpdateTableDto {
+  number?: number;
+  capacity?: number;
+  locationId?: number;
+  customer?: string;
 }
 
 export interface CloseTabResponse {
-  saleId: number;
+  orderId: number;
   total: number;
-  message?: string;
+  message: string;
 }

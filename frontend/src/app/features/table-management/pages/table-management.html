@@ -19,7 +19,11 @@
         @for (location of locations; track location.id) {
           <button
             (click)="selectLocation(location.id)"
-            [class]="selectedLocation === location.id ? 'px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-md text-sm font-medium transition-colors' : 'px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm font-medium transition-colors'"
+            [class]="
+              selectedLocation === location.id
+                ? 'px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-md text-sm font-medium transition-colors'
+                : 'px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm font-medium transition-colors'
+            "
           >
             {{ location.name }}
           </button>
@@ -57,7 +61,7 @@
         [occupied]="occupiedTables"
       />
 
-      <!-- Tables Grid - Responsivo -->
+      <!-- Tables Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         @for (table of sortedTables; track table.id) {
           <app-table-card
@@ -77,6 +81,7 @@
     </div>
   </div>
 
+  <!-- Table CRUD Modal -->
   <app-table-modal
     *ngIf="showModal"
     [show]="showModal"
@@ -84,19 +89,18 @@
     [tableId]="selectedTable?.id"
     [entity]="selectedTable"
     [selectedLocation]="selectedLocation"
+    [locations]="locations"
     (close)="closeModal()"
-    (saved)="onTableModalSave($event)"
+    (saved)="onTableModalSave()"
   />
+
   <!-- Products Modal -->
   <app-table-product-modal
     *ngIf="showProductModal && selectedTableForProducts"
     [show]="showProductModal"
     [table]="selectedTableForProducts!"
-    [products]="products"
     (close)="closeProductModal()"
-    (add)="addProductToTable($event)"
-    (remove)="removeProduct($event)"
-    (update)="updateProductQuantity($event.id, $event.change)"
+    (updated)="getTables()"
   />
 
   <!-- Tab/Comanda Modal -->

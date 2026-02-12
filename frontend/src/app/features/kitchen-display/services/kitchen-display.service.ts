@@ -129,11 +129,6 @@ export class KitchenService {
       });
     }
 
-    console.log(
-      pendingItems.map((item) => item.productionId),
-      'itens pendentes',
-    );
-
     return this.client.post(`${this.apiUrl}/batch/start`, {
       productionIds: pendingItems.map((item) => item.productionId),
     });

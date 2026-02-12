@@ -26,18 +26,18 @@
     <!-- Body -->
     <div class="p-6 overflow-y-auto flex-1">
       <div class="space-y-3 mb-6">
-        @if (!table.products || table.products.length === 0) {
+        @if (!table.order?.items || table.order!.items.length === 0) {
           <div class="text-center py-8 text-slate-400">Nenhum produto na comanda</div>
         }
-        @for (product of table.products; track product.id) {
+        @for (item of table.order?.items; track item.id) {
           <div class="flex justify-between items-center py-3 border-b border-slate-700/50">
             <div class="flex-1">
-              <div class="text-white font-medium">{{ product.productName }}</div>
+              <div class="text-white font-medium">{{ item.name }}</div>
               <div class="text-slate-400 text-sm">
-                {{ product.quantity }}x R$ {{ product.unitPrice.toFixed(2) }}
+                {{ item.quantity }}x R$ {{ item.unitPrice.toFixed(2) }}
               </div>
             </div>
-            <div class="text-white font-bold">R$ {{ product.totalPrice.toFixed(2) }}</div>
+            <div class="text-white font-bold">R$ {{ item.total.toFixed(2) }}</div>
           </div>
         }
       </div>
@@ -61,7 +61,7 @@
       </button>
       <button
         (click)="finish.emit()"
-        [disabled]="!table.products?.length"
+        [disabled]="!table.order?.items?.length"
         class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors"
       >
         Fechar Comanda

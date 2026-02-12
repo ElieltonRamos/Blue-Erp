@@ -11,7 +11,7 @@
         <h3 class="text-xl font-bold text-white">Mesa {{ table.number }} - Produtos</h3>
         <p class="text-slate-400 text-sm">{{ table.customer }}</p>
       </div>
-      <button (click)="close.emit()" class="p-1 hover:bg-slate-700 rounded transition-colors">
+      <button (click)="onClose()" class="p-1 hover:bg-slate-700 rounded transition-colors">
         <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -25,37 +25,86 @@
 
     <!-- Body -->
     <div class="p-6 overflow-y-auto flex-1">
-      <!-- Add Product -->
+      <!-- Buscar Produto -->
       <div class="mb-6">
-        <label class="block text-slate-300 text-sm font-medium mb-2">Adicionar Produto</label>
-        <select
-          #productSelect
-          (change)="onProductSelect(productSelect.value)"
-          class="w-full bg-slate-700 border border-slate-600 rounded-md px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-        >
-          <option value="">Selecione um produto...</option>
-          @for (product of products; track product.id) {
-            <option [value]="product.id">
-              {{ product.name }} - R$ {{ product.price.toFixed(2) }}
-            </option>
-          }
-        </select>
+        <label class="block text-slate-300 text-sm font-medium mb-3">Buscar Produto</label>
+        <div class="grid grid-cols-12 gap-3">
+          <div class="col-span-4">
+            <input
+              type="text"
+              [(ngModel)]="searchCode"
+              (keyup.enter)="searchByCode()"
+              [disabled]="isSearching"
+              placeholder="Código de barras"
+              class="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50"
+            />
+          </div>
+          <div class="col-span-6">
+            <input
+              type="text"
+              [(ngModel)]="searchName"
+              (keyup.enter)="searchByName()"
+              [disabled]="isSearching"
+              placeholder="Nome do produto"
+              class="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50"
+            />
+          </div>
+          <div class="col-span-2">
+            <button
+              type="button"
+              (click)="searchCode ? searchByCode() : searchByName()"
+              [disabled]="isSearching || (!searchCode && !searchName)"
+              class="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            >
+              @if (isSearching) {
+                <svg
+                  class="animate-spin w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                </svg>
+              } @else {
+                Buscar
+              }
+            </button>
+          </div>
+        </div>
+
+        <!-- Resultados da busca por nome -->
+        @if (searchResults.length > 0) {
+          <div class="mt-3">
+            <label class="text-slate-300 text-sm mb-2 block">Selecione o produto:</label>
+            <select
+              (change)="selectSearchResult($event)"
+              class="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            >
+              <option value="">-- Escolha um produto --</option>
+              @for (product of searchResults; track product.id; let i = $index) {
+                <option [value]="i">
+                  {{ product.code }} - {{ product.name }} - R$ {{ product.price.toFixed(2) }}
+                </option>
+              }
+            </select>
+          </div>
+        }
       </div>
 
       <!-- Products List -->
       <div class="space-y-3">
-        @if (!table.products?.length) {
+        @if (items.length === 0) {
           <div class="text-center py-8 text-slate-400">Nenhum produto adicionado ainda</div>
         }
-        @for (item of table.products; track item.id) {
+        @for (item of items; track item.id) {
           <div class="bg-slate-700/50 rounded-lg p-4 border border-slate-600/50">
             <div class="flex justify-between items-start mb-2">
               <div class="flex-1">
-                <h4 class="text-white font-medium">{{ item.productName }}</h4>
+                <h4 class="text-white font-medium">{{ item.name }}</h4>
                 <p class="text-slate-400 text-sm">R$ {{ item.unitPrice.toFixed(2) }} / unidade</p>
               </div>
               <button
-                (click)="remove.emit(item.id!)"
+                (click)="removeItem(item)"
                 class="p-1 hover:bg-rose-600 rounded transition-colors"
               >
                 <svg
@@ -76,7 +125,7 @@
             <div class="flex justify-between items-center">
               <div class="flex items-center gap-2">
                 <button
-                  (click)="update.emit({ id: item.id!, change: -1 })"
+                  (click)="updateQuantity(item, -1)"
                   class="p-1 bg-slate-600 hover:bg-slate-500 rounded transition-colors"
                 >
                   <svg
@@ -95,7 +144,7 @@
                 </button>
                 <span class="text-white font-medium w-12 text-center">{{ item.quantity }}</span>
                 <button
-                  (click)="update.emit({ id: item.id!, change: 1 })"
+                  (click)="updateQuantity(item, 1)"
                   class="p-1 bg-slate-600 hover:bg-slate-500 rounded transition-colors"
                 >
                   <svg
@@ -113,17 +162,27 @@
                   </svg>
                 </button>
               </div>
-              <div class="text-white font-bold">R$ {{ item.totalPrice.toFixed(2) }}</div>
+              <div class="text-white font-bold">R$ {{ item.total.toFixed(2) }}</div>
             </div>
           </div>
         }
       </div>
+
+      <!-- Total -->
+      @if (items.length > 0) {
+        <div class="mt-4 bg-slate-700/50 rounded-lg p-4 border border-slate-600/50">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-300 font-medium">Total:</span>
+            <span class="text-white font-bold text-xl">R$ {{ orderTotal.toFixed(2) }}</span>
+          </div>
+        </div>
+      }
     </div>
 
     <!-- Footer -->
     <div class="p-6 border-t border-slate-700">
       <button
-        (click)="close.emit()"
+        (click)="onClose()"
         class="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm font-medium transition-colors"
       >
         Fechar

@@ -9,17 +9,17 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { FormField, ModalEditEntity } from '../../../../shared/modal-edit-entity/modal-edit-entity';
-import { Location, Table } from '../../types/table';
+import { Table } from '../../types/table';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { TableService } from '../../services/table.service';
 import { Observable } from 'rxjs';
-import { TableMockService } from '../../services/table.mock.service';
+import { ProductionLocation } from '../../../users/services/location.service';
 
 interface ModalConfig {
   title: string;
   fields: FormField[];
-  validate: (table: Table) => boolean;
-  execute: (service: TableMockService, table: Table, tableId?: number) => Observable<any>;
+  validate: (data: any) => boolean;
+  execute: (service: TableService, data: any, tableId?: number) => Observable<any>;
 }
 
 @Component({
@@ -42,92 +42,110 @@ export class TableModalComponent implements OnChanges {
   @Input() type!: 'add' | 'edit' | 'reserve' | 'occupy';
   @Input() entity: Table | null = null;
   @Input() tableId?: number;
-  @Input() selectedLocation?: string;
+  @Input() selectedLocation: number | null = null;
+  @Input() locations: ProductionLocation[] = [];
 
   @Output() close = new EventEmitter<void>();
-  @Output() saved = new EventEmitter<Table>();
+  @Output() saved = new EventEmitter<void>();
 
   config: ModalConfig | null = null;
 
-  private tableService = inject(TableMockService);
+  private tableService = inject(TableService);
   private notification = inject(NotificationService);
 
-  private readonly configs: Record<string, ModalConfig> = {
-    add: {
-      title: 'Nova Mesa',
-      fields: [
-        { name: 'number', label: 'Número da Mesa', type: 'number', required: true },
-        { name: 'capacity', label: 'Capacidade', type: 'number', required: true },
-        {
-          name: 'locationId',
-          label: 'Local',
-          type: 'select',
-          required: true,
-          options: ['salao-01', 'salao-02', 'salao-03'], // ← NOVO CAMPO
+  private buildConfigs(): Record<string, ModalConfig> {
+    const locationOptions = this.locations.map((l) => l.name);
+
+    return {
+      add: {
+        title: 'Nova Mesa',
+        fields: [
+          { name: 'number', label: 'Número da Mesa', type: 'number', placeholder: '0', required: true },
+          { name: 'capacity', label: 'Capacidade', type: 'number', placeholder: '0', required: true },
+          {
+            name: 'locationId',
+            label: 'Local',
+            type: 'select',
+            required: true,
+            options: locationOptions,
+          },
+        ],
+        validate: (data) => !!(data.number && data.capacity && data.locationId),
+        execute: (service, data) => {
+          const locationId = this.getLocationIdByName(data.locationId);
+          return service.createTable({
+            number: Number(data.number),
+            capacity: Number(data.capacity),
+            locationId: locationId!,
+          });
         },
-      ],
-      validate: (table) => !!(table.number && table.capacity),
-      execute: (service, table) => service.createTable(table),
-    },
+      },
 
-    edit: {
-      title: 'Editar Mesa',
-      fields: [
-        { name: 'number', label: 'Número da Mesa', type: 'number', required: true },
-        { name: 'capacity', label: 'Capacidade', type: 'number', required: true },
-        { name: 'customer', label: 'Cliente', type: 'text' },
-        {
-          name: 'locationId',
-          label: 'Local',
-          type: 'select',
-          required: true,
-          options: ['salao-01', 'salao-02', 'salao-03'], // ← NOVO CAMPO
+      edit: {
+        title: 'Editar Mesa',
+        fields: [
+          { name: 'number', label: 'Número da Mesa', type: 'number', required: true },
+          { name: 'capacity', label: 'Capacidade', type: 'number', required: true },
+          { name: 'customer', label: 'Nome do Cliente', type: 'text', required: true },
+          {
+            name: 'locationId',
+            label: 'Local',
+            type: 'select',
+            required: true,
+            options: locationOptions,
+          },
+        ],
+        validate: (data) => !!(data.number && data.capacity && data.locationId),
+        execute: (service, data) => {
+          const locationId = this.getLocationIdByName(data.locationId);
+          return service.editTable(data.id, {
+            number: Number(data.number),
+            capacity: Number(data.capacity),
+            locationId: locationId,
+            customer: data.customer,
+          });
         },
-      ],
-      validate: (table) => !!(table.number && table.capacity),
-      execute: (service, table, tableId) => service.editTable(tableId!, table),
-    },
+      },
 
-    reserve: {
-      title: 'Reservar Mesa',
-      fields: [
-        { name: 'customer', label: 'Nome do Cliente', type: 'text', required: true },
-        { name: 'time', label: 'Horário', type: 'datetime-local', required: true },
-      ],
-      validate: (table) => !!(table.customer && table.time),
-      execute: (service, table, tableId) =>
-        service.reserveTable(tableId!, table.customer!, table.time!),
-    },
+      reserve: {
+        title: 'Reservar Mesa',
+        fields: [
+          { name: 'customer', label: 'Nome do Cliente', type: 'text', required: true },
+          { name: 'time', label: 'Horário', type: 'datetime-local', required: true },
+        ],
+        validate: (data) => !!(data.customer && data.time),
+        execute: (service, data, tableId) =>
+          service.reserveTable(tableId!, data.customer, data.time),
+      },
 
-    occupy: {
-      title: 'Ocupar Mesa',
-      fields: [{ name: 'customer', label: 'Nome do Cliente', type: 'text', required: true }],
-      validate: (table) => !!table.customer,
-      execute: (service, table, tableId) => service.occupyTable(tableId!, table.customer!),
-    },
-  };
+      occupy: {
+        title: 'Ocupar Mesa',
+        fields: [{ name: 'customer', label: 'Nome do Cliente', type: 'text', required: true }],
+        validate: (data) => !!data.customer,
+        execute: (service, data, tableId) => service.occupyTable(tableId!, data.customer),
+      },
+    };
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['type'] || changes['show'] || changes['entity']) {
+    if (changes['type'] || changes['show'] || changes['entity'] || changes['locations']) {
       this.setupModal();
     }
   }
 
   private setupModal(): void {
-    if (!this.type || !this.configs[this.type]) {
+    if (!this.type) {
       this.config = null;
       return;
     }
 
-    this.config = this.configs[this.type];
+    const configs = this.buildConfigs();
+    this.config = configs[this.type] || null;
 
     if (!this.entity) {
-      this.entity = {} as Table;
-    } else {
       this.entity = {
-        ...this.entity,
-        locationId: this.entity.locationId || this.selectedLocation || 'salao-01',
-      };
+        locationId: this.selectedLocation ?? undefined,
+      } as any;
     }
 
     if (this.type !== 'add' && !this.tableId) {
@@ -135,23 +153,23 @@ export class TableModalComponent implements OnChanges {
     }
   }
 
-  onSave(table: Table): void {
+  onSave(data: any): void {
     if (!this.config) {
       this.notification.error('Configuração inválida!');
       return;
     }
 
-    if (!this.config.validate(table)) {
+    if (!this.config.validate(data)) {
       this.notification.error('Preencha todos os campos obrigatórios!');
       return;
     }
 
-    const request$ = this.config.execute(this.tableService, table, this.tableId);
+    const request$ = this.config.execute(this.tableService, data, this.tableId);
 
     request$.subscribe({
       next: () => {
         this.notification.success(`${this.config!.title} realizado com sucesso!`);
-        this.saved.emit(table);
+        this.saved.emit();
         this.close.emit();
       },
       error: (error: any) => {
@@ -161,5 +179,9 @@ export class TableModalComponent implements OnChanges {
         );
       },
     });
+  }
+
+  private getLocationIdByName(name: string): number | undefined {
+    return this.locations.find((l) => l.name === name)?.id;
   }
 }

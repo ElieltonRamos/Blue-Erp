@@ -12,9 +12,10 @@ import { ProductsModule } from './products/products.module';
 import { OrdersModule } from './orders/orders.module';
 import { OrderProductionModule } from './order-production/order-production.module';
 import { ProductionLocationsModule } from './production-locations/production-locations.module';
+import { TablesModule } from './tables/tables.module';
 
 @Module({
-  imports: [UsersModule, PrismaModule, CompanyModule, ClientsModule, IbptModule, ExpensesModule, PrimaryMaterialsModule, ProductsModule, OrdersModule, OrderProductionModule, ProductionLocationsModule],
+  imports: [UsersModule, PrismaModule, CompanyModule, ClientsModule, IbptModule, ExpensesModule, PrimaryMaterialsModule, ProductsModule, OrdersModule, OrderProductionModule, ProductionLocationsModule, TablesModule],
   controllers: [AppController],
   providers: [AppService],
 })

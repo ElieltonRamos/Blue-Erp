@@ -50,6 +50,12 @@ enum ProductionStatus {
   CANCELED
 }
 
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+}
+
 model Company {
   id                        Int       @id @default(autoincrement())
   cnpj                      String    @unique
@@ -160,6 +166,7 @@ model ProductionLocation {
   order       Int      @default(0)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
+  tables      Table[]
 
   @@index([active])
   @@index([order])
@@ -238,6 +245,7 @@ model Order {
   operatorId        Int?        @map("operator_id")
   operator          User?       @relation(fields: [operatorId], references: [id])
   items             OrderItem[]
+  tableRef          Table?
 
   @@index([status])
   @@index([locationId])
@@ -401,4 +409,24 @@ model PreparationStep {
   @@unique([productId, order])
   @@index([productId])
   @@map("preparation_steps")
+}
+
+model Table {
+  id         Int                @id @default(autoincrement())
+  number     Int
+  capacity   Int
+  status     TableStatus        @default(AVAILABLE)
+  customer   String?
+  time       String?
+  locationId Int                @map("location_id")
+  location   ProductionLocation @relation(fields: [locationId], references: [id])
+  orderId    Int?               @unique @map("order_id")
+  order      Order?             @relation(fields: [orderId], references: [id])
+  createdAt  DateTime           @default(now()) @map("created_at")
+  updatedAt  DateTime           @updatedAt @map("updated_at")
+
+  @@unique([number, locationId])
+  @@index([locationId])
+  @@index([status])
+  @@map("tables")
 }
