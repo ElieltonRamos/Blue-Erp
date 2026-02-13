@@ -14,9 +14,10 @@ import { OrderProductionModule } from './order-production/order-production.modul
 import { ProductionLocationsModule } from './production-locations/production-locations.module';
 import { TablesModule } from './tables/tables.module';
 import { SalesModule } from './sales/sales.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
-  imports: [UsersModule, PrismaModule, CompanyModule, ClientsModule, IbptModule, ExpensesModule, PrimaryMaterialsModule, ProductsModule, OrdersModule, OrderProductionModule, ProductionLocationsModule, TablesModule, SalesModule],
+  imports: [UsersModule, PrismaModule, CompanyModule, ClientsModule, IbptModule, ExpensesModule, PrimaryMaterialsModule, ProductsModule, OrdersModule, OrderProductionModule, ProductionLocationsModule, TablesModule, SalesModule, ReportsModule],
   controllers: [AppController],
   providers: [AppService],
 })

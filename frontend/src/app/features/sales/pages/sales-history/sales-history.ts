@@ -43,13 +43,7 @@ export class SalesHistory {
 
   ngOnInit() {
     this.getOperators();
-
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const localDate = now.toISOString().split('T')[0];
-    this.startDate = localDate;
-    this.endDate = localDate;
-
+    this.setTodayDate();
     this.getSales(this.page, this.limit);
   }
 
@@ -71,9 +65,20 @@ export class SalesHistory {
     this.getSales(this.page, this.limit);
   }
 
+  private setTodayDate(): void {
+    const now = new Date();
+    const brasiliaOffset = -3;
+    const brasiliaTime = new Date(now.getTime() + brasiliaOffset * 60 * 60 * 1000);
+
+    brasiliaTime.setHours(0, 0, 0, 0);
+    const localDate = brasiliaTime.toISOString().split('T')[0];
+
+    this.startDate = localDate;
+    this.endDate = localDate;
+  }
+
   clearDateFilter(): void {
-    this.startDate = null;
-    this.endDate = null;
+    this.setTodayDate();
     this.filterId = '';
     this.filterClient = '';
     this.filterOperator = '';

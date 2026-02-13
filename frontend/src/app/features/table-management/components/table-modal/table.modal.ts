@@ -60,8 +60,20 @@ export class TableModalComponent implements OnChanges {
       add: {
         title: 'Nova Mesa',
         fields: [
-          { name: 'number', label: 'Número da Mesa', type: 'number', placeholder: '0', required: true },
-          { name: 'capacity', label: 'Capacidade', type: 'number', placeholder: '0', required: true },
+          {
+            name: 'number',
+            label: 'Número da Mesa',
+            type: 'number',
+            placeholder: '0',
+            required: true,
+          },
+          {
+            name: 'capacity',
+            label: 'Capacidade',
+            type: 'number',
+            placeholder: '0',
+            required: true,
+          },
           {
             name: 'locationId',
             label: 'Local',
@@ -120,7 +132,15 @@ export class TableModalComponent implements OnChanges {
 
       occupy: {
         title: 'Ocupar Mesa',
-        fields: [{ name: 'customer', label: 'Nome do Cliente', type: 'text', required: true }],
+        fields: [
+          {
+            name: 'customer',
+            label: 'Nome do Cliente',
+            type: 'text',
+            placeholder: '',
+            required: true,
+          },
+        ],
         validate: (data) => !!data.customer,
         execute: (service, data, tableId) => service.occupyTable(tableId!, data.customer),
       },

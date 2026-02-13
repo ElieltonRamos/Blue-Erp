@@ -92,6 +92,7 @@ export interface SaleFilters {
   page?: number;
   limit?: number;
   clientId?: number;
+  clientName?: string;
   operatorId?: number;
   paymentMethod?: string;
   fiscalStatus?: FiscalStatus;

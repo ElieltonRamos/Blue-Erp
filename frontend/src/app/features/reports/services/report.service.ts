@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../core/services/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { SalesReportSummary } from '../types/reportsSales';
+import { SalesReportResponse } from '../types/reportsSales';
 import { ProductReportSummary } from '../types/reportProducts';
 import { ReportExpense } from '../types/reportExpense';
 import { OrderReportSummary } from '../types/reportOrders';
@@ -14,8 +14,8 @@ export class ReportService {
   private apiUrl = environment.apiUrl;
   private client = inject(HttpClient);
 
-  generateReportSales(startDate: string, endDate: string): Observable<SalesReportSummary> {
-    return this.client.get<SalesReportSummary>(`${this.apiUrl}/report/sales`, {
+  generateReportSales(startDate: string, endDate: string): Observable<SalesReportResponse> {
+    return this.client.get<SalesReportResponse>(`${this.apiUrl}/reports/sales`, {
       params: {
         startDate,
         endDate,

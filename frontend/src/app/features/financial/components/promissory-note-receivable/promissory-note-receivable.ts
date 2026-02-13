@@ -1,13 +1,14 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { PaginatorComponent } from '../../../../shared/paginator/paginator.component';
 import { ModalSalesNote } from '../../../sales/components/modal-sales-note/modal-sales-note';
-import { Sale } from '../../../sales/types/sale';
+import { MarkAsReceivedDto, Sale } from '../../../sales/types/sale';
 import { FinancialService } from '../../services/financial.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import User from '../../../users/types/user';
+import { SaleService } from '../../../sales/services/sales.service';
 
 @Component({
   selector: 'app-promissory-note-receivable',
@@ -27,15 +28,16 @@ export class PromissoryNoteReceivable {
   filterId: string = '';
   filterClient: string = '';
   filterOperator: string = '';
-  filterMethod: string = 'Notinha';
+  filterMethod: string = 'NOTINHA';
   filterIsPaid: boolean | undefined = false;
   filterStatusSelect: 'pending' | 'all' = 'pending';
   operators: User[] = [];
   selectedSalesIds: number[] = [];
 
   private router = inject(Router);
-  private financialService = inject(FinancialService);
+  private saleService = inject(SaleService);
   private notification = inject(NotificationService);
+  private cdr = inject(ChangeDetectorRef);
 
   get totalSelectedAmount(): number {
     const selected = this.listSales.filter((sale) => this.selectedSalesIds.includes(sale.id!));
@@ -92,7 +94,9 @@ export class PromissoryNoteReceivable {
   }
 
   markSelectedAsReceived(): void {
-    this.financialService.markSaleReceived(this.selectedSalesIds).subscribe({
+    const saleIds: MarkAsReceivedDto = { salesIds: this.selectedSalesIds }
+    console.log(saleIds)
+    this.saleService.markAsReceived(saleIds).subscribe({
       next: () => {
         this.notification.success('Baixa de notinhas realizada com sucesso!');
         this.selectedSalesIds = [];
@@ -122,7 +126,7 @@ export class PromissoryNoteReceivable {
     this.filterId = '';
     this.filterClient = '';
     this.filterOperator = '';
-    this.filterMethod = 'Notinha';
+    this.filterMethod = 'NOTINHA';
     this.filterIsPaid = false;
     this.filterStatusSelect = 'pending';
     this.page = 1;
@@ -130,26 +134,30 @@ export class PromissoryNoteReceivable {
   }
 
   goToMenu() {
-    this.router.navigate(['/menu']);
+    this.router.navigate(['/dashboard']);
   }
+
   getSales(page: number, limit: number): void {
-    const filters: any = {
-      id: this.filterId?.trim() || undefined,
-      startDate: this.startDate || undefined,
-      endDate: this.endDate || undefined,
-      client: this.filterClient?.trim() || undefined,
-      operator: this.filterOperator?.trim() || undefined,
-      paymentMethod: this.filterMethod?.trim() || undefined,
-      isPaid: this.filterIsPaid,
+    const filters = {
+      page,
+      limit,
+      ...(this.filterId?.trim() && { clientId: Number(this.filterId) }),
+      ...(this.filterClient?.trim() && { clientName: this.filterClient }),
+      ...(this.startDate && { startDate: this.startDate }),
+      ...(this.endDate && { endDate: this.endDate }),
+      ...(this.filterOperator?.trim() && { operatorId: Number(this.filterOperator) }),
+      ...(this.filterMethod?.trim() && { paymentMethod: this.filterMethod }),
+      ...(this.filterIsPaid !== undefined && { isPaid: this.filterIsPaid }),
     };
 
-    this.financialService.getSales(page, limit, filters).subscribe({
+    this.saleService.getSales(filters).subscribe({
       next: (response) => {
         this.listSales = response.data;
         this.totalItems = response.total;
         this.page = response.page;
         this.limit = response.limit;
         this.totalPages = response.totalPages;
+        this.cdr.detectChanges(); 
       },
       error: (e) => {
         this.notification.error(`Erro ao buscar vendas: ${e.error?.message || 'Erro inesperado.'}`);

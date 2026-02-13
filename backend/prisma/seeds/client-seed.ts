@@ -2,13 +2,13 @@ import { PrismaClient } from 'generated/prisma/client';
 
 export async function seedClients(prisma: PrismaClient) {
   const joao = await prisma.client.upsert({
-    where: { cpf: '12345678901' },
+    where: { cpf: '00000000000' },
     update: {},
     create: {
-      name: 'João Silva',
-      phone: '11987654321',
-      address: 'Rua das Acácias, 123 - Centro - São Paulo/SP',
-      cpf: '12345678901',
+      name: 'Clientes Avista',
+      phone: '00000000000',
+      address: 'Sem Endereço',
+      cpf: '00000000000',
       active: true,
     },
   });

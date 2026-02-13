@@ -62,14 +62,21 @@ export class ReportSales {
   }
 
   generateReport() {
+    if (this.isLoading) return;
+
     this.isLoading = true;
-    // Chamar serviço que busca os dados e exibe ou exporta
+
     this.reportService.generateReportSales(this.startDate, this.endDate).subscribe({
-      next: (reportData) => {
-        this.report = reportData;
+      next: (response) => {
+        if (response.status === 'OK' && response.data) {
+          this.report = response.data;
+        } else {
+          this.notification.error(response.message ?? 'Erro ao gerar relatório');
+        }
       },
       error: (err) => {
-        this.notification.error(`Erro ao gerar relatório: ${err.error.message}`);
+        console.error(err);
+        this.notification.error(err?.error?.message ?? 'Erro inesperado ao gerar relatório');
       },
       complete: () => {
         this.isLoading = false;

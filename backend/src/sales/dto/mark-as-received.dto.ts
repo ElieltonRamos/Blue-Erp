@@ -7,8 +7,8 @@ export class MarkAsReceivedDto {
     example: [1, 2, 3],
     type: [Number],
   })
-  @IsArray()
-  @IsInt({ each: true })
-  @ArrayMinSize(1)
+  @IsArray({ message: 'salesIds deve ser um array' })
+  @IsInt({ each: true, message: 'Todos os IDs devem ser números inteiros' })
+  @ArrayMinSize(1, { message: 'É necessário enviar pelo menos um ID de venda' })
   salesIds: number[];
 }

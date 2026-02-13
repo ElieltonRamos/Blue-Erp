@@ -39,6 +39,33 @@ import { MarkAsReceivedDto } from './dto/mark-as-received.dto.js';
 export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
+  @Patch('mark-as-received')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Marcar múltiplas vendas como recebidas/pagas' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Vendas marcadas como recebidas',
+    schema: {
+      properties: {
+        message: {
+          type: 'string',
+          example: '3 venda(s) marcada(s) como recebida(s) com sucesso',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Lista de IDs inválida',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Nenhuma venda pendente encontrada',
+  })
+  markAsReceived(@Body() dto: MarkAsReceivedDto) {
+    return this.salesService.markAsReceived(dto.salesIds);
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Criar nova venda' })
@@ -154,32 +181,5 @@ export class SalesController {
     @CurrentUser('username') username: string,
   ) {
     return this.salesService.convertOrderToSale(orderId, dto, userId, username);
-  }
-
-  @Patch('mark-as-received')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Marcar múltiplas vendas como recebidas/pagas' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Vendas marcadas como recebidas',
-    schema: {
-      properties: {
-        message: {
-          type: 'string',
-          example: '3 venda(s) marcada(s) como recebida(s) com sucesso',
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Lista de IDs inválida',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Nenhuma venda pendente encontrada',
-  })
-  markAsReceived(@Body() dto: MarkAsReceivedDto) {
-    return this.salesService.markAsReceived(dto.salesIds);
   }
 }

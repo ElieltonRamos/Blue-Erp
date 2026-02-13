@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsNumber,
   IsString,
@@ -71,10 +71,24 @@ export class SaleFiltersDto {
     description: 'Filtrar por vendas pagas/não pagas',
     example: true,
   })
-  @Type(() => Boolean)
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    if (value === true) return true;
+    if (value === false) return false;
+    return undefined;
+  })
   @IsBoolean()
   @IsOptional()
   isPaid?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Filtrar por nome do cliente',
+    example: 'João Silva',
+  })
+  @IsString()
+  @IsOptional()
+  clientName?: string;
 
   @ApiPropertyOptional({
     description: 'Filtrar por chave fiscal',

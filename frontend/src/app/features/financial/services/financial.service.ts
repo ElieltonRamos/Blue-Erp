@@ -44,36 +44,4 @@ export class FinancialService {
   updateExpense(expense: Expense): Observable<Expense> {
     return this.client.patch<Expense>(`${this.apiUrl}/expenses/${expense.id}`, expense);
   }
-
-  markSaleReceived(salesId: number[]): Observable<any> {
-    return this.client.patch(`${this.apiUrl}/sale/received`, { salesId });
-  }
-
-  getSales(
-    page: number,
-    pageLimit: number,
-    filters: {
-      id?: string;
-      startDate?: string;
-      endDate?: string;
-      client?: string;
-      operator?: string;
-      paymentMethod?: string;
-      isPaid?: boolean;
-    } = {},
-  ): Observable<PaginatedResponse<Sale>> {
-    let params = new HttpParams()
-      .set('page', page.toString())
-      .set('pageLimit', pageLimit.toString());
-
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params = params.set(key, value as any);
-      }
-    });
-
-    return this.client.get<PaginatedResponse<Sale>>(`${this.apiUrl}/sale`, {
-      params,
-    });
-  }
 }

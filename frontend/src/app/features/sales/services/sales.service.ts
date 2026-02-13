@@ -29,6 +29,7 @@ export class SaleService {
       if (filters.page) params = params.set('page', filters.page.toString());
       if (filters.limit) params = params.set('limit', filters.limit.toString());
       if (filters.clientId) params = params.set('clientId', filters.clientId.toString());
+      if (filters.clientName) params = params.set('clientName', filters.clientName);
       if (filters.operatorId) params = params.set('operatorId', filters.operatorId.toString());
       if (filters.paymentMethod) params = params.set('paymentMethod', filters.paymentMethod);
       if (filters.fiscalStatus) params = params.set('fiscalStatus', filters.fiscalStatus);

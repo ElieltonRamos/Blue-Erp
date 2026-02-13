@@ -62,8 +62,17 @@ export class ModalSalesNote implements OnInit {
   }
 
   getDateSale() {
-    const data = new Date(this.saleData.date).toLocaleString();
-    return data;
+    const date = new Date(this.saleData.date);
+    // Ajusta para compensar a conversão UTC
+    date.setHours(date.getHours() + 3);
+
+    return date.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 
   getQuantity(item: SaleItem): number {

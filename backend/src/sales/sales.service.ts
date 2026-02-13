@@ -19,6 +19,22 @@ import { ConvertOrderToSaleDto } from '../orders/dto/convert-order-to-sale.js';
 export class SalesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private getBrasiliaTime(): Date {
+    const now = new Date();
+    const brasiliaOffset = -3; // UTC-3
+    return new Date(now.getTime() + brasiliaOffset * 60 * 60 * 1000);
+  }
+
+  private getStartOfDayBrasilia(dateString: string): Date {
+    const date = new Date(`${dateString}T00:00:00-03:00`);
+    return date;
+  }
+
+  private getEndOfDayBrasilia(dateString: string): Date {
+    const date = new Date(`${dateString}T23:59:59-03:00`);
+    return date;
+  }
+
   async create(
     createSaleDto: CreateSaleDto,
     userId: number,
@@ -102,7 +118,7 @@ export class SalesService {
         clientId,
         userOperator: username,
         operatorId: userId,
-        date: new Date(),
+        date: this.getBrasiliaTime(),
         paymentMethod: saleData.paymentMethod,
         totalProductsWithoutDiscount,
         discount,
@@ -140,6 +156,7 @@ export class SalesService {
       paymentMethod,
       fiscalStatus,
       isPaid,
+      clientName,
       fiscalKey,
       startDate,
       endDate,
@@ -149,6 +166,13 @@ export class SalesService {
 
     const where: Prisma.SaleWhereInput = {
       ...(clientId && { clientId }),
+      ...(clientName && {
+        client: {
+          name: {
+            contains: clientName,
+          },
+        },
+      }),
       ...(operatorId && { operatorId }),
       ...(paymentMethod && { paymentMethod }),
       ...(fiscalStatus && { fiscalStatus }),
@@ -157,8 +181,8 @@ export class SalesService {
       ...(startDate || endDate
         ? {
             date: {
-              ...(startDate && { gte: new Date(`${startDate}T00:00:00.000Z`) }),
-              ...(endDate && { lte: new Date(`${endDate}T23:59:59.999Z`) }),
+              ...(startDate && { gte: this.getStartOfDayBrasilia(startDate) }),
+              ...(endDate && { lte: this.getEndOfDayBrasilia(endDate) }),
             },
           }
         : {}),
@@ -378,7 +402,7 @@ export class SalesService {
           clientId,
           userOperator: username,
           operatorId: userId,
-          date: new Date(),
+          date: this.getBrasiliaTime(),
           paymentMethod: dto.paymentMethod,
           totalProductsWithoutDiscount,
           discount,
