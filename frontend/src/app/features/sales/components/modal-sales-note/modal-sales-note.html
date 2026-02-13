@@ -31,14 +31,14 @@
 
       <p>
         <strong>Cliente:</strong>
-        {{ saleData.client?.name }}
+        {{ saleData.client.name }}
       </p>
       <p><strong>Data:</strong> {{ getDateSale() }}</p>
       <p>
-        <strong>Vendedor:</strong> {{ saleData.userOperator }}
+        <strong>Vendedor:</strong>
         {{ saleData.operator?.username }}
       </p>
-      @if (saleData.paymentMethod === 'Notinha') {
+      @if (saleData.paymentMethod === 'NOTINHA') {
         <p>
           <strong>Status do Pagamento:</strong>
           {{ saleData.isPaid ? 'Recebido' : 'Pendente' }}

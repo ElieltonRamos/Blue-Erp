@@ -232,38 +232,38 @@
             <p class="text-white text-[10px] mb-1.5">Forma de Pagamento:</p>
             <div class="grid grid-cols-4 gap-1.5">
               <button
-                (click)="selectPaymentMethod('money')"
-                [class.bg-cyan-600]="selectedPaymentMethod === 'money'"
-                [class.bg-slate-700]="selectedPaymentMethod !== 'money'"
+                (click)="selectPaymentMethod('DINHEIRO')"
+                [class.bg-cyan-600]="selectedPaymentMethod === 'DINHEIRO'"
+                [class.bg-slate-700]="selectedPaymentMethod !== 'DINHEIRO'"
                 class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
                 title="Dinheiro"
               >
                 <span class="text-lg">💵</span>
               </button>
               <button
-                (click)="selectPaymentMethod('credit')"
-                [class.bg-cyan-600]="selectedPaymentMethod === 'credit'"
-                [class.bg-slate-700]="selectedPaymentMethod !== 'credit'"
+                (click)="selectPaymentMethod('CARTAO')"
+                [class.bg-cyan-600]="selectedPaymentMethod === 'CARTAO'"
+                [class.bg-slate-700]="selectedPaymentMethod !== 'CARTAO'"
                 class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
                 title="Cartão"
               >
                 <span class="text-lg">💳</span>
               </button>
               <button
-                (click)="selectPaymentMethod('pix')"
-                [class.bg-cyan-600]="selectedPaymentMethod === 'pix'"
-                [class.bg-slate-700]="selectedPaymentMethod !== 'pix'"
+                (click)="selectPaymentMethod('PIX')"
+                [class.bg-cyan-600]="selectedPaymentMethod === 'PIX'"
+                [class.bg-slate-700]="selectedPaymentMethod !== 'PIX'"
                 class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
-                title="Pix"
+                title="PIX"
               >
                 <span class="text-lg">📱</span>
               </button>
               <button
-                (click)="selectPaymentMethod('term')"
+                (click)="selectPaymentMethod('NOTINHA')"
                 [disabled]="!selectedClient"
                 [class.opacity-40]="!selectedClient"
-                [class.bg-cyan-600]="selectedPaymentMethod === 'term'"
-                [class.bg-slate-700]="selectedPaymentMethod !== 'term'"
+                [class.bg-cyan-600]="selectedPaymentMethod === 'NOTINHA'"
+                [class.bg-slate-700]="selectedPaymentMethod !== 'NOTINHA'"
                 class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
                 title="A Prazo"
               >
@@ -272,7 +272,7 @@
             </div>
           </div>
 
-          <div *ngIf="selectedPaymentMethod === 'money'" class="grid grid-cols-2 gap-2">
+          <div *ngIf="selectedPaymentMethod === 'DINHEIRO'" class="grid grid-cols-2 gap-2">
             <div>
               <label class="text-white text-[10px] block mb-1">Valor Recebido:</label>
               <input

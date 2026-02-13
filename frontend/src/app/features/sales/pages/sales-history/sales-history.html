@@ -22,13 +22,14 @@
 
       <!-- Primeira Linha: ID, Data Inicial, Data Final -->
       <div class="flex flex-wrap gap-4 items-end mb-4">
-        <!-- Filtro por ID -->
+        <!-- Filtro por ID do Cliente -->
         <div class="flex flex-col w-32">
-          <label class="text-sm text-white mb-1">ID</label>
+          <label class="text-sm text-white mb-1">ID Cliente</label>
           <input
-            type="text"
+            type="number"
             class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
             [(ngModel)]="filterId"
+            placeholder="ID"
           />
         </div>
 
@@ -53,18 +54,8 @@
         </div>
       </div>
 
-      <!-- Segunda Linha: Cliente, Operador, Método de Pagamento -->
+      <!-- Segunda Linha: Operador, Método de Pagamento, Status Fiscal -->
       <div class="flex flex-wrap gap-4 items-end mb-4">
-        <!-- Filtro por Cliente -->
-        <div class="flex flex-col w-full sm:w-64">
-          <label class="text-sm text-white mb-1">Cliente</label>
-          <input
-            type="text"
-            class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
-            [(ngModel)]="filterClient"
-          />
-        </div>
-
         <!-- Filtro por Operador -->
         <div class="flex flex-col w-full sm:w-64">
           <label class="text-sm text-white mb-1">Operador</label>
@@ -74,7 +65,7 @@
           >
             <option value="">Todos</option>
             @for (item of operators; track item.id) {
-              <option [value]="item.username">{{ item.username }}</option>
+              <option [value]="item.id">{{ item.username }}</option>
             }
           </select>
         </div>
@@ -93,6 +84,36 @@
             <option value="Notinha">Notinha</option>
           </select>
         </div>
+
+        <!-- Filtro por Status Fiscal -->
+        <div class="flex flex-col w-full sm:w-64">
+          <label class="text-sm text-white mb-1">Status Fiscal</label>
+          <select
+            class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+            [(ngModel)]="filterFiscalStatus"
+          >
+            <option [value]="null">Todos</option>
+            @for (status of fiscalStatusOptions; track status) {
+              <option [value]="status">{{ status }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- Terceira Linha: Status de Pagamento -->
+      <div class="flex flex-wrap gap-4 items-end mb-4">
+        <!-- Filtro por Status de Pagamento -->
+        <div class="flex flex-col w-full sm:w-64">
+          <label class="text-sm text-white mb-1">Status de Pagamento</label>
+          <select
+            class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+            [(ngModel)]="filterIsPaid"
+          >
+            <option [value]="null">Todos</option>
+            <option [value]="true">Pago</option>
+            <option [value]="false">Pendente</option>
+          </select>
+        </div>
       </div>
 
       <!-- Botões -->
@@ -104,7 +125,15 @@
           Filtrar
         </button>
 
-        @if (startDate || endDate || filterId || filterClient || filterOperator || filterMethod) {
+        @if (
+          startDate ||
+          endDate ||
+          filterId ||
+          filterOperator ||
+          filterMethod ||
+          filterFiscalStatus ||
+          filterIsPaid !== null
+        ) {
           <button
             (click)="clearDateFilter()"
             class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
@@ -123,8 +152,9 @@
             <th class="py-3 px-4">ID</th>
             <th class="py-3 px-4">Data</th>
             <th class="py-3 px-4">Cliente</th>
-            <th class="py-3 px-4">Método de Pagamento</th>
+            <th class="py-3 px-4">Método</th>
             <th class="py-3 px-4">Operador</th>
+            <th class="py-3 px-4">Pagamento</th>
             <th class="py-3 px-4">Total</th>
             <th class="py-3 px-4">Ações</th>
           </tr>
@@ -133,11 +163,22 @@
           @for (sale of listSales; track sale.id) {
             <tr class="hover:bg-[#243447] transition">
               <td class="py-3 px-4">{{ sale.id }}</td>
-              <td class="py-3 px-4">{{ sale.date }}</td>
-              <td class="py-3 px-4">{{ sale.client?.name }}</td>
+              <td class="py-3 px-4">{{ sale.date | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="py-3 px-4">{{ sale.client.name }}</td>
               <td class="py-3 px-4">{{ sale.paymentMethod }}</td>
-              <td class="py-3 px-4">{{ sale.operator?.username }}</td>
-              <td class="py-3 px-4">{{ sale.total }}</td>
+              <td class="py-3 px-4">{{ sale.userOperator }}</td>
+              <td class="py-3 px-4">
+                <span
+                  [class]="
+                    sale.isPaid
+                      ? 'bg-green-600 text-white px-2 py-1 rounded text-xs'
+                      : 'bg-red-600 text-white px-2 py-1 rounded text-xs'
+                  "
+                >
+                  {{ sale.isPaid ? 'PAGO' : 'PENDENTE' }}
+                </span>
+              </td>
+              <td class="py-3 px-4">R$ {{ sale.total.toFixed(2) }}</td>
               <td class="py-3 px-4 space-x-2">
                 <button
                   (click)="openSaleModal(sale)"
@@ -146,6 +187,10 @@
                   Ver Detalhes
                 </button>
               </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="9" class="text-center py-8 text-gray-400">Nenhuma venda encontrada</td>
             </tr>
           }
         </tbody>

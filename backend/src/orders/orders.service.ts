@@ -6,12 +6,10 @@ import {
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderEntity } from './entities/order.entity';
-import { OrderStatus, Prisma, FiscalStatus } from 'generated/prisma/client';
+import { OrderStatus, Prisma } from 'generated/prisma/client';
 import { OrderFiltersDto } from './dto/order-filters.dto';
 import { SendToKitchenDto } from './dto/send-to-kitchen.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { Decimal } from '@prisma/client/runtime/client';
-import { ConvertOrderToSaleDto } from './dto/convert-order-to-sale';
 
 @Injectable()
 export class OrdersService {
@@ -20,7 +18,6 @@ export class OrdersService {
   async create(createOrderDto: CreateOrderDto): Promise<OrderEntity> {
     const { items, operatorId, ...orderData } = createOrderDto;
 
-    // Validar operador se foi enviado
     if (operatorId) {
       const operator = await this.prisma.client.user.findUnique({
         where: { id: operatorId },
@@ -32,7 +29,6 @@ export class OrdersService {
       }
     }
 
-    // Validar produtos
     const productIds = items.map((item) => item.productId);
     const products = await this.prisma.client.product.findMany({
       where: { id: { in: productIds } },
@@ -87,20 +83,17 @@ export class OrdersService {
         },
       });
 
-      // Enviar automaticamente para cozinha se tiver produtos MANUFACTURED
       const hasManufacturedItems = order.items.some(
         (item) => item.product.productType === 'MANUFACTURED',
       );
 
       if (hasManufacturedItems) {
         await this.prisma.client.$transaction(async (tx) => {
-          // Atualizar pedido com kitchenSentAt
           await tx.order.update({
             where: { id: order.id },
             data: { kitchenSentAt: new Date() },
           });
 
-          // Criar registros de produção para cada item MANUFACTURED
           for (const item of order.items) {
             if (item.product.productType === 'MANUFACTURED') {
               await tx.orderProduction.create({
@@ -118,13 +111,11 @@ export class OrdersService {
           }
         });
 
-        // Atualizar ordem local com kitchenSentAt
         order.kitchenSentAt = new Date();
       }
 
       return this.mapToEntity(order);
     } catch (error) {
-      // Tratamento de erros do Prisma
       if (error.code === 'P2003') {
         throw new BadRequestException(
           'Erro de chave estrangeira: Verifique se os dados relacionados existem',
@@ -337,7 +328,6 @@ export class OrdersService {
         const novoPreco = Number(incoming.unitPrice);
         const precoAtual = Number(existing.unitPrice);
 
-        // 🚫 Não pode alterar preço após envio à cozinha
         if (isInProduction && novoPreco !== precoAtual) {
           throw new BadRequestException(
             `Não é permitido alterar o preço do item "${existing.name}" após envio à cozinha`,
@@ -519,7 +509,6 @@ export class OrdersService {
       throw new BadRequestException('Pedido já foi enviado para cozinha');
     }
 
-    // Buscar pedido com produtos para pegar productionLocation
     const orderWithProducts = await this.prisma.client.order.findUnique({
       where: { id },
       include: {
@@ -538,13 +527,10 @@ export class OrdersService {
     });
 
     await this.prisma.client.$transaction(async (tx) => {
-      // Atualizar pedido
       await tx.order.update({
         where: { id },
         data: { kitchenSentAt: new Date() },
       });
-
-      // Criar registros de produção para cada item MANUFATURADO
 
       if (orderWithProducts === null) {
         throw new BadRequestException('Lista de pedidos vazia');
@@ -634,177 +620,6 @@ export class OrdersService {
     return this.mapToEntity(canceledOrder!);
   }
 
-  async markReady(id: number): Promise<OrderEntity> {
-    const order = await this.findOne(id);
-
-    if (order.status !== OrderStatus.OPEN) {
-      throw new BadRequestException(
-        'Apenas pedidos abertos podem ser marcados como prontos',
-      );
-    }
-
-    if (!order.kitchenSentAt) {
-      throw new BadRequestException(
-        'Pedido precisa ser enviado para cozinha primeiro',
-      );
-    }
-
-    // Verificar se todos items estão prontos
-    const allItemsReady = order.items.every(
-      (item) => item.kitchenReadyAt !== null,
-    );
-
-    if (!allItemsReady) {
-      throw new BadRequestException('Nem todos os itens estão prontos');
-    }
-
-    const readyOrder = await this.prisma.client.order.update({
-      where: { id },
-      data: {
-        kitchenReadyAt: new Date(),
-      },
-      include: {
-        items: true,
-        operator: {
-          select: {
-            id: true,
-            username: true,
-            role: true,
-          },
-        },
-      },
-    });
-
-    return this.mapToEntity(readyOrder);
-  }
-
-  async convertToSale(
-    orderId: number,
-    dto: ConvertOrderToSaleDto,
-    userId: number,
-    username: string,
-  ) {
-    // Buscar pedido com itens
-    const order = await this.prisma.client.order.findUnique({
-      where: { id: orderId },
-      include: {
-        items: {
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                costPrice: true,
-                ncm: true,
-                unit: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (!order) {
-      throw new NotFoundException(`Pedido ${orderId} não encontrado`);
-    }
-
-    if (order.status !== OrderStatus.CLOSED) {
-      throw new BadRequestException(
-        'Apenas pedidos fechados podem ser convertidos em venda',
-      );
-    }
-
-    // Validar cliente
-    const clientId = dto.clientId || 1;
-    const client = await this.prisma.client.client.findUnique({
-      where: { id: clientId },
-    });
-
-    if (!client) {
-      throw new BadRequestException(`Cliente ${clientId} não encontrado`);
-    }
-
-    // Calcular valores
-    const discount = new Decimal(Number(dto.discount));
-    const totalProductsWithoutDiscount = new Decimal(order.total);
-    const total = totalProductsWithoutDiscount.minus(discount);
-
-    // Calcular lucro
-    const profitSale = order.items.reduce((acc, item) => {
-      const itemCost = new Decimal(item.product.costPrice).times(
-        new Decimal(item.quantity),
-      );
-      const itemRevenue = new Decimal(item.total);
-      return acc.plus(itemRevenue.minus(itemCost));
-    }, new Decimal(0));
-
-    // Criar venda em transação
-    const sale = await this.prisma.client.$transaction(async (tx) => {
-      // Criar venda
-      const createdSale = await tx.sale.create({
-        data: {
-          clientId,
-          userOperator: username,
-          operatorId: userId,
-          date: new Date(),
-          paymentMethod: dto.paymentMethod,
-          totalProductsWithoutDiscount,
-          discount,
-          total,
-          profitSale: profitSale.minus(discount),
-          isPaid: clientId !== 1,
-          cfop: dto.cfop,
-          fiscalStatus: FiscalStatus.PENDENTE,
-          items: {
-            create: order.items.map((item, index) => ({
-              itemNumber: index + 1,
-              productId: item.productId,
-              xProd: item.product.name,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              totalPrice: item.total,
-              taxUnit: item.product.unit,
-              taxQuantity: item.quantity,
-              taxUnitPrice: item.unitPrice,
-              composesTotal: 1,
-              cfop: dto.cfop,
-              totalTaxValue: null,
-              importTaxValue: new Decimal(0),
-              iofValue: new Decimal(0),
-            })),
-          },
-        },
-        include: {
-          items: true,
-          client: true,
-          operator: {
-            select: {
-              id: true,
-              username: true,
-              role: true,
-            },
-          },
-        },
-      });
-
-      // Atualizar status do pedido
-      await tx.order.update({
-        where: { id: orderId },
-        data: {
-          status: OrderStatus.PAID,
-        },
-      });
-
-      return createdSale;
-    });
-
-    return {
-      ...sale,
-      address: order.address,
-    };
-  }
-
-  // Helper para converter Prisma -> Entity
   private mapToEntity(order: any): OrderEntity {
     return {
       id: order.id,

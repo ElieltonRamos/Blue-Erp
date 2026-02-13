@@ -7,7 +7,7 @@ import {
   OnInit,
   ChangeDetectorRef,
 } from '@angular/core';
-import { Sale, SaleItem } from '../../types/sale';
+import { FiscalStatus, Sale, SaleItem } from '../../types/sale';
 import { LicenseService } from '../../../../core/services/license.service';
 import { NfceEmissaoResponse, NfceService } from '../../services/nfce.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
@@ -88,7 +88,7 @@ export class ModalSalesNote implements OnInit {
   }
 
   hasNfce(): boolean {
-    return this.saleData.nfceStatus === 'emitida' && !!this.saleData.nfceKey;
+    return this.saleData.fiscalStatus === FiscalStatus.EMITIDA && !!this.saleData.fiscalKey;
   }
 
   requestNfce() {
@@ -100,7 +100,7 @@ export class ModalSalesNote implements OnInit {
     }
 
     if (this.hasNfce()) {
-      this.downloadPdf(this.saleData.nfceKey!);
+      this.downloadPdf(this.saleData.fiscalKey!);
       return;
     }
 
@@ -117,10 +117,10 @@ export class ModalSalesNote implements OnInit {
               `Chave: ${this.formatChave(response.chaveAcesso)}\n` +
               `Protocolo: ${response.protocolo || 'N/A'}`,
           );
-          this.saleData.nfceStatus = 'emitida';
-          this.saleData.nfceKey = response.chaveAcesso;
-          this.saleData.nfceProtocol = response.protocolo;
-          this.saleData.dateNfceEmit = new Date();
+          this.saleData.fiscalStatus = FiscalStatus.EMITIDA;
+          this.saleData.fiscalKey = response.chaveAcesso;
+          this.saleData.fiscalProtocol = response.protocolo;
+          this.saleData.fiscalEmitDate = new Date();
           this.downloadPdf(response.chaveAcesso);
         } else if (response.status === 'rejeitada') {
           this.notification.error(`NFC-e rejeitada pela SEFAZ:\n${response.mensagem}`);

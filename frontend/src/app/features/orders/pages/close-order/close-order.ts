@@ -21,7 +21,7 @@ import Client from '../../../clients/types/clients';
 import { ConvertOrderToSaleDto } from '../../types/convert-order-sale';
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 
-export type PaymentMethod = 'money' | 'credit' | 'debit' | 'pix' | 'term';
+export type PaymentMethod = 'DINHEIRO' | 'CARTAO' | 'PIX' | 'NOTINHA';
 
 @Component({
   selector: 'app-close-order',
@@ -49,11 +49,10 @@ export class CloseOrder implements OnInit {
   total = 0;
   amountReceived = 0;
   paymentMethods = [
-    { id: 'money' as PaymentMethod, name: 'Dinheiro', icon: '💵' },
-    { id: 'credit' as PaymentMethod, name: 'Crédito', icon: '💳' },
-    { id: 'debit' as PaymentMethod, name: 'Débito', icon: '💳' },
-    { id: 'pix' as PaymentMethod, name: 'PIX', icon: '📱' },
-    { id: 'term' as PaymentMethod, name: 'Prazo', icon: '📅' },
+    { id: 'DINHEIRO' as PaymentMethod, name: 'Dinheiro', icon: '💵' },
+    { id: 'CARTAO' as PaymentMethod, name: 'Crédito', icon: '💳' },
+    { id: 'PIX' as PaymentMethod, name: 'PIX', icon: '📱' },
+    { id: 'NOTINHA' as PaymentMethod, name: 'Prazo', icon: '📅' },
   ];
 
   customerSearchId = '';
@@ -226,7 +225,7 @@ export class CloseOrder implements OnInit {
 
     this.total = this.subtotal - this.discount;
 
-    if (this.selectedPaymentMethod !== 'money') {
+    if (this.selectedPaymentMethod !== 'DINHEIRO') {
       this.amountReceived = this.total;
     }
 
@@ -244,7 +243,7 @@ export class CloseOrder implements OnInit {
   get isValidPayment(): boolean {
     if (!this.selectedPaymentMethod) return false;
 
-    if (this.selectedPaymentMethod === 'money') {
+    if (this.selectedPaymentMethod === 'DINHEIRO') {
       return this.amountReceived >= this.total;
     }
 
@@ -252,14 +251,14 @@ export class CloseOrder implements OnInit {
   }
 
   selectPaymentMethod(method: PaymentMethod): void {
-    if (method === 'term' && !this.selectedClient) {
+    if (method === 'NOTINHA' && !this.selectedClient) {
       this.notification.warning('Venda a prazo requer cliente cadastrado');
       return;
     }
 
     this.selectedPaymentMethod = method;
 
-    this.amountReceived = method === 'money' ? 0 : this.total;
+    this.amountReceived = method === 'DINHEIRO' ? 0 : this.total;
 
     this.cdr.markForCheck();
   }

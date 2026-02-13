@@ -4,14 +4,15 @@ import { UserService } from '../../../users/services/user.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { FormsModule } from '@angular/forms';
 import { PaginatorComponent } from '../../../../shared/paginator/paginator.component';
-import { SalesService } from '../../services/sales.service';
 import { ModalSalesNote } from '../../components/modal-sales-note/modal-sales-note';
-import { Sale } from '../../types/sale';
+import { FiscalStatus, Sale, SaleFilters } from '../../types/sale';
 import User from '../../../users/types/user';
+import { SaleService } from '../../services/sales.service';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-sales-history',
-  imports: [FormsModule, ModalSalesNote, PaginatorComponent],
+  imports: [FormsModule, ModalSalesNote, PaginatorComponent, DatePipe],
   templateUrl: './sales-history.html',
 })
 export class SalesHistory {
@@ -29,11 +30,15 @@ export class SalesHistory {
   filterClient: string = '';
   filterOperator: string = '';
   filterMethod: string = '';
+  filterFiscalStatus: FiscalStatus | null = null;
+  filterIsPaid: boolean | null = null;
   operators: User[] = [];
+
+  fiscalStatusOptions = Object.values(FiscalStatus);
 
   private router = inject(Router);
   private userService = inject(UserService);
-  private salesService = inject(SalesService);
+  private salesService = inject(SaleService);
   private notification = inject(NotificationService);
 
   ngOnInit() {
@@ -54,13 +59,15 @@ export class SalesHistory {
         this.operators = response;
       },
       error: (e) => {
-        this.notification.error(`Erro ao buscar operadores: ${e.error?.message || 'Erro inesperado.'}`);
+        this.notification.error(
+          `Erro ao buscar operadores: ${e.error?.message || 'Erro inesperado.'}`,
+        );
       },
     });
   }
 
   applyDateFilter(): void {
-    this.page = 1; // Reinicia para a primeira página
+    this.page = 1;
     this.getSales(this.page, this.limit);
   }
 
@@ -71,6 +78,8 @@ export class SalesHistory {
     this.filterClient = '';
     this.filterOperator = '';
     this.filterMethod = '';
+    this.filterFiscalStatus = null;
+    this.filterIsPaid = null;
     this.page = 1;
     this.getSales(this.page, this.limit);
   }
@@ -80,16 +89,19 @@ export class SalesHistory {
   }
 
   getSales(page: number, limit: number): void {
-    const filters: any = {
-      id: this.filterId?.trim() || undefined,
-      startDate: this.startDate || undefined,
-      endDate: this.endDate || undefined,
-      client: this.filterClient?.trim() || undefined,
-      operator: this.filterOperator?.trim() || undefined,
-      paymentMethod: this.filterMethod?.trim() || undefined,
+    const filters: SaleFilters = {
+      page,
+      limit,
+      ...(this.filterId?.trim() && { clientId: Number(this.filterId) }),
+      ...(this.startDate && { startDate: this.startDate }),
+      ...(this.endDate && { endDate: this.endDate }),
+      ...(this.filterOperator?.trim() && { operatorId: Number(this.filterOperator) }),
+      ...(this.filterMethod?.trim() && { paymentMethod: this.filterMethod }),
+      ...(this.filterFiscalStatus && { fiscalStatus: this.filterFiscalStatus }),
+      ...(this.filterIsPaid !== null && { isPaid: this.filterIsPaid }),
     };
 
-    this.salesService.getSales(page, limit, filters).subscribe({
+    this.salesService.getSales(filters).subscribe({
       next: (response) => {
         this.listSales = response.data;
         this.totalItems = response.total;
@@ -111,5 +123,17 @@ export class SalesHistory {
   openSaleModal(sale: Sale) {
     this.saleSelected = sale;
     this.showSaleModal = true;
+  }
+
+  markAsReceived(salesIds: number[]): void {
+    this.salesService.markAsReceived({ salesIds }).subscribe({
+      next: (response) => {
+        this.notification.success(response.message);
+        this.getSales(this.page, this.limit);
+      },
+      error: (e: any) => {
+        this.notification.error(`Erro ao marcar vendas: ${e.error?.message || 'Erro inesperado.'}`);
+      },
+    });
   }
 }

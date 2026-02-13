@@ -1,64 +1,59 @@
-import { inject, Injectable } from '@angular/core';
-import { environment } from '../../../core/services/environment';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Sale } from '../types/sale';
 import { Observable } from 'rxjs';
-import { PaginatedResponse } from '../../../core/guards/types/paginator';
-import { SalesReportSummary } from '../types/reportsSales';
+import { environment } from '../../../core/services/environment';
+import {
+  Sale,
+  CreateSaleDto,
+  UpdateSaleDto,
+  SaleFilters,
+  SalePaginatedResponse,
+  MarkAsReceivedDto,
+} from '../types/sale';
 
 @Injectable({
   providedIn: 'root',
 })
-export class SalesService {
-  private apiUrl = environment.apiUrl;
+export class SaleService {
+  private readonly apiUrl = `${environment.apiUrl}/sales`;
   private client = inject(HttpClient);
 
-  createSale(sale: Sale): Observable<Sale> {
-    return this.client.post<Sale>(`${this.apiUrl}/sale`, sale);
+  createSale(dto: CreateSaleDto): Observable<Sale> {
+    return this.client.post<Sale>(this.apiUrl, dto);
   }
 
-  getSales(
-    page: number,
-    pageLimit: number,
-    filters: {
-      id?: string;
-      startDate?: string;
-      endDate?: string;
-      client?: string;
-      operator?: string;
-      paymentMethod?: string;
-      isPaid?: boolean;
-    } = {},
-  ): Observable<PaginatedResponse<Sale>> {
-    let params = new HttpParams()
-      .set('page', page.toString())
-      .set('pageLimit', pageLimit.toString());
+  getSales(filters?: SaleFilters): Observable<SalePaginatedResponse> {
+    let params = new HttpParams();
 
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params = params.set(key, value as any);
-      }
-    });
+    if (filters) {
+      if (filters.page) params = params.set('page', filters.page.toString());
+      if (filters.limit) params = params.set('limit', filters.limit.toString());
+      if (filters.clientId) params = params.set('clientId', filters.clientId.toString());
+      if (filters.operatorId) params = params.set('operatorId', filters.operatorId.toString());
+      if (filters.paymentMethod) params = params.set('paymentMethod', filters.paymentMethod);
+      if (filters.fiscalStatus) params = params.set('fiscalStatus', filters.fiscalStatus);
+      if (filters.isPaid !== undefined) params = params.set('isPaid', filters.isPaid.toString());
+      if (filters.fiscalKey) params = params.set('fiscalKey', filters.fiscalKey);
+      if (filters.startDate) params = params.set('startDate', filters.startDate);
+      if (filters.endDate) params = params.set('endDate', filters.endDate);
+    }
 
-    return this.client.get<PaginatedResponse<Sale>>(`${this.apiUrl}/sale`, {
-      params,
-    });
+    return this.client.get<SalePaginatedResponse>(this.apiUrl, { params });
   }
 
-  markSaleReceived(salesId: number[]): Observable<any> {
-    return this.client.patch(`${this.apiUrl}/sale/received`, { salesId });
+  getSaleById(id: number): Observable<Sale> {
+    return this.client.get<Sale>(`${this.apiUrl}/${id}`);
   }
 
-  generateReportSales(startDate: string, endDate: string): Observable<SalesReportSummary> {
-    return this.client.get<SalesReportSummary>(`${this.apiUrl}/report/sales`, {
-      params: {
-        startDate,
-        endDate,
-      },
-    });
+  updateSale(id: number, dto: UpdateSaleDto): Observable<Sale> {
+    return this.client.patch<Sale>(`${this.apiUrl}/${id}`, dto);
   }
 
-  requestNfce(saleId: number): Observable<any> {
-    return this.client.post(`${this.apiUrl}/sales/${saleId}/nfce`, {});
+  deleteSale(id: number): Observable<{ message: string }> {
+    return this.client.delete<{ message: string }>(`${this.apiUrl}/${id}`);
+  }
+
+  markAsReceived(dto: MarkAsReceivedDto): Observable<{ message: string }> {
+    return this.client.patch<{ message: string }>(`${this.apiUrl}/mark-as-received`, dto);
   }
 }

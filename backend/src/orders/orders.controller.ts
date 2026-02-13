@@ -10,7 +10,6 @@ import {
   HttpCode,
   HttpStatus,
   ParseIntPipe,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,7 +17,6 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
-  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { OrderEntity } from './entities/order.entity';
@@ -29,9 +27,6 @@ import {
   OrderFiltersDto,
   OrderPaginatedResponseDto,
 } from './dto/order-filters.dto';
-import { ConvertOrderToSaleDto } from './dto/convert-order-to-sale';
-import { CurrentUser } from 'src/common/decorators/current-user.decorator';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 
 @ApiTags('Orders')
 @Controller('orders')
@@ -174,68 +169,5 @@ export class OrdersController {
   })
   cancel(@Param('id', ParseIntPipe) id: number): Promise<OrderEntity> {
     return this.ordersService.cancel(id);
-  }
-
-  @Patch(':id/mark-ready')
-  @ApiOperation({
-    summary: 'Marcar pedido como pronto (todos itens preparados)',
-  })
-  @ApiParam({ name: 'id', type: Number, description: 'ID do pedido' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Pedido marcado como pronto',
-    type: OrderEntity,
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description:
-      'Pedido não pode ser marcado como pronto (não enviado para cozinha ou itens não estão prontos)',
-  })
-  markReady(@Param('id', ParseIntPipe) id: number): Promise<OrderEntity> {
-    return this.ordersService.markReady(id);
-  }
-
-  @Post(':id/convert-to-sale')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Converter pedido fechado em venda' })
-  @ApiResponse({
-    status: 201,
-    description: 'Pedido convertido em venda com sucesso',
-    schema: {
-      example: {
-        saleId: 123,
-        orderId: 456,
-        total: 150.5,
-        profitSale: 45.3,
-        fiscalStatus: 'PENDENTE',
-        message: 'Pedido convertido em venda com sucesso',
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Apenas pedidos fechados podem ser convertidos em venda',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Token não fornecido ou inválido',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Pedido ou cliente não encontrado',
-  })
-  convertToSale(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() convertOrderToSaleDto: ConvertOrderToSaleDto,
-    @CurrentUser('userId') userId: number,
-    @CurrentUser('username') username: string,
-  ) {
-    return this.ordersService.convertToSale(
-      id,
-      convertOrderToSaleDto,
-      userId,
-      username,
-    );
   }
 }

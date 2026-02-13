@@ -21,10 +21,6 @@ export class OrderService {
   private readonly productsApiUrl = `${environment.apiUrl}/products`;
   private client = inject(HttpClient);
 
-  // ============================================
-  // ORDERS ENDPOINTS
-  // ============================================
-
   createOrder(dto: CreateOrderDto): Observable<Order> {
     return this.client.post<Order>(this.apiUrl, dto);
   }
@@ -71,10 +67,6 @@ export class OrderService {
     return this.client.patch<Order>(`${this.apiUrl}/${id}/cancel`, {});
   }
 
-  markReady(id: number): Observable<Order> {
-    return this.client.patch<Order>(`${this.apiUrl}/${id}/mark-ready`, {});
-  }
-
   finishOrder(id: number): Observable<any> {
     return this.client.post<any>(`${this.apiUrl}/${id}/finish`, {});
   }
@@ -108,6 +100,6 @@ export class OrderService {
   }
 
   convertToSale(orderId: number, dto: ConvertOrderToSaleDto): Observable<any> {
-    return this.client.post<any>(`${this.apiUrl}/${orderId}/convert-to-sale`, dto);
+    return this.client.post<any>(`${environment.apiUrl}/sales/convert/${orderId}`, dto);
   }
 }
