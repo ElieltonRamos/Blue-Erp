@@ -4,6 +4,7 @@
 /build
 certs
 release
+backups
 
 # Logs
 logs
