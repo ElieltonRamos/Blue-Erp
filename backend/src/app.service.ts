@@ -22,7 +22,7 @@ const execAsync = promisify(exec);
 export class AppService {
   constructor(private prisma: PrismaService) {}
 
-  @Cron('0 5 * * *') // Todos os dias às 5h
+  @Cron('0 5 * * *', { name: 'scheduled-backup' }) // Todos os dias às 5h
   async scheduledBackup() {
     console.log('🕐 Executando backup agendado...');
     await this.execBackup();

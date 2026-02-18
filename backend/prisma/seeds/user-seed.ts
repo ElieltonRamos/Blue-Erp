@@ -1,5 +1,5 @@
 import { PrismaClient } from 'generated/prisma/client';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 export async function seedUsers(prisma: PrismaClient) {
   const hashAdmin = await bcrypt.hash('admin123', 10);

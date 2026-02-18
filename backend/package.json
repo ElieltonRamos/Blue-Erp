@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "",
   "author": "",
   "private": true,
@@ -22,7 +22,12 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "build:bundle": "npx esbuild dist/src/main.js --bundle --platform=node --target=node18 --outfile=release/server.js --minify --packages=external",
+    "pkg:win": "npx pkg release/server.js --targets node18-win-x64 --output release/blueErp.exe",
+    "pkg:linux": "npx pkg release/server.js --targets node18-linux-x64 --output release/blueErp-linux",
+    "release:win": "npm run build && npm run build:bundle && npm run pkg:win",
+    "release:linux": "npm run build && npm run build:bundle && npm run pkg:linux"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -34,7 +39,7 @@
     "@nestjs/swagger": "^11.2.4",
     "@prisma/adapter-mariadb": "^7.2.0",
     "@prisma/client": "^7.2.0",
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
     "dotenv": "^17.2.3",
