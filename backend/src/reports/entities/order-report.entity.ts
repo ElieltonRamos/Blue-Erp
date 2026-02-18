@@ -1,5 +1,3 @@
-// types/reportOrders.ts
-
 export type OrderStatusDB = 'OPEN' | 'CLOSED' | 'CANCELED' | 'PAID';
 export type OrderTypeDB = 'DINE_IN' | 'DELIVERY';
 
@@ -15,8 +13,8 @@ export interface OrderSummary {
   status: OrderStatusDB;
   createdAt: string;
   finishedAt?: string;
-  preparationTime?: number; // kitchenSentAt → kitchenReadyAt (minutos)
-  totalOrderTime?: number; // createdAt → finishedAt (minutos)
+  preparationTime?: number;
+  totalOrderTime?: number;
 }
 
 export interface ProductPerformance {
@@ -49,50 +47,27 @@ export interface OrderTypeDistribution {
 export interface LocationReport {
   locationId: string;
   locationName: string;
-
-  // Totais
   totalOrders: number;
   totalRevenue: number;
-  percentage: number; // % do faturamento total
+  percentage: number;
   averageOrderValue: number;
-
-  // Métricas de tempo
-  averagePreparationTime: number; // kitchenSentAt → kitchenReadyAt
-  averageTotalOrderTime: number; // createdAt → finishedAt
-
-  // Métricas operacionais
-  cancellationRate: number; // % de pedidos cancelados
-  kitchenPassRate: number; // % de pedidos que passaram pela cozinha
+  averagePreparationTime: number;
+  averageTotalOrderTime: number;
+  cancellationRate: number;
+  kitchenPassRate: number;
   averageItemsPerOrder: number;
-
-  // Pico
-  peakHour: number | null; // hora com mais pedidos
-  peakConcurrentOrders: number; // máximo de pedidos simultâneos
-
-  // Mesas (DINE_IN)
-  tableOccupancyRate: number | null; // % mesas com pedido / total mesas do local
-  averageTableOccupationTime: number | null; // minutos médios de ocupação
-
-  // Receita por hora do local
+  peakHour: number | null;
+  peakConcurrentOrders: number;
+  tableOccupancyRate: number | null;
+  averageTableOccupationTime: number | null;
   revenueByHour: TimeDistribution[];
-
-  // Distribuições internas
   ordersByStatus: StatusDistribution[];
   ordersByType: OrderTypeDistribution[];
-
-  // Top produtos do local
   topProducts: ProductPerformance[];
-
-  // Mesas mais ativas
-  topTables: {
-    table: string;
-    totalOrders: number;
-    totalRevenue: number;
-  }[];
+  topTables: { table: string; totalOrders: number; totalRevenue: number }[];
 }
 
 export interface OrderReportSummary {
-  // Totais globais
   totalOrders: number;
   totalRevenue: number;
   averageOrderValue: number;
@@ -100,16 +75,10 @@ export interface OrderReportSummary {
   averageTotalOrderTime: number;
   cancellationRate: number;
   averageItemsPerOrder: number;
-
-  // Distribuições globais
   ordersByStatus: StatusDistribution[];
   ordersByType: OrderTypeDistribution[];
   ordersByHour: TimeDistribution[];
-
-  // Visão gerencial por local
   byLocation: LocationReport[];
-
-  // Rankings globais
   topProducts: ProductPerformance[];
   topTables: {
     table: string;
@@ -123,34 +92,7 @@ export interface OrderReportSummary {
     totalOrders: number;
     totalRevenue: number;
   }[];
-
-  // Listas de pedidos
   recentOrders: OrderSummary[];
   slowestOrders: OrderSummary[];
   fastestOrders: OrderSummary[];
 }
-
-export interface OrderReport {
-  status: string;
-  data: OrderReportSummary;
-}
-
-export const orderReportMock: OrderReportSummary = {
-  totalOrders: 0,
-  totalRevenue: 0,
-  averageOrderValue: 0,
-  averagePreparationTime: 0,
-  averageTotalOrderTime: 0,
-  cancellationRate: 0,
-  averageItemsPerOrder: 0,
-  ordersByStatus: [],
-  ordersByType: [],
-  ordersByHour: [],
-  byLocation: [],
-  topProducts: [],
-  topTables: [],
-  topCustomers: [],
-  recentOrders: [],
-  slowestOrders: [],
-  fastestOrders: [],
-};

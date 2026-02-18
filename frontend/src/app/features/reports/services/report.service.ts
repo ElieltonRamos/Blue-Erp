@@ -3,9 +3,9 @@ import { environment } from '../../../core/services/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { SalesReportResponse } from '../types/reportsSales';
-import { ProductReportSummary } from '../types/reportProducts';
+import { ProductReport, ProductReportSummary } from '../types/reportProducts';
 import { ReportExpense } from '../types/reportExpense';
-import { OrderReportSummary } from '../types/reportOrders';
+import { OrderReport, OrderReportSummary } from '../types/reportOrders';
 
 @Injectable({
   providedIn: 'root',
@@ -29,15 +29,15 @@ export class ReportService {
    * @param endDate - Data final no formato YYYY-MM-DD
    * @returns Observable com os dados do relatório de produtos
    */
-  generateReportProducts(startDate: string, endDate: string): Observable<ProductReportSummary> {
+  generateReportProducts(startDate: string, endDate: string): Observable<ProductReport> {
     const params = new HttpParams().set('startDate', startDate).set('endDate', endDate);
 
-    return this.client.get<ProductReportSummary>(`${this.apiUrl}/reports/products`, { params });
+    return this.client.get<ProductReport>(`${this.apiUrl}/reports/products`, { params });
   }
 
   getExpensesReport(startDate: string, endDate: string): Observable<ReportExpense> {
     const params = { startDate, endDate };
-    return this.client.get<ReportExpense>(`${this.apiUrl}/expenses/reports`, { params });
+    return this.client.get<ReportExpense>(`${this.apiUrl}/reports/expenses`, { params });
   }
 
   /**
@@ -46,9 +46,9 @@ export class ReportService {
    * @param endDate - Data final no formato YYYY-MM-DD
    * @returns Observable com os dados do relatório de pedidos
    */
-  generateReportOrders(startDate: string, endDate: string): Observable<OrderReportSummary> {
+  generateReportOrders(startDate: string, endDate: string): Observable<OrderReport> {
     const params = new HttpParams().set('startDate', startDate).set('endDate', endDate);
 
-    return this.client.get<OrderReportSummary>(`${this.apiUrl}/reports/orders`, { params });
+    return this.client.get<OrderReport>(`${this.apiUrl}/reports/orders`, { params });
   }
 }

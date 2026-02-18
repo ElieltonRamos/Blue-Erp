@@ -25,7 +25,7 @@ export interface StockLevel {
   currentStock: number;
   unit: string;
   type: 'product' | 'raw_material';
-  lastRestockDate: string;
+  lastRestockDate: string | null;
 }
 
 export interface PurchaseSuggestion {
@@ -46,19 +46,3 @@ export interface ProductReportSummary {
   totalProductsSold: number;
   totalRevenue: number;
 }
-
-export interface ProductReport {
-  status: string;
-  data: ProductReportSummary;
-}
-
-export const productReportMock: ProductReportSummary = {
-  topSellingProducts: [],
-  mostUsedRawMaterials: [],
-  expiringRawMaterials: [],
-  lowestStocks: [],
-  highestStocks: [],
-  purchaseSuggestions: [],
-  totalProductsSold: 0,
-  totalRevenue: 0,
-};

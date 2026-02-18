@@ -1,13 +1,11 @@
 <!-- Container Principal -->
 <div class="w-full max-w-6xl bg-[#182233] rounded-2xl shadow-lg p-6">
-  <!-- Título Principal -->
   <div class="mb-4">
     <h1 class="text-3xl font-bold text-white">Relatório de Pedidos</h1>
   </div>
 
   <!-- Filtros -->
   <div class="flex flex-wrap gap-4 mb-6">
-    <!-- Data Inicial -->
     <div class="flex flex-col">
       <label class="text-white text-sm mb-1">Data Início</label>
       <input
@@ -16,8 +14,6 @@
         class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
       />
     </div>
-
-    <!-- Data Final -->
     <div class="flex flex-col">
       <label class="text-white text-sm mb-1">Data Fim</label>
       <input
@@ -26,8 +22,6 @@
         class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
       />
     </div>
-
-    <!-- Botões Rápidos -->
     <div class="flex items-end gap-2">
       <button
         (click)="setToday()"
@@ -48,8 +42,6 @@
         Este Mês
       </button>
     </div>
-
-    <!-- Gerar Relatório -->
     <div class="flex items-end">
       <button
         (click)="generateReport()"
@@ -63,40 +55,294 @@
   <div class="w-full max-w-6xl mx-auto bg-[#182233] rounded-2xl shadow-lg p-6 mt-6 text-white">
     <h2 class="text-2xl font-bold mb-6">Relatório de Pedidos {{ getFullDate() }}</h2>
 
-    <!-- Resumo Geral -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <!-- ── RESUMO GLOBAL ── -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-        <h3 class="text-sm text-gray-300">Total de Pedidos</h3>
+        <h3 class="text-xs text-gray-400">Total de Pedidos</h3>
         <p class="text-2xl font-semibold">{{ report.totalOrders }}</p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-        <h3 class="text-sm text-gray-300">Faturamento Total</h3>
+        <h3 class="text-xs text-gray-400">Faturamento Total</h3>
         <p class="text-2xl font-semibold">R$ {{ report.totalRevenue.toFixed(2) }}</p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-        <h3 class="text-sm text-gray-300">Ticket Médio</h3>
+        <h3 class="text-xs text-gray-400">Ticket Médio</h3>
         <p class="text-2xl font-semibold">R$ {{ report.averageOrderValue.toFixed(2) }}</p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-        <h3 class="text-sm text-gray-300">Tempo Médio de Preparo</h3>
+        <h3 class="text-xs text-gray-400">Itens por Pedido</h3>
+        <p class="text-2xl font-semibold">{{ report.averageItemsPerOrder.toFixed(1) }}</p>
+      </div>
+      <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+        <h3 class="text-xs text-gray-400">Tempo Médio de Preparo</h3>
         <p class="text-2xl font-semibold">{{ formatTime(report.averagePreparationTime) }}</p>
+      </div>
+      <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+        <h3 class="text-xs text-gray-400">Tempo Médio do Pedido</h3>
+        <p class="text-2xl font-semibold">{{ formatTime(report.averageTotalOrderTime) }}</p>
+      </div>
+      <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+        <h3 class="text-xs text-gray-400">Taxa de Cancelamento</h3>
+        <p
+          class="text-2xl font-semibold"
+          [class.text-red-400]="report.cancellationRate > 10"
+          [class.text-yellow-400]="report.cancellationRate > 5 && report.cancellationRate <= 10"
+          [class.text-green-400]="report.cancellationRate <= 5"
+        >
+          {{ report.cancellationRate.toFixed(1) }}%
+        </p>
       </div>
     </div>
 
-    <!-- Distribuições -->
+    <!-- ── DESEMPENHO POR LOCAL ── -->
+    @if (report.byLocation.length > 0) {
+      <div class="mb-8">
+        <h3 class="text-xl font-bold mb-4">🏪 Desempenho por Local</h3>
+
+        <!-- Cards resumo por local -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          @for (loc of report.byLocation; track loc.locationId) {
+            <div class="bg-[#2a3445] p-4 rounded-xl border border-[#3a4a60]">
+              <div class="flex justify-between items-start mb-3">
+                <p class="font-bold text-lg">{{ loc.locationName }}</p>
+                <span class="bg-indigo-700 text-white text-xs px-2 py-1 rounded-full">
+                  {{ loc.percentage.toFixed(1) }}% do total
+                </span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-sm">
+                <div class="bg-[#1f2a40] p-2 rounded">
+                  <p class="text-gray-400 text-xs">Pedidos</p>
+                  <p class="font-semibold">{{ loc.totalOrders }}</p>
+                </div>
+                <div class="bg-[#1f2a40] p-2 rounded">
+                  <p class="text-gray-400 text-xs">Faturamento</p>
+                  <p class="font-semibold text-green-400">R$ {{ loc.totalRevenue.toFixed(2) }}</p>
+                </div>
+                <div class="bg-[#1f2a40] p-2 rounded">
+                  <p class="text-gray-400 text-xs">Ticket Médio</p>
+                  <p class="font-semibold">R$ {{ loc.averageOrderValue.toFixed(2) }}</p>
+                </div>
+                <div class="bg-[#1f2a40] p-2 rounded">
+                  <p class="text-gray-400 text-xs">Itens/Pedido</p>
+                  <p class="font-semibold">{{ loc.averageItemsPerOrder.toFixed(1) }}</p>
+                </div>
+                <div class="bg-[#1f2a40] p-2 rounded">
+                  <p class="text-gray-400 text-xs">Tempo Preparo</p>
+                  <p class="font-semibold">{{ formatTime(loc.averagePreparationTime) }}</p>
+                </div>
+                <div class="bg-[#1f2a40] p-2 rounded">
+                  <p class="text-gray-400 text-xs">Tempo Total</p>
+                  <p class="font-semibold">{{ formatTime(loc.averageTotalOrderTime) }}</p>
+                </div>
+                <div class="bg-[#1f2a40] p-2 rounded">
+                  <p class="text-gray-400 text-xs">Cancelamentos</p>
+                  <p
+                    class="font-semibold"
+                    [class.text-red-400]="loc.cancellationRate > 10"
+                    [class.text-yellow-400]="loc.cancellationRate > 5 && loc.cancellationRate <= 10"
+                    [class.text-green-400]="loc.cancellationRate <= 5"
+                  >
+                    {{ loc.cancellationRate.toFixed(1) }}%
+                  </p>
+                </div>
+                <div class="bg-[#1f2a40] p-2 rounded">
+                  <p class="text-gray-400 text-xs">Passou pela Cozinha</p>
+                  <p class="font-semibold">{{ loc.kitchenPassRate.toFixed(1) }}%</p>
+                </div>
+                @if (loc.peakHour !== null) {
+                  <div class="bg-[#1f2a40] p-2 rounded">
+                    <p class="text-gray-400 text-xs">Hora de Pico</p>
+                    <p class="font-semibold">{{ loc.peakHour }}:00</p>
+                  </div>
+                }
+                @if (loc.peakConcurrentOrders > 0) {
+                  <div class="bg-[#1f2a40] p-2 rounded">
+                    <p class="text-gray-400 text-xs">Pico Simultâneo</p>
+                    <p class="font-semibold">{{ loc.peakConcurrentOrders }} pedidos</p>
+                  </div>
+                }
+                @if (loc.tableOccupancyRate !== null) {
+                  <div class="bg-[#1f2a40] p-2 rounded">
+                    <p class="text-gray-400 text-xs">Ocupação de Mesas</p>
+                    <p class="font-semibold">{{ loc.tableOccupancyRate.toFixed(1) }}%</p>
+                  </div>
+                }
+                @if (loc.averageTableOccupationTime !== null) {
+                  <div class="bg-[#1f2a40] p-2 rounded">
+                    <p class="text-gray-400 text-xs">Tempo Médio Mesa</p>
+                    <p class="font-semibold">{{ formatTime(loc.averageTableOccupationTime) }}</p>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Accordion por local -->
+        @for (loc of report.byLocation; track loc.locationId) {
+          <div class="bg-[#2a3445] rounded-xl mb-4 overflow-hidden">
+            <div
+              class="flex items-center justify-between px-5 py-3 bg-[#1f2a40] cursor-pointer"
+              (click)="toggleLocation(loc.locationId)"
+            >
+              <div class="flex items-center gap-3">
+                <span class="text-indigo-400 font-bold text-lg">{{ loc.locationName }}</span>
+                <span class="text-gray-400 text-sm">
+                  {{ loc.totalOrders }} pedidos · R$ {{ loc.totalRevenue.toFixed(2) }} ·
+                  {{ loc.cancellationRate.toFixed(1) }}% cancel.
+                </span>
+              </div>
+              <span class="text-gray-400 text-sm">{{
+                isLocationExpanded(loc.locationId) ? '▲' : '▼'
+              }}</span>
+            </div>
+
+            @if (isLocationExpanded(loc.locationId)) {
+              <div class="p-5 space-y-5">
+                <!-- Status / Tipo / Top Produtos -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div>
+                    <h5 class="text-sm font-bold text-gray-300 mb-2">Status dos Pedidos</h5>
+                    <div class="space-y-2">
+                      @for (s of loc.ordersByStatus; track s.status) {
+                        <div
+                          class="flex justify-between items-center bg-[#1f2a40] px-3 py-2 rounded"
+                        >
+                          <div class="flex items-center gap-2">
+                            <span
+                              class="w-2 h-2 rounded-full"
+                              [class.bg-yellow-500]="s.status === 'OPEN'"
+                              [class.bg-blue-500]="s.status === 'CLOSED'"
+                              [class.bg-green-500]="s.status === 'PAID'"
+                              [class.bg-red-500]="s.status === 'CANCELED'"
+                            >
+                            </span>
+                            <span class="text-sm">{{ getStatusLabel(s.status) }}</span>
+                          </div>
+                          <span class="text-sm font-semibold">
+                            {{ s.count }}
+                            <span class="text-gray-400 text-xs"
+                              >({{ s.percentage.toFixed(1) }}%)</span
+                            >
+                          </span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <div>
+                    <h5 class="text-sm font-bold text-gray-300 mb-2">Tipo de Pedidos</h5>
+                    <div class="space-y-2">
+                      @for (t of loc.ordersByType; track t.type) {
+                        <div class="bg-[#1f2a40] px-3 py-2 rounded">
+                          <div class="flex justify-between">
+                            <span class="text-sm">{{ getTypeLabel(t.type) }}</span>
+                            <span class="text-sm font-semibold"
+                              >{{ t.count }} ({{ t.percentage.toFixed(1) }}%)</span
+                            >
+                          </div>
+                          <p class="text-xs text-green-400 mt-1">
+                            R$ {{ t.totalRevenue.toFixed(2) }}
+                          </p>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <div>
+                    <h5 class="text-sm font-bold text-gray-300 mb-2">Top Produtos</h5>
+                    <div class="space-y-2">
+                      @for (p of loc.topProducts; track p.productId) {
+                        <div class="bg-[#1f2a40] px-3 py-2 rounded">
+                          <div class="flex justify-between">
+                            <span class="text-sm">{{ p.productName }}</span>
+                            <span class="text-sm font-semibold">{{ p.totalOrdered }}x</span>
+                          </div>
+                          <p class="text-xs text-green-400 mt-1">
+                            R$ {{ p.totalRevenue.toFixed(2) }}
+                          </p>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Receita por hora do local -->
+                @if (loc.revenueByHour.length > 0) {
+                  <div>
+                    <h5 class="text-sm font-bold text-gray-300 mb-2">⏰ Receita por Hora</h5>
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-left text-sm">
+                        <thead class="border-b border-gray-600">
+                          <tr>
+                            <th class="py-2 px-3 text-gray-400">Horário</th>
+                            <th class="py-2 px-3 text-gray-400">Pedidos</th>
+                            <th class="py-2 px-3 text-gray-400">Faturamento</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (h of loc.revenueByHour; track h.hour) {
+                            <tr
+                              class="border-b border-gray-700 hover:bg-[#1f2a40]"
+                              [class.bg-indigo-900]="loc.peakHour === h.hour"
+                            >
+                              <td class="py-2 px-3">
+                                {{ h.hour }}:00 - {{ h.hour + 1 }}:00
+                                @if (loc.peakHour === h.hour) {
+                                  <span class="ml-2 text-xs text-indigo-300">pico</span>
+                                }
+                              </td>
+                              <td class="py-2 px-3">{{ h.totalOrders }}</td>
+                              <td class="py-2 px-3 text-green-400">
+                                R$ {{ h.totalRevenue.toFixed(2) }}
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                }
+
+                <!-- Mesas mais ativas -->
+                @if (loc.topTables.length > 0) {
+                  <div>
+                    <h5 class="text-sm font-bold text-gray-300 mb-2">🪑 Mesas Mais Ativas</h5>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      @for (table of loc.topTables; track table.table) {
+                        <div class="bg-[#1f2a40] px-3 py-2 rounded text-center">
+                          <p class="font-bold">Mesa {{ table.table }}</p>
+                          <p class="text-xs text-gray-400">{{ table.totalOrders }} pedidos</p>
+                          <p class="text-sm text-green-400">
+                            R$ {{ table.totalRevenue.toFixed(2) }}
+                          </p>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ── DISTRIBUIÇÕES GLOBAIS ── -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-      <!-- Status dos Pedidos -->
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-xl font-bold text-white mb-4">📊 Status dos Pedidos</h4>
+        <h4 class="text-xl font-bold mb-4">📊 Status dos Pedidos</h4>
         <div class="space-y-3">
-          @for (status of report.ordersByStatus; track $index) {
+          @for (status of report.ordersByStatus; track status.status) {
             <div class="flex justify-between items-center bg-[#1f2a40] p-3 rounded-lg">
               <div class="flex items-center gap-3">
-                <span class="w-3 h-3 rounded-full"
-                      [class.bg-yellow-500]="status.status === 'pending'"
-                      [class.bg-blue-500]="status.status === 'preparing'"
-                      [class.bg-green-500]="status.status === 'ready'"
-                      [class.bg-gray-500]="status.status === 'delivered'">
+                <span
+                  class="w-3 h-3 rounded-full"
+                  [class.bg-yellow-500]="status.status === 'OPEN'"
+                  [class.bg-blue-500]="status.status === 'CLOSED'"
+                  [class.bg-green-500]="status.status === 'PAID'"
+                  [class.bg-red-500]="status.status === 'CANCELED'"
+                >
                 </span>
                 <span>{{ getStatusLabel(status.status) }}</span>
               </div>
@@ -112,17 +358,16 @@
         </div>
       </div>
 
-      <!-- Tipo de Pedidos -->
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-xl font-bold text-white mb-4">🍽️ Tipo de Pedidos</h4>
+        <h4 class="text-xl font-bold mb-4">🍽️ Tipo de Pedidos</h4>
         <div class="space-y-3">
-          @for (type of report.ordersByType; track $index) {
+          @for (type of report.ordersByType; track type.type) {
             <div class="bg-[#1f2a40] p-3 rounded-lg">
               <div class="flex justify-between items-center mb-2">
                 <span class="font-semibold">{{ getTypeLabel(type.type) }}</span>
                 <span class="text-lg font-bold">{{ type.count }}</span>
               </div>
-              <div class="flex justify-between items-center text-sm">
+              <div class="flex justify-between text-sm">
                 <span class="text-gray-400">{{ type.percentage.toFixed(1) }}%</span>
                 <span class="text-green-400">R$ {{ type.totalRevenue.toFixed(2) }}</span>
               </div>
@@ -135,21 +380,21 @@
       </div>
     </div>
 
-    <!-- Produtos Mais Pedidos -->
+    <!-- Top Produtos Global -->
     <div class="bg-[#2a3445] p-4 rounded-xl mb-6">
-      <h4 class="text-xl font-bold text-white mb-4">🏆 Produtos Mais Pedidos</h4>
+      <h4 class="text-xl font-bold mb-4">🏆 Produtos Mais Pedidos</h4>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead class="border-b border-gray-600">
             <tr>
               <th class="py-2 px-3 text-gray-300">Produto</th>
-              <th class="py-2 px-3 text-gray-300">Qtd. Pedida</th>
+              <th class="py-2 px-3 text-gray-300">Qtd.</th>
               <th class="py-2 px-3 text-gray-300">Faturamento</th>
               <th class="py-2 px-3 text-gray-300">Tempo Médio</th>
             </tr>
           </thead>
           <tbody>
-            @for (product of report.topProducts; track $index) {
+            @for (product of report.topProducts; track product.productId) {
               <tr class="border-b border-gray-700 hover:bg-[#1f2a40]">
                 <td class="py-2 px-3">{{ product.productName }}</td>
                 <td class="py-2 px-3">{{ product.totalOrdered }}</td>
@@ -159,7 +404,9 @@
             }
             @if (report.topProducts.length === 0) {
               <tr>
-                <td colspan="4" class="py-4 text-center text-gray-400">Nenhum produto no período</td>
+                <td colspan="4" class="py-4 text-center text-gray-400">
+                  Nenhum produto no período
+                </td>
               </tr>
             }
           </tbody>
@@ -167,20 +414,20 @@
       </div>
     </div>
 
-    <!-- Distribuição por Horário -->
+    <!-- Distribuição por Horário Global -->
     <div class="bg-[#2a3445] p-4 rounded-xl mb-6">
-      <h4 class="text-xl font-bold text-white mb-4">⏰ Distribuição por Horário</h4>
+      <h4 class="text-xl font-bold mb-4">⏰ Distribuição por Horário</h4>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead class="border-b border-gray-600">
             <tr>
               <th class="py-2 px-3 text-gray-300">Horário</th>
-              <th class="py-2 px-3 text-gray-300">Total de Pedidos</th>
+              <th class="py-2 px-3 text-gray-300">Pedidos</th>
               <th class="py-2 px-3 text-gray-300">Faturamento</th>
             </tr>
           </thead>
           <tbody>
-            @for (hour of report.ordersByHour; track $index) {
+            @for (hour of report.ordersByHour; track hour.hour) {
               <tr class="border-b border-gray-700 hover:bg-[#1f2a40]">
                 <td class="py-2 px-3">{{ hour.hour }}:00 - {{ hour.hour + 1 }}:00</td>
                 <td class="py-2 px-3">{{ hour.totalOrders }}</td>
@@ -199,20 +446,21 @@
 
     <!-- Mesas e Clientes -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-      <!-- Mesas Mais Ativas -->
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-xl font-bold text-white mb-4">🪑 Mesas Mais Ativas</h4>
+        <h4 class="text-xl font-bold mb-4">🪑 Mesas Mais Ativas</h4>
         <div class="space-y-3">
-          @for (table of report.topTables; track $index) {
+          @for (table of report.topTables; track table.table) {
             <div class="bg-[#1f2a40] p-3 rounded-lg">
               <div class="flex justify-between items-center">
                 <div>
                   <p class="font-semibold">Mesa {{ table.table }}</p>
-                  <p class="text-sm text-gray-400">{{ table.totalOrders }} pedidos</p>
+                  <p class="text-xs text-gray-400">
+                    {{ table.locationName }} · {{ table.totalOrders }} pedidos
+                  </p>
                 </div>
-                <div class="text-right">
-                  <p class="text-lg font-bold text-green-400">R$ {{ table.totalRevenue.toFixed(2) }}</p>
-                </div>
+                <p class="text-lg font-bold text-green-400">
+                  R$ {{ table.totalRevenue.toFixed(2) }}
+                </p>
               </div>
             </div>
           }
@@ -222,20 +470,19 @@
         </div>
       </div>
 
-      <!-- Clientes Mais Frequentes (Delivery) -->
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-xl font-bold text-white mb-4">🚚 Clientes Mais Frequentes (Delivery)</h4>
+        <h4 class="text-xl font-bold mb-4">🚚 Clientes Mais Frequentes (Delivery)</h4>
         <div class="space-y-3">
-          @for (customer of report.topCustomers; track $index) {
+          @for (customer of report.topCustomers; track customer.customerName) {
             <div class="bg-[#1f2a40] p-3 rounded-lg">
               <div class="flex justify-between items-center">
                 <div>
                   <p class="font-semibold">{{ customer.customerName }}</p>
                   <p class="text-sm text-gray-400">{{ customer.totalOrders }} pedidos</p>
                 </div>
-                <div class="text-right">
-                  <p class="text-lg font-bold text-green-400">R$ {{ customer.totalRevenue.toFixed(2) }}</p>
-                </div>
+                <p class="text-lg font-bold text-green-400">
+                  R$ {{ customer.totalRevenue.toFixed(2) }}
+                </p>
               </div>
             </div>
           }
@@ -248,22 +495,25 @@
 
     <!-- Performance de Tempo -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-      <!-- Pedidos Mais Rápidos -->
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-xl font-bold text-white mb-4">⚡ Pedidos Mais Rápidos</h4>
+        <h4 class="text-xl font-bold mb-4">⚡ Pedidos Mais Rápidos</h4>
         <div class="space-y-3">
-          @for (order of report.fastestOrders; track $index) {
+          @for (order of report.fastestOrders; track order.orderId) {
             <div class="bg-[#1f2a40] p-3 rounded-lg">
               <div class="flex justify-between items-start">
                 <div>
-                  <p class="font-semibold">Pedido #{{ order.orderNumber }}</p>
+                  <p class="font-semibold">Pedido #{{ order.orderId }}</p>
                   <p class="text-sm text-gray-400">
                     {{ order.table ? 'Mesa ' + order.table : order.customerName }}
                   </p>
-                  <p class="text-xs text-gray-500">{{ order.totalItems }} itens</p>
+                  <p class="text-xs text-gray-500">
+                    {{ order.locationName }} · {{ order.totalItems }} itens
+                  </p>
                 </div>
                 <div class="text-right">
-                  <p class="text-lg font-bold text-green-400">{{ formatTime(order.preparationTime || 0) }}</p>
+                  <p class="text-lg font-bold text-green-400">
+                    {{ formatTime(order.preparationTime || 0) }}
+                  </p>
                   <p class="text-xs text-gray-400">R$ {{ order.totalRevenue.toFixed(2) }}</p>
                 </div>
               </div>
@@ -275,22 +525,25 @@
         </div>
       </div>
 
-      <!-- Pedidos Mais Lentos -->
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-xl font-bold text-white mb-4">🐌 Pedidos Mais Lentos</h4>
+        <h4 class="text-xl font-bold mb-4">🐌 Pedidos Mais Lentos</h4>
         <div class="space-y-3">
-          @for (order of report.slowestOrders; track $index) {
+          @for (order of report.slowestOrders; track order.orderId) {
             <div class="bg-[#1f2a40] p-3 rounded-lg">
               <div class="flex justify-between items-start">
                 <div>
-                  <p class="font-semibold">Pedido #{{ order.orderNumber }}</p>
+                  <p class="font-semibold">Pedido #{{ order.orderId }}</p>
                   <p class="text-sm text-gray-400">
                     {{ order.table ? 'Mesa ' + order.table : order.customerName }}
                   </p>
-                  <p class="text-xs text-gray-500">{{ order.totalItems }} itens</p>
+                  <p class="text-xs text-gray-500">
+                    {{ order.locationName }} · {{ order.totalItems }} itens
+                  </p>
                 </div>
                 <div class="text-right">
-                  <p class="text-lg font-bold text-red-400">{{ formatTime(order.preparationTime || 0) }}</p>
+                  <p class="text-lg font-bold text-red-400">
+                    {{ formatTime(order.preparationTime || 0) }}
+                  </p>
                   <p class="text-xs text-gray-400">R$ {{ order.totalRevenue.toFixed(2) }}</p>
                 </div>
               </div>
@@ -305,12 +558,13 @@
 
     <!-- Pedidos Recentes -->
     <div class="bg-[#2a3445] p-4 rounded-xl">
-      <h4 class="text-xl font-bold text-white mb-4">📋 Pedidos Recentes</h4>
+      <h4 class="text-xl font-bold mb-4">📋 Pedidos Recentes</h4>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead class="border-b border-gray-600">
             <tr>
-              <th class="py-2 px-3 text-gray-300">Nº Pedido</th>
+              <th class="py-2 px-3 text-gray-300">Nº</th>
+              <th class="py-2 px-3 text-gray-300">Local</th>
               <th class="py-2 px-3 text-gray-300">Mesa/Cliente</th>
               <th class="py-2 px-3 text-gray-300">Tipo</th>
               <th class="py-2 px-3 text-gray-300">Itens</th>
@@ -320,20 +574,23 @@
             </tr>
           </thead>
           <tbody>
-            @for (order of report.recentOrders; track $index) {
+            @for (order of report.recentOrders; track order.orderId) {
               <tr class="border-b border-gray-700 hover:bg-[#1f2a40]">
-                <td class="py-2 px-3">#{{ order.orderNumber }}</td>
+                <td class="py-2 px-3">#{{ order.orderId }}</td>
+                <td class="py-2 px-3 text-indigo-300">{{ order.locationName }}</td>
                 <td class="py-2 px-3">
                   {{ order.table ? 'Mesa ' + order.table : order.customerName }}
                 </td>
                 <td class="py-2 px-3">{{ getTypeLabel(order.type) }}</td>
                 <td class="py-2 px-3">{{ order.totalItems }}</td>
                 <td class="py-2 px-3">
-                  <span class="px-2 py-1 rounded text-xs font-semibold"
-                        [class.bg-yellow-600]="order.status === 'pending'"
-                        [class.bg-blue-600]="order.status === 'preparing'"
-                        [class.bg-green-600]="order.status === 'ready'"
-                        [class.bg-gray-600]="order.status === 'delivered'">
+                  <span
+                    class="px-2 py-1 rounded text-xs font-semibold"
+                    [class.bg-yellow-600]="order.status === 'OPEN'"
+                    [class.bg-blue-600]="order.status === 'CLOSED'"
+                    [class.bg-green-600]="order.status === 'PAID'"
+                    [class.bg-red-600]="order.status === 'CANCELED'"
+                  >
                     {{ getStatusLabel(order.status) }}
                   </span>
                 </td>
@@ -343,7 +600,7 @@
             }
             @if (report.recentOrders.length === 0) {
               <tr>
-                <td colspan="7" class="py-4 text-center text-gray-400">Nenhum pedido no período</td>
+                <td colspan="8" class="py-4 text-center text-gray-400">Nenhum pedido no período</td>
               </tr>
             }
           </tbody>

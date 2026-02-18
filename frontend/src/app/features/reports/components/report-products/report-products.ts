@@ -15,7 +15,7 @@ export class ReportProducts {
   private router = inject(Router);
   private notification = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef);
-  
+
   report: ProductReportSummary = productReportMock;
 
   startDate: string = '';
@@ -62,11 +62,10 @@ export class ReportProducts {
     return `${year}-${month}-${day}`;
   }
 
-  formatDate(dateString: string): string {
-    if (!dateString) return '';
-    const date = new Date(`${dateString}T00:00`);
-    const formatter = new Intl.DateTimeFormat('pt-BR');
-    return formatter.format(date);
+  formatDate(dateString: string | null): string {
+    if (!dateString) return 'Não informado';
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('pt-BR').format(date);
   }
 
   getPriorityLabel(priority: 'high' | 'medium' | 'low'): string {
@@ -97,10 +96,12 @@ export class ReportProducts {
     // Chamar serviço que busca os dados do relatório de produtos
     this.reportService.generateReportProducts(this.startDate, this.endDate).subscribe({
       next: (reportData) => {
-        this.report = reportData;
+        this.report = reportData.data;
       },
       error: (err) => {
-        this.notification.error(`Erro ao gerar relatório: ${err.error?.message || 'Erro desconhecido'}`);
+        this.notification.error(
+          `Erro ao gerar relatório: ${err.error?.message || 'Erro desconhecido'}`,
+        );
       },
       complete: () => {
         this.isLoading = false;

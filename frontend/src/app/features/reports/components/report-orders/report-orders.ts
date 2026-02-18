@@ -1,6 +1,10 @@
-import { ChangeDetectorRef, Component, inject } from '@angular/core';
-import { OrderReportSummary, orderReportMock } from '../../types/reportOrders';
-import { Router } from '@angular/router';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import {
+  OrderReportSummary,
+  orderReportMock,
+  OrderStatusDB,
+  OrderTypeDB,
+} from '../../types/reportOrders';
 import { ReportService } from '../../services/report.service';
 import { FormsModule } from '@angular/forms';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
@@ -10,49 +14,48 @@ import { NotificationService } from '../../../../shared/toastr/notification.serv
   imports: [FormsModule],
   templateUrl: './report-orders.html',
 })
-export class ReportOrders {
+export class ReportOrders implements OnInit {
   private reportService = inject(ReportService);
-  private router = inject(Router);
   private notification = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef);
-  
-  report: OrderReportSummary = orderReportMock;
 
+  report: OrderReportSummary = orderReportMock;
   startDate: string = '';
   endDate: string = '';
   isLoading = false;
 
+  private expandedLocations = new Set<string>();
+
   ngOnInit() {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    const localDate = now.toISOString().split('T')[0];
+    this.startDate = now.toISOString().split('T')[0];
+    this.endDate = this.startDate;
+  }
 
-    this.startDate = localDate;
-    this.endDate = localDate;
+  toggleLocation(locationId: string): void {
+    if (this.expandedLocations.has(locationId)) {
+      this.expandedLocations.delete(locationId);
+    } else {
+      this.expandedLocations.add(locationId);
+    }
+  }
+
+  isLocationExpanded(locationId: string): boolean {
+    return this.expandedLocations.has(locationId);
   }
 
   getFullDate(): string {
     if (!this.startDate || !this.endDate) return '';
-
     const start = new Date(`${this.startDate}T00:00`);
     const end = new Date(`${this.endDate}T00:00`);
-    const formatter = new Intl.DateTimeFormat('pt-BR');
-
-    return `${formatter.format(start)} - ${formatter.format(end)}`;
+    const fmt = new Intl.DateTimeFormat('pt-BR');
+    return `${fmt.format(start)} - ${fmt.format(end)}`;
   }
 
   setToday() {
-    const today = new Date();
-    this.startDate = this.formatDateInput(today);
-    this.endDate = this.formatDateInput(today);
-  }
-
-  setThisMonth() {
-    const today = new Date();
-    const first = new Date(today.getFullYear(), today.getMonth(), 1);
-    const last = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    this.startDate = this.formatDateInput(first);
-    this.endDate = this.formatDateInput(last);
+    this.startDate = this.formatDateInput(new Date());
+    this.endDate = this.startDate;
   }
 
   setThisWeek() {
@@ -65,58 +68,54 @@ export class ReportOrders {
     this.endDate = this.formatDateInput(last);
   }
 
+  setThisMonth() {
+    const today = new Date();
+    this.startDate = this.formatDateInput(new Date(today.getFullYear(), today.getMonth(), 1));
+    this.endDate = this.formatDateInput(new Date(today.getFullYear(), today.getMonth() + 1, 0));
+  }
+
   formatDateInput(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   }
 
   formatDateTime(dateString: string): string {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    const formatter = new Intl.DateTimeFormat('pt-BR', {
+    return new Intl.DateTimeFormat('pt-BR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    });
-    return formatter.format(date);
+    }).format(new Date(dateString));
   }
 
-  formatDate(dateString: string): string {
-    if (!dateString) return '';
-    const date = new Date(`${dateString}T00:00`);
-    const formatter = new Intl.DateTimeFormat('pt-BR');
-    return formatter.format(date);
+  formatTime(minutes: number | null): string {
+    if (!minutes || minutes === 0) return '-';
+    if (minutes < 60) return `${Math.round(minutes)} min`;
+    const h = Math.floor(minutes / 60);
+    const m = Math.round(minutes % 60);
+    return `${h}h ${m}min`;
   }
 
-  getStatusLabel(status: 'pending' | 'preparing' | 'ready' | 'delivered'): string {
-    const labels = {
-      pending: 'Pendente',
-      preparing: 'Preparando',
-      ready: 'Pronto',
-      delivered: 'Entregue',
+  getStatusLabel(status: OrderStatusDB): string {
+    const labels: Record<OrderStatusDB, string> = {
+      OPEN: 'Aberto',
+      CLOSED: 'Fechado',
+      CANCELED: 'Cancelado',
+      PAID: 'Pago',
     };
-    return labels[status] || status;
+    return labels[status] ?? status;
   }
 
-  getTypeLabel(type: 'dine_in' | 'delivery'): string {
-    const labels = {
-      dine_in: 'Local',
-      delivery: 'Delivery',
+  getTypeLabel(type: OrderTypeDB): string {
+    const labels: Record<OrderTypeDB, string> = {
+      DINE_IN: 'Local',
+      DELIVERY: 'Delivery',
     };
-    return labels[type] || type;
-  }
-
-  formatTime(minutes: number): string {
-    if (minutes < 60) {
-      return `${Math.round(minutes)} min`;
-    }
-    const hours = Math.floor(minutes / 60);
-    const mins = Math.round(minutes % 60);
-    return `${hours}h ${mins}min`;
+    return labels[type] ?? type;
   }
 
   generateReport() {
@@ -124,24 +123,22 @@ export class ReportOrders {
       this.notification.error('Por favor, selecione as datas de início e fim.');
       return;
     }
-
-    const start = new Date(this.startDate);
-    const end = new Date(this.endDate);
-
-    if (start > end) {
+    if (new Date(this.startDate) > new Date(this.endDate)) {
       this.notification.error('A data de início não pode ser maior que a data de fim.');
       return;
     }
 
     this.isLoading = true;
+    this.expandedLocations.clear();
 
-    // Chamar serviço que busca os dados do relatório de pedidos
     this.reportService.generateReportOrders(this.startDate, this.endDate).subscribe({
       next: (reportData) => {
-        this.report = reportData;
+        this.report = reportData.data;
       },
       error: (err) => {
-        this.notification.error(`Erro ao gerar relatório: ${err.error?.message || 'Erro desconhecido'}`);
+        this.notification.error(
+          `Erro ao gerar relatório: ${(err.error?.message as string) || 'Erro desconhecido'}`,
+        );
       },
       complete: () => {
         this.isLoading = false;

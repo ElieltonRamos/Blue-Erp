@@ -69,7 +69,7 @@ export class ReportsExpensesComponent {
     this.isLoading = true;
     this.reportService.getExpensesReport(this.startDate, this.endDate).subscribe({
       next: (response) => {
-        this.report = response;
+        this.report = response.data;
         this.isLoading = false;
         this.cdr.detectChanges();
       },
