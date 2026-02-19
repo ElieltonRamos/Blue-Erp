@@ -10,6 +10,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { Express } from 'express';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -17,6 +18,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { CompanyService } from './company.service.js';
 import { CreateCompanyDto } from './dto/create-company.dto.js';
 import { UpdateCompanyDto } from './dto/update-company.dto.js';
+import { RolesGuard } from '../common/guards/roles.guard.js';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 
 // Interface para arquivo uploaded (compatível com o service)
 interface UploadedFile {
@@ -27,6 +30,7 @@ interface UploadedFile {
 }
 
 @ApiTags('company')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('company')
 export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}

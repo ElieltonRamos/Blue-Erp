@@ -1,4 +1,3 @@
-// src/users/users.controller.ts
 import {
   Controller,
   Get,
@@ -9,6 +8,7 @@ import {
   Delete,
   HttpStatus,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -22,25 +22,15 @@ import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { UserFiltersDto } from './dto/user-filter.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { RolesGuard } from '../common/guards/roles.guard.js';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
+import { Roles } from '../common/decorators/roles.decorator.js';
+import { Role } from '../common/decorators/roles.enum.js';
 
-@ApiTags('users') // Agrupa endpoints
+@ApiTags('users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-
-  @Post()
-  @ApiOperation({ summary: 'Criar novo usuário' })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: 'Usuário criado com sucesso',
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Dados inválidos',
-  })
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
 
   @Post('login')
   @ApiOperation({ summary: 'Autenticar usuário' })
@@ -61,7 +51,26 @@ export class UsersController {
     return this.usersService.login(loginDto);
   }
 
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Criar novo usuário' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Usuário criado com sucesso',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Dados inválidos',
+  })
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto);
+  }
+
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Listar todos os usuários' })
   @ApiQuery({ name: 'username', required: false })
@@ -82,18 +91,27 @@ export class UsersController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Buscar usuário por ID' })
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Atualizar usuário' })
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(+id, updateUserDto);
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Remover usuário (soft delete)' })
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);

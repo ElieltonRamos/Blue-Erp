@@ -1,6 +1,10 @@
-import { Controller, Get, Post, Res } from '@nestjs/common';
+import { Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import { AppService } from './app.service';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { RolesGuard } from './common/guards/roles.guard';
+import { Roles } from './common/decorators/roles.decorator';
+import { Role } from './common/decorators/roles.enum';
 
 @Controller()
 export class AppController {
@@ -14,6 +18,8 @@ export class AppController {
   }
 
   @Post('backup')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async executeBackup() {
     await this.appService.execBackup();
     return { message: 'Backup executado com sucesso' };

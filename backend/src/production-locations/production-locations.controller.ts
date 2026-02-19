@@ -8,6 +8,7 @@ import {
   Delete,
   ParseIntPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -19,8 +20,11 @@ import {
 import { ProductionLocationsService } from './production-locations.service';
 import { CreateProductionLocationDto } from './dto/create-production-location.dto';
 import { UpdateProductionLocationDto } from './dto/update-production-location.dto';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @ApiTags('Production Locations')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('production-locations')
 export class ProductionLocationsController {
   constructor(

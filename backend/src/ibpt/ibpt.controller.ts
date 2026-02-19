@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -23,8 +24,11 @@ import { IbptService } from './ibpt.service.js';
 import { GetAllIbptQueryDto } from './dto/response-ibpt.dto.js';
 import { CreateIbptDto } from './dto/create-ibpt.dto.js';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../common/guards/roles.guard.js';
 
 @ApiTags('IBPT')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('ibpt')
 export class IbptController {
   constructor(private readonly ibptService: IbptService) {}

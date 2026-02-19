@@ -8,13 +8,17 @@ import {
   Query,
   ParseIntPipe,
   Body,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ProductionStatus } from 'generated/prisma/client';
 import { ProductionService } from './order-production.service';
 import { BatchProductionDto } from './dto/batch-production.dto';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 
 @ApiTags('Production')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('production')
 export class ProductionController {
   constructor(private readonly productionService: ProductionService) {}

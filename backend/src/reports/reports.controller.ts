@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import { Controller, Get, Query, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Query, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { SalesReportFilterDto } from './dto/create-report-sale.dto';
 import { SalesReportService } from './sale-reports.service';
@@ -13,8 +13,11 @@ import { ExpenseReportService } from './expense-reports.service';
 import { OrderReportResponseDto } from './dto/response-report-order.dto';
 import { OrderReportFilterDto } from './dto/create-report-order.dto';
 import { OrderReportService } from './orders-report.service';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
 
 @ApiTags('Relatórios')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('reports')
 export class ReportsController {
   constructor(

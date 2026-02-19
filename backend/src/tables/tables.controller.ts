@@ -28,8 +28,10 @@ import { OccupyTableDto } from './dto/occupy-table.dto.js';
 import { ReserveTableDto } from './dto/reserve-table.dto.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
+import { RolesGuard } from '../common/guards/roles.guard.js';
 
 @ApiTags('Tables')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('tables')
 export class TablesController {
   constructor(private readonly tablesService: TablesService) {}

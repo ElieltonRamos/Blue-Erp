@@ -83,6 +83,25 @@ export class OrdersService {
         },
       });
 
+      const resaleItems = order.items.filter(
+        (item) => item.product.productType === 'RESALE',
+      );
+
+      if (resaleItems.length > 0) {
+        await this.prisma.client.$transaction(async (tx) => {
+          for (const item of resaleItems) {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: {
+                quantity: {
+                  decrement: item.quantity,
+                },
+              },
+            });
+          }
+        });
+      }
+
       const hasManufacturedItems = order.items.some(
         (item) => item.product.productType === 'MANUFACTURED',
       );
@@ -209,6 +228,7 @@ export class OrdersService {
 
     return this.mapToEntity(order);
   }
+
   async update(
     id: number,
     updateOrderDto: UpdateOrderDto,
@@ -288,37 +308,51 @@ export class OrdersService {
       const existingItems = existingOrder.items;
       const incomingIds = items.filter((i) => i.id).map((i) => i.id!);
 
+      // Remoção de itens
       for (const item of existingItems) {
         if (incomingIds.includes(item.id)) continue;
 
-        const hasInProgressProduction = item.productions.some(
-          (p) => p.status === 'IN_PROGRESS',
-        );
-
-        if (hasInProgressProduction) {
-          throw new BadRequestException(
-            `Item "${item.name}" está em produção e não pode ser removido`,
+        if (item.product.productType === 'MANUFACTURED') {
+          const hasInProgressProduction = item.productions.some(
+            (p) => p.status === 'IN_PROGRESS',
           );
-        }
 
-        const hasStartedProduction = item.productions.some(
-          (p) => p.status !== 'CANCELED' && Number(p.quantityProduced) > 0,
-        );
+          if (hasInProgressProduction) {
+            throw new BadRequestException(
+              `Item "${item.name}" está em produção e não pode ser removido`,
+            );
+          }
 
-        if (hasStartedProduction) {
-          throw new BadRequestException(
-            `Item "${item.name}" já iniciou produção e não pode ser removido`,
+          const hasStartedProduction = item.productions.some(
+            (p) => p.status !== 'CANCELED' && Number(p.quantityProduced) > 0,
           );
-        }
 
-        await tx.orderProduction.updateMany({
-          where: { orderItemId: item.id, status: 'PENDING' },
-          data: { status: 'CANCELED' },
-        });
+          if (hasStartedProduction) {
+            throw new BadRequestException(
+              `Item "${item.name}" já iniciou produção e não pode ser removido`,
+            );
+          }
+
+          await tx.orderProduction.updateMany({
+            where: { orderItemId: item.id, status: 'PENDING' },
+            data: { status: 'CANCELED' },
+          });
+        }
 
         await tx.orderItem.delete({ where: { id: item.id } });
+
+        // Estorna estoque se RESALE
+        if (item.product.productType === 'RESALE') {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              quantity: { increment: item.quantity },
+            },
+          });
+        }
       }
 
+      // Atualização de itens existentes
       for (const incoming of items.filter((i) => i.id)) {
         const existing = existingItems.find((i) => i.id === incoming.id);
         if (!existing) continue;
@@ -334,6 +368,7 @@ export class OrdersService {
           );
         }
 
+        // Aumento de quantidade
         if (novaQuantidade > quantidadeAtual) {
           const diferenca = novaQuantidade - quantidadeAtual;
 
@@ -352,39 +387,42 @@ export class OrdersService {
           }
         }
 
+        // Redução de quantidade
         if (novaQuantidade < quantidadeAtual) {
-          const pendingProductions = existing.productions.filter(
-            (p) => p.status === 'PENDING',
-          );
-
-          let restanteParaCancelar = quantidadeAtual - novaQuantidade;
-
-          for (const prod of pendingProductions) {
-            if (restanteParaCancelar <= 0) break;
-
-            const qty = Number(prod.quantityRequested);
-
-            if (qty <= restanteParaCancelar) {
-              await tx.orderProduction.update({
-                where: { id: prod.id },
-                data: { status: 'CANCELED' },
-              });
-              restanteParaCancelar -= qty;
-            } else {
-              await tx.orderProduction.update({
-                where: { id: prod.id },
-                data: {
-                  quantityRequested: qty - restanteParaCancelar,
-                },
-              });
-              restanteParaCancelar = 0;
-            }
-          }
-
-          if (restanteParaCancelar > 0) {
-            throw new BadRequestException(
-              `Não é possível reduzir "${existing.name}" pois parte já está em produção`,
+          if (existing.product.productType === 'MANUFACTURED') {
+            const pendingProductions = existing.productions.filter(
+              (p) => p.status === 'PENDING',
             );
+
+            let restanteParaCancelar = quantidadeAtual - novaQuantidade;
+
+            for (const prod of pendingProductions) {
+              if (restanteParaCancelar <= 0) break;
+
+              const qty = Number(prod.quantityRequested);
+
+              if (qty <= restanteParaCancelar) {
+                await tx.orderProduction.update({
+                  where: { id: prod.id },
+                  data: { status: 'CANCELED' },
+                });
+                restanteParaCancelar -= qty;
+              } else {
+                await tx.orderProduction.update({
+                  where: { id: prod.id },
+                  data: {
+                    quantityRequested: qty - restanteParaCancelar,
+                  },
+                });
+                restanteParaCancelar = 0;
+              }
+            }
+
+            if (restanteParaCancelar > 0) {
+              throw new BadRequestException(
+                `Não é possível reduzir "${existing.name}" pois parte já está em produção`,
+              );
+            }
           }
         }
 
@@ -398,8 +436,25 @@ export class OrdersService {
             total: totalItem,
           },
         });
+
+        // Ajusta estoque se RESALE
+        if (existing.product.productType === 'RESALE') {
+          const diferenca = novaQuantidade - quantidadeAtual;
+          if (diferenca > 0) {
+            await tx.product.update({
+              where: { id: existing.productId },
+              data: { quantity: { decrement: diferenca } },
+            });
+          } else if (diferenca < 0) {
+            await tx.product.update({
+              where: { id: existing.productId },
+              data: { quantity: { increment: Math.abs(diferenca) } },
+            });
+          }
+        }
       }
 
+      // Novos itens
       const newItems = items.filter((i) => !i.id);
 
       if (newItems.length > 0) {
@@ -446,6 +501,14 @@ export class OrdersService {
               total: totalItem,
             },
           });
+
+          // Baixa estoque se RESALE
+          if (product.productType === 'RESALE') {
+            await tx.product.update({
+              where: { id: newItem.productId },
+              data: { quantity: { decrement: newItem.quantity } },
+            });
+          }
 
           if (product.productType === 'MANUFACTURED') {
             await tx.orderProduction.create({

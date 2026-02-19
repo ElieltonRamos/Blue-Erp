@@ -9,14 +9,18 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { PrimaryMaterialsService } from './primary-materials.service';
 import { CreatePrimaryMaterialDto } from './dto/create-primary-material.dto';
 import { UpdatePrimaryMaterialDto } from './dto/update-primary-material.dto';
 import { FilterPrimaryMaterialDto } from './dto/filter-primary-material.dto';
 import { AdjustStockDto } from './dto/adjust-stock.dto';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @Controller('primary-materials')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class PrimaryMaterialsController {
   constructor(
     private readonly primaryMaterialsService: PrimaryMaterialsService,

@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -19,8 +20,11 @@ import { FilterProductDto } from './dto/filter-product.dto';
 import { ProduceProductDto } from './dto/produce-product.dto';
 import { UpdatePreparationDto } from './dto/update-preparation.dto';
 import { UpdateCompositionDto } from './dto/update-composition.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
 
 @ApiTags('Products')
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('products')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
