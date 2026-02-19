@@ -33,7 +33,7 @@ export class ModalSalesNote implements OnInit {
   nfceData: NfceEmissaoResponse | null = null;
   companyData: Company | null = null;
 
-  canEmitNfce = this.licenseService.getCurrentPlan() !== 'basic';
+  canEmitNfce = this.licenseService.getCurrentPlan() === 'pro';
 
   ngOnInit() {
     this.loadCompanyData();

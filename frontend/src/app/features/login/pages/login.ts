@@ -4,6 +4,7 @@ import { alertLoading, closeLoading } from '../../../shared/alerts/custom-alerts
 import { Router } from '@angular/router';
 import { ServiceLogin } from '../services/login.service';
 import { NotificationService } from '../../../shared/toastr/notification.service';
+import { LicenseService } from '../../../core/services/license.service';
 
 @Component({
   selector: 'app-login',
@@ -14,6 +15,7 @@ export class Login {
   private route = inject(Router);
   private loginService = inject(ServiceLogin);
   private notification = inject(NotificationService);
+  private licenseService = inject(LicenseService);
 
   form = new FormGroup({
     username: new FormControl('', [Validators.required]),
@@ -38,22 +40,26 @@ export class Login {
         localStorage.setItem('token', response.token);
         closeLoading();
 
-        // Exibe aviso de licença offline se houver
         if (response.licenseWarning) {
           this.notification.warning(response.licenseWarning, 'Atenção');
         }
 
+        this.licenseService.getTokenInfo().subscribe({
+          next: (info) => {
+            localStorage.setItem('licensePlan', info.plan);
+          },
+        });
+
         this.notification.success(`Bem Vindo! 👋`);
+        this.form.reset();
         this.route.navigate(['/dashboard']);
       },
       error: (err) => {
         closeLoading();
         localStorage.removeItem('token');
-
         this.notification.error(err.error?.message || 'Credenciais inválidas');
+        this.form.reset();
       },
     });
-
-    this.form.reset();
   }
 }

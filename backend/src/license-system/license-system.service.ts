@@ -13,12 +13,17 @@ import axios from 'axios';
 export class LicenseSystemService {
   private readonly LICENSING_SERVER =
     'https://licensing-service-blue-pdv.vercel.app';
-  private readonly publicKey: string;
+  private readonly publicKey = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAosv4C0/s/wjSFt/dyibk
+Fo9Uj1F1aJhcUqnbVRWHychNBeuxS8/qiec2197UYG0Igr7JKyewI+q99qm47lFH
+qemHwyXhVcUqBBazVSE1r6tXMjqwRruEQhvPhyNRAy+s9tWJ8r7HK2ycwiHry2KU
+Kl/cD59tVhiX2EYSBDxgY5zkbq5WGhTjJFok8Y+JrmeS+P2WYddSwG6oE+kgFRZg
+3v1MoxcyyGnpEnQ1nw6CtTstdH5KyJzy14EznVHaNBhT9tg4ctt3sWzSNHWFbg6I
+HS9hY6lVL19A4jIz/GUa4pxTj1XetkaZ8znWU9nQoygb41P3SBZ+4xynNywQ834S
+SwIDAQAB
+-----END PUBLIC KEY-----`;
 
-  constructor(private readonly prisma: PrismaService) {
-    this.publicKey =
-      process.env.LICENSE_PUBLIC_KEY?.replace(/\\n/g, '\n') || '';
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
   private async fetchToken(
     cnpj: string,
@@ -86,12 +91,27 @@ export class LicenseSystemService {
     const licenseExpired = now > payload.licenseValidUntil;
     const tokenExpired = nowSeconds > payload.exp;
 
-    // Licença expirada
+    // Licença expirada — verifica grace period offline a partir do exp do token
     if (licenseExpired) {
+      const tokenExpDate = new Date(payload.exp * 1000);
+      const diffMs = now - tokenExpDate.getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const daysRemaining = payload.maxOfflineDays - diffDays;
+
+      if (daysRemaining > 0) {
+        return {
+          isValid: true,
+          plan: payload.plan,
+          mode: 'offline',
+          daysRemaining,
+          message: `Licença expirada. Sistema em modo offline. ${daysRemaining} dia(s) restante(s) para regularizar.`,
+        };
+      }
+
       return { isValid: false, plan: 'none', mode: 'expired' };
     }
 
-    // Token expirado mas dentro do período offline
+    // Token expirado mas licença ainda válida — modo offline normal
     if (tokenExpired) {
       const tokenExpDate = new Date(payload.exp * 1000);
       const diffMs = now - tokenExpDate.getTime();
@@ -109,6 +129,20 @@ export class LicenseSystemService {
       }
 
       return { isValid: false, plan: 'none', mode: 'expired' };
+    }
+
+    // Online válida — verifica se está próxima de vencer (3 dias)
+    const msUntilExpiry = payload.licenseValidUntil - now;
+    const daysUntilExpiry = Math.ceil(msUntilExpiry / (1000 * 60 * 60 * 24));
+
+    if (daysUntilExpiry <= 3) {
+      return {
+        isValid: true,
+        plan: payload.plan,
+        mode: 'online',
+        daysRemaining: daysUntilExpiry,
+        message: `Sua licença vence em ${daysUntilExpiry} dia(s). Renove para evitar interrupções.`,
+      };
     }
 
     return { isValid: true, plan: payload.plan, mode: 'online' };
@@ -142,7 +176,7 @@ export class LicenseSystemService {
     if (result.serverRejected) {
       await this.prisma.client.company.update({
         where: { id: company.id },
-        data: { licenseToken: null },
+        data: { licenseToken: undefined },
       });
       return { isValid: false, plan: 'none', mode: 'expired' };
     }

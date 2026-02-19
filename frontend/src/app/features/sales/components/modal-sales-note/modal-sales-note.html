@@ -98,7 +98,7 @@
         [disabled]="isRequestingNfce || !canEmitNfce"
         [class.opacity-60]="!canEmitNfce"
         [class.cursor-not-allowed]="!canEmitNfce"
-        [title]="!canEmitNfce ? 'Recurso disponível apenas nos planos Premium e Pro' : ''"
+        [title]="!canEmitNfce ? 'Recurso disponível apenas no plano Pro' : ''"
         class="relative group"
       >
         @if (isRequestingNfce) {

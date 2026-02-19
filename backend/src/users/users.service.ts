@@ -258,7 +258,7 @@ export class UsersService {
     const token = await this.jwtService.signAsync(payload);
 
     // Retorna aviso se em modo offline
-    if (license.mode === 'offline') {
+    if (license.message) {
       return { token, licenseWarning: license.message };
     }
 
