@@ -6,6 +6,8 @@ certs
 release
 backups
 sea-prep.blob
+*.exe
+!nsis-installer-windows/nssm.exe
 
 # Logs
 logs
