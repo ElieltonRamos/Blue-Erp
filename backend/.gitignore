@@ -5,6 +5,7 @@
 certs
 release
 backups
+sea-prep.blob
 
 # Logs
 logs

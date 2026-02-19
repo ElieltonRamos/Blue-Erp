@@ -32,6 +32,7 @@ const dbConfig = {
 
 function findMigrationsDir(startDir: string): string | null {
   const searchPatterns = [
+    ['migrations'],
     ['dist', 'prisma', 'migrations'],
     ['build', 'prisma', 'migrations'],
     ['prisma', 'migrations'],
