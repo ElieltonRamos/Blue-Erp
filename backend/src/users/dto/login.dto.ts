@@ -19,3 +19,18 @@ export class LoginDto {
   @MinLength(6, { message: 'Senha deve ter no mínimo 6 caracteres' })
   password: string;
 }
+
+export class LoginResponseDto {
+  @ApiProperty({
+    description: 'Token JWT',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
+  token: string;
+
+  @ApiProperty({
+    description: 'Aviso sobre licença em modo offline',
+    example: 'Sistema em modo offline. 3 dia(s) restante(s) para reconectar.',
+    required: false,
+  })
+  licenseWarning?: string;
+}

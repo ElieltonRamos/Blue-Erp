@@ -16,6 +16,7 @@ import { ProductionLocationsModule } from './production-locations/production-loc
 import { TablesModule } from './tables/tables.module';
 import { SalesModule } from './sales/sales.module';
 import { ReportsModule } from './reports/reports.module';
+import { LicenseSystemModule } from './license-system/license-system.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ReportsModule } from './reports/reports.module';
     TablesModule,
     SalesModule,
     ReportsModule,
+    LicenseSystemModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -83,7 +83,7 @@ model Company {
   certificateExpirationDate DateTime? @map("certificate_expiration_date")
   ibptVersion               String    @default("4.0") @map("ibpt_version")
   licenseKey                String    @map("license_key")
-  licenseToken              String    @map("license_token")
+  licenseToken              String?   @map("license_token") @db.Text
   createdAt                 DateTime  @default(now()) @map("created_at")
   updatedAt                 DateTime  @updatedAt @map("updated_at")
 

@@ -14,12 +14,14 @@ import { UpdateUserDto } from './dto/update-user.dto.js';
 import { UserFiltersDto } from './dto/user-filter.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { Prisma } from 'generated/prisma/client.js';
+import { LicenseSystemService } from '../license-system/license-system.service.js';
 
 @Injectable()
 export class UsersService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private licenseService: LicenseSystemService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserResponseDto> {
@@ -215,7 +217,9 @@ export class UsersService {
     return new UserResponseDto(result);
   }
 
-  async login(loginDto: LoginDto): Promise<{ token: string }> {
+  async login(
+    loginDto: LoginDto,
+  ): Promise<{ token: string; licenseWarning?: string }> {
     const { username, password } = loginDto;
 
     const user = await this.prisma.client.user.findUnique({
@@ -236,6 +240,15 @@ export class UsersService {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
+    // Validação da licença
+    const license = await this.licenseService.validate();
+
+    if (!license.isValid) {
+      throw new UnauthorizedException(
+        'Licença inválida ou expirada. Entre em contato com o suporte via WhatsApp: (38) 98866-3580',
+      );
+    }
+
     const payload = {
       userId: user.id,
       username: user.username,
@@ -243,6 +256,11 @@ export class UsersService {
     };
 
     const token = await this.jwtService.signAsync(payload);
+
+    // Retorna aviso se em modo offline
+    if (license.mode === 'offline') {
+      return { token, licenseWarning: license.message };
+    }
 
     return { token };
   }

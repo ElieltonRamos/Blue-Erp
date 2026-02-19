@@ -260,11 +260,11 @@ async function runSeeds(): Promise<void> {
         certificate_expiration_date, ibpt_version, license_key, license_token,
         created_at, updated_at
       ) VALUES (
-        '12345678000190', 'Restaurante Bom Sabor LTDA', 'Bom Sabor', '123456789', '1',
+        '00000000000000', 'Restaurante Bom Sabor LTDA', 'Bom Sabor', '123456789', '1',
         'Rua das Flores', '456', 'Loja 1', 'Centro', 'São Paulo', '3550308', 'SP', '01310100',
         '11987654321', 'contato@bomsabor.com.br', '1', 1, 'staging',
         'HOMOLOGACAO-CSC-EXEMPLO', '1', '/certificates/bomsabor.pfx', 'certificado123',
-        '2026-12-31', '4.0', 'LIC-2024-BOMSABOR', 'TOKEN-XYZ-123',
+        '2026-12-31', '4.0', 'b6a63bc12098bbc81b16e5cc4c8e5dcb8d7506aa8b9a57cc56d72f4d677f13ef', 'TOKEN-XYZ-123',
         NOW(), NOW()
       ) ON DUPLICATE KEY UPDATE cnpj = cnpj
     `);

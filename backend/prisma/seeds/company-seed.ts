@@ -5,7 +5,7 @@ export async function seedCompany(prisma: PrismaClient) {
     where: { cnpj: '12345678000190' },
     update: {},
     create: {
-      cnpj: '12345678000190',
+      cnpj: '00000000000000',
       corporateName: 'Restaurante Bom Sabor LTDA',
       tradeName: 'Bom Sabor',
       stateRegistration: '123456789',
@@ -29,7 +29,8 @@ export async function seedCompany(prisma: PrismaClient) {
       certificatePassword: 'certificado123',
       certificateExpirationDate: new Date('2026-12-31'),
       ibptVersion: '4.0',
-      licenseKey: 'LIC-2024-BOMSABOR',
+      licenseKey:
+        'b6a63bc12098bbc81b16e5cc4c8e5dcb8d7506aa8b9a57cc56d72f4d677f13ef',
       licenseToken: 'TOKEN-XYZ-123',
     },
   });

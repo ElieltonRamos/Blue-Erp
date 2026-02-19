@@ -25,8 +25,8 @@ export class CompanyResponseDto {
   certificatePassword: string; // Senha do certificado digital
   certificateExpirationDate: Date | null; // Data de expiração do certificado
   ibptVersion: string; // Versão da tabela IBPT
-  licenseKey: string;
-  licenseToken: string;
+  licenseKey: string | null;
+  licenseToken: string | null;
 
   constructor(partial: Partial<CompanyResponseDto>) {
     Object.assign(this, partial);

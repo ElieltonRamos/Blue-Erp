@@ -37,6 +37,12 @@ export class Login {
       next: (response) => {
         localStorage.setItem('token', response.token);
         closeLoading();
+
+        // Exibe aviso de licença offline se houver
+        if (response.licenseWarning) {
+          this.notification.warning(response.licenseWarning, 'Atenção');
+        }
+
         this.notification.success(`Bem Vindo! 👋`);
         this.route.navigate(['/dashboard']);
       },
