@@ -1,4 +1,3 @@
-// src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -17,16 +16,44 @@ async function bootstrap() {
     }),
   );
 
-  // Configuração do Swagger
-  const config = new DocumentBuilder()
-    .setTitle('Blue-ERP API')
-    .setDescription('API do sistema Blue-ERP para gestão')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
+  const appEnvKeys = [
+    'PORT',
+    'ENVIRONMENT',
+    'DATABASE_URL',
+    'DATABASE_USER',
+    'DATABASE_PASSWORD',
+    'DATABASE_NAME',
+    'DATABASE_HOST',
+    'DATABASE_PORT',
+    'JWT_SECRET',
+    'LICENSE_PUBLIC_KEY',
+    'LICENSING_SERVER',
+  ];
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  console.log('=== Environment Variables ===');
+  appEnvKeys.forEach((key) => {
+    const value = process.env[key];
+    const isSensitive = ['PASSWORD', 'SECRET', 'KEY', 'URL'].some((s) =>
+      key.includes(s),
+    );
+    console.log(
+      `${key}:`,
+      value ? (isSensitive ? '***' : value) : 'nao-identificado',
+    );
+  });
+  console.log('=============================');
+
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Blue-ERP API')
+      .setDescription('API do sistema Blue-ERP para gestão')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, document);
+  }
 
   await app.listen(process.env.PORT ?? 3000);
 }

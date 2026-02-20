@@ -11,17 +11,9 @@ import axios from 'axios';
 
 @Injectable()
 export class LicenseSystemService {
-  private readonly LICENSING_SERVER =
-    'https://licensing-service-blue-pdv.vercel.app';
-  private readonly publicKey = `-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAosv4C0/s/wjSFt/dyibk
-Fo9Uj1F1aJhcUqnbVRWHychNBeuxS8/qiec2197UYG0Igr7JKyewI+q99qm47lFH
-qemHwyXhVcUqBBazVSE1r6tXMjqwRruEQhvPhyNRAy+s9tWJ8r7HK2ycwiHry2KU
-Kl/cD59tVhiX2EYSBDxgY5zkbq5WGhTjJFok8Y+JrmeS+P2WYddSwG6oE+kgFRZg
-3v1MoxcyyGnpEnQ1nw6CtTstdH5KyJzy14EznVHaNBhT9tg4ctt3sWzSNHWFbg6I
-HS9hY6lVL19A4jIz/GUa4pxTj1XetkaZ8znWU9nQoygb41P3SBZ+4xynNywQ834S
-SwIDAQAB
------END PUBLIC KEY-----`;
+  private readonly licensingServer = process.env.LICENSING_SERVER || '';
+  private readonly publicKey =
+    process.env.LICENSE_PUBLIC_KEY?.replace(/\\n/g, '\n') || '';
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -35,7 +27,7 @@ SwIDAQAB
   }> {
     try {
       const response = await axios.get(
-        `${this.LICENSING_SERVER}/api/license/${cnpj}`,
+        `${this.licensingServer}/api/license/${cnpj}`,
         {
           params: { licenseKey },
           timeout: 10000,

@@ -48,6 +48,10 @@ Section "Instalação Principal" SecMain
     File "install-service.bat"
     File "uninstall-service.bat"
     File "blue-erp-server-icon.ico"
+    File ".env"
+    
+    ; Criar pasta de logs
+    CreateDirectory "$INSTDIR\logs"
     
     ; Criar registro
     WriteRegStr HKLM "Software\${APP_NAME}" "InstallDir" "$INSTDIR"
@@ -65,12 +69,27 @@ Section "Instalação Principal" SecMain
     ; Criar desinstalador
     WriteUninstaller "$INSTDIR\uninstall.exe"
     
-    ; Instalar e iniciar serviço
+    ; Instalar serviço
     DetailPrint "Instalando serviço ${SERVICE_NAME}..."
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" install ${SERVICE_NAME} "$INSTDIR\${APP_EXE}"'
+    
+    ; Configurar diretório de trabalho (para o .env ser encontrado)
+    nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppDirectory "$INSTDIR"'
+    
+    ; Configurar inicialização automática
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} Start SERVICE_AUTO_START'
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppRestartDelay 5000'
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} Description "Servidor Blue ERP - Sistema de PDV"'
+    
+    ; Configurar logs
+    DetailPrint "Configurando logs..."
+    nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppStdout "$INSTDIR\logs\service.log"'
+    nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppStderr "$INSTDIR\logs\error.log"'
+    nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppStdoutCreationDisposition 4'
+    nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppStderrCreationDisposition 4'
+    nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppRotateFiles 1'
+    nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppRotateOnline 1'
+    nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppRotateBytes 5242880'
     
     DetailPrint "Iniciando serviço..."
     nsExec::ExecToLog 'net start ${SERVICE_NAME}'
@@ -81,6 +100,7 @@ Section "Atalhos" SecShortcuts
     CreateDirectory "$SMPROGRAMS\${APP_NAME}"
     CreateShortCut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\blue-erp-server-icon.ico"
     CreateShortCut "$SMPROGRAMS\${APP_NAME}\Desinstalar.lnk" "$INSTDIR\uninstall.exe"
+    CreateShortCut "$SMPROGRAMS\${APP_NAME}\Abrir Logs.lnk" "$INSTDIR\logs"
     CreateShortCut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\blue-erp-server-icon.ico"
 SectionEnd
 
@@ -100,11 +120,17 @@ Section "Uninstall"
     Delete "$INSTDIR\install-service.bat"
     Delete "$INSTDIR\uninstall-service.bat"
     Delete "$INSTDIR\blue-erp-server-icon.ico"
+    Delete "$INSTDIR\.env"
     Delete "$INSTDIR\uninstall.exe"
+    
+    ; Remover logs
+    Delete "$INSTDIR\logs\*.log"
+    RMDir "$INSTDIR\logs"
     
     ; Remover atalhos
     Delete "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk"
     Delete "$SMPROGRAMS\${APP_NAME}\Desinstalar.lnk"
+    Delete "$SMPROGRAMS\${APP_NAME}\Abrir Logs.lnk"
     RMDir "$SMPROGRAMS\${APP_NAME}"
     Delete "$DESKTOP\${APP_NAME}.lnk"
     

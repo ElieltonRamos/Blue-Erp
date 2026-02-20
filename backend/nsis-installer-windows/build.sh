@@ -26,6 +26,7 @@ REQUIRED_FILES=(
     "uninstall-service.bat"
     "LICENSE.txt"
     "blue-erp-server.nsi"
+    ".env"
 )
 
 echo "Verificando arquivos necessários..."

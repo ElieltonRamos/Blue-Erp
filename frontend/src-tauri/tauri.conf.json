@@ -1,7 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "blue-erp",
-  "version": "0.1.0",
+  "productName": "Blue Erp",
+  "mainBinaryName": "blue-erp",
+  "version": "0.5.7",
   "identifier": "com.bluetech.blue-erp",
   "build": {
     "frontendDist": "../dist/frontend/browser",
@@ -16,7 +17,7 @@
         "width": 800,
         "height": 600,
         "resizable": true,
-        "maximizable": true,
+        "maximized": true,
         "fullscreen": false
       }
     ],
