@@ -7,6 +7,7 @@ import { PrismaService } from './database/prisma.service';
 import { promisify } from 'util';
 import { exec } from 'child_process';
 import { Cron } from '@nestjs/schedule';
+import { LicenseSystemService } from './license-system/license-system.service';
 
 const INSTALADOR_INFO = {
   nome: 'BlueTech Informática',
@@ -20,7 +21,10 @@ const execAsync = promisify(exec);
 
 @Injectable()
 export class AppService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private licenseService: LicenseSystemService,
+  ) {}
 
   @Cron('0 5 * * *', { name: 'scheduled-backup' }) // Todos os dias às 5h
   async scheduledBackup() {
@@ -103,6 +107,48 @@ export class AppService {
       backupInfo.statusClass = 'text-red-400';
     }
 
+    // License info
+    const licenseInfo = {
+      status: '❌ Inválida',
+      statusClass: 'text-red-400',
+      plan: '-',
+      cnpj: '-',
+      validUntil: '-',
+      alert: '',
+    };
+
+    try {
+      const licenseStatus = await this.licenseService.getStatus();
+
+      if (licenseStatus.isValid) {
+        licenseInfo.status =
+          licenseStatus.mode === 'online' ? '🟢 Online' : '🟡 Offline';
+        licenseInfo.statusClass =
+          licenseStatus.mode === 'online'
+            ? 'text-green-400'
+            : 'text-yellow-400';
+      } else {
+        licenseInfo.status = '🔴 Expirada';
+        licenseInfo.statusClass = 'text-red-400';
+      }
+
+      licenseInfo.plan =
+        licenseStatus.plan === 'pro'
+          ? 'Pro'
+          : licenseStatus.plan === 'basic'
+            ? 'Basic'
+            : '-';
+      licenseInfo.alert = licenseStatus.message || '';
+
+      const tokenInfo = await this.licenseService.getTokenInfo();
+      licenseInfo.cnpj = tokenInfo.cnpj;
+      licenseInfo.validUntil = new Date(
+        tokenInfo.licenseValidUntil,
+      ).toLocaleDateString('pt-BR');
+    } catch {
+      // Mantém valores padrão
+    }
+
     return {
       serverStatus: '🟢 Online',
       uptime: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`,
@@ -126,6 +172,12 @@ export class AppService {
       instaladorTelefone: INSTALADOR_INFO.telefone,
       instaladorEmail: INSTALADOR_INFO.email,
       instaladorData: INSTALADOR_INFO.instalacao,
+      licenseStatus: licenseInfo.status,
+      licenseStatusClass: licenseInfo.statusClass,
+      licensePlan: licenseInfo.plan,
+      licenseCnpj: licenseInfo.cnpj,
+      licenseValidUntil: licenseInfo.validUntil,
+      licenseAlert: licenseInfo.alert,
     };
   }
 
@@ -188,6 +240,32 @@ export class AppService {
                 <p class="text-sm opacity-75 mt-2">Último: ${data.backupLast}</p>
                 <p class="text-xs opacity-60">(${data.backupDaysAgo}) ${data.backupCount > 0 ? `• ${data.backupCount}` : ''}</p>
             </div>
+        </div>
+
+        <!-- Licença -->
+        <div class="bg-gradient-to-br from-green-900/30 to-emerald-900/30 backdrop-blur-lg rounded-2xl p-8 border-2 border-green-500/30 mb-8">
+            <h3 class="text-2xl font-bold mb-6 flex items-center text-green-300">
+                🔑 Licença do Sistema
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div>
+                    <p class="text-sm opacity-75">Status</p>
+                    <p class="text-xl font-bold ${data.licenseStatusClass}">${data.licenseStatus}</p>
+                </div>
+                <div>
+                    <p class="text-sm opacity-75">Plano</p>
+                    <p class="text-xl font-bold">${data.licensePlan}</p>
+                </div>
+                <div>
+                    <p class="text-sm opacity-75">CNPJ</p>
+                    <p class="text-xl font-bold">${data.licenseCnpj}</p>
+                </div>
+                <div>
+                    <p class="text-sm opacity-75">Validade</p>
+                    <p class="text-xl font-bold">${data.licenseValidUntil}</p>
+                </div>
+            </div>
+            ${data.licenseAlert ? `<p class="text-sm text-yellow-300 mt-4 p-3 bg-yellow-500/10 rounded-lg">⚠️ ${data.licenseAlert}</p>` : ''}
         </div>
 
         <!-- Instalador -->
