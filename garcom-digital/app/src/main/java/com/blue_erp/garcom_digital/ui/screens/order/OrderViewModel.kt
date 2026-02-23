@@ -1,5 +1,6 @@
 package com.blue_erp.garcom_digital.ui.screens.order
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -117,7 +118,7 @@ class OrderViewModel @Inject constructor(
             updateItemQuantity(existing.id) { it + 1.0 }
         } else {
             val newItem = TableOrderItem(
-                id = -(System.currentTimeMillis().toInt()),
+                id = -(_uiState.value.editedItems.size + 1),
                 code = product.code,
                 name = product.name,
                 quantity = 1.0,
@@ -154,20 +155,25 @@ class OrderViewModel @Inject constructor(
                 )
             }
             val request = UpdateOrderRequest(items = items, total = items.sumOf { it.total })
+            android.util.Log.d("OrderViewModel", "saveChanges → request items: ${items}")
+            android.util.Log.d("OrderViewModel", "saveChanges → request: $request")
 
             when (val result = orderRepository.updateOrder(orderId, request)) {
-                is Resource.Success -> _uiState.update {
-                    it.copy(
-                        order = result.data,
-                        editedItems = result.data.items.toList(),
-                        isSaving = false,
-                        hasUnsavedChanges = false,
-                        success = "Comanda salva"
-                    )
+                is Resource.Success -> {
+                    Log.d("OrderViewModel", "saveChanges → success: ${result.data}")
+                    _uiState.update {
+                        it.copy(
+                            order = result.data,
+                            editedItems = result.data.items.toList(),
+                            isSaving = false,
+                            hasUnsavedChanges = false,
+                            success = "Comanda salva"
+                        )
+                    }
                 }
                 is Resource.Error -> {
+                    Log.e("OrderViewModel", "saveChanges → error: ${result.message}")
                     _uiState.update { it.copy(isSaving = false, error = result.message) }
-                    loadTable() // restaura estado real do backend
                 }
                 is Resource.Loading -> {}
             }

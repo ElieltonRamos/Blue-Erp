@@ -34,8 +34,12 @@ fun OrderScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.error) {
-        uiState.error?.let { viewModel.clearError(); snackbarHostState.showSnackbar(it) }
+        uiState.error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.loadTable() // recarrega após fechar o snackbar
+        }
     }
+
     LaunchedEffect(uiState.success) {
         uiState.success?.let { viewModel.clearSuccess(); snackbarHostState.showSnackbar(it) }
     }
@@ -266,7 +270,10 @@ private fun OrderItemCard(
 private fun OrderBottomBar(total: Double) {
     Surface(tonalElevation = 4.dp, color = MaterialTheme.colorScheme.surface) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("Total", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

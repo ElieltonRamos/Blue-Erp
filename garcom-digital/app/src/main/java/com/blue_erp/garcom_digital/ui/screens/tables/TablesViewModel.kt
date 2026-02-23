@@ -50,29 +50,26 @@ class TablesViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-            val locationsDeferred = async { tableRepository.getLocations() }
-            val tablesDeferred = async { tableRepository.getTables(null) }
-
-            val locationsResult = locationsDeferred.await()
-            val tablesResult = tablesDeferred.await()
-
+            val locationsResult = tableRepository.getLocations()
             val locations = if (locationsResult is Resource.Success) locationsResult.data else emptyList()
-            val selectedLocationId = locations.firstOrNull()?.id
-
-            val tables = if (tablesResult is Resource.Success) tablesResult.data else emptyList()
-            val error = when {
-                locationsResult is Resource.Error -> locationsResult.message
-                tablesResult is Resource.Error -> tablesResult.message
-                else -> null
-            }
+            val firstLocationId = locations.firstOrNull()?.id
 
             _uiState.value = _uiState.value.copy(
                 locations = locations,
-                selectedLocationId = selectedLocationId,
-                tables = tables,
-                isLoading = false,
-                error = error
+                selectedLocationId = firstLocationId ?: _uiState.value.selectedLocationId
             )
+
+            when (val tablesResult = tableRepository.getTables(firstLocationId)) {
+                is Resource.Success -> _uiState.value = _uiState.value.copy(
+                    tables = tablesResult.data,
+                    isLoading = false
+                )
+                is Resource.Error -> _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = tablesResult.message
+                )
+                is Resource.Loading -> {}
+            }
         }
     }
 
