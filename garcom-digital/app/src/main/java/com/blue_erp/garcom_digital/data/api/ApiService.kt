@@ -7,7 +7,7 @@ import retrofit2.http.*
 interface ApiService {
 
     // Auth
-    @POST("auth/login")
+    @POST("users/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
     // Tables
