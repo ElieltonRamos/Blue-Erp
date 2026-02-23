@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -31,14 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.blue_erp.garcom_digital.R
-
-// Cores mais claras
-private val BackgroundLight = Color(0xFF2D2D4A)
-private val BackgroundMedium = Color(0xFF1E1E3A)
-private val SurfaceColor = Color(0xFF3D3D5C)
-private val PurpleAccent = Color(0xFF7B2CBF)
-private val TextPrimary = Color.White
-private val TextSecondary = Color(0xFFB0B0B0)
+import com.blue_erp.garcom_digital.ui.theme.GarcomDigitalTheme
 
 @Composable
 fun LoginScreen(
@@ -73,8 +65,8 @@ private fun LoginScreenContent(
     var passwordVisible by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
+    val colors = MaterialTheme.colorScheme
 
-    // Detecta se o teclado está aberto
     val density = LocalDensity.current
     val imeBottom = WindowInsets.ime.getBottom(density)
     val imeVisible = imeBottom > 0
@@ -86,7 +78,7 @@ private fun LoginScreenContent(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(BackgroundLight, BackgroundMedium)
+                    colors = listOf(colors.surfaceVariant, colors.background)
                 )
             )
             .imePadding()
@@ -100,7 +92,6 @@ private fun LoginScreenContent(
         ) {
             Spacer(modifier = Modifier.height(if (imeVisible) 16.dp else 48.dp))
 
-            // Logo - reduz quando teclado abre
             Image(
                 painter = painterResource(id = R.drawable.logo_app_garcom),
                 contentDescription = "Logo Garçom Digital",
@@ -118,15 +109,15 @@ private fun LoginScreenContent(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = SurfaceColor,
-                    focusedBorderColor = PurpleAccent,
-                    unfocusedLabelColor = TextSecondary,
-                    focusedLabelColor = PurpleAccent,
-                    cursorColor = PurpleAccent,
-                    unfocusedContainerColor = SurfaceColor,
-                    focusedContainerColor = SurfaceColor,
-                    unfocusedTextColor = TextPrimary,
-                    focusedTextColor = TextPrimary
+                    unfocusedBorderColor = colors.surface,
+                    focusedBorderColor = colors.primary,
+                    unfocusedLabelColor = colors.onSurfaceVariant,
+                    focusedLabelColor = colors.primary,
+                    cursorColor = colors.primary,
+                    unfocusedContainerColor = colors.surface,
+                    focusedContainerColor = colors.surface,
+                    unfocusedTextColor = colors.onSurface,
+                    focusedTextColor = colors.onSurface
                 ),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
@@ -149,15 +140,15 @@ private fun LoginScreenContent(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = SurfaceColor,
-                    focusedBorderColor = PurpleAccent,
-                    unfocusedLabelColor = TextSecondary,
-                    focusedLabelColor = PurpleAccent,
-                    cursorColor = PurpleAccent,
-                    unfocusedContainerColor = SurfaceColor,
-                    focusedContainerColor = SurfaceColor,
-                    unfocusedTextColor = TextPrimary,
-                    focusedTextColor = TextPrimary
+                    unfocusedBorderColor = colors.surface,
+                    focusedBorderColor = colors.primary,
+                    unfocusedLabelColor = colors.onSurfaceVariant,
+                    focusedLabelColor = colors.primary,
+                    cursorColor = colors.primary,
+                    unfocusedContainerColor = colors.surface,
+                    focusedContainerColor = colors.surface,
+                    unfocusedTextColor = colors.onSurface,
+                    focusedTextColor = colors.onSurface
                 ),
                 visualTransformation = if (passwordVisible) {
                     VisualTransformation.None
@@ -167,13 +158,9 @@ private fun LoginScreenContent(
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
-                            imageVector = if (passwordVisible) {
-                                Icons.Default.VisibilityOff
-                            } else {
-                                Icons.Default.Visibility
-                            },
+                            imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                             contentDescription = null,
-                            tint = TextSecondary
+                            tint = colors.onSurfaceVariant
                         )
                     }
                 },
@@ -190,19 +177,17 @@ private fun LoginScreenContent(
                 enabled = !uiState.isLoading
             )
 
-            // Erro
             uiState.error?.let { error ->
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = error,
-                    color = Color(0xFFFF6B6B),
+                    color = colors.error,
                     fontSize = 14.sp
                 )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Botão Entrar
             Button(
                 onClick = onLogin,
                 modifier = Modifier
@@ -210,15 +195,15 @@ private fun LoginScreenContent(
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = PurpleAccent,
-                    disabledContainerColor = PurpleAccent.copy(alpha = 0.5f)
+                    containerColor = colors.primary,
+                    disabledContainerColor = colors.primary.copy(alpha = 0.5f)
                 ),
                 enabled = !uiState.isLoading
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = Color.White,
+                        color = colors.onPrimary,
                         strokeWidth = 2.dp
                     )
                 } else {
@@ -230,12 +215,10 @@ private fun LoginScreenContent(
                 }
             }
 
-            // Espaço extra para permitir scroll quando teclado está aberto
             Spacer(modifier = Modifier.height(300.dp))
         }
     }
 
-    // Dialog de licença
     uiState.licenseWarning?.let { warning ->
         AlertDialog(
             onDismissRequest = onClearLicenseWarning,
@@ -243,12 +226,12 @@ private fun LoginScreenContent(
             text = { Text(warning) },
             confirmButton = {
                 TextButton(onClick = onClearLicenseWarning) {
-                    Text("OK", color = PurpleAccent)
+                    Text("OK", color = colors.primary)
                 }
             },
-            containerColor = SurfaceColor,
-            titleContentColor = TextPrimary,
-            textContentColor = TextSecondary
+            containerColor = colors.surface,
+            titleContentColor = colors.onSurface,
+            textContentColor = colors.onSurfaceVariant
         )
     }
 }
@@ -256,7 +239,7 @@ private fun LoginScreenContent(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun LoginScreenPreview() {
-    MaterialTheme {
+    GarcomDigitalTheme {
         LoginScreenContent(
             uiState = LoginUiState(),
             onUsernameChange = {},

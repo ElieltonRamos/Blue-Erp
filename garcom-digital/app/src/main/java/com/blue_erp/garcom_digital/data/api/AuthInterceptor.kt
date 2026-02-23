@@ -14,7 +14,7 @@ class AuthInterceptor @Inject constructor(
         val originalRequest = chain.request()
         
         // Não adiciona token em rotas de login
-        if (originalRequest.url.encodedPath.contains("auth/login")) {
+        if (originalRequest.url.encodedPath.contains("users/login")) {
             return chain.proceed(originalRequest)
         }
 

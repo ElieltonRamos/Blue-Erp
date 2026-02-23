@@ -25,8 +25,8 @@ class AuthRepository @Inject constructor(
                 } ?: Resource.Error("Resposta vazia do servidor")
             } else {
                 val errorMessage = when (response.code()) {
-                    401 -> "Usuário ou senha inválidos"
-                    else -> "Erro ao fazer login: ${response.code()}"
+                    400 -> "Usuário ou senha inválidos"
+                    else -> "Erro ao fazer login"
                 }
                 Resource.Error(errorMessage)
             }

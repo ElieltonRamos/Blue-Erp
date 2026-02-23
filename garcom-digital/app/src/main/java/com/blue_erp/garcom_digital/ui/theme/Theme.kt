@@ -7,43 +7,48 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val LightColorScheme = lightColorScheme(
-    primary = Blue700,
-    onPrimary = Color.White,
-    primaryContainer = Blue500,
-    onPrimaryContainer = Color.White,
-    secondary = Orange500,
-    onSecondary = Color.White,
-    secondaryContainer = Orange700,
-    onSecondaryContainer = Color.White,
-    background = Gray100,
-    onBackground = Gray900,
-    surface = Color.White,
-    onSurface = Gray900,
-    error = Red500,
-    onError = Color.White
+private val AppDarkColorScheme = darkColorScheme(
+    primary              = Purple500,
+    onPrimary            = TextPrimary,
+    primaryContainer     = Purple700,
+    onPrimaryContainer   = TextPrimary,
+    secondary            = Cyan500,
+    onSecondary          = BackgroundDark,
+    secondaryContainer   = Cyan300,
+    onSecondaryContainer = BackgroundDark,
+    background           = BackgroundDark,
+    onBackground         = TextPrimary,
+    surface              = SurfaceDark,
+    onSurface            = TextPrimary,
+    surfaceVariant       = SurfaceDarkVariant,
+    onSurfaceVariant     = TextSecondary,
+    error                = Red500,
+    onError              = TextPrimary,
+    outline              = SurfaceDark
 )
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Blue500,
-    onPrimary = Color.White,
-    primaryContainer = Blue900,
-    onPrimaryContainer = Color.White,
-    secondary = Orange500,
-    onSecondary = Color.White,
-    secondaryContainer = Orange700,
-    onSecondaryContainer = Color.White,
-    background = Gray900,
-    onBackground = Color.White,
-    surface = Color(0xFF1E1E1E),
-    onSurface = Color.White,
-    error = Red500,
-    onError = Color.White
+private val AppLightColorScheme = lightColorScheme(
+    primary              = Purple500,
+    onPrimary            = TextPrimary,
+    primaryContainer     = Purple100,
+    onPrimaryContainer   = Purple900,
+    secondary            = Cyan500,
+    onSecondary          = BackgroundDark,
+    secondaryContainer   = Cyan100,
+    onSecondaryContainer = BackgroundDark,
+    background           = BackgroundLight,
+    onBackground         = OnSurfaceLight,
+    surface              = SurfaceLight,
+    onSurface            = OnSurfaceLight,
+    surfaceVariant       = SurfaceLightVariant,
+    onSurfaceVariant     = TextDisabled,
+    error                = Red500,
+    onError              = TextPrimary,
+    outline              = SurfaceLightVariant
 )
 
 @Composable
@@ -51,14 +56,14 @@ fun GarcomDigitalTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
-    
+    val colorScheme = if (darkTheme) AppDarkColorScheme else AppLightColorScheme
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+            window.statusBarColor = colorScheme.background.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
 

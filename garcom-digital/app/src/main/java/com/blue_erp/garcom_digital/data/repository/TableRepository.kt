@@ -11,17 +11,21 @@ class TableRepository @Inject constructor(
     private val apiService: ApiService
 ) {
 
+    suspend fun getLocations(): Resource<List<ProductionLocationResponse>> {
+        return try {
+            val response = apiService.getLocations()
+            if (response.isSuccessful) Resource.Success(response.body() ?: emptyList())
+            else Resource.Error("Erro ao carregar locais: ${response.code()}")
+        } catch (e: Exception) {
+            Resource.Error("Erro de conexão: ${e.message}")
+        }
+    }
+
     suspend fun getTables(locationId: Int? = null): Resource<List<TableResponse>> {
         return try {
             val response = apiService.getTables(locationId)
-            
-            if (response.isSuccessful) {
-                response.body()?.let { tables ->
-                    Resource.Success(tables)
-                } ?: Resource.Success(emptyList())
-            } else {
-                Resource.Error("Erro ao carregar mesas: ${response.code()}")
-            }
+            if (response.isSuccessful) Resource.Success(response.body() ?: emptyList())
+            else Resource.Error("Erro ao carregar mesas: ${response.code()}")
         } catch (e: Exception) {
             Resource.Error("Erro de conexão: ${e.message}")
         }
@@ -30,14 +34,9 @@ class TableRepository @Inject constructor(
     suspend fun getTable(id: Int): Resource<TableResponse> {
         return try {
             val response = apiService.getTable(id)
-            
             if (response.isSuccessful) {
-                response.body()?.let { table ->
-                    Resource.Success(table)
-                } ?: Resource.Error("Mesa não encontrada")
-            } else {
-                Resource.Error("Erro ao carregar mesa: ${response.code()}")
-            }
+                response.body()?.let { Resource.Success(it) } ?: Resource.Error("Mesa não encontrada")
+            } else Resource.Error("Erro ao carregar mesa: ${response.code()}")
         } catch (e: Exception) {
             Resource.Error("Erro de conexão: ${e.message}")
         }
@@ -46,17 +45,10 @@ class TableRepository @Inject constructor(
     suspend fun occupyTable(id: Int, customer: String): Resource<TableResponse> {
         return try {
             val response = apiService.occupyTable(id, OccupyTableRequest(customer))
-            
             if (response.isSuccessful) {
-                response.body()?.let { table ->
-                    Resource.Success(table)
-                } ?: Resource.Error("Erro ao ocupar mesa")
+                response.body()?.let { Resource.Success(it) } ?: Resource.Error("Erro ao ocupar mesa")
             } else {
-                val errorMessage = when (response.code()) {
-                    400 -> "Mesa já está ocupada"
-                    else -> "Erro ao ocupar mesa: ${response.code()}"
-                }
-                Resource.Error(errorMessage)
+                Resource.Error(if (response.code() == 400) "Mesa já está ocupada" else "Erro: ${response.code()}")
             }
         } catch (e: Exception) {
             Resource.Error("Erro de conexão: ${e.message}")
@@ -66,17 +58,10 @@ class TableRepository @Inject constructor(
     suspend fun releaseTable(id: Int): Resource<TableResponse> {
         return try {
             val response = apiService.releaseTable(id)
-            
             if (response.isSuccessful) {
-                response.body()?.let { table ->
-                    Resource.Success(table)
-                } ?: Resource.Error("Erro ao liberar mesa")
+                response.body()?.let { Resource.Success(it) } ?: Resource.Error("Erro ao liberar mesa")
             } else {
-                val errorMessage = when (response.code()) {
-                    400 -> "Finalize a comanda primeiro"
-                    else -> "Erro ao liberar mesa: ${response.code()}"
-                }
-                Resource.Error(errorMessage)
+                Resource.Error(if (response.code() == 400) "Finalize a comanda primeiro" else "Erro: ${response.code()}")
             }
         } catch (e: Exception) {
             Resource.Error("Erro de conexão: ${e.message}")
@@ -86,17 +71,10 @@ class TableRepository @Inject constructor(
     suspend fun reserveTable(id: Int, customer: String, time: String): Resource<TableResponse> {
         return try {
             val response = apiService.reserveTable(id, ReserveTableRequest(customer, time))
-            
             if (response.isSuccessful) {
-                response.body()?.let { table ->
-                    Resource.Success(table)
-                } ?: Resource.Error("Erro ao reservar mesa")
+                response.body()?.let { Resource.Success(it) } ?: Resource.Error("Erro ao reservar mesa")
             } else {
-                val errorMessage = when (response.code()) {
-                    400 -> "Mesa está ocupada"
-                    else -> "Erro ao reservar mesa: ${response.code()}"
-                }
-                Resource.Error(errorMessage)
+                Resource.Error(if (response.code() == 400) "Mesa está ocupada" else "Erro: ${response.code()}")
             }
         } catch (e: Exception) {
             Resource.Error("Erro de conexão: ${e.message}")
@@ -106,17 +84,10 @@ class TableRepository @Inject constructor(
     suspend fun closeTab(id: Int): Resource<CloseTabResponse> {
         return try {
             val response = apiService.closeTab(id)
-            
             if (response.isSuccessful) {
-                response.body()?.let { closeResponse ->
-                    Resource.Success(closeResponse)
-                } ?: Resource.Error("Erro ao fechar comanda")
+                response.body()?.let { Resource.Success(it) } ?: Resource.Error("Erro ao fechar comanda")
             } else {
-                val errorMessage = when (response.code()) {
-                    400 -> "Mesa sem comanda ativa"
-                    else -> "Erro ao fechar comanda: ${response.code()}"
-                }
-                Resource.Error(errorMessage)
+                Resource.Error(if (response.code() == 400) "Mesa sem comanda ativa" else "Erro: ${response.code()}")
             }
         } catch (e: Exception) {
             Resource.Error("Erro de conexão: ${e.message}")

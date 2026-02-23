@@ -2,12 +2,14 @@ package com.blue_erp.garcom_digital.ui.screens.tables
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.blue_erp.garcom_digital.data.model.ProductionLocationResponse
 import com.blue_erp.garcom_digital.data.model.TableResponse
 import com.blue_erp.garcom_digital.data.model.TableStatus
 import com.blue_erp.garcom_digital.data.repository.AuthRepository
 import com.blue_erp.garcom_digital.data.repository.TableRepository
 import com.blue_erp.garcom_digital.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +18,8 @@ import javax.inject.Inject
 
 data class TablesUiState(
     val tables: List<TableResponse> = emptyList(),
+    val locations: List<ProductionLocationResponse> = emptyList(),
+    val selectedLocationId: Int? = null,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val error: String? = null,
@@ -25,7 +29,8 @@ data class TablesUiState(
     val showReleaseConfirmDialog: Boolean = false,
     val actionLoading: Boolean = false,
     val actionSuccess: String? = null,
-    val isLoggedOut: Boolean = false
+    val isLoggedOut: Boolean = false,
+    val navigateToTable: Int? = null  // tableId para navegar
 )
 
 @HiltViewModel
@@ -38,6 +43,42 @@ class TablesViewModel @Inject constructor(
     val uiState: StateFlow<TablesUiState> = _uiState.asStateFlow()
 
     init {
+        loadInitial()
+    }
+
+    private fun loadInitial() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+
+            val locationsDeferred = async { tableRepository.getLocations() }
+            val tablesDeferred = async { tableRepository.getTables(null) }
+
+            val locationsResult = locationsDeferred.await()
+            val tablesResult = tablesDeferred.await()
+
+            val locations = if (locationsResult is Resource.Success) locationsResult.data else emptyList()
+            val selectedLocationId = locations.firstOrNull()?.id
+
+            val tables = if (tablesResult is Resource.Success) tablesResult.data else emptyList()
+            val error = when {
+                locationsResult is Resource.Error -> locationsResult.message
+                tablesResult is Resource.Error -> tablesResult.message
+                else -> null
+            }
+
+            _uiState.value = _uiState.value.copy(
+                locations = locations,
+                selectedLocationId = selectedLocationId,
+                tables = tables,
+                isLoading = false,
+                error = error
+            )
+        }
+    }
+
+    fun selectLocation(locationId: Int) {
+        if (_uiState.value.selectedLocationId == locationId) return
+        _uiState.value = _uiState.value.copy(selectedLocationId = locationId)
         loadTables()
     }
 
@@ -45,7 +86,7 @@ class TablesViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-            when (val result = tableRepository.getTables()) {
+            when (val result = tableRepository.getTables(_uiState.value.selectedLocationId)) {
                 is Resource.Success -> {
                     _uiState.value = _uiState.value.copy(
                         tables = result.data,
@@ -67,7 +108,7 @@ class TablesViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isRefreshing = true)
 
-            when (val result = tableRepository.getTables()) {
+            when (val result = tableRepository.getTables(_uiState.value.selectedLocationId)) {
                 is Resource.Success -> {
                     _uiState.value = _uiState.value.copy(
                         tables = result.data,
@@ -87,13 +128,13 @@ class TablesViewModel @Inject constructor(
 
     fun onTableClick(table: TableResponse) {
         _uiState.value = _uiState.value.copy(selectedTable = table)
-        
+
         when (table.status) {
             TableStatus.AVAILABLE -> {
                 _uiState.value = _uiState.value.copy(showOccupyDialog = true)
             }
             TableStatus.OCCUPIED -> {
-                // Navega para tela de detalhes/comanda
+                _uiState.value = _uiState.value.copy(navigateToTable = table.id, selectedTable = null)
             }
             TableStatus.RESERVED -> {
                 _uiState.value = _uiState.value.copy(showOccupyDialog = true)
@@ -101,16 +142,18 @@ class TablesViewModel @Inject constructor(
         }
     }
 
+    fun clearNavigateToTable() {
+        _uiState.value = _uiState.value.copy(navigateToTable = null)
+    }
+
     fun onTableLongClick(table: TableResponse) {
         _uiState.value = _uiState.value.copy(selectedTable = table)
-        
+
         when (table.status) {
             TableStatus.AVAILABLE -> {
                 _uiState.value = _uiState.value.copy(showReserveDialog = true)
             }
-            TableStatus.OCCUPIED -> {
-                // Não permite ação direta, precisa fechar comanda
-            }
+            TableStatus.OCCUPIED -> {}
             TableStatus.RESERVED -> {
                 _uiState.value = _uiState.value.copy(showReleaseConfirmDialog = true)
             }

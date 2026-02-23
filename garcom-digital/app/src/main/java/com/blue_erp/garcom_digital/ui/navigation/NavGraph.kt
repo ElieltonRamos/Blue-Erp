@@ -2,14 +2,20 @@ package com.blue_erp.garcom_digital.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.blue_erp.garcom_digital.ui.screens.login.LoginScreen
+import com.blue_erp.garcom_digital.ui.screens.order.OrderScreen
 import com.blue_erp.garcom_digital.ui.screens.tables.TablesScreen
 
 sealed class Screen(val route: String) {
-    data object Login : Screen("login")
+    data object Login  : Screen("login")
     data object Tables : Screen("tables")
+    data object Order  : Screen("order/{tableId}") {
+        fun createRoute(tableId: Int) = "order/$tableId"
+    }
 }
 
 @Composable
@@ -38,9 +44,18 @@ fun NavGraph(
                         popUpTo(Screen.Tables.route) { inclusive = true }
                     }
                 },
-                onTableClick = { tableId, orderId ->
-                    // TODO: Navegar para detalhes/comanda
+                onTableClick = { tableId, _ ->
+                    navController.navigate(Screen.Order.createRoute(tableId))
                 }
+            )
+        }
+
+        composable(
+            route = Screen.Order.route,
+            arguments = listOf(navArgument("tableId") { type = NavType.IntType })
+        ) {
+            OrderScreen(
+                onBack = { navController.popBackStack() }
             )
         }
     }
