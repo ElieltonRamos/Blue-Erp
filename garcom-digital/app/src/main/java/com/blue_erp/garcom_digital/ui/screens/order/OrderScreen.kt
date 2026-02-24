@@ -44,6 +44,10 @@ fun OrderScreen(
         uiState.success?.let { viewModel.clearSuccess(); snackbarHostState.showSnackbar(it) }
     }
 
+    LaunchedEffect(uiState.shouldNavigateBack) {
+        if (uiState.shouldNavigateBack) onBack()
+    }
+
     OrderScreenContent(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
@@ -55,7 +59,10 @@ fun OrderScreen(
         onOpenProductSearch = viewModel::openProductSearch,
         onCloseProductSearch = viewModel::closeProductSearch,
         onProductQueryChange = viewModel::onProductQueryChange,
-        onAddProduct = viewModel::addProduct
+        onAddProduct = viewModel::addProduct,
+        onCloseTab = viewModel::closeTab,
+        onOpenCloseTabDialog = viewModel::openCloseTabDialog,
+        onCloseCloseTabDialog = viewModel::closeCloseTabDialog,
     )
 }
 
@@ -72,7 +79,10 @@ private fun OrderScreenContent(
     onOpenProductSearch: () -> Unit,
     onCloseProductSearch: () -> Unit,
     onProductQueryChange: (String) -> Unit,
-    onAddProduct: (ProductResponse) -> Unit
+    onAddProduct: (ProductResponse) -> Unit,
+    onCloseTab: () -> Unit,
+    onOpenCloseTabDialog: () -> Unit,
+    onCloseCloseTabDialog: () -> Unit,
 ) {
     val table = uiState.table
     val order = uiState.order
@@ -135,7 +145,11 @@ private fun OrderScreenContent(
             }
         },
         bottomBar = {
-            OrderBottomBar(total = total)
+            OrderBottomBar(
+                total = total,
+                isClosingTab = uiState.isClosingTab,
+                onCloseTab = onOpenCloseTabDialog
+            )
         }
     ) { paddingValues ->
         when {
@@ -184,6 +198,20 @@ private fun OrderScreenContent(
                 }
             }
         }
+    }
+
+    if (uiState.showCloseTabDialog) {
+        AlertDialog(
+            onDismissRequest = onCloseCloseTabDialog,
+            title = { Text("Fechar comanda") },
+            text = { Text("Deseja fechar comanda e liberar mesa?") },
+            confirmButton = {
+                TextButton(onClick = onCloseTab) { Text("Confirmar") }
+            },
+            dismissButton = {
+                TextButton(onClick = onCloseCloseTabDialog) { Text("Cancelar") }
+            }
+        )
     }
 
     if (uiState.showProductSearch) {
@@ -267,7 +295,11 @@ private fun OrderItemCard(
 }
 
 @Composable
-private fun OrderBottomBar(total: Double) {
+private fun OrderBottomBar(
+    total: Double,
+    isClosingTab: Boolean,
+    onCloseTab: () -> Unit
+) {
     Surface(tonalElevation = 4.dp, color = MaterialTheme.colorScheme.surface) {
         Row(
             modifier = Modifier
@@ -276,14 +308,26 @@ private fun OrderBottomBar(total: Double) {
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Total", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = currencyFormat.format(total),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Total", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    text = currencyFormat.format(total),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            Button(
+                onClick = onCloseTab,
+                enabled = !isClosingTab,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+            ) {
+                if (isClosingTab) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onError)
+                } else {
+                    Text("Fechar Comanda")
+                }
+            }
         }
     }
 }
@@ -329,15 +373,15 @@ private fun ProductSearchSheet(
                     contentAlignment = Alignment.Center
                 ) { CircularProgressIndicator() }
 
-                query.isBlank() -> Box(
+                products.isEmpty() && query.isNotBlank() -> Box(
                     modifier = Modifier.fillMaxWidth().height(120.dp),
                     contentAlignment = Alignment.Center
-                ) { Text("Digite para buscar produtos", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                ) { Text("Nenhum produto encontrado", color = MaterialTheme.colorScheme.onSurfaceVariant) }
 
                 products.isEmpty() -> Box(
                     modifier = Modifier.fillMaxWidth().height(120.dp),
                     contentAlignment = Alignment.Center
-                ) { Text("Nenhum produto encontrado", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                ) { CircularProgressIndicator() } // ainda carregando a lista inicial
 
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp),
@@ -355,7 +399,16 @@ private fun ProductSearchSheet(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(product.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                                    Text(product.code, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Text("Código: ${product.code} ", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        product.quantity?.let {
+                                            Text(
+                                                text = "Estoque: ${if (it % 1.0 == 0.0) it.toInt().toString() else String.format("%.2f", it)} ${product.unit}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = if (it <= 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
                                 }
                                 Text(
                                     text = currencyFormat.format(product.price),
@@ -395,7 +448,8 @@ private fun OrderScreenPreview() {
             onBack = {}, onSave = {},
             onIncrement = {}, onDecrement = {}, onRemove = {},
             onOpenProductSearch = {}, onCloseProductSearch = {},
-            onProductQueryChange = {}, onAddProduct = {}
+            onProductQueryChange = {}, onAddProduct = {},
+            onCloseTab = {}, onCloseCloseTabDialog = {}, onOpenCloseTabDialog = {}
         )
     }
 }
@@ -409,7 +463,8 @@ private fun OrderScreenEmptyPreview() {
             onBack = {}, onSave = {},
             onIncrement = {}, onDecrement = {}, onRemove = {},
             onOpenProductSearch = {}, onCloseProductSearch = {},
-            onProductQueryChange = {}, onAddProduct = {}
+            onProductQueryChange = {}, onAddProduct = {}, onOpenCloseTabDialog = {},
+            onCloseCloseTabDialog = {}, onCloseTab = {}
         )
     }
 }
@@ -423,7 +478,8 @@ private fun OrderScreenLoadingPreview() {
             onBack = {}, onSave = {},
             onIncrement = {}, onDecrement = {}, onRemove = {},
             onOpenProductSearch = {}, onCloseProductSearch = {},
-            onProductQueryChange = {}, onAddProduct = {}
+            onProductQueryChange = {}, onAddProduct = {}, onCloseTab = {}, onCloseCloseTabDialog = {},
+            onOpenCloseTabDialog = {},
         )
     }
 }

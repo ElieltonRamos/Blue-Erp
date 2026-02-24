@@ -24,6 +24,7 @@ data class ProductResponse(
     val price: Double,
     val unit: String,
     val active: Boolean,
+    val quantity: Double? = null,
     val categoryId: Int?
 )
 

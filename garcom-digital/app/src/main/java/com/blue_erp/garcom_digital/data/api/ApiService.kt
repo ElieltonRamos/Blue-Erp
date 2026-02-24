@@ -44,7 +44,7 @@ interface ApiService {
     @GET("products")
     suspend fun getProducts(
         @Query("page") page: Int = 1,
-        @Query("limit") limit: Int = 20,
+        @Query("limit") limit: Int = 500,
         @Query("search") search: String? = null,
         @Query("active") active: Boolean = true
     ): Response<PaginatedProductResponse>

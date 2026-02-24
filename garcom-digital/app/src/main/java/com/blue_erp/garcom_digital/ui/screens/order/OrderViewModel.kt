@@ -26,7 +26,10 @@ data class OrderUiState(
     val showProductSearch: Boolean = false,
     val productQuery: String = "",
     val products: List<ProductResponse> = emptyList(),
-    val isSearchingProducts: Boolean = false
+    val isSearchingProducts: Boolean = false,
+    val showCloseTabDialog: Boolean = false,
+    val shouldNavigateBack: Boolean = false,
+    val isClosingTab: Boolean = false,
 )
 
 @OptIn(FlowPreview::class)
@@ -50,6 +53,24 @@ class OrderViewModel @Inject constructor(
             _productQuery
                 .debounce(400)
                 .collectLatest { query -> searchProducts(query) }
+        }
+    }
+
+    fun openCloseTabDialog() = _uiState.update { it.copy(showCloseTabDialog = true) }
+    fun closeCloseTabDialog() = _uiState.update { it.copy(showCloseTabDialog = false) }
+
+    fun closeTab() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isClosingTab = true, showCloseTabDialog = false, error = null) }
+            when (val result = tableRepository.closeTab(tableId)) {
+                is Resource.Success -> _uiState.update {
+                    it.copy(isClosingTab = false, shouldNavigateBack = true)
+                }
+                is Resource.Error -> _uiState.update {
+                    it.copy(isClosingTab = false, error = result.message)
+                }
+                is Resource.Loading -> {}
+            }
         }
     }
 
@@ -184,6 +205,7 @@ class OrderViewModel @Inject constructor(
 
     fun openProductSearch() {
         _uiState.update { it.copy(showProductSearch = true, productQuery = "", products = emptyList()) }
+        viewModelScope.launch { searchProducts("") }
     }
 
     fun closeProductSearch() {
@@ -196,10 +218,6 @@ class OrderViewModel @Inject constructor(
     }
 
     private fun searchProducts(query: String) {
-        if (query.isBlank()) {
-            _uiState.update { it.copy(products = emptyList(), isSearchingProducts = false) }
-            return
-        }
         viewModelScope.launch {
             _uiState.update { it.copy(isSearchingProducts = true) }
             when (val result = orderRepository.getProducts(query)) {
