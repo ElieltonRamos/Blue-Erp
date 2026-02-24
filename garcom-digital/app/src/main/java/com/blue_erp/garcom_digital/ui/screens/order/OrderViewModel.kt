@@ -145,7 +145,8 @@ class OrderViewModel @Inject constructor(
                 quantity = 1.0,
                 unitPrice = product.price,
                 total = product.price,
-                productId = product.id
+                productId = product.id,
+                productionLocation = ""
             )
             _uiState.update {
                 it.copy(

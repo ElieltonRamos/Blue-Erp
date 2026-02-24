@@ -428,9 +428,9 @@ private fun ProductSearchSheet(
 // ── Previews ──────────────────────────────────────────────────────────────────
 
 private val previewItems = listOf(
-    TableOrderItem(id = 1, code = "PROD-001", name = "Filé Mignon",       quantity = 2.0, unitPrice = 45.0, total = 90.0,  productId = 1),
-    TableOrderItem(id = 2, code = "PROD-002", name = "Refrigerante Lata", quantity = 3.0, unitPrice = 8.0,  total = 24.0,  productId = 2),
-    TableOrderItem(id = 3, code = "PROD-003", name = "Batata Frita",      quantity = 1.0, unitPrice = 22.0, total = 22.0,  productId = 3),
+    TableOrderItem(id = 1, code = "PROD-001", name = "Filé Mignon",       quantity = 2.0, unitPrice = 45.0, total = 90.0,  productId = 1, productionLocation = "asd"),
+    TableOrderItem(id = 2, code = "PROD-002", name = "Refrigerante Lata", quantity = 3.0, unitPrice = 8.0,  total = 24.0,  productId = 2, productionLocation = "asd"),
+    TableOrderItem(id = 3, code = "PROD-003", name = "Batata Frita",      quantity = 1.0, unitPrice = 22.0, total = 22.0,  productId = 3, productionLocation = "asd"),
 )
 
 private val previewOrder = TableOrder(

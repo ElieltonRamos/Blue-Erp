@@ -302,7 +302,7 @@
                 </svg>
               </button>
               <button
-                *ngIf="order.status === 'OPEN'"
+                *ngIf="order.status === 'OPEN' || order.status === 'CLOSED'"
                 (click)="finishOrder(order.id)"
                 class="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg transition-colors"
                 title="Finalizar"

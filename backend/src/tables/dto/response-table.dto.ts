@@ -19,6 +19,51 @@ export class TableLocationDto {
   }
 }
 
+// ✅ NOVA CLASSE: OrderProductionDto
+export class OrderProductionDto {
+  @ApiProperty({ example: 1 })
+  id: number;
+
+  @ApiProperty({ example: 'JAPONESA' })
+  productionLocation: string;
+
+  @ApiProperty({
+    example: 'COMPLETED',
+    enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELED'],
+  })
+  status: string;
+
+  @ApiProperty({ example: 2 })
+  quantityRequested: number;
+
+  @ApiProperty({ example: 2 })
+  quantityProduced: number;
+
+  @ApiPropertyOptional({ example: '2026-02-24T18:09:28.000Z' })
+  pendingAt: Date | null;
+
+  @ApiPropertyOptional({ example: '2026-02-24T18:09:39.000Z' })
+  startedAt: Date | null;
+
+  @ApiPropertyOptional({ example: '2026-02-24T18:21:20.000Z' })
+  completedAt: Date | null;
+
+  @ApiPropertyOptional({ example: '2026-02-24T18:43:39.000Z' })
+  deliveredAt: Date | null;
+
+  constructor(data: any) {
+    this.id = data.id;
+    this.productionLocation = data.productionLocation;
+    this.status = data.status;
+    this.quantityRequested = Number(data.quantityRequested);
+    this.quantityProduced = Number(data.quantityProduced);
+    this.pendingAt = data.pendingAt;
+    this.startedAt = data.startedAt;
+    this.completedAt = data.completedAt;
+    this.deliveredAt = data.deliveredAt;
+  }
+}
+
 export class TableOrderItemDto {
   @ApiProperty({ example: 1 })
   id: number;
@@ -41,6 +86,30 @@ export class TableOrderItemDto {
   @ApiProperty({ example: 1 })
   productId: number;
 
+  @ApiPropertyOptional({ example: 'Sem cebola' })
+  observations: string | null;
+
+  @ApiProperty({ example: 'COZINHA' })
+  productionLocation: string;
+
+  @ApiPropertyOptional({ example: '2026-02-24T18:10:00.000Z' })
+  sentToKitchenAt: Date | null;
+
+  @ApiPropertyOptional({ example: '2026-02-24T18:25:00.000Z' })
+  kitchenReadyAt: Date | null;
+
+  @ApiPropertyOptional({ example: '2026-02-24T18:30:00.000Z' })
+  deliveredAt: Date | null;
+
+  @ApiPropertyOptional({ example: null })
+  canceledAt: Date | null;
+
+  @ApiProperty({
+    type: [OrderProductionDto],
+    description: 'Produções associadas a este item',
+  })
+  productions: OrderProductionDto[];
+
   constructor(data: any) {
     this.id = data.id;
     this.code = data.code;
@@ -49,6 +118,17 @@ export class TableOrderItemDto {
     this.unitPrice = Number(data.unitPrice);
     this.total = Number(data.total);
     this.productId = data.productId;
+    this.observations = data.observations;
+    this.productionLocation = data.productionLocation;
+    this.sentToKitchenAt = data.sentToKitchenAt;
+    this.kitchenReadyAt = data.kitchenReadyAt;
+    this.deliveredAt = data.deliveredAt;
+    this.canceledAt = data.canceledAt;
+
+    // ✅ MAPEAR PRODUÇÕES
+    this.productions = (data.productions || []).map(
+      (p: any) => new OrderProductionDto(p),
+    );
   }
 }
 

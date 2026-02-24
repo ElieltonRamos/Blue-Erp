@@ -49,6 +49,7 @@ async function bootstrap() {
       .setDescription('API do sistema Blue-ERP para gestão')
       .setVersion('1.0')
       .addBearerAuth()
+      .addSecurityRequirements('bearer')
       .build();
 
     const document = SwaggerModule.createDocument(app, config);

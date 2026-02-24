@@ -64,7 +64,11 @@ export class TablesService {
         location: true,
         order: {
           include: {
-            items: true,
+            items: {
+              include: {
+                productions: true,
+              },
+            },
           },
         },
       },
@@ -84,7 +88,11 @@ export class TablesService {
         location: true,
         order: {
           include: {
-            items: true,
+            items: {
+              include: {
+                productions: true,
+              },
+            },
           },
         },
       },
