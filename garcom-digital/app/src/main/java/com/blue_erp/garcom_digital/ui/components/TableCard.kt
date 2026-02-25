@@ -6,8 +6,11 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.TableBar
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -17,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.blue_erp.garcom_digital.data.config.TableAlertConfig
 import com.blue_erp.garcom_digital.data.model.*
 import com.blue_erp.garcom_digital.ui.theme.GarcomDigitalTheme
 import com.blue_erp.garcom_digital.ui.theme.TableAvailable
@@ -135,6 +138,50 @@ fun TableCard(
                         )
                     }
 
+                    // ✅ ALERTAS DE MESA
+                    if (table.hasAlert) {
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        val (backgroundColor, textColor) = when (table.alertLevel) {
+                            TableAlertLevel.WARNING ->
+                                Color(TableAlertConfig.Colors.WARNING_BACKGROUND) to
+                                        Color(TableAlertConfig.Colors.WARNING_TEXT)
+                            TableAlertLevel.CRITICAL ->
+                                Color(TableAlertConfig.Colors.CRITICAL_BACKGROUND) to
+                                        Color(TableAlertConfig.Colors.CRITICAL_TEXT)
+                            TableAlertLevel.NONE ->
+                                Color.Transparent to Color.Transparent
+                        }
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier
+                                .background(
+                                    color = backgroundColor,
+                                    shape = MaterialTheme.shapes.small
+                                )
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Icon(
+                                imageVector = when (table.alertLevel) {
+                                    TableAlertLevel.WARNING -> Icons.Default.Warning
+                                    TableAlertLevel.CRITICAL -> Icons.Default.ErrorOutline
+                                    TableAlertLevel.NONE -> Icons.Default.Info
+                                },
+                                contentDescription = null,
+                                tint = textColor,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = table.alertMessage,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = textColor,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
                     // ✅ Badge de itens prontos (texto)
                     if (table.hasReadyItems) {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -189,7 +236,17 @@ fun TableCard(
                 }
             }
 
-            // ✅ Badge circular no canto superior direito
+            // ✅ Badge de alerta no canto (só aparece se tiver alerta e NÃO tiver itens prontos)
+            if (table.hasAlert && !table.hasReadyItems) {
+                AlertBadge(
+                    alertLevel = table.alertLevel,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                )
+            }
+
+            // ✅ Badge de itens prontos no canto (prioridade sobre alerta)
             if (table.hasReadyItems) {
                 ReadyItemsBadge(
                     count = table.readyItemsCount,
@@ -202,14 +259,41 @@ fun TableCard(
     }
 }
 
+@Composable
+fun AlertBadge(
+    alertLevel: TableAlertLevel,
+    modifier: Modifier = Modifier
+) {
+    val (backgroundColor, icon) = when (alertLevel) {
+        TableAlertLevel.WARNING ->
+            Color(TableAlertConfig.Colors.WARNING_TEXT) to Icons.Default.Warning
+        TableAlertLevel.CRITICAL ->
+            Color(TableAlertConfig.Colors.CRITICAL_TEXT) to Icons.Default.ErrorOutline
+        TableAlertLevel.NONE -> return
+    }
+
+    Box(
+        modifier = modifier
+            .size(24.dp)
+            .background(
+                color = backgroundColor,
+                shape = CircleShape
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = "Alerta",
+            tint = Color.White,
+            modifier = Modifier.size(14.dp)
+        )
+    }
+}
+
 private fun formatCurrency(value: Double): String {
     val format = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
     return format.format(value)
 }
-
-// ============================================================
-// PREVIEWS ATUALIZADOS COM CAMPO `productions`
-// ============================================================
 
 @Preview(name = "Mesa Disponível", showBackground = true)
 @Composable
@@ -273,7 +357,7 @@ private fun TableCardOccupiedPreview() {
                             kitchenReadyAt = null,
                             deliveredAt = null,
                             canceledAt = null,
-                            productions = emptyList()  // ✅ ADICIONAR
+                            productions = emptyList()
                         ),
                         TableOrderItem(
                             id = 2,
@@ -289,7 +373,7 @@ private fun TableCardOccupiedPreview() {
                             kitchenReadyAt = null,
                             deliveredAt = null,
                             canceledAt = null,
-                            productions = emptyList()  // ✅ ADICIONAR
+                            productions = emptyList()
                         )
                     ),
                     createdAt = "2024-02-24T10:10:00Z"
@@ -340,7 +424,6 @@ private fun TableCardOccupiedWithReadyItemsPreview() {
                             kitchenReadyAt = "2024-02-24T10:35:00Z",
                             deliveredAt = null,
                             canceledAt = null,
-                            // ✅ ADICIONAR productions com item PRONTO
                             productions = listOf(
                                 OrderProduction(
                                     id = 1,
@@ -351,7 +434,7 @@ private fun TableCardOccupiedWithReadyItemsPreview() {
                                     pendingAt = "2024-02-24T10:20:00Z",
                                     startedAt = "2024-02-24T10:25:00Z",
                                     completedAt = "2024-02-24T10:35:00Z",
-                                    deliveredAt = null  // ← SEM deliveredAt = PRONTO!
+                                    deliveredAt = null
                                 )
                             )
                         ),
@@ -369,7 +452,6 @@ private fun TableCardOccupiedWithReadyItemsPreview() {
                             kitchenReadyAt = "2024-02-24T10:25:00Z",
                             deliveredAt = null,
                             canceledAt = null,
-                            // ✅ ADICIONAR productions com item PRONTO
                             productions = listOf(
                                 OrderProduction(
                                     id = 2,
@@ -380,7 +462,7 @@ private fun TableCardOccupiedWithReadyItemsPreview() {
                                     pendingAt = "2024-02-24T10:20:00Z",
                                     startedAt = "2024-02-24T10:22:00Z",
                                     completedAt = "2024-02-24T10:25:00Z",
-                                    deliveredAt = null  // ← SEM deliveredAt = PRONTO!
+                                    deliveredAt = null
                                 )
                             )
                         )
@@ -458,7 +540,6 @@ private fun TableCardWithManyReadyItemsPreview() {
                             kitchenReadyAt = "2024-02-24T10:30:00Z",
                             deliveredAt = null,
                             canceledAt = null,
-                            // ✅ ADICIONAR productions
                             productions = listOf(
                                 OrderProduction(
                                     id = 100 + index,
@@ -469,7 +550,7 @@ private fun TableCardWithManyReadyItemsPreview() {
                                     pendingAt = "2024-02-24T10:00:00Z",
                                     startedAt = "2024-02-24T10:15:00Z",
                                     completedAt = "2024-02-24T10:30:00Z",
-                                    deliveredAt = null  // ← TODOS PRONTOS
+                                    deliveredAt = null
                                 )
                             )
                         )
@@ -478,6 +559,40 @@ private fun TableCardWithManyReadyItemsPreview() {
                 ),
                 createdAt = "2024-02-24T09:45:00Z",
                 updatedAt = "2024-02-24T09:50:00Z"
+            ),
+            onClick = {},
+            onLongClick = {}
+        )
+    }
+}
+
+@Preview(name = "Mesa SEM Pedidos ⚠️ (Warning)", showBackground = true)
+@Composable
+private fun TableCardWithoutOrdersWarningPreview() {
+    GarcomDigitalTheme {
+        TableCard(
+            table = TableResponse(
+                id = 6,
+                number = 7,
+                capacity = 4,
+                status = TableStatus.OCCUPIED,
+                customer = "Carlos Mendes",
+                time = null,
+                locationId = 1,
+                location = TableLocation(1, "SALAO", "Salão Principal"),
+                orderId = 4,
+                order = TableOrder(
+                    id = 4,
+                    type = "DINE_IN",
+                    locationId = "SALAO",
+                    customerName = "Carlos Mendes",
+                    status = "OPEN",
+                    total = 0.0,
+                    items = emptyList(),  // ⚠️ SEM ITENS!
+                    createdAt = "2024-02-24T10:00:00.000Z"  // Há 12 min atrás (simulado)
+                ),
+                createdAt = "2024-02-24T10:00:00Z",
+                updatedAt = "2024-02-24T10:00:00Z"
             ),
             onClick = {},
             onLongClick = {}
