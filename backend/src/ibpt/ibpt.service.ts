@@ -135,6 +135,58 @@ export class IbptService {
     });
   }
 
+  async updateAliqSale(saleId: number): Promise<void> {
+    const sale = await this.prisma.client.sale.findUnique({
+      where: { id: saleId },
+      include: {
+        items: {
+          include: { product: true },
+        },
+      },
+    });
+
+    if (!sale) {
+      throw new NotFoundException('Venda não encontrada');
+    }
+
+    if (!sale.items || sale.items.length === 0) {
+      throw new NotFoundException('Venda sem itens');
+    }
+
+    for (const item of sale.items) {
+      const ncm = this.cleanNcm(item.product.ncm || '');
+
+      const ibpt = await this.prisma.client.ibpt.findFirst({
+        where: { ncm },
+      });
+
+      if (!ibpt) continue;
+
+      const federalTaxRate = ibpt.federalTaxRate;
+      const stateTaxRate = ibpt.stateTaxRate;
+      const municipalTaxRate = ibpt.municipalTaxRate;
+
+      // 1. Atualiza alíquotas no Product
+      await this.prisma.client.product.update({
+        where: { id: item.productId },
+        data: { federalTaxRate, stateTaxRate, municipalTaxRate },
+      });
+
+      // 2. Recalcula totalTaxValue no SaleItem
+      const qCom = this.toNumber(item.quantity, 4);
+      const vUnCom = this.toNumber(item.unitPrice, 4);
+      const vProd = qCom * vUnCom;
+      const totalRate = federalTaxRate + stateTaxRate + municipalTaxRate;
+      const totalTaxValue =
+        totalRate > 0 ? this.toNumber(vProd * (totalRate / 100), 2) : 0;
+
+      await this.prisma.client.saleItem.update({
+        where: { id: item.id },
+        data: { totalTaxValue },
+      });
+    }
+  }
+
   async importFromCsv(csv: string): Promise<void> {
     const linhas = csv
       .split(/\r?\n/)

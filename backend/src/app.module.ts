@@ -18,6 +18,7 @@ import { SalesModule } from './sales/sales.module';
 import { ReportsModule } from './reports/reports.module';
 import { LicenseSystemModule } from './license-system/license-system.module';
 import { LicenseSystemService } from './license-system/license-system.service';
+import { FiscalModule } from './fiscal-module/fiscal.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { LicenseSystemService } from './license-system/license-system.service';
     SalesModule,
     ReportsModule,
     LicenseSystemModule,
+    FiscalModule,
   ],
   controllers: [AppController],
   providers: [AppService, LicenseSystemService],

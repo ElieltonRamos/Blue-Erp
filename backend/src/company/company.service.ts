@@ -27,7 +27,6 @@ export class CompanyService {
   async create(
     createCompanyDto: CreateCompanyDto,
   ): Promise<CompanyResponseDto> {
-    // Verifica se já existe uma empresa cadastrada
     const existingCompany = await this.prisma.client.company.findFirst();
     if (existingCompany) {
       throw new ConflictException(
@@ -35,7 +34,6 @@ export class CompanyService {
       );
     }
 
-    // Verifica se CNPJ já existe
     const existingCnpj = await this.prisma.client.company.findUnique({
       where: { cnpj: createCompanyDto.cnpj },
     });
@@ -58,7 +56,6 @@ export class CompanyService {
   }
 
   async getCompany(): Promise<CompanyResponseDto> {
-    // Sempre busca a empresa com ID 1
     const company = await this.prisma.client.company.findUnique({
       where: { id: 1 },
     });
@@ -75,7 +72,6 @@ export class CompanyService {
   async update(
     updateCompanyDto: UpdateCompanyDto,
   ): Promise<CompanyResponseDto> {
-    // Verifica se a empresa existe
     const existingCompany = await this.prisma.client.company.findUnique({
       where: { id: 1 },
     });
@@ -86,7 +82,6 @@ export class CompanyService {
       );
     }
 
-    // Verifica se CNPJ já existe em outra empresa (improvável, mas por segurança)
     if (
       updateCompanyDto.cnpj &&
       updateCompanyDto.cnpj !== existingCompany.cnpj
@@ -102,7 +97,6 @@ export class CompanyService {
       }
     }
 
-    // Limpa dados vazios (similar ao cleanUpdateData do arquivo 2)
     const cleanedData = this.cleanUpdateData(updateCompanyDto);
 
     const company = await this.prisma.client.company.update({
@@ -129,17 +123,14 @@ export class CompanyService {
       throw new NotFoundException('Nenhuma empresa para deletar');
     }
 
-    // Remove certificado se existir
     if (company.certificatePath) {
       try {
         await fs.unlink(company.certificatePath);
       } catch {
-        // Ignora erro se arquivo não existir
         console.warn('Certificado não encontrado para remoção');
       }
     }
 
-    // Deleta empresa (reset config)
     await this.prisma.client.company.delete({
       where: { id: 1 },
     });
@@ -166,41 +157,42 @@ export class CompanyService {
     return { data: nextNumber };
   }
 
-  async getCertificadoConfig(): Promise<{
-    existe: boolean;
-    certificadoInfo?: { temSenha: boolean; expirationDate?: Date | null };
+  async getCertificateConfig(): Promise<{
+    exists: boolean;
+    certificateInfo?: { hasPassword: boolean; expirationDate?: Date | null };
   }> {
     const company = await this.prisma.client.company.findUnique({
       where: { id: 1 },
     });
 
     if (!company || !company.certificatePath) {
-      return { existe: false };
+      return { exists: false };
     }
 
-    const existe = await this.certificadoExiste(company.certificatePath);
+    const fileExists = await this.certificateFileExists(
+      company.certificatePath,
+    );
 
-    // Verifica se tem senha de forma segura
-    let temSenha = false;
+    let hasPassword = false;
     if (company.certificatePassword) {
-      const senha = String(company.certificatePassword);
-      temSenha = senha.trim().length > 0;
+      const password = String(company.certificatePassword);
+      hasPassword = password.trim().length > 0;
     }
 
     return {
-      existe,
-      certificadoInfo: existe
+      exists: fileExists,
+      certificateInfo: fileExists
         ? {
-            temSenha,
+            hasPassword,
             expirationDate: company.certificateExpirationDate,
           }
         : undefined,
     };
   }
 
-  async getCertificadoBuffer(): Promise<{
+  async getCertificateBuffer(): Promise<{
     pfxBuffer: Buffer;
-    senha: string;
+    password: string;
   }> {
     const company = await this.prisma.client.company.findUnique({
       where: { id: 1 },
@@ -214,8 +206,10 @@ export class CompanyService {
       throw new NotFoundException('Certificado não cadastrado');
     }
 
-    const existe = await this.certificadoExiste(company.certificatePath);
-    if (!existe) {
+    const fileExists = await this.certificateFileExists(
+      company.certificatePath,
+    );
+    if (!fileExists) {
       throw new NotFoundException('Arquivo de certificado não encontrado');
     }
 
@@ -223,13 +217,13 @@ export class CompanyService {
 
     return {
       pfxBuffer,
-      senha: company.certificatePassword || '',
+      password: company.certificatePassword || '',
     };
   }
 
   async uploadCompanyCertificate(
     file: UploadedFile,
-    certificadoSenha: string,
+    certificatePassword: string,
     expirationDate?: Date,
   ): Promise<CompanyResponseDto> {
     const company = await this.prisma.client.company.findUnique({
@@ -244,7 +238,6 @@ export class CompanyService {
       throw new BadRequestException('Arquivo de certificado inválido');
     }
 
-    // Valida extensão do arquivo
     const allowedExtensions = ['.pfx', '.p12'];
     const fileExtension = path.extname(file.originalname).toLowerCase();
     if (!allowedExtensions.includes(fileExtension)) {
@@ -255,7 +248,6 @@ export class CompanyService {
 
     const certsDir = path.join(process.cwd(), 'certs');
 
-    // Remove certificado antigo se existir
     if (company.certificatePath) {
       try {
         await fs.unlink(company.certificatePath);
@@ -264,20 +256,17 @@ export class CompanyService {
       }
     }
 
-    // Salva novo certificado
     const fileName = `cert_${Date.now()}_${company.cnpj}${fileExtension}`;
     const filePath = path.join(certsDir, fileName);
 
-    // Cria pasta se não existir
     await fs.mkdir(certsDir, { recursive: true });
     await fs.writeFile(filePath, file.buffer);
 
-    // Atualiza no banco
     const updatedCompany = await this.prisma.client.company.update({
       where: { id: 1 },
       data: {
         certificatePath: filePath,
-        certificatePassword: certificadoSenha,
+        certificatePassword: certificatePassword,
         certificateExpirationDate: expirationDate || null,
       },
     });
@@ -301,14 +290,12 @@ export class CompanyService {
       throw new NotFoundException('Nenhum certificado cadastrado');
     }
 
-    // Remove arquivo físico
     try {
       await fs.unlink(company.certificatePath);
     } catch {
       console.warn('Erro ao remover certificado');
     }
 
-    // Remove do banco - usando undefined ao invés de null
     await this.prisma.client.company.update({
       where: { id: 1 },
       data: {
@@ -321,8 +308,10 @@ export class CompanyService {
     return { message: 'Certificado removido com sucesso' };
   }
 
-  // Métodos auxiliares privados
-  private async certificadoExiste(filePath: string | null): Promise<boolean> {
+  // Private helper methods
+  private async certificateFileExists(
+    filePath: string | null,
+  ): Promise<boolean> {
     if (!filePath) return false;
 
     try {
@@ -334,10 +323,8 @@ export class CompanyService {
   }
 
   private formatCnpj(cnpj: string): string {
-    // Remove formatação existente
     const cleanCnpj = cnpj.replace(/\D/g, '');
 
-    // Aplica formatação XX.XXX.XXX/XXXX-XX
     return cleanCnpj.replace(
       /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
       '$1.$2.$3/$4-$5',
@@ -347,12 +334,10 @@ export class CompanyService {
   private cleanUpdateData(data: UpdateCompanyDto): UpdateCompanyDto {
     const cleanedData = { ...data };
 
-    // Remove senha de certificado se for string vazia
     if (cleanedData.certificatePassword === '') {
       delete cleanedData.certificatePassword;
     }
 
-    // Remove outros campos vazios se necessário
     Object.keys(cleanedData).forEach((key) => {
       const value = cleanedData[key as keyof UpdateCompanyDto];
       if (value === '') {
