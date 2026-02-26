@@ -104,7 +104,6 @@ export class NfeSender {
     };
     this.signer = new NfeSigner(this.certificate);
   }
-
   async send(xml: string, nfeData: NFeOptions): Promise<SefazReturn> {
     try {
       this.signer.validateCertificate();
@@ -127,36 +126,42 @@ export class NfeSender {
       }
       const digVal = digValMatch[1];
 
-      // 4️⃣ Calcula valor total
+      // 4️⃣ Calcula valor total da nota e do ICMS
+      // Importante: No seu XML anterior o vICMS era 0.00
       const vNF = nfeData.produtos
         .reduce((s, p) => s + p.qCom * p.vUnCom, 0)
         .toFixed(2);
 
-      // 5️⃣ Gera QR Code
+      // Se o seu sistema não calcula ICMS (Simples Nacional), manteremos 0.00
+      const vICMS = '0.00';
+
+      // 5️⃣ Gera QR Code (Usando a função buildQrCodeUrl atualizada com vICMS)
       const qrCodeUrl = buildQrCodeUrl({
         accessKey,
         tpAmb: nfeData.ide.tpAmb,
         dhEmi: nfeData.ide.dhEmi,
         vNF,
+        vICMS, // Passando o valor para a lógica de omissão se zero
         digVal,
         idCSC: nfeData.csc.idCSC,
         csc: nfeData.csc.csc,
       });
 
-      // 6️⃣ URL correta por ambiente
-      const urlChave =
-        nfeData.ide.tpAmb === '1'
-          ? 'https://nfce.fazenda.mg.gov.br/portalnfce/sistema/qrcode'
-          : 'https://hnfce.fazenda.mg.gov.br/portalnfce/sistema/qrcode';
+      // 6️⃣ URLs de Consulta Manual (Conforme tabela oficial Portal Sped)
+      const isProd = nfeData.ide.tpAmb === '1';
+      const urlChaveConsulta = isProd
+        ? 'https://portalsped.fazenda.mg.gov.br/portalnfce'
+        : 'https://hportalsped.fazenda.mg.gov.br/portalnfce';
 
       // 7️⃣ Monta infNFeSupl
       const infNFeSupl =
         `<infNFeSupl>` +
         `<qrCode><![CDATA[${qrCodeUrl}]]></qrCode>` +
-        `<urlChave>${urlChave}</urlChave>` +
+        `<urlChave>${urlChaveConsulta}</urlChave>` +
         `</infNFeSupl>`;
 
       // 8️⃣ Injeta infNFeSupl NO LUGAR CORRETO
+      // Dica: Para NFC-e, o infNFeSupl deve vir após o infNFe e ANTES da Signature.
       const finalXml = signedXml.replace('</infNFe>', `</infNFe>${infNFeSupl}`);
 
       // 9️⃣ Monta lote
@@ -328,7 +333,7 @@ export class NfeSender {
         res.on('end', () => {
           console.log('=== SEFAZ RAW RESPONSE ===');
           console.log('Status:', res.statusCode);
-          console.log('Body:', data.substring(0, 1000));
+          console.log('Body:', data);
           console.log('========================');
 
           if (res.statusCode && res.statusCode >= 400) {

@@ -99,36 +99,44 @@ export function buildQrCodeUrl(params: {
   tpAmb: string;
   dhEmi: string;
   vNF: string;
+  vICMS: string; // Adicione o vICMS como parâmetro
   digVal: string;
   idCSC: string;
   csc: string;
 }): string {
-  const { accessKey, tpAmb, dhEmi, vNF, digVal, idCSC, csc } = params;
+  const { accessKey, tpAmb, dhEmi, vNF, vICMS, digVal, idCSC, csc } = params;
   const idCSCPadded = idCSC.padStart(6, '0');
 
   const dhEmiHex = Buffer.from(dhEmi, 'utf-8').toString('hex');
-  const digValHex = Buffer.from(digVal, 'utf-8').toString('hex'); // hex da STRING base64, não decode
+  const digValHex = Buffer.from(digVal, 'utf-8').toString('hex');
 
-  const paramStr =
+  // Montagem base dos parâmetros
+  let paramStr =
     `chNFe=${accessKey}` +
     `&nVersao=100` +
     `&tpAmb=${tpAmb}` +
     `&dhEmi=${dhEmiHex}` +
-    `&vNF=${vNF}` +
-    `&vICMS=0.00` +
-    `&digVal=${digValHex}` +
-    `&cIdToken=${idCSCPadded}`;
+    `&vNF=${vNF}`;
 
+  // REGRA CRUCIAL: Só adiciona vICMS se for maior que zero
+  if (parseFloat(vICMS) > 0) {
+    paramStr += `&vICMS=${vICMS}`;
+  }
+
+  paramStr += `&digVal=${digValHex}&cIdToken=${idCSCPadded}`;
+
+  // O Hash deve ser gerado SOBRE a paramStr exata (com ou sem vICMS)
   const hash = createHash('sha1')
     .update(paramStr + csc)
     .digest('hex')
     .toUpperCase();
 
-  return (
-    `https://hnfce.fazenda.mg.gov.br/portalnfce/sistema/qrcode?` +
-    paramStr +
-    `&cHashQRCode=${hash}`
-  );
+  const baseUrl =
+    tpAmb === '1'
+      ? 'https://portalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml'
+      : 'https://hportalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml';
+
+  return `${baseUrl}?${paramStr}&cHashQRCode=${hash}`;
 }
 
 export function generateNFeXML(data: NFeOptions): string {
