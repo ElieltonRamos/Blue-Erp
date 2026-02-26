@@ -364,6 +364,10 @@ export class DanfeGenerator {
           vPag: parseFloat(s(inf.pag?.detPag?.vPag || '0')),
         },
         infAdic: inf.infAdic?.infCpl ? s(inf.infAdic.infCpl) : undefined,
+        csc: {
+          csc: this.config.csc,
+          idCSC: this.config.idCSC,
+        },
       },
       accessKey: s(inf['@_Id']).replace('NFe', ''),
       totals: {

@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { FiscalStatus, Sale, SaleItem } from '../../types/sale';
 import { LicenseService } from '../../../../core/services/license.service';
-import { NfceEmissaoResponse, NfceService } from '../../services/nfce.service';
+import { EmissionResult, NfceService } from '../../services/nfce.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { CompanyService } from '../../../company/services/company.service';
 import { Company } from '../../../company/types/company';
@@ -30,7 +30,7 @@ export class ModalSalesNote implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   isRequestingNfce = false;
-  nfceData: NfceEmissaoResponse | null = null;
+  nfceData: EmissionResult | null = null;
   companyData: Company | null = null;
 
   canEmitNfce = this.licenseService.getCurrentPlan() === 'pro';
@@ -45,7 +45,7 @@ export class ModalSalesNote implements OnInit {
         this.companyData = company;
         this.cdr.detectChanges();
       },
-      error: (_error) => {
+      error: () => {
         this.notification.error('Erro ao carregar dados da empresa');
       },
     });
@@ -63,7 +63,6 @@ export class ModalSalesNote implements OnInit {
 
   getDateSale() {
     const date = new Date(this.saleData.date);
-    // Ajusta para compensar a conversão UTC
     date.setHours(date.getHours() + 3);
 
     return date.toLocaleString('pt-BR', {
@@ -115,27 +114,27 @@ export class ModalSalesNote implements OnInit {
 
     this.isRequestingNfce = true;
 
-    this.nfceService.emitirPorVenda(this.saleData.id!, 1, true).subscribe({
+    this.nfceService.emitBySale(this.saleData.id!, true).subscribe({
       next: (response) => {
         this.nfceData = response;
         this.isRequestingNfce = false;
 
-        if (response.status === 'autorizada') {
+        if (response.status === 'authorized') {
           this.notification.success(
             `NFC-e autorizada com sucesso!\n\n` +
-              `Chave: ${this.formatChave(response.chaveAcesso)}\n` +
-              `Protocolo: ${response.protocolo || 'N/A'}`,
+              `Chave: ${this.formatAccessKey(response.accessKey)}\n` +
+              `Protocolo: ${response.protocol || 'N/A'}`,
           );
           this.saleData.fiscalStatus = FiscalStatus.EMITIDA;
-          this.saleData.fiscalKey = response.chaveAcesso;
-          this.saleData.fiscalProtocol = response.protocolo;
+          this.saleData.fiscalKey = response.accessKey;
+          this.saleData.fiscalProtocol = response.protocol;
           this.saleData.fiscalEmitDate = new Date();
-          this.downloadPdf(response.chaveAcesso);
-        } else if (response.status === 'rejeitada') {
-          this.notification.error(`NFC-e rejeitada pela SEFAZ:\n${response.mensagem}`);
-        } else if (response.status === 'contingencia') {
-          this.notification.warning(`NFC-e emitida em contingência:\n${response.mensagem}`);
-          this.downloadPdf(response.chaveAcesso);
+          this.downloadPdf(response.accessKey);
+        } else if (response.status === 'rejected') {
+          this.notification.error(`NFC-e rejeitada pela SEFAZ:\n${response.message}`);
+        } else if (response.status === 'contingency') {
+          this.notification.warning(`NFC-e emitida em contingência:\n${response.message}`);
+          this.downloadPdf(response.accessKey);
         }
       },
       error: (error) => {
@@ -150,17 +149,17 @@ export class ModalSalesNote implements OnInit {
     });
   }
 
-  formatChave(chave: string): string {
-    return this.nfceService.formatarChaveAcesso(chave);
+  formatAccessKey(key: string): string {
+    return this.nfceService.formatAccessKey(key);
   }
 
-  downloadPdf(chaveAcesso: string) {
-    this.nfceService.downloadPdf(chaveAcesso).subscribe({
+  downloadPdf(accessKey: string) {
+    this.nfceService.downloadPdf(accessKey).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `${chaveAcesso}.pdf`;
+        link.download = `${accessKey}.pdf`;
         link.click();
         window.URL.revokeObjectURL(url);
         this.notification.success('DANFE baixado com sucesso!');
@@ -171,6 +170,7 @@ export class ModalSalesNote implements OnInit {
       },
     });
   }
+
   print() {
     const content = document.getElementById('invoiceContent')?.innerHTML;
     if (!content) {
@@ -191,7 +191,6 @@ export class ModalSalesNote implements OnInit {
       return;
     }
 
-    // Importa os estilos do Tailwind do app
     const styles = Array.from(document.styleSheets)
       .map((style) => {
         try {
@@ -210,48 +209,30 @@ export class ModalSalesNote implements OnInit {
           <style>
             @media print {
               @page {
-                size: 80mm auto;  /* largura 80mm, altura automática */
-                margin: 0;         /* sem margens extras */
+                size: 80mm auto;
+                margin: 0;
               }
-
               body {
                 margin: 0;
-                padding: 5mm;      /* pequeno padding interno */
+                padding: 5mm;
                 width: 80mm;
                 font-family: 'Courier New', monospace;
                 font-size: 10pt;
-                font-weight: bold; /* Todo texto em negrito */
+                font-weight: bold;
               }
-
-              /* Garante negrito em todos os elementos */
-              * {
-                font-weight: bold !important;
-              }
-
+              * { font-weight: bold !important; }
               .cupom-nao-fiscal {
                 width: 100%;
                 page-break-inside: avoid;
                 break-inside: avoid;
               }
-
-              /* Oculta botões e elementos desnecessários */
-              button, .no-print {
-                display: none !important;
-              }
-
-              /* Ajusta tabelas para cupom */
+              button, .no-print { display: none !important; }
               table {
                 width: 100%;
                 border-collapse: collapse;
                 font-size: 9pt;
               }
-
-              th, td {
-                padding: 2px;
-                text-align: left;
-              }
-
-              /* Linha divisória */
+              th, td { padding: 2px; text-align: left; }
               hr {
                 border: none;
                 border-top: 1px dashed #000;
@@ -261,9 +242,7 @@ export class ModalSalesNote implements OnInit {
           </style>
         </head>
         <body onload="window.print(); setTimeout(() => window.close(), 100);">
-          <div class="cupom-nao-fiscal">
-            ${content}
-          </div>
+          <div class="cupom-nao-fiscal">${content}</div>
         </body>
       </html>
     `);

@@ -1,26 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
-import { StoragePaths } from '../interfaces/fiscal.interfaces';
+import { StoragePaths } from '../entities/fiscal-module.entity';
 
 @Injectable()
 export class StorageService {
   private readonly logger = new Logger(StorageService.name);
-  private readonly xmlBaseDir: string;
-  private readonly pdfBaseDir: string;
-
-  constructor(private readonly configService: ConfigService) {
-    this.xmlBaseDir = this.configService.get<string>(
-      'FISCAL_XML_DIR',
-      './output/nfce/xml',
-    );
-    this.pdfBaseDir = this.configService.get<string>(
-      'FISCAL_PDF_DIR',
-      './output/nfce/pdf',
-    );
-    this.ensureDirectoriesExist([this.xmlBaseDir, this.pdfBaseDir]);
-  }
+  private readonly xmlBaseDir = './output/nfce/xml';
+  private readonly pdfBaseDir = './output/nfce/pdf';
 
   private ensureDirectoriesExist(directories: string[]): void {
     directories.forEach((dir) => {

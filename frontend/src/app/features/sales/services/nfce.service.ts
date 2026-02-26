@@ -2,85 +2,82 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../core/services/environment';
 
-// Interfaces
-export interface NfceEmissaoRequest {
-  companyId: number;
+export interface EmitNfceRequest {
   saleId: number;
-  emitirDanfe?: boolean;
+  generateDanfe?: boolean;
 }
 
-export interface NfceEmissaoResponse {
-  chaveAcesso: string;
-  protocolo?: string;
+export interface EmissionResult {
+  accessKey: string;
+  protocol?: string;
   xmlPath: string;
   pdfPath?: string;
-  status: 'autorizada' | 'rejeitada' | 'contingencia';
-  mensagem: string;
+  status: 'authorized' | 'rejected' | 'contingency';
+  message: string;
 }
 
-export interface RetornoSefaz {
-  sucesso: boolean;
-  protocolo?: string;
-  mensagem: string;
-  xmlAssinado?: string;
-  codigoStatus?: string;
-  motivoRejeicao?: string;
+export interface CancelNfceRequest {
+  accessKey: string;
+  justification: string;
 }
 
-export interface StatusServicoResponse {
+export interface CancelNfceResponse {
+  message: string;
+  protocol?: string;
+}
+
+export interface SefazReturn {
+  success: boolean;
+  protocol?: string;
+  message: string;
+  signedXml?: string;
+  statusCode?: string;
+  accessKey?: string;
+}
+
+export interface ServiceStatusResponse {
   online: boolean;
-  mensagem: string;
-  tempo?: number;
+  message: string;
+  time?: number;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class NfceService {
-  private apiUrl = environment.apiUrl;
-  private client = inject(HttpClient)
+  private readonly baseUrl = `${environment.apiUrl}/fiscal`;
+  private readonly client = inject(HttpClient);
 
-
-  emitir(request: NfceEmissaoRequest) {
-    return this.client.post<NfceEmissaoResponse>(
-      `${this.apiUrl}/nfce/emitir`,
-      request
-    );
+  emit(request: EmitNfceRequest) {
+    return this.client.post<EmissionResult>(`${this.baseUrl}/nfce/emit`, request);
   }
 
-  emitirPorVenda(saleId: number, companyId: number, emitirDanfe: boolean = true) {
-    return this.client.post<NfceEmissaoResponse>(
-      `${this.apiUrl}/nfce/emitir`,
-      { saleId, companyId, emitirDanfe }
-    );
+  emitBySale(saleId: number, generateDanfe: boolean = true) {
+    return this.emit({ saleId, generateDanfe });
   }
 
-  consultar(companyId: number, chaveAcesso: string) {
-    return this.client.get<RetornoSefaz>(
-      `${this.apiUrl}/nfce/consultar/${companyId}/${chaveAcesso}`
-    );
+  cancel(request: CancelNfceRequest) {
+    return this.client.post<CancelNfceResponse>(`${this.baseUrl}/nfce/cancel`, request);
   }
 
-  consultarStatusServico(companyId: number) {
-    return this.client.get<StatusServicoResponse>(
-      `${this.apiUrl}/nfce/status/${companyId}`
-    );
+  query(accessKey: string) {
+    return this.client.get<SefazReturn>(`${this.baseUrl}/nfce/query`, { params: { accessKey } });
   }
 
-  downloadPdf(chaveAcesso: string) {
-    return this.client.get(`${this.apiUrl}/nfce/download/pdf/${chaveAcesso}`, {
-      responseType: 'blob',
-    });
+  queryServiceStatus() {
+    return this.client.get<ServiceStatusResponse>(`${this.baseUrl}/sefaz/status`);
   }
 
-  formatarChaveAcesso(chave: string): string {
-    if (!chave || chave.length !== 44) {
-      return chave;
-    }
-    return chave.match(/.{1,4}/g)?.join(' ') || chave;
+  downloadPdf(accessKey: string) {
+    return this.client.get(`${this.baseUrl}/nfce/pdf/${accessKey}`, { responseType: 'blob' });
   }
 
-  validarChaveAcesso(chave: string): boolean {
-    return /^\d{44}$/.test(chave);
+  formatAccessKey(key: string): string {
+    if (!key || key.length !== 44) return key;
+    return key.match(/.{1,4}/g)?.join(' ') || key;
+  }
+
+  validateAccessKey(key: string): boolean {
+    return /^\d{44}$/.test(key);
   }
 }

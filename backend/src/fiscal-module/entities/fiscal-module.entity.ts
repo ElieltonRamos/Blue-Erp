@@ -65,6 +65,10 @@ export interface NFeOptions {
   };
   infAdic?: string;
   fonteIBPT?: string;
+  csc: {
+    idCSC: string;
+    csc: string;
+  };
 }
 
 export interface NFeProduct {

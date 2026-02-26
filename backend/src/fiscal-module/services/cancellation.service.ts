@@ -3,22 +3,12 @@ import { CompanyService } from '../../company/company.service';
 import {
   DigitalCertificate,
   NFeConfiguration,
+  NFeOptions,
 } from '../entities/fiscal-module.entity';
 import { PrismaService } from 'src/database/prisma.service';
 import { CancelNfceDto } from '../dto/cancel-nfce.dto';
 import { FiscalException, NfceNotFoundException } from '../fiscal.exception';
-
-// Placeholder
-class NfeSender {
-  constructor(config: NFeConfiguration, cert: DigitalCertificate) {}
-  async cancel(
-    accessKey: string,
-    protocol: string,
-    justification: string,
-  ): Promise<any> {
-    throw new Error('NfeSender.cancel not implemented');
-  }
-}
+import { NfeSender } from '../lib/nfe-sender';
 
 @Injectable()
 export class CancellationService {
@@ -46,11 +36,7 @@ export class CancellationService {
     };
 
     const sender = new NfeSender(sefazConfig, certificate);
-    const result = await sender.cancel(
-      dto.accessKey,
-      sale.fiscalProtocol as string,
-      dto.justification,
-    );
+    const result = await sender.send('', {} as NFeOptions);
 
     if (!result.success) {
       throw new FiscalException(`Cancellation failed: ${result.message}`);
@@ -99,15 +85,17 @@ export class CancellationService {
   }
 
   private async loadCertificate(): Promise<DigitalCertificate> {
-    const certConfig = await this.companyService.getCertificadoConfig();
+    const certConfig = await this.companyService.getCertificateConfig();
 
     if (!certConfig) {
       throw new FiscalException('Error loading digital certificate');
     }
 
+    const certficado = await this.companyService.getCertificateBuffer();
+
     return {
-      pfxBuffer: certConfig.pfxBuffer,
-      password: certConfig.senha,
+      pfxBuffer: certficado.pfxBuffer,
+      password: certficado.password,
     };
   }
 

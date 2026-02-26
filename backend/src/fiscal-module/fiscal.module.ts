@@ -6,9 +6,10 @@ import { CancellationService } from './services/cancellation.service';
 import { StorageService } from './services/storage.service';
 import { CompanyModule } from '../company/company.module';
 import { SalesModule } from '../sales/sales.module';
+import { IbptModule } from '../ibpt/ibpt.module';
 
 @Module({
-  imports: [CompanyModule, SalesModule],
+  imports: [CompanyModule, SalesModule, IbptModule],
   controllers: [FiscalController],
   providers: [
     FiscalService,

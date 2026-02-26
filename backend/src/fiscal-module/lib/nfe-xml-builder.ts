@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { create } from 'xmlbuilder2';
 import { NFeOptions, NFeProduct } from '../entities/fiscal-module.entity';
+import { createHash } from 'crypto';
 
 function calculateCheckDigit(key43: string): string {
   const multipliers = [2, 3, 4, 5, 6, 7, 8, 9];
@@ -14,6 +14,14 @@ function calculateCheckDigit(key43: string): string {
 
   const remainder = sum % 11;
   return (remainder < 2 ? 0 : 11 - remainder).toString();
+}
+
+function formatDateTimeBR(isoDate: string): string {
+  const date = new Date(isoDate);
+  const offset = '-03:00';
+  const pad = (n: number) => n.toString().padStart(2, '0');
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}${offset}`;
 }
 
 function generateAccessKey(ide: NFeOptions['ide'], cnpj: string): string {
@@ -52,12 +60,6 @@ function buildItemTax(item: NFeProduct) {
         CSOSN: item.csosn,
       },
     },
-    II: {
-      vBC: '0.00',
-      vDespAdu: '0.00',
-      vII: '0.00',
-      vIOF: '0.00',
-    },
     PIS: {
       PISOutr: {
         CST: item.pisCst || '49',
@@ -77,10 +79,63 @@ function buildItemTax(item: NFeProduct) {
   };
 }
 
+function buildDest(data: NFeOptions) {
+  const cpf = data.dest.CPF?.replace(/\D/g, '');
+  const hasCpf = cpf && cpf.length === 11 && cpf !== '00000000000';
+
+  if (hasCpf) {
+    return {
+      CPF: cpf,
+      xNome: data.dest.xNome,
+      indIEDest: '9',
+    };
+  }
+
+  return undefined; // sem dest
+}
+
+export function buildQrCodeUrl(params: {
+  accessKey: string;
+  tpAmb: string;
+  dhEmi: string;
+  vNF: string;
+  digVal: string;
+  idCSC: string;
+  csc: string;
+}): string {
+  const { accessKey, tpAmb, dhEmi, vNF, digVal, idCSC, csc } = params;
+  const idCSCPadded = idCSC.padStart(6, '0');
+
+  const dhEmiHex = Buffer.from(dhEmi, 'utf-8').toString('hex');
+  const digValHex = Buffer.from(digVal, 'utf-8').toString('hex'); // hex da STRING base64, não decode
+
+  const paramStr =
+    `chNFe=${accessKey}` +
+    `&nVersao=100` +
+    `&tpAmb=${tpAmb}` +
+    `&dhEmi=${dhEmiHex}` +
+    `&vNF=${vNF}` +
+    `&vICMS=0.00` +
+    `&digVal=${digValHex}` +
+    `&cIdToken=${idCSCPadded}`;
+
+  const hash = createHash('sha1')
+    .update(paramStr + csc)
+    .digest('hex')
+    .toUpperCase();
+
+  return (
+    `https://hnfce.fazenda.mg.gov.br/portalnfce/sistema/qrcode?` +
+    paramStr +
+    `&cHashQRCode=${hash}`
+  );
+}
+
 export function generateNFeXML(data: NFeOptions): string {
   const accessKey = generateAccessKey(data.ide, data.emit.CNPJ);
   data.ide.cDV = accessKey.slice(-1);
-
+  data.ide.dhEmi = formatDateTimeBR(data.ide.dhEmi);
+  data.ide.nNF = parseInt(data.ide.nNF, 10).toString();
   const taxPerItem = data.produtos.map((p) => buildItemTax(p));
 
   const totalProducts = data.produtos.reduce(
@@ -90,79 +145,105 @@ export function generateNFeXML(data: NFeOptions): string {
 
   const totalTax = taxPerItem.reduce((sum, t) => sum + Number(t.vTotTrib), 0);
 
+  const dest = buildDest(data);
+
+  const isHomolog = data.ide.tpAmb === '2';
+
   const root = {
-    nfeProc: {
-      '@versao': '4.00',
+    NFe: {
       '@xmlns': 'http://www.portalfiscal.inf.br/nfe',
-      NFe: {
-        '@xmlns': 'http://www.portalfiscal.inf.br/nfe',
-        infNFe: {
-          '@Id': `NFe${accessKey}`,
-          '@versao': '4.00',
-          ide: data.ide,
-          emit: data.emit,
-          dest: data.dest,
-          det: data.produtos.map((p, index) => ({
-            '@nItem': p.nItem.toString(),
-            prod: {
-              cProd: p.cProd,
-              cEAN: 'SEM GTIN',
-              xProd: p.xProd,
-              NCM: p.ncm,
-              CFOP: p.cfop,
-              uCom: p.uCom,
-              qCom: p.qCom.toFixed(4),
-              vUnCom: p.vUnCom.toFixed(5),
-              vProd: (p.qCom * p.vUnCom).toFixed(2),
-              cEANTrib: 'SEM GTIN',
-              uTrib: p.uTrib,
-              qTrib: p.qTrib.toFixed(4),
-              vUnTrib: p.vUnTrib.toFixed(5),
-              indTot: p.indTot.toString(),
-            },
-            imposto: taxPerItem[index],
-          })),
-          total: {
-            ICMSTot: {
-              vBC: '0.00',
-              vICMS: '0.00',
-              vICMSDeson: '0.00',
-              vFCPUFDest: '0.00',
-              vICMSUFDest: '0.00',
-              vICMSUFRemet: '0.00',
-              vFCP: '0.00',
-              vBCST: '0.00',
-              vST: '0.00',
-              vFCPST: '0.00',
-              vFCPSTRet: '0.00',
-              vProd: totalProducts.toFixed(2),
-              vFrete: '0.00',
-              vSeg: '0.00',
-              vDesc: '0.00',
-              vII: '0.00',
-              vIPI: '0.00',
-              vIPIDevol: '0.00',
-              vPIS: '0.00',
-              vCOFINS: '0.00',
-              vOutro: '0.00',
-              vNF: totalProducts.toFixed(2),
-              vTotTrib: totalTax.toFixed(2),
-            },
-          },
-          transp: { modFrete: '9' },
-          pag: {
-            detPag: {
-              indPag: data.pag.indPag,
-              tPag: data.pag.tPag,
-              vPag: data.pag.vPag.toFixed(2),
-            },
-            vTroco: '0.00',
-          },
-          infAdic: data.infAdic ? { infCpl: data.infAdic } : undefined,
+      infNFe: {
+        '@Id': `NFe${accessKey}`,
+        '@versao': '4.00',
+        ide: {
+          cUF: data.ide.cUF,
+          cNF: data.ide.cNF,
+          natOp: data.ide.natOp,
+          mod: data.ide.mod,
+          serie: data.ide.serie,
+          nNF: data.ide.nNF,
+          dhEmi: data.ide.dhEmi,
+          tpNF: data.ide.tpNF,
+          idDest: data.ide.idDest,
+          cMunFG: data.ide.cMunFG,
+          tpImp: data.ide.tpImp,
+          tpEmis: data.ide.tpEmis,
+          cDV: data.ide.cDV,
+          tpAmb: data.ide.tpAmb,
+          finNFe: data.ide.finNFe,
+          indFinal: data.ide.indFinal,
+          indPres: data.ide.indPres,
+          procEmi: data.ide.procEmi,
+          verProc: data.ide.verProc,
         },
+        emit: {
+          CNPJ: data.emit.CNPJ,
+          xNome: data.emit.xNome,
+          xFant: data.emit.xFant,
+          enderEmit: data.emit.enderEmit,
+          IE: data.emit.IE,
+          CRT: data.emit.CRT,
+        },
+        ...(dest ? { dest } : {}),
+        det: data.produtos.map((p, index) => ({
+          '@nItem': p.nItem.toString(),
+          prod: {
+            cProd: p.cProd,
+            cEAN: 'SEM GTIN',
+            xProd:
+              isHomolog && index === 0
+                ? 'NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL'
+                : p.xProd,
+            NCM: p.ncm,
+            CFOP: p.cfop,
+            uCom: p.uCom,
+            qCom: p.qCom.toFixed(4),
+            vUnCom: p.vUnCom.toFixed(5),
+            vProd: (p.qCom * p.vUnCom).toFixed(2),
+            cEANTrib: 'SEM GTIN',
+            uTrib: p.uTrib,
+            qTrib: p.qTrib.toFixed(4),
+            vUnTrib: p.vUnTrib.toFixed(5),
+            indTot: p.indTot.toString(),
+          },
+          imposto: taxPerItem[index],
+        })),
+        total: {
+          ICMSTot: {
+            vBC: '0.00',
+            vICMS: '0.00',
+            vICMSDeson: '0.00',
+            vFCP: '0.00',
+            vBCST: '0.00',
+            vST: '0.00',
+            vFCPST: '0.00',
+            vFCPSTRet: '0.00',
+            vProd: totalProducts.toFixed(2),
+            vFrete: '0.00',
+            vSeg: '0.00',
+            vDesc: '0.00',
+            vII: '0.00',
+            vIPI: '0.00',
+            vIPIDevol: '0.00',
+            vPIS: '0.00',
+            vCOFINS: '0.00',
+            vOutro: '0.00',
+            vNF: totalProducts.toFixed(2),
+            vTotTrib: totalTax.toFixed(2),
+          },
+        },
+        transp: { modFrete: '9' },
+        pag: {
+          detPag: {
+            tPag: data.pag.tPag,
+            vPag: data.pag.vPag.toFixed(2),
+          },
+          vTroco: '0.00',
+        },
+        infAdic: data.infAdic ? { infCpl: data.infAdic } : undefined,
       },
     },
   };
 
-  return create(root).end({ prettyPrint: true });
+  return create(root).end({ prettyPrint: false, headless: true });
 }

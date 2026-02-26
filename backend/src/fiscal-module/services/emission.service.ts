@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CompanyService } from '../../company/company.service';
+import { CompanyResponseDto } from '../../company/dto/company-response.dto';
 import { IbptService } from '../../ibpt/ibpt.service';
 import { StorageService } from './storage.service';
 import { SaleToNfeConverterService } from '../../sales/sale-to-nfe-converte.service';
@@ -16,6 +17,7 @@ import {
   NFeConfiguration,
   DanfeConfig,
   DanfeTotals,
+  SefazReturn,
 } from '../entities/fiscal-module.entity';
 import { EmitNfceDto } from '../dto/emit-nfce.dto';
 import { PrismaService } from 'src/database/prisma.service';
@@ -60,7 +62,7 @@ export class EmissionService {
     const sender = new NfeSender(sefazConfig, certificate);
     this.validateCertificate(sender);
 
-    const sefazReturn = await sender.send(xml);
+    const sefazReturn = await sender.send(xml, nfeData);
 
     if (!sefazReturn.success || sefazReturn.statusCode !== '100') {
       await this.handleRejection(dto.saleId, accessKey, sefazReturn);
@@ -76,8 +78,8 @@ export class EmissionService {
       sefazReturn.signedXml || xml,
     );
 
-    let pdfPath: string | undefined;
-    if (dto.generateDanfe) {
+    let pdfPath = '';
+    if (dto.generateDanfe && storagePaths.pdfPath) {
       pdfPath = await this.generateDanfe(
         company,
         nfeData,
@@ -112,7 +114,10 @@ export class EmissionService {
     return sale;
   }
 
-  private checkIfAlreadyEmitted(sale: any): void {
+  private checkIfAlreadyEmitted(sale: {
+    fiscalStatus: string;
+    fiscalKey: string | null;
+  }): void {
     if (sale.fiscalStatus === 'EMITIDA' && sale.fiscalKey) {
       throw new NfceAlreadyEmittedException(sale.fiscalKey);
     }
@@ -124,10 +129,12 @@ export class EmissionService {
         await this.companyService.getCertificateBuffer();
 
       return { pfxBuffer, password };
-    } catch (error: any) {
-      throw new CertificateException(
-        error.message || 'Error loading digital certificate',
-      );
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Error loading digital certificate';
+      throw new CertificateException(message);
     }
   }
 
@@ -156,18 +163,20 @@ export class EmissionService {
     return accessKey;
   }
 
-  private validateCertificate(sender: any): void {
+  private validateCertificate(sender: NfeSender): void {
     try {
-      sender.assinador?.validateCertificate();
-    } catch (error: any) {
-      throw new CertificateException(error.message);
+      sender.signer.validateCertificate();
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Invalid certificate';
+      throw new CertificateException(message);
     }
   }
 
   private async handleRejection(
     saleId: number,
     accessKey: string,
-    sefazReturn: any,
+    sefazReturn: SefazReturn,
   ): Promise<never> {
     await this.prisma.client.sale.update({
       where: { id: saleId },
@@ -183,7 +192,7 @@ export class EmissionService {
   }
 
   private async generateDanfe(
-    company: any,
+    company: CompanyResponseDto,
     nfeData: NFeOptions,
     accessKey: string,
     pdfPath: string,

@@ -1,11 +1,11 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import * as forge from 'node-forge';
+import { SignedXml } from 'xml-crypto';
 import { DigitalCertificate } from '../entities/fiscal-module.entity';
 
 export class NfeSigner {
   private readonly certificate: DigitalCertificate;
-  private privateKey!: forge.pki.rsa.PrivateKey;
+  private privateKeyPem!: string;
+  private publicCertPem!: string;
   private publicCert!: forge.pki.Certificate;
 
   constructor(certificate: DigitalCertificate) {
@@ -33,7 +33,9 @@ export class NfeSigner {
         throw new Error('Private key not found in certificate');
       }
 
-      this.privateKey = keyBag.key as forge.pki.rsa.PrivateKey;
+      this.privateKeyPem = forge.pki.privateKeyToPem(
+        keyBag.key as forge.pki.rsa.PrivateKey,
+      );
 
       const certBags = p12.getBags({ bagType: forge.pki.oids.certBag });
       const certBag = certBags[forge.pki.oids.certBag]?.[0];
@@ -43,6 +45,7 @@ export class NfeSigner {
       }
 
       this.publicCert = certBag.cert;
+      this.publicCertPem = forge.pki.certificateToPem(this.publicCert);
     } catch (error) {
       const err = error as Error;
       throw new Error(`Error loading certificate: ${err.message}`);
@@ -51,51 +54,39 @@ export class NfeSigner {
 
   public signXml(xml: string): string {
     try {
-      const { DOMParser, XMLSerializer } = require('@xmldom/xmldom');
-      const xmlDoc = new DOMParser().parseFromString(xml, 'text/xml');
-
-      const infNFe = xmlDoc.getElementsByTagName('infNFe')[0];
-      if (!infNFe) {
-        throw new Error('infNFe element not found in XML');
-      }
-
-      const idNFe = infNFe.getAttribute('Id');
-      if (!idNFe) {
-        throw new Error('Id attribute not found in infNFe');
-      }
-
-      const serializer = new XMLSerializer();
-      const infNFeStr = serializer
-        .serializeToString(infNFe)
-        .replace(/>\s+</g, '><');
-
-      const md = forge.md.sha1.create();
-      md.update(infNFeStr, 'utf8');
-      const digestValue = forge.util.encode64(md.digest().bytes());
-
-      const signedInfo = `<SignedInfo xmlns="http://www.w3.org/2000/09/xmldsig#"><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><Reference URI="#${idNFe}"><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/><Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><DigestValue>${digestValue}</DigestValue></Reference></SignedInfo>`;
-
-      const mdSign = forge.md.sha1.create();
-      mdSign.update(signedInfo, 'utf8');
-      const signatureValue = forge.util.encode64(this.privateKey.sign(mdSign));
-
-      const certDer = forge.asn1
-        .toDer(forge.pki.certificateToAsn1(this.publicCert))
-        .getBytes();
-      const certBase64 = forge.util.encode64(certDer);
-
-      const signatureXml = `<Signature xmlns="http://www.w3.org/2000/09/xmldsig#">${signedInfo}<SignatureValue>${signatureValue}</SignatureValue><KeyInfo><X509Data><X509Certificate>${certBase64}</X509Certificate></X509Data></KeyInfo></Signature>`;
-
-      const nfeElement = xmlDoc.getElementsByTagName('NFe')[0];
-      const signatureDoc = new DOMParser().parseFromString(
-        signatureXml,
-        'text/xml',
-      );
-      nfeElement.appendChild(
-        xmlDoc.importNode(signatureDoc.documentElement, true),
+      const certBase64 = this.publicCertPem.replace(
+        /-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|\n|\r/g,
+        '',
       );
 
-      return new XMLSerializer().serializeToString(xmlDoc);
+      const sig = new SignedXml({
+        privateKey: this.privateKeyPem,
+        publicCert: certBase64,
+        canonicalizationAlgorithm:
+          'http://www.w3.org/TR/2001/REC-xml-c14n-20010315',
+        signatureAlgorithm: 'http://www.w3.org/2000/09/xmldsig#rsa-sha1',
+      });
+
+      sig.getKeyInfoContent = () =>
+        `<X509Data><X509Certificate>${certBase64}</X509Certificate></X509Data>`;
+
+      sig.addReference({
+        xpath: "//*[local-name(.)='infNFe']",
+        transforms: [
+          'http://www.w3.org/2000/09/xmldsig#enveloped-signature',
+          'http://www.w3.org/TR/2001/REC-xml-c14n-20010315',
+        ],
+        digestAlgorithm: 'http://www.w3.org/2000/09/xmldsig#sha1',
+      });
+
+      sig.computeSignature(xml, {
+        location: {
+          reference: "//*[local-name(.)='infNFe']",
+          action: 'after',
+        },
+      });
+
+      return sig.getSignedXml();
     } catch (error) {
       const err = error as Error;
       throw new Error(`Error signing XML: ${err.message}`);

@@ -151,6 +151,7 @@ export class SaleToNfeConverterService {
       },
       infAdic: infoText,
       fonteIBPT: company.ibptVersion,
+      csc: { csc: company.nfceCsc, idCSC: company.nfceCscId },
     };
   }
 

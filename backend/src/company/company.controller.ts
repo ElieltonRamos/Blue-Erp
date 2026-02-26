@@ -119,7 +119,7 @@ export class CompanyController {
     description: 'Status do certificado',
   })
   getCertificadoConfig() {
-    return this.companyService.getCertificadoConfig();
+    return this.companyService.getCertificateConfig();
   }
 
   @Get('certificado/buffer')
@@ -133,7 +133,7 @@ export class CompanyController {
     description: 'Certificado não encontrado',
   })
   getCertificadoBuffer() {
-    return this.companyService.getCertificadoBuffer();
+    return this.companyService.getCertificateBuffer();
   }
 
   @Patch('certificate')
