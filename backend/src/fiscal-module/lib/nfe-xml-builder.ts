@@ -94,49 +94,54 @@ function buildDest(data: NFeOptions) {
   return undefined; // sem dest
 }
 
+// <infNFeSupl>
+//   <qrCode>
+//     <![CDATA[ https://www.sefaz.rs.gov.br/NFCE/NFCE-COM.aspx?chNFe=43170620491524000130650010000000041270328804&nVersao=100&tpAmb=2&dhEmi=323031372d30362d31345432303a33343a32312b30303a3030&vNF=67&vICMS=&digVal=63365036774e6a4b774e774d515639673953553269732b6f6d4c513d&cIdToken=1&cHashQRCode=4CF97E69A5B04FF72589F32D79E1FD7A003D28B8 ]]>
+//   </qrCode>
+// </infNFeSupl>
+// valor acima passa pela validacao => tentar seguir a mesma logica
 export function buildQrCodeUrl(params: {
   accessKey: string;
   tpAmb: string;
   dhEmi: string;
   vNF: string;
-  vICMS: string; // Adicione o vICMS como parâmetro
   digVal: string;
   idCSC: string;
   csc: string;
 }): string {
-  const { accessKey, tpAmb, dhEmi, vNF, vICMS, digVal, idCSC, csc } = params;
+  const { accessKey, tpAmb, dhEmi, vNF, digVal, idCSC, csc } = params;
   const idCSCPadded = idCSC.padStart(6, '0');
 
+  // Hex encode dos valores
   const dhEmiHex = Buffer.from(dhEmi, 'utf-8').toString('hex');
   const digValHex = Buffer.from(digVal, 'utf-8').toString('hex');
 
-  // Montagem base dos parâmetros
-  let paramStr =
+  // Monta string para hash (com & normal)
+  const paramsForHash =
     `chNFe=${accessKey}` +
     `&nVersao=100` +
     `&tpAmb=${tpAmb}` +
     `&dhEmi=${dhEmiHex}` +
-    `&vNF=${vNF}`;
+    `&vNF=${vNF}` +
+    `&digVal=${digValHex}` +
+    `&cIdToken=${idCSCPadded}`;
 
-  // REGRA CRUCIAL: Só adiciona vICMS se for maior que zero
-  if (parseFloat(vICMS) > 0) {
-    paramStr += `&vICMS=${vICMS}`;
-  }
-
-  paramStr += `&digVal=${digValHex}&cIdToken=${idCSCPadded}`;
-
-  // O Hash deve ser gerado SOBRE a paramStr exata (com ou sem vICMS)
+  // Hash = SHA1(params + CSC)
   const hash = createHash('sha1')
-    .update(paramStr + csc)
+    .update(paramsForHash + csc)
     .digest('hex')
     .toUpperCase();
+
+  // URL final: substitui & por %26
+  const finalParams =
+    paramsForHash.replace(/&/g, '%26') + `%26cHashQRCode=${hash}`;
 
   const baseUrl =
     tpAmb === '1'
       ? 'https://portalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml'
       : 'https://hportalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml';
 
-  return `${baseUrl}?${paramStr}&cHashQRCode=${hash}`;
+  return `${baseUrl}?${finalParams}`;
 }
 
 export function generateNFeXML(data: NFeOptions): string {
@@ -181,6 +186,7 @@ export function generateNFeXML(data: NFeOptions): string {
           finNFe: data.ide.finNFe,
           indFinal: data.ide.indFinal,
           indPres: data.ide.indPres,
+          indIntermed: data.ide.indIntermed || '0',
           procEmi: data.ide.procEmi,
           verProc: data.ide.verProc,
         },
@@ -244,6 +250,9 @@ export function generateNFeXML(data: NFeOptions): string {
         pag: {
           detPag: {
             tPag: data.pag.tPag,
+            ...(data.pag.tPag === '99' && data.pag.xPag
+              ? { xPag: data.pag.xPag }
+              : {}),
             vPag: data.pag.vPag.toFixed(2),
           },
           vTroco: '0.00',

@@ -39,12 +39,10 @@ const UF_CODES: Record<string, string> = {
 };
 
 const PAYMENT_MAP: Record<string, string> = {
-  dinheiro: '01',
-  debito: '04',
-  credito: '03',
-  pix: '17',
-  vale: '04',
-  outros: '99',
+  DINHEIRO: '01',
+  CARTAO: '03', // ou '04' se for débito por padrão
+  PIX: '17',
+  NOTINHA: '99',
 };
 
 interface TaxSummary {
@@ -147,6 +145,7 @@ export class SaleToNfeConverterService {
       pag: {
         indPag: sale.isPaid ? '0' : '1',
         tPag: PAYMENT_MAP[sale.paymentMethod] || '99',
+        xPag: sale.paymentMethod === 'NOTINHA' ? 'Crédito Loja' : undefined,
         vPag: this.toNumber(sale.total, 2),
       },
       infAdic: infoText,

@@ -133,7 +133,7 @@ export class NfeSender {
         .toFixed(2);
 
       // Se o seu sistema não calcula ICMS (Simples Nacional), manteremos 0.00
-      const vICMS = '0.00';
+      // const vICMS = '0.00';
 
       // 5️⃣ Gera QR Code (Usando a função buildQrCodeUrl atualizada com vICMS)
       const qrCodeUrl = buildQrCodeUrl({
@@ -141,7 +141,6 @@ export class NfeSender {
         tpAmb: nfeData.ide.tpAmb,
         dhEmi: nfeData.ide.dhEmi,
         vNF,
-        vICMS, // Passando o valor para a lógica de omissão se zero
         digVal,
         idCSC: nfeData.csc.idCSC,
         csc: nfeData.csc.csc,
@@ -369,77 +368,84 @@ export class NfeSender {
   }
 
   private extractSoapBody(parsed: any): any {
-    // Navega pelo envelope SOAP até o body
     const envelope =
+      parsed?.['S:Envelope'] ||
       parsed?.['soap:Envelope'] ||
-      parsed?.['soap12:Envelope'] ||
-      parsed?.['soapenv:Envelope'] ||
-      parsed;
+      parsed?.['soap12:Envelope'];
+
+    if (!envelope) return parsed;
 
     const body =
-      envelope?.['soap:Body']?.[0] ||
-      envelope?.['soap12:Body']?.[0] ||
-      envelope?.['soapenv:Body']?.[0] ||
-      envelope;
+      envelope['S:Body']?.[0] ||
+      envelope['soap:Body']?.[0] ||
+      envelope['soap12:Body']?.[0];
 
-    // Pega o primeiro elemento filho do body
-    const keys = Object.keys(body || {}).filter((k) => !k.startsWith('$'));
-    if (keys.length > 0) {
-      const result = body[keys[0]];
-      return Array.isArray(result) ? result[0] : result;
-    }
+    if (!body) return parsed;
 
-    return body;
+    const nfeResultMsg = body['nfeResultMsg']?.[0];
+
+    if (!nfeResultMsg) return body;
+
+    const retEnviNFe = nfeResultMsg['retEnviNFe']?.[0];
+
+    return retEnviNFe || nfeResultMsg;
   }
 
   private parseResponse(ret: any): SefazReturn {
     try {
-      const retEnvi = ret?.retEnviNFe?.[0] || ret?.retEnviNFe || ret;
+      const cStat = ret?.cStat?.[0] || ret?.cStat;
+      const xMotivo = ret?.xMotivo?.[0] || ret?.xMotivo;
 
-      const cStat = retEnvi?.cStat?.[0] || retEnvi?.cStat;
-      const xMotivo = retEnvi?.xMotivo?.[0] || retEnvi?.xMotivo;
+      if (cStat === '104') {
+        const protNFe = ret?.protNFe?.[0];
+        const infProt = protNFe?.infProt?.[0];
 
-      if (cStat === '100' || cStat === '104') {
-        const protNFe =
-          retEnvi?.protNFe?.[0]?.infProt?.[0] || retEnvi?.protNFe?.infProt;
-
-        if (protNFe) {
-          const protStatus = protNFe.cStat?.[0] || protNFe.cStat;
+        if (infProt) {
+          const protStatus = infProt.cStat?.[0];
+          const protMotivo = infProt.xMotivo?.[0];
 
           if (protStatus === '100') {
             return {
               success: true,
-              accessKey: protNFe.chNFe?.[0] || protNFe.chNFe,
-              protocol: protNFe.nProt?.[0] || protNFe.nProt,
-              authorizationDate: protNFe.dhRecbto?.[0] || protNFe.dhRecbto,
-              message: protNFe.xMotivo?.[0] || protNFe.xMotivo || xMotivo,
+              accessKey: infProt.chNFe?.[0],
+              protocol: infProt.nProt?.[0],
+              authorizationDate: infProt.dhRecbto?.[0],
+              message: protMotivo || 'Autorizado',
               statusCode: protStatus,
-              xmlProtocol: JSON.stringify(protNFe),
+              xmlProtocol: JSON.stringify(infProt),
             };
           }
 
           return {
             success: false,
-            message: protNFe.xMotivo?.[0] || protNFe.xMotivo || xMotivo,
+            message: protMotivo || xMotivo || 'Erro desconhecido',
             statusCode: protStatus,
-            errors: [JSON.stringify(protNFe)],
+            errors: [`cStat: ${protStatus} - ${protMotivo}`],
           };
         }
       }
 
+      if (cStat === '100') {
+        return {
+          success: true,
+          message: xMotivo || 'Autorizado',
+          statusCode: cStat,
+        };
+      }
+
       return {
         success: false,
-        message: xMotivo || 'Unknown error',
+        message: xMotivo || 'Erro desconhecido na SEFAZ',
         statusCode: cStat || '999',
-        errors: [JSON.stringify(ret)],
+        errors: [`cStat: ${cStat} - ${xMotivo}`],
       };
     } catch (error) {
       const err = error as Error;
       return {
         success: false,
-        message: 'Error parsing SEFAZ response',
+        message: `Erro ao processar resposta: ${err.message}`,
         statusCode: '999',
-        errors: [err.message],
+        errors: [err.stack || err.message],
       };
     }
   }
