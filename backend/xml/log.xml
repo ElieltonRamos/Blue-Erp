@@ -9,16 +9,17 @@
         <cStat>104</cStat>
         <xMotivo>Lote processado</xMotivo>
         <cUF>31</cUF>
-        <dhRecbto>2026-02-27T09:07:42-03:00</dhRecbto>
+        <dhRecbto>2026-02-27T12:02:02-03:00</dhRecbto>
         <protNFe versao="4.00">
-          <infProt>
+          <infProt Id="ID131260000168704">
             <tpAmb>2</tpAmb>
             <verAplic>W-1.5.78</verAplic>
-            <chNFe>31260254730299000169650010000000211463886393</chNFe>
-            <dhRecbto>2026-02-27T09:07:42-03:00</dhRecbto>
-            <digVal>dlclTILhbThpiwAKwOaJI+3sTBs=</digVal>
-            <cStat>215</cStat>
-            <xMotivo>Rejeição: Falha no schema XML</xMotivo>
+            <chNFe>31260254730299000169650010000000361972366846</chNFe>
+            <dhRecbto>2026-02-27T12:02:02-03:00</dhRecbto>
+            <nProt>131260000168704</nProt>
+            <digVal>Hc+s5ap8fE4IjGC88xAzijvWPCM=</digVal>
+            <cStat>100</cStat>
+            <xMotivo>Autorizado o uso da NF-e</xMotivo>
           </infProt>
         </protNFe>
       </retEnviNFe>

@@ -128,10 +128,16 @@ export function buildQrCodeUrl(params: {
     .digest('hex')
     .toUpperCase();
 
+  console.log('-token');
+  console.log(idCSC);
+
+  // const baseUrl =
+  //   tpAmb === '1'
+  //     ? 'https://portalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml'
+  //     : 'https://hportalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml';
+  // QR Code URL é a mesma para produção e homologação em MG
   const baseUrl =
-    tpAmb === '1'
-      ? 'https://portalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml'
-      : 'https://hportalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml';
+    'https://portalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml';
 
   return `${baseUrl}?p=${payload}|${hash}`;
 }
