@@ -104,77 +104,68 @@ export class NfeSender {
     };
     this.signer = new NfeSigner(this.certificate);
   }
+
   async send(xml: string, nfeData: NFeOptions): Promise<SefazReturn> {
     try {
       this.signer.validateCertificate();
 
-      // 1️⃣ Assina o XML
       const signedXml = this.signer.signXml(xml);
 
-      // 2️⃣ Extrai a chave de acesso
       const accessKey = this.extractAccessKey(signedXml);
       if (!accessKey) {
         throw new Error('Access key not found');
       }
 
-      // 3️⃣ Extrai o DigestValue CORRETO (do infNFe)
       const digValMatch = signedXml.match(
         /<Reference URI="#NFe\d{44}">[\s\S]*?<DigestValue>([^<]+)<\/DigestValue>/,
       );
       if (!digValMatch) {
         throw new Error('infNFe DigestValue not found');
       }
-      const digVal = digValMatch[1];
 
-      // 4️⃣ Calcula valor total da nota e do ICMS
-      // Importante: No seu XML anterior o vICMS era 0.00
-      const vNF = nfeData.produtos
-        .reduce((s, p) => s + p.qCom * p.vUnCom, 0)
-        .toFixed(2);
+      const vNFMatch = signedXml.match(/<vNF>([^<]+)<\/vNF>/);
+      if (!vNFMatch) {
+        throw new Error('vNF not found in signed XML');
+      }
 
-      // Se o seu sistema não calcula ICMS (Simples Nacional), manteremos 0.00
-      // const vICMS = '0.00';
+      const vICMSMatch = signedXml.match(/<vICMS>([^<]+)<\/vICMS>/);
 
-      // 5️⃣ Gera QR Code (Usando a função buildQrCodeUrl atualizada com vICMS)
+      const rawVICMS = vICMSMatch?.[1] ?? '';
+      const vICMS = parseFloat(rawVICMS) === 0 ? '' : rawVICMS;
+
       const qrCodeUrl = buildQrCodeUrl({
         accessKey,
         tpAmb: nfeData.ide.tpAmb,
-        dhEmi: nfeData.ide.dhEmi,
-        vNF,
-        digVal,
         idCSC: nfeData.csc.idCSC,
         csc: nfeData.csc.csc,
       });
 
-      // 6️⃣ URLs de Consulta Manual (Conforme tabela oficial Portal Sped)
       const isProd = nfeData.ide.tpAmb === '1';
       const urlChaveConsulta = isProd
         ? 'https://portalsped.fazenda.mg.gov.br/portalnfce'
         : 'https://hportalsped.fazenda.mg.gov.br/portalnfce';
 
-      // 7️⃣ Monta infNFeSupl
       const infNFeSupl =
         `<infNFeSupl>` +
         `<qrCode><![CDATA[${qrCodeUrl}]]></qrCode>` +
         `<urlChave>${urlChaveConsulta}</urlChave>` +
         `</infNFeSupl>`;
 
-      // 8️⃣ Injeta infNFeSupl NO LUGAR CORRETO
-      // Dica: Para NFC-e, o infNFeSupl deve vir após o infNFe e ANTES da Signature.
       const finalXml = signedXml.replace('</infNFe>', `</infNFe>${infNFeSupl}`);
 
-      // 9️⃣ Monta lote
+      if (!finalXml.includes('<infNFeSupl>')) {
+        throw new Error('Failed to inject infNFeSupl into signed XML');
+      }
+
       const batchId = Date.now().toString();
       const batchXml = this.buildBatch(finalXml, batchId);
 
-      // 🔟 Salva XML (debug)
       const dirPath = join(process.cwd(), 'xml');
       if (!existsSync(dirPath)) {
         mkdirSync(dirPath, { recursive: true });
       }
       writeFileSync(join(dirPath, 'NFe-homolog.xml'), finalXml, 'utf8');
 
-      // 1️⃣1️⃣ Envia para SEFAZ
       const { host, path } = this.getEndpoint('authorization');
       const soapEnvelope = this.buildSoapEnvelope(
         'nfeAutorizacaoLote',
@@ -200,7 +191,6 @@ export class NfeSender {
       };
     }
   }
-
   private extractAccessKey(xml: string): string {
     const match = xml.match(/Id="NFe(\d{44})"/);
     return match ? match[1] : '';

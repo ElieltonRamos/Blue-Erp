@@ -103,45 +103,37 @@ function buildDest(data: NFeOptions) {
 export function buildQrCodeUrl(params: {
   accessKey: string;
   tpAmb: string;
-  dhEmi: string;
-  vNF: string;
-  digVal: string;
   idCSC: string;
   csc: string;
+  // contingência offline
+  offline?: boolean;
+  dhEmi?: string;
+  vNF?: string;
+  digVal?: string;
 }): string {
-  const { accessKey, tpAmb, dhEmi, vNF, digVal, idCSC, csc } = params;
-  const idCSCPadded = idCSC.padStart(6, '0');
+  const { accessKey, tpAmb, idCSC, csc } = params;
 
-  // Hex encode dos valores
-  const dhEmiHex = Buffer.from(dhEmi, 'utf-8').toString('hex');
-  const digValHex = Buffer.from(digVal, 'utf-8').toString('hex');
+  let payload: string;
 
-  // Monta string para hash (com & normal)
-  const paramsForHash =
-    `chNFe=${accessKey}` +
-    `&nVersao=100` +
-    `&tpAmb=${tpAmb}` +
-    `&dhEmi=${dhEmiHex}` +
-    `&vNF=${vNF}` +
-    `&digVal=${digValHex}` +
-    `&cIdToken=${idCSCPadded}`;
+  if (params.offline && params.dhEmi && params.vNF && params.digVal) {
+    const dhEmiHex = Buffer.from(params.dhEmi, 'utf-8').toString('hex');
+    const digValHex = Buffer.from(params.digVal, 'utf-8').toString('hex');
+    payload = `${accessKey}|2|${tpAmb}|${dhEmiHex}|${params.vNF}|${digValHex}|${idCSC}`;
+  } else {
+    payload = `${accessKey}|2|${tpAmb}|${idCSC}`;
+  }
 
-  // Hash = SHA1(params + CSC)
   const hash = createHash('sha1')
-    .update(paramsForHash + csc)
+    .update(payload + csc)
     .digest('hex')
     .toUpperCase();
-
-  // URL final: substitui & por %26
-  const finalParams =
-    paramsForHash.replace(/&/g, '%26') + `%26cHashQRCode=${hash}`;
 
   const baseUrl =
     tpAmb === '1'
       ? 'https://portalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml'
       : 'https://hportalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml';
 
-  return `${baseUrl}?${finalParams}`;
+  return `${baseUrl}?p=${payload}|${hash}`;
 }
 
 export function generateNFeXML(data: NFeOptions): string {
