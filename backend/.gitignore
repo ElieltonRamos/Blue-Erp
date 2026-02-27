@@ -8,6 +8,7 @@ backups
 sea-prep.blob
 *.exe
 !nsis-installer-windows/nssm.exe
+output
 
 # Logs
 logs

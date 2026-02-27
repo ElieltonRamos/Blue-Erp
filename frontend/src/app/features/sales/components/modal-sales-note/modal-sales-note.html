@@ -38,7 +38,7 @@
         <strong>Vendedor:</strong>
         {{ saleData.operator?.username }}
       </p>
-      @if (saleData.paymentMethod === 'NOTINHA') {
+      @if (saleData.paymentMethod === 'CREDITO_LOJA') {
         <p>
           <strong>Status do Pagamento:</strong>
           {{ saleData.isPaid ? 'Recebido' : 'Pendente' }}

@@ -85,15 +85,19 @@
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl">
         <h4 class="text-sm text-gray-300">Dinheiro</h4>
-        <p class="text-xl font-semibold">R$ {{ report.salesByPaymentMethod.cash }}</p>
+        <p class="text-xl font-semibold">R$ {{ report.salesByPaymentMethod.dinheiro }}</p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl">
         <h4 class="text-sm text-gray-300">Cartão</h4>
-        <p class="text-xl font-semibold">R$ {{ report.salesByPaymentMethod.card }}</p>
+        <p class="text-xl font-semibold">R$ {{ report.salesByPaymentMethod.cartaoCredito }}</p>
+      </div>
+      <div class="bg-[#2a3445] p-4 rounded-xl">
+        <h4 class="text-sm text-gray-300">Cartão</h4>
+        <p class="text-xl font-semibold">R$ {{ report.salesByPaymentMethod.cartaoDebito }}</p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl">
         <h4 class="text-sm text-gray-300">Notinha</h4>
-        <p class="text-xl font-semibold">R$ {{ report.salesByPaymentMethod.promissoryNote }}</p>
+        <p class="text-xl font-semibold">R$ {{ report.salesByPaymentMethod.creditoLoja }}</p>
       </div>
     </div>
 
@@ -114,11 +118,15 @@
             <div class="text-xl text-gray-300 space-y-1">
               <div>
                 <span class="font-semibold">Dinheiro:</span> R$
-                {{ item.paymentBreakdown.cash }}
+                {{ item.paymentBreakdown.dinheiro }}
               </div>
               <div>
-                <span class="font-semibold">Cartão:</span> R$
-                {{ item.paymentBreakdown.card }}
+                <span class="font-semibold">Cartão Credito:</span> R$
+                {{ item.paymentBreakdown.cartaoCredito }}
+              </div>
+              <div>
+                <span class="font-semibold">Cartão Debito:</span> R$
+                {{ item.paymentBreakdown.cartaoDebito }}
               </div>
               <div>
                 <span class="font-semibold">PIX:</span> R$
@@ -126,7 +134,7 @@
               </div>
               <div>
                 <span class="font-semibold">Notinha:</span> R$
-                {{ item.paymentBreakdown.promissoryNote }}
+                {{ item.paymentBreakdown.creditoLoja }}
               </div>
             </div>
           </div>

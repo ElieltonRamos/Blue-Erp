@@ -87,17 +87,26 @@ export class SalesReportService {
       grossRevenue: 0,
       grossProfit: 0,
       totalDiscounts: 0,
-      salesByPaymentMethod: { pix: 0, cash: 0, card: 0, promissoryNote: 0 },
+      salesByPaymentMethod: {
+        dinheiro: 0,
+        cartaoCredito: 0,
+        cartaoDebito: 0,
+        pix: 0,
+        creditoLoja: 0,
+      },
       salesByOperator: {} as Record<
         string,
         {
           operator: string;
           totalSales: number;
           revenue: number;
-          paymentBreakdown: Record<
-            'pix' | 'cash' | 'card' | 'promissoryNote',
-            number
-          >;
+          paymentBreakdown: {
+            dinheiro: number;
+            cartaoCredito: number;
+            cartaoDebito: number;
+            pix: number;
+            creditoLoja: number;
+          };
         }
       >,
     };
@@ -135,30 +144,26 @@ export class SalesReportService {
   private buildResponse(
     aggregators: ReturnType<typeof this.initializeAggregators>,
   ) {
+    const fmt = (v: number) => Number(v.toFixed(2));
+    const fmtBreakdown = (b: typeof aggregators.salesByPaymentMethod) => ({
+      dinheiro: fmt(b.dinheiro),
+      cartaoCredito: fmt(b.cartaoCredito),
+      cartaoDebito: fmt(b.cartaoDebito),
+      pix: fmt(b.pix),
+      creditoLoja: fmt(b.creditoLoja),
+    });
+
     return {
       totalSales: aggregators.totalSales,
-      grossRevenue: Number(aggregators.grossRevenue.toFixed(2)),
-      grossProfit: Number(aggregators.grossProfit.toFixed(2)),
-      totalDiscounts: Number(aggregators.totalDiscounts.toFixed(2)),
-
-      salesByPaymentMethod: {
-        pix: Number(aggregators.salesByPaymentMethod.pix.toFixed(2)),
-        cash: Number(aggregators.salesByPaymentMethod.cash.toFixed(2)),
-        card: Number(aggregators.salesByPaymentMethod.card.toFixed(2)),
-        promissoryNote: Number(
-          aggregators.salesByPaymentMethod.promissoryNote.toFixed(2),
-        ),
-      },
+      grossRevenue: fmt(aggregators.grossRevenue),
+      grossProfit: fmt(aggregators.grossProfit),
+      totalDiscounts: fmt(aggregators.totalDiscounts),
+      salesByPaymentMethod: fmtBreakdown(aggregators.salesByPaymentMethod),
       salesByOperator: Object.values(aggregators.salesByOperator).map((op) => ({
         operator: op.operator,
         totalSales: op.totalSales,
-        revenue: Number(op.revenue.toFixed(2)),
-        paymentBreakdown: {
-          pix: Number(op.paymentBreakdown.pix.toFixed(2)),
-          cash: Number(op.paymentBreakdown.cash.toFixed(2)),
-          card: Number(op.paymentBreakdown.card.toFixed(2)),
-          promissoryNote: Number(op.paymentBreakdown.promissoryNote.toFixed(2)),
-        },
+        revenue: fmt(op.revenue),
+        paymentBreakdown: fmtBreakdown(op.paymentBreakdown),
       })),
     };
   }

@@ -1,4 +1,10 @@
-export type PaymentMethod = 'DINHEIRO' | 'CARTAO' | 'PIX' | 'NOTINHA';
+export interface PaymentBreakdown {
+  dinheiro: number;
+  cartaoCredito: number;
+  cartaoDebito: number;
+  pix: number;
+  creditoLoja: number;
+}
 
 export interface SalesReportSummary {
   totalSales: number;
@@ -6,23 +12,13 @@ export interface SalesReportSummary {
   grossProfit: number;
   totalDiscounts: number;
 
-  salesByPaymentMethod: {
-    pix: number;
-    cash: number;
-    card: number;
-    promissoryNote: number;
-  };
+  salesByPaymentMethod: PaymentBreakdown;
 
   salesByOperator: {
     operator: string;
     totalSales: number;
     revenue: number;
-    paymentBreakdown: {
-      pix: number;
-      cash: number;
-      card: number;
-      promissoryNote: number;
-    };
+    paymentBreakdown: PaymentBreakdown;
   }[];
 }
 

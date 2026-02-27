@@ -28,7 +28,7 @@ export class PromissoryNoteReceivable {
   filterId: string = '';
   filterClient: string = '';
   filterOperator: string = '';
-  filterMethod: string = 'NOTINHA';
+  filterMethod: string = 'CREDITO_LOJA';
   filterIsPaid: boolean | undefined = false;
   filterStatusSelect: 'pending' | 'all' = 'pending';
   operators: User[] = [];
@@ -126,7 +126,7 @@ export class PromissoryNoteReceivable {
     this.filterId = '';
     this.filterClient = '';
     this.filterOperator = '';
-    this.filterMethod = 'NOTINHA';
+    this.filterMethod = 'CREDITO_LOJA';
     this.filterIsPaid = false;
     this.filterStatusSelect = 'pending';
     this.page = 1;

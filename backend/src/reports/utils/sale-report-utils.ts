@@ -1,21 +1,35 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-export function normalizePaymentMethod(
-  method: string,
-): 'pix' | 'cash' | 'card' | 'promissoryNote' {
+import { PaymentBreakdown } from '../entities/sale-report.entity';
+
+export type PaymentMethodKey = keyof PaymentBreakdown;
+
+export function normalizePaymentMethod(method: string): PaymentMethodKey {
   const methodUpper = method.toUpperCase();
 
   switch (methodUpper) {
     case 'PIX':
       return 'pix';
     case 'DINHEIRO':
-      return 'cash';
-    case 'CARTAO':
-      return 'card';
-    case 'NOTINHA':
-      return 'promissoryNote';
+      return 'dinheiro';
+    case 'CARTAO_CREDITO':
+      return 'cartaoCredito';
+    case 'CARTAO_DEBITO':
+      return 'cartaoDebito';
+    case 'CREDITO_LOJA':
+      return 'creditoLoja';
     default:
-      return 'cash'; // default fallback
+      return 'dinheiro';
   }
+}
+
+export function createEmptyBreakdown(): PaymentBreakdown {
+  return {
+    dinheiro: 0,
+    cartaoCredito: 0,
+    cartaoDebito: 0,
+    pix: 0,
+    creditoLoja: 0,
+  };
 }
 
 export function validateDateFilters(filters: {
@@ -45,12 +59,7 @@ export function processOperatorAggregation(
       operator: operatorName,
       totalSales: 0,
       revenue: 0,
-      paymentBreakdown: {
-        pix: 0,
-        cash: 0,
-        card: 0,
-        promissoryNote: 0,
-      },
+      paymentBreakdown: createEmptyBreakdown(),
     };
   }
 
@@ -62,16 +71,10 @@ export function processOperatorAggregation(
 }
 
 export function processPaymentAggregation(
-  method: 'pix' | 'cash' | 'card' | 'promissoryNote',
+  method: PaymentMethodKey,
   total: number,
-  salesByPaymentMethod: Record<
-    'pix' | 'cash' | 'card' | 'promissoryNote',
-    number
-  >,
-  operatorPaymentBreakdown: Record<
-    'pix' | 'cash' | 'card' | 'promissoryNote',
-    number
-  >,
+  salesByPaymentMethod: PaymentBreakdown,
+  operatorPaymentBreakdown: PaymentBreakdown,
 ) {
   salesByPaymentMethod[method] += total;
   operatorPaymentBreakdown[method] += total;

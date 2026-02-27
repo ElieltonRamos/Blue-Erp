@@ -21,7 +21,12 @@ import Client from '../../../clients/types/clients';
 import { ConvertOrderToSaleDto } from '../../types/convert-order-sale';
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 
-export type PaymentMethod = 'DINHEIRO' | 'CARTAO' | 'PIX' | 'NOTINHA';
+export type PaymentMethod =
+  | 'DINHEIRO'
+  | 'CARTAO_CREDITO'
+  | 'CARTAO_DEBITO'
+  | 'PIX'
+  | 'CREDITO_LOJA';
 
 @Component({
   selector: 'app-close-order',
@@ -50,9 +55,10 @@ export class CloseOrder implements OnInit {
   amountReceived = 0;
   paymentMethods = [
     { id: 'DINHEIRO' as PaymentMethod, name: 'Dinheiro', icon: '💵' },
-    { id: 'CARTAO' as PaymentMethod, name: 'Crédito', icon: '💳' },
+    { id: 'CARTAO_CREDITO' as PaymentMethod, name: 'Crédito', icon: '💳' },
+    { id: 'CARTAO_DEBITO' as PaymentMethod, name: 'Débito', icon: '💳' },
     { id: 'PIX' as PaymentMethod, name: 'PIX', icon: '📱' },
-    { id: 'NOTINHA' as PaymentMethod, name: 'Prazo', icon: '📅' },
+    { id: 'CREDITO_LOJA' as PaymentMethod, name: 'Prazo', icon: '📅' },
   ];
 
   customerSearchId = '';
@@ -251,7 +257,7 @@ export class CloseOrder implements OnInit {
   }
 
   selectPaymentMethod(method: PaymentMethod): void {
-    if (method === 'NOTINHA' && !this.selectedClient) {
+    if (method === 'CREDITO_LOJA' && !this.selectedClient) {
       this.notification.warning('Venda a prazo requer cliente cadastrado');
       return;
     }

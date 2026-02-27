@@ -7,54 +7,11 @@ import {
   NFeProduct,
 } from 'src/fiscal-module/entities/fiscal-module.entity';
 import { FiscalException } from 'src/fiscal-module/fiscal.exception';
-
-const UF_CODES: Record<string, string> = {
-  AC: '12',
-  AL: '27',
-  AP: '16',
-  AM: '13',
-  BA: '29',
-  CE: '23',
-  DF: '53',
-  ES: '32',
-  GO: '52',
-  MA: '21',
-  MT: '51',
-  MS: '50',
-  MG: '31',
-  PA: '15',
-  PB: '25',
-  PR: '41',
-  PE: '26',
-  PI: '22',
-  RJ: '33',
-  RN: '24',
-  RS: '43',
-  RO: '11',
-  RR: '14',
-  SC: '42',
-  SP: '35',
-  SE: '28',
-  TO: '17',
-};
-
-const PAYMENT_MAP: Record<string, string> = {
-  DINHEIRO: '01',
-  CARTAO: '03', // ou '04' se for débito por padrão
-  PIX: '17',
-  NOTINHA: '99',
-};
-
-interface TaxSummary {
-  totalValue: number;
-  totalTax: number;
-  federalTax: number;
-  stateTax: number;
-  municipalTax: number;
-  federalPercent: number;
-  statePercent: number;
-  municipalPercent: number;
-}
+import {
+  PAYMENT_MAP,
+  TaxSummary,
+  UF_CODES,
+} from './entities/sale-converter-nfe';
 
 @Injectable()
 export class SaleToNfeConverterService {
@@ -145,7 +102,8 @@ export class SaleToNfeConverterService {
       pag: {
         indPag: sale.isPaid ? '0' : '1',
         tPag: PAYMENT_MAP[sale.paymentMethod] || '99',
-        xPag: sale.paymentMethod === 'NOTINHA' ? 'Crédito Loja' : undefined,
+        xPag:
+          sale.paymentMethod === 'CREDITO_LOJA' ? 'Crédito Loja' : undefined,
         vPag: this.toNumber(sale.total, 2),
       },
       infAdic: infoText,

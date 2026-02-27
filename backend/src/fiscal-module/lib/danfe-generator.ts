@@ -2,16 +2,12 @@
 import { PDFDocument, StandardFonts, rgb, PDFFont, PDFPage } from 'pdf-lib';
 import { XMLParser } from 'fast-xml-parser';
 import { promises as fs } from 'fs';
-import crypto from 'crypto';
 import QRCode from 'qrcode';
 import {
   NFeOptions,
   DanfeConfig,
   DanfeTotals,
 } from '../entities/fiscal-module.entity';
-
-const DEFAULT_CONSULT_URL =
-  'https://nfce.fazenda.mg.gov.br/portalnfce/sistema/qrcode';
 
 const PAYMENT_LABELS: Record<string, string> = {
   '01': 'Dinheiro',
@@ -29,19 +25,27 @@ const PAYMENT_LABELS: Record<string, string> = {
   '99': 'Outros',
 };
 
+interface ParsedNfe {
+  nfeData: NFeOptions;
+  accessKey: string;
+  totals: DanfeTotals;
+  qrCodeUrl: string;
+  urlChave: string;
+}
+
 export class DanfeGenerator {
   private readonly config: DanfeConfig;
-  private readonly consultUrl: string;
 
   constructor(config: DanfeConfig) {
     this.config = config;
-    this.consultUrl = config.consultUrl || DEFAULT_CONSULT_URL;
   }
 
   async generateDanfe(
     nfeData: NFeOptions,
     accessKey: string,
     totals: DanfeTotals,
+    qrCodeUrl: string,
+    urlChave: string,
     outputPath: string,
   ): Promise<void> {
     const pdfDoc = await PDFDocument.create();
@@ -50,7 +54,7 @@ export class DanfeGenerator {
     const pageHeight = 600 + nfeData.produtos.length * 25;
     const page = pdfDoc.addPage([widthPt, pageHeight]);
 
-    const ctx = { page, font, widthPt, y: pageHeight - 20 };
+    const ctx: DrawContext = { page, font, widthPt, y: pageHeight - 20 };
 
     this.drawTitle(ctx);
     this.drawEmitter(ctx, nfeData);
@@ -58,9 +62,9 @@ export class DanfeGenerator {
     this.drawProducts(ctx, nfeData);
     this.drawTotals(ctx, nfeData, totals);
     this.drawPayment(ctx, nfeData);
-    this.drawAccessKey(ctx, nfeData, accessKey);
+    this.drawAccessKey(ctx, nfeData, accessKey, urlChave);
     this.drawConsumer(ctx, nfeData);
-    await this.drawQrCode(ctx, pdfDoc, nfeData, accessKey);
+    await this.drawQrCode(ctx, pdfDoc, qrCodeUrl);
     this.drawTaxInfo(ctx, nfeData);
 
     await fs.writeFile(outputPath, await pdfDoc.save());
@@ -68,8 +72,16 @@ export class DanfeGenerator {
 
   async generateFromXml(xmlPath: string, pdfPath: string): Promise<void> {
     const xml = await fs.readFile(xmlPath, 'utf-8');
-    const { nfeData, accessKey, totals } = this.parseXml(xml);
-    await this.generateDanfe(nfeData, accessKey, totals, pdfPath);
+    const { nfeData, accessKey, totals, qrCodeUrl, urlChave } =
+      this.parseXml(xml);
+    await this.generateDanfe(
+      nfeData,
+      accessKey,
+      totals,
+      qrCodeUrl,
+      urlChave,
+      pdfPath,
+    );
   }
 
   // --- Drawing sections ---
@@ -81,7 +93,7 @@ export class DanfeGenerator {
   }
 
   private drawEmitter(ctx: DrawContext, data: NFeOptions): void {
-    this.drawCenter(ctx, data.emit.xNome, 9);
+    this.drawWrapped(ctx, data.emit.xNome, 9, true);
     this.drawCenter(ctx, `CNPJ: ${this.formatCnpj(data.emit.CNPJ)}`, 9);
     const addr = data.emit.enderEmit;
     this.drawWrapped(
@@ -109,7 +121,7 @@ export class DanfeGenerator {
 
     for (const p of data.produtos) {
       const total = p.qCom * p.vUnCom;
-      this.drawLeft(ctx, p.xProd, 8);
+      this.drawWrapped(ctx, p.xProd, 8, false);
       this.drawText(
         ctx,
         `${p.qCom} x R$ ${p.vUnCom.toFixed(2)} = R$ ${total.toFixed(2)}`,
@@ -150,9 +162,10 @@ export class DanfeGenerator {
     ctx: DrawContext,
     data: NFeOptions,
     accessKey: string,
+    urlChave: string,
   ): void {
     this.drawCenter(ctx, 'Consulte pela Chave de Acesso em', 8);
-    this.drawCenter(ctx, 'www.fazenda.gov.br/nfce/consulta', 8);
+    this.drawWrapped(ctx, urlChave, 7, true);
     this.drawLeft(ctx, 'Chave de Acesso:', 8);
 
     if (accessKey) {
@@ -170,32 +183,31 @@ export class DanfeGenerator {
   }
 
   private drawConsumer(ctx: DrawContext, data: NFeOptions): void {
-    this.drawLeft(ctx, `CONSUMIDOR: ${data.dest.xNome}`, 8);
+    this.drawWrapped(ctx, `CONSUMIDOR: ${data.dest.xNome}`, 8, false);
 
     if (data.dest.CPF) {
       this.drawLeft(ctx, `CPF: ${this.formatCpf(data.dest.CPF)}`, 8);
     }
 
     const addr = data.dest.enderDest;
-    this.drawWrapped(
-      ctx,
-      `${addr.xLgr}, ${addr.nro} - ${addr.xBairro}, ${addr.xMun}/${addr.UF}`,
-      7,
-      false,
-    );
+    if (addr?.xLgr) {
+      this.drawWrapped(
+        ctx,
+        `${addr.xLgr}, ${addr.nro} - ${addr.xBairro}, ${addr.xMun}/${addr.UF}`,
+        7,
+        false,
+      );
+    }
   }
 
   private async drawQrCode(
     ctx: DrawContext,
     pdfDoc: PDFDocument,
-    data: NFeOptions,
-    accessKey: string,
+    qrCodeUrl: string,
   ): Promise<void> {
     ctx.y -= 95;
 
-    const hash = this.generateHash(accessKey, data.ide.tpAmb);
-    const qrUrl = `${this.consultUrl}?p=${accessKey}|${data.ide.tpAmb}|${this.config.idCSC}|${hash}`;
-    const qrBuffer = await QRCode.toBuffer(qrUrl, { width: 90 });
+    const qrBuffer = await QRCode.toBuffer(qrCodeUrl, { width: 90 });
     const qrImage = await pdfDoc.embedPng(qrBuffer);
 
     ctx.page.drawImage(qrImage, {
@@ -300,25 +312,26 @@ export class DanfeGenerator {
     return clean.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
   }
 
-  private generateHash(accessKey: string, environment: string): string {
-    return crypto
-      .createHash('sha1')
-      .update(
-        `${accessKey}|${environment}|${this.config.idCSC}|${this.config.csc}`,
-      )
-      .digest('hex')
-      .toUpperCase();
-  }
-
-  private parseXml(xml: string): {
-    nfeData: NFeOptions;
-    accessKey: string;
-    totals: DanfeTotals;
-  } {
-    const parser = new XMLParser({ ignoreAttributes: false });
+  parseXml(xml: string): ParsedNfe {
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      processEntities: false,
+    });
     const parsed = parser.parse(xml);
-    const inf = parsed.nfeProc?.NFe?.infNFe || parsed.NFe?.infNFe;
+
+    const nfe = parsed.nfeProc?.NFe || parsed.NFe;
+    const inf = nfe?.infNFe;
+    const infSupl = nfe?.infNFeSupl;
+
     const s = (v: any) => String(v || '');
+
+    const qrCodeRaw = s(infSupl?.qrCode);
+    const qrCodeUrl = qrCodeRaw
+      .replace('<![CDATA[', '')
+      .replace(']]>', '')
+      .trim();
+
+    const urlChave = s(infSupl?.urlChave);
 
     const produtos = (Array.isArray(inf.det) ? inf.det : [inf.det]).map(
       (item: any) => ({
@@ -375,6 +388,8 @@ export class DanfeGenerator {
         discountValue: parseFloat(s(inf.total?.ICMSTot?.vDesc || '0')),
         totalValue: parseFloat(s(inf.total?.ICMSTot?.vNF || '0')),
       },
+      qrCodeUrl,
+      urlChave,
     };
   }
 }

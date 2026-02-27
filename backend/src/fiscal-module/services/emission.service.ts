@@ -84,6 +84,7 @@ export class EmissionService {
         company,
         nfeData,
         accessKey,
+        sefazReturn.signedXml || xml,
         storagePaths.pdfPath,
       );
     }
@@ -195,6 +196,7 @@ export class EmissionService {
     company: CompanyResponseDto,
     nfeData: NFeOptions,
     accessKey: string,
+    signedXml: string,
     pdfPath: string,
   ): Promise<string> {
     const danfeConfig: DanfeConfig = {
@@ -204,9 +206,16 @@ export class EmissionService {
     };
 
     const danfe = new DanfeGenerator(danfeConfig);
-    const totals = this.calculateTotals(nfeData);
+    const { totals, qrCodeUrl, urlChave } = danfe.parseXml(signedXml);
 
-    await danfe.generateDanfe(nfeData, accessKey, totals, pdfPath);
+    await danfe.generateDanfe(
+      nfeData,
+      accessKey,
+      totals,
+      qrCodeUrl,
+      urlChave,
+      pdfPath,
+    );
 
     return pdfPath;
   }

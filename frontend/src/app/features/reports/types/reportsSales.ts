@@ -1,17 +1,16 @@
-// Estrutura igual ao backend
-
-export interface PaymentMethodBreakdown {
+export interface PaymentBreakdown {
+  dinheiro: number;
+  cartaoCredito: number;
+  cartaoDebito: number;
   pix: number;
-  cash: number;
-  card: number;
-  promissoryNote: number;
+  creditoLoja: number;
 }
 
 export interface OperatorSales {
   operator: string;
   totalSales: number;
   revenue: number;
-  paymentBreakdown: PaymentMethodBreakdown;
+  paymentBreakdown: PaymentBreakdown;
 }
 
 export interface SalesReportSummary {
@@ -19,11 +18,10 @@ export interface SalesReportSummary {
   grossRevenue: number;
   grossProfit: number;
   totalDiscounts: number;
-  salesByPaymentMethod: PaymentMethodBreakdown;
+  salesByPaymentMethod: PaymentBreakdown;
   salesByOperator: OperatorSales[];
 }
 
-// 🔥 NOVO — resposta completa da API
 export interface SalesReportResponse {
   status: 'OK' | 'ERROR';
   data?: SalesReportSummary;
@@ -36,10 +34,11 @@ export const summaryMock: SalesReportSummary = {
   grossProfit: 0,
   totalDiscounts: 0,
   salesByPaymentMethod: {
+    dinheiro: 0,
+    cartaoCredito: 0,
+    cartaoDebito: 0,
     pix: 0,
-    cash: 0,
-    card: 0,
-    promissoryNote: 0,
+    creditoLoja: 0,
   },
   salesByOperator: [],
 };
