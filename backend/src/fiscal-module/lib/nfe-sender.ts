@@ -1,8 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import * as https from 'https';
 import { parseString } from 'xml2js';
 import { promisify } from 'util';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import { join } from 'path';
 import {
   NFeConfiguration,
   DigitalCertificate,
@@ -128,11 +127,6 @@ export class NfeSender {
         throw new Error('vNF not found in signed XML');
       }
 
-      const vICMSMatch = signedXml.match(/<vICMS>([^<]+)<\/vICMS>/);
-
-      const rawVICMS = vICMSMatch?.[1] ?? '';
-      const vICMS = parseFloat(rawVICMS) === 0 ? '' : rawVICMS;
-
       const qrCodeUrl = buildQrCodeUrl({
         accessKey,
         tpAmb: nfeData.ide.tpAmb,
@@ -159,12 +153,6 @@ export class NfeSender {
 
       const batchId = Date.now().toString();
       const batchXml = this.buildBatch(finalXml, batchId);
-
-      const dirPath = join(process.cwd(), 'xml');
-      if (!existsSync(dirPath)) {
-        mkdirSync(dirPath, { recursive: true });
-      }
-      writeFileSync(join(dirPath, 'NFe-homolog.xml'), finalXml, 'utf8');
 
       const { host, path } = this.getEndpoint('authorization');
       const soapEnvelope = this.buildSoapEnvelope(
@@ -320,11 +308,6 @@ export class NfeSender {
         let data = '';
         res.on('data', (chunk) => (data += chunk));
         res.on('end', () => {
-          console.log('=== SEFAZ RAW RESPONSE ===');
-          console.log('Status:', res.statusCode);
-          console.log('Body:', data);
-          console.log('========================');
-
           if (res.statusCode && res.statusCode >= 400) {
             reject(
               new Error(`HTTP ${res.statusCode}: ${data.substring(0, 200)}`),
@@ -463,15 +446,5 @@ export class NfeSender {
     }
 
     return { host, path };
-  }
-
-  private createHttpsAgent(): https.Agent {
-    return new https.Agent({
-      pfx: this.certificate.pfxBuffer,
-      passphrase: this.certificate.password,
-      rejectUnauthorized: false,
-      keepAlive: true,
-      minVersion: 'TLSv1.2',
-    });
   }
 }

@@ -16,7 +16,6 @@ import {
   DigitalCertificate,
   NFeConfiguration,
   DanfeConfig,
-  DanfeTotals,
   SefazReturn,
 } from '../entities/fiscal-module.entity';
 import { EmitNfceDto } from '../dto/emit-nfce.dto';
@@ -24,10 +23,13 @@ import { PrismaService } from 'src/database/prisma.service';
 import { generateNFeXML } from '../lib/nfe-xml-builder';
 import { NfeSender } from '../lib/nfe-sender';
 import { DanfeGenerator } from '../lib/danfe-generator';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { join } from 'path';
 
 @Injectable()
 export class EmissionService {
   private readonly logger = new Logger(EmissionService.name);
+  private readonly sefazTempDir = join(process.cwd(), 'sefaz-temp');
 
   constructor(
     private readonly prisma: PrismaService,
@@ -35,10 +37,14 @@ export class EmissionService {
     private readonly ibptService: IbptService,
     private readonly storageService: StorageService,
     private readonly saleToNfeConverter: SaleToNfeConverterService,
-  ) {}
+  ) {
+    if (!existsSync(this.sefazTempDir)) {
+      mkdirSync(this.sefazTempDir, { recursive: true });
+    }
+  }
 
   async emit(dto: EmitNfceDto): Promise<EmissionResult> {
-    this.logger.log(`Starting NFC-e emission for sale ${dto.saleId}`);
+    this.logger.log(`Iniciando emissão NFC-e para venda ${dto.saleId}`);
 
     const sale = await this.findSale(dto.saleId);
     this.checkIfAlreadyEmitted(sale);
@@ -54,6 +60,8 @@ export class EmissionService {
     const xml = generateNFeXML(nfeData);
     const accessKey = this.extractAccessKey(xml);
 
+    this.saveXmlDebug(accessKey, xml, 'envio');
+
     const sefazConfig: NFeConfiguration = {
       environment: company.nfceEnvironment,
       state: company.state,
@@ -68,15 +76,19 @@ export class EmissionService {
       await this.handleRejection(dto.saleId, accessKey, sefazReturn);
     }
 
+    if (!sefazReturn.signedXml) {
+      this.logger.warn(`XML assinado não retornado para chave ${accessKey}`);
+      throw new FiscalException('SEFAZ não retornou o XML assinado');
+    }
+
+    this.saveXmlDebug(accessKey, sefazReturn.signedXml, 'retorno');
+
     const storagePaths = this.storageService.getStoragePaths(
       accessKey,
       new Date(nfeData.ide.dhEmi),
     );
 
-    this.storageService.saveXml(
-      storagePaths.xmlPath,
-      sefazReturn.signedXml || xml,
-    );
+    this.storageService.saveXml(storagePaths.xmlPath, sefazReturn.signedXml);
 
     let pdfPath = '';
     if (dto.generateDanfe && storagePaths.pdfPath) {
@@ -84,14 +96,14 @@ export class EmissionService {
         company,
         nfeData,
         accessKey,
-        sefazReturn.signedXml || xml,
+        sefazReturn.signedXml,
         storagePaths.pdfPath,
       );
     }
 
     await this.updateSaleAsEmitted(dto.saleId, accessKey, sefazReturn.protocol);
 
-    this.logger.log(`NFC-e emitted successfully: ${accessKey}`);
+    this.logger.log(`NFC-e emitida com sucesso: ${accessKey}`);
 
     return {
       accessKey,
@@ -99,8 +111,18 @@ export class EmissionService {
       xmlPath: storagePaths.xmlPath,
       pdfPath,
       status: 'authorized',
-      message: 'NFC-e authorized successfully',
+      message: 'NFC-e autorizada com sucesso',
     };
+  }
+
+  private saveXmlDebug(accessKey: string, xml: string, stage: string): void {
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const fileName = `${stage}_${accessKey}_${timestamp}.xml`;
+      writeFileSync(join(this.sefazTempDir, fileName), xml, 'utf8');
+    } catch (error) {
+      this.logger.warn(`Falha ao salvar XML de debug (${stage}): ${error}`);
+    }
   }
 
   private async findSale(saleId: number) {
@@ -109,7 +131,7 @@ export class EmissionService {
     });
 
     if (!sale) {
-      throw new FiscalException('Sale not found', 404);
+      throw new FiscalException('Venda não encontrada', 404);
     }
 
     return sale;
@@ -134,23 +156,23 @@ export class EmissionService {
       const message =
         error instanceof Error
           ? error.message
-          : 'Error loading digital certificate';
+          : 'Erro ao carregar certificado digital';
       throw new CertificateException(message);
     }
   }
 
   private validateNFeData(nfeData: NFeOptions): void {
     if (!nfeData.emit?.CNPJ) {
-      throw new FiscalException('Issuer CNPJ is required');
+      throw new FiscalException('CNPJ do emitente é obrigatório');
     }
     if (!nfeData.produtos || nfeData.produtos.length === 0) {
-      throw new FiscalException('NFC-e must contain at least one product');
+      throw new FiscalException('NFC-e deve conter ao menos um produto');
     }
     if (!nfeData.pag?.tPag || !nfeData.pag?.vPag) {
-      throw new FiscalException('Payment information is required');
+      throw new FiscalException('Informações de pagamento são obrigatórias');
     }
     if (!nfeData.ide?.nNF || !nfeData.ide?.serie) {
-      throw new FiscalException('Invoice number and series are required');
+      throw new FiscalException('Número da nota e série são obrigatórios');
     }
   }
 
@@ -158,7 +180,7 @@ export class EmissionService {
     const accessKey = this.storageService.extractAccessKey(xml);
 
     if (!accessKey) {
-      throw new FiscalException('Error generating access key');
+      throw new FiscalException('Erro ao gerar chave de acesso');
     }
 
     return accessKey;
@@ -169,7 +191,7 @@ export class EmissionService {
       sender.signer.validateCertificate();
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : 'Invalid certificate';
+        error instanceof Error ? error.message : 'Certificado inválido';
       throw new CertificateException(message);
     }
   }
@@ -189,7 +211,9 @@ export class EmissionService {
       },
     });
 
-    throw new SefazException(sefazReturn.message || 'NFC-e rejected by SEFAZ');
+    throw new SefazException(
+      sefazReturn.message || 'NFC-e rejeitada pela SEFAZ',
+    );
   }
 
   private async generateDanfe(
@@ -220,17 +244,6 @@ export class EmissionService {
     return pdfPath;
   }
 
-  private calculateTotals(nfeData: NFeOptions): DanfeTotals {
-    const productValue = nfeData.produtos.reduce(
-      (sum, p) => sum + p.qCom * p.vUnCom,
-      0,
-    );
-    const discountValue = 0;
-    const totalValue = productValue - discountValue;
-
-    return { productValue, discountValue, totalValue };
-  }
-
   private async updateSaleAsEmitted(
     saleId: number,
     accessKey: string,
@@ -245,5 +258,7 @@ export class EmissionService {
         fiscalEmitDate: new Date(),
       },
     });
+
+    await this.companyService.incrementNfceNumber();
   }
 }

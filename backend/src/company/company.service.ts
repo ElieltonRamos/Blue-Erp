@@ -138,6 +138,18 @@ export class CompanyService {
     return { message: 'Configuração da empresa resetada com sucesso' };
   }
 
+  async getNextNfceNumber(): Promise<{ data: number }> {
+    const company = await this.prisma.client.company.findUnique({
+      where: { id: 1 },
+    });
+
+    if (!company) {
+      throw new NotFoundException('Empresa não configurada');
+    }
+
+    return { data: company.nfceCurrentNumber + 1 };
+  }
+
   async incrementNfceNumber(): Promise<{ data: number }> {
     const company = await this.prisma.client.company.findUnique({
       where: { id: 1 },

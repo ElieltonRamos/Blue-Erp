@@ -91,21 +91,14 @@ function buildDest(data: NFeOptions) {
     };
   }
 
-  return undefined; // sem dest
+  return undefined;
 }
 
-// <infNFeSupl>
-//   <qrCode>
-//     <![CDATA[ https://www.sefaz.rs.gov.br/NFCE/NFCE-COM.aspx?chNFe=43170620491524000130650010000000041270328804&nVersao=100&tpAmb=2&dhEmi=323031372d30362d31345432303a33343a32312b30303a3030&vNF=67&vICMS=&digVal=63365036774e6a4b774e774d515639673953553269732b6f6d4c513d&cIdToken=1&cHashQRCode=4CF97E69A5B04FF72589F32D79E1FD7A003D28B8 ]]>
-//   </qrCode>
-// </infNFeSupl>
-// valor acima passa pela validacao => tentar seguir a mesma logica
 export function buildQrCodeUrl(params: {
   accessKey: string;
   tpAmb: string;
   idCSC: string;
   csc: string;
-  // contingência offline
   offline?: boolean;
   dhEmi?: string;
   vNF?: string;
@@ -128,18 +121,28 @@ export function buildQrCodeUrl(params: {
     .digest('hex')
     .toUpperCase();
 
-  console.log('-token');
-  console.log(idCSC);
-
-  // const baseUrl =
-  //   tpAmb === '1'
-  //     ? 'https://portalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml'
-  //     : 'https://hportalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml';
-  // QR Code URL é a mesma para produção e homologação em MG
   const baseUrl =
     'https://portalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml';
 
   return `${baseUrl}?p=${payload}|${hash}`;
+}
+
+function buildDetPag(data: NFeOptions) {
+  const detPag: Record<string, any> = {
+    tPag: data.pag.tPag,
+    ...(data.pag.tPag === '99' && data.pag.xPag ? { xPag: data.pag.xPag } : {}),
+    vPag: data.pag.vPag.toFixed(2),
+  };
+
+  if (data.pag.card) {
+    detPag.card = {
+      tpIntegra: data.pag.card.tpIntegra,
+      tBand: data.pag.card.tBand,
+      cAut: data.pag.card.cAut,
+    };
+  }
+
+  return detPag;
 }
 
 export function generateNFeXML(data: NFeOptions): string {
@@ -246,13 +249,7 @@ export function generateNFeXML(data: NFeOptions): string {
         },
         transp: { modFrete: '9' },
         pag: {
-          detPag: {
-            tPag: data.pag.tPag,
-            ...(data.pag.tPag === '99' && data.pag.xPag
-              ? { xPag: data.pag.xPag }
-              : {}),
-            vPag: data.pag.vPag.toFixed(2),
-          },
+          detPag: buildDetPag(data),
           vTroco: '0.00',
         },
         infAdic: data.infAdic ? { infCpl: data.infAdic } : undefined,

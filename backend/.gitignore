@@ -9,6 +9,8 @@ sea-prep.blob
 *.exe
 !nsis-installer-windows/nssm.exe
 output
+sefaz-temp
+diff.txt
 
 # Logs
 logs

@@ -13,6 +13,8 @@ import {
   UF_CODES,
 } from './entities/sale-converter-nfe';
 
+const CARD_PAYMENT_METHODS = ['CARTAO_CREDITO', 'CARTAO_DEBITO'];
+
 @Injectable()
 export class SaleToNfeConverterService {
   private readonly logger = new Logger(SaleToNfeConverterService.name);
@@ -25,8 +27,7 @@ export class SaleToNfeConverterService {
   async convert(saleId: number): Promise<NFeOptions> {
     const sale = await this.findSaleWithRelations(saleId);
     const company = await this.companyService.getCompany();
-    const { data: nfceNumber } =
-      await this.companyService.incrementNfceNumber();
+    const { data: nfceNumber } = await this.companyService.getNextNfceNumber();
 
     const items = this.normalizeItems(sale);
     const taxes = this.calculateTaxes(items);
@@ -105,6 +106,13 @@ export class SaleToNfeConverterService {
         xPag:
           sale.paymentMethod === 'CREDITO_LOJA' ? 'Crédito Loja' : undefined,
         vPag: this.toNumber(sale.total, 2),
+        ...(CARD_PAYMENT_METHODS.includes(sale.paymentMethod) && {
+          card: {
+            tpIntegra: '2',
+            tBand: '99',
+            cAut: '000000',
+          },
+        }),
       },
       infAdic: infoText,
       fonteIBPT: company.ibptVersion,

@@ -63,6 +63,11 @@ export interface NFeOptions {
     tPag: string;
     vPag: number;
     xPag?: string;
+    card?: {
+      tpIntegra: string;
+      tBand: string;
+      cAut: string;
+    };
   };
   infAdic?: string;
   fonteIBPT?: string;
