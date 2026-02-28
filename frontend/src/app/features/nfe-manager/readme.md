@@ -255,6 +255,27 @@ fiscalXml      → XML completo (LongText) — base para reemissão de PDF
 
 ---
 
+## Orientações ao Cliente
+
+### Operacional
+
+- **Cancelamento tem prazo de 30 minutos** — após esse prazo a nota não pode ser cancelada pelo sistema; orientar o operador a cancelar imediatamente em caso de erro
+- **Nota com status ERRO não tem valor fiscal** — o produto foi vendido mas a nota não foi autorizada pela SEFAZ; é necessário reemitir antes do fechamento do dia
+- **O XML da nota tem valor legal** — nunca deve ser deletado do banco de dados; é o documento fiscal oficial
+
+### Fiscal
+
+- **O sistema não recolhe imposto** — o recolhimento é feito pelo contador mensalmente via PGDAS-D no portal do Simples Nacional
+- **Exportar XMLs e relatórios mensalmente** — esses arquivos são a base para o trabalho do contador; recomenda-se exportar até o 5º dia útil do mês seguinte
+- **Simples Nacional não isenta de emitir NF-e** — a emissão é obrigação legal independente do regime tributário
+
+### Suporte
+
+- **SEFAZ fora do ar não impede a venda** — mas a nota fica com status PENDENTE até o sistema voltar; monitorar e reemitir quando disponível
+- **Certificado digital vencido bloqueia toda emissão** — renovar com pelo menos 30 dias de antecedência; o sistema deve alertar próximo ao vencimento
+
+---
+
 ## Considerações para o Contador
 
 O sistema disponibiliza:
