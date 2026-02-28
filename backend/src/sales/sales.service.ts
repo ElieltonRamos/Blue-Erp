@@ -357,6 +357,7 @@ export class SalesService {
                 costPrice: true,
                 ncm: true,
                 unit: true,
+                csosn: true,
               },
             },
           },
@@ -374,7 +375,6 @@ export class SalesService {
       );
     }
 
-    // Cliente padrão: 1 = Cliente À Vista
     const clientId = dto.clientId ?? 1;
     const client = await this.prisma.client.client.findUnique({
       where: { id: clientId },
@@ -423,7 +423,7 @@ export class SalesService {
               taxQuantity: item.quantity,
               taxUnitPrice: item.unitPrice,
               composesTotal: 1,
-              cfop: dto.cfop || '5102',
+              cfop: item.product.csosn === '500' ? '5405' : dto.cfop || '5102',
               totalTaxValue: null,
               importTaxValue: new Decimal(0),
               iofValue: new Decimal(0),

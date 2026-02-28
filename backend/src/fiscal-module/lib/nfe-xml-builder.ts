@@ -1,6 +1,7 @@
 import { create } from 'xmlbuilder2';
 import { NFeOptions, NFeProduct } from '../entities/fiscal-module.entity';
 import { createHash } from 'crypto';
+import { baseUrl } from './nfe-endpoints.config';
 
 function calculateCheckDigit(key43: string): string {
   const multipliers = [2, 3, 4, 5, 6, 7, 8, 9];
@@ -45,22 +46,92 @@ function generateAccessKey(ide: NFeOptions['ide'], cnpj: string): string {
   return key43 + calculateCheckDigit(key43);
 }
 
+function buildIcmsGroup(item: NFeProduct): Record<string, any> {
+  const orig = item.origem.toString();
+  const csosn = item.csosn;
+
+  switch (csosn) {
+    case '500':
+      return { ICMSSN500: { orig, CSOSN: csosn } };
+    case '400':
+      return { ICMSSN400: { orig, CSOSN: csosn } };
+    case '201':
+      return {
+        ICMSSN201: {
+          orig,
+          CSOSN: csosn,
+          modBCST: '3',
+          pMVAST: '0.00',
+          pRedBCST: '0.00',
+          vBCST: '0.00',
+          pICMSST: '0.00',
+          vICMSST: '0.00',
+        },
+      };
+    case '202':
+    case '203':
+      return {
+        ICMSSN202: {
+          orig,
+          CSOSN: csosn,
+          modBCST: '3',
+          pMVAST: '0.00',
+          pRedBCST: '0.00',
+          vBCST: '0.00',
+          pICMSST: '0.00',
+          vICMSST: '0.00',
+        },
+      };
+    case '300':
+      return { ICMSSN300: { orig, CSOSN: csosn } };
+    case '900':
+      return {
+        ICMSSN900: {
+          orig,
+          CSOSN: csosn,
+          modBC: '3',
+          vBC: '0.00',
+          pRedBC: '0.00',
+          pICMS: '0.00',
+          vICMS: '0.00',
+          modBCST: '3',
+          pMVAST: '0.00',
+          pRedBCST: '0.00',
+          vBCST: '0.00',
+          pICMSST: '0.00',
+          vICMSST: '0.00',
+        },
+      };
+    case '102':
+    default:
+      return { ICMSSN102: { orig, CSOSN: csosn } };
+  }
+}
+
 function buildItemTax(item: NFeProduct) {
   const vProd = item.qCom * item.vUnCom;
   const totalRate =
-    (item.aliqFederal || 0) +
-    (item.aliqEstadual || 0) +
-    (item.aliqMunicipal || 0);
-  const vTotTrib = totalRate > 0 ? vProd * (totalRate / 100) : 0;
+    (item.aliqFederal ?? 0) +
+    (item.aliqEstadual ?? 0) +
+    (item.aliqMunicipal ?? 0);
+
+  if (totalRate === 0) {
+    throw new Error(
+      `Produto "${item.xProd}" (NCM: ${item.ncm}) com totalRate zero. Verifique as alíquotas IBPT.`,
+    );
+  }
+
+  const vTotTrib = vProd * (totalRate / 100);
+
+  if (vTotTrib <= 0) {
+    throw new Error(
+      `Produto "${item.xProd}" (NCM: ${item.ncm}) com vTotTrib inválido: ${vTotTrib}. Verifique qCom, vUnCom e alíquotas.`,
+    );
+  }
 
   return {
     vTotTrib: vTotTrib.toFixed(2),
-    ICMS: {
-      ICMSSN102: {
-        orig: item.origem.toString(),
-        CSOSN: item.csosn,
-      },
-    },
+    ICMS: buildIcmsGroup(item),
     PIS: {
       PISOutr: {
         CST: item.pisCst || '49',
@@ -121,9 +192,6 @@ export function buildQrCodeUrl(params: {
     .update(payload + csc)
     .digest('hex')
     .toUpperCase();
-
-  const baseUrl =
-    'https://portalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml';
 
   return `${baseUrl}?p=${payload}|${hash}`;
 }

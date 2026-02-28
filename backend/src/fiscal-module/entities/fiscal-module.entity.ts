@@ -92,9 +92,9 @@ export interface NFeProduct {
   uTrib: string;
   qTrib: number;
   vUnTrib: number;
-  aliqFederal: number;
-  aliqEstadual: number;
-  aliqMunicipal: number;
+  aliqFederal: number | null;
+  aliqEstadual: number | null;
+  aliqMunicipal: number | null;
   vTotTrib: number | null;
   pisCst: string;
   cofinsCst: string;

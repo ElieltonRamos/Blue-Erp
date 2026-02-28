@@ -23,9 +23,18 @@ import { PrismaService } from 'src/database/prisma.service';
 import { generateNFeXML } from '../lib/nfe-xml-builder';
 import { NfeSender } from '../lib/nfe-sender';
 import { DanfeGenerator } from '../lib/danfe-generator';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  mkdirSync,
+  writeFileSync,
+  readdirSync,
+  statSync,
+  unlinkSync,
+} from 'fs';
 import { join } from 'path';
 import { nowBrasilia } from 'src/common/date-utils';
+
+const DEBUG_RETENTION_DAYS = 7;
 
 @Injectable()
 export class EmissionService {
@@ -55,13 +64,26 @@ export class EmissionService {
 
     await this.ibptService.updateAliqSale(dto.saleId);
 
-    const nfeData = await this.saleToNfeConverter.convert(dto.saleId);
+    // Reserva o número atomicamente antes de qualquer processamento
+    const nfceNumber = await this.reserveNfceNumber();
+
+    let nfeData: NFeOptions;
+    try {
+      nfeData = await this.saleToNfeConverter.convert(dto.saleId, nfceNumber);
+    } catch (error) {
+      // Se falhar antes do SEFAZ, reverte o número reservado
+      await this.releaseNfceNumber(nfceNumber);
+      throw error;
+    }
+
     this.validateNFeData(nfeData);
 
     const xml = generateNFeXML(nfeData);
     const accessKey = this.extractAccessKey(xml);
+    this.validateInfAdic(nfeData, accessKey);
 
     this.saveXmlDebug(accessKey, xml, 'envio');
+    this.cleanOldDebugFiles();
 
     const sefazConfig: NFeConfiguration = {
       environment: company.nfceEnvironment,
@@ -84,33 +106,59 @@ export class EmissionService {
 
     this.saveXmlDebug(accessKey, sefazReturn.signedXml, 'retorno');
 
+    // A partir daqui a nota está autorizada na SEFAZ.
+    // Qualquer falha é registrada com a chave para recuperação manual.
     const storagePaths = this.storageService.getStoragePaths(
       accessKey,
       new Date(nfeData.ide.dhEmi),
     );
 
-    await this.storageService.saveXml(
-      storagePaths.xmlPath,
-      sefazReturn.signedXml,
-    );
-
-    let pdfPath = '';
-    if (dto.generateDanfe && storagePaths.pdfPath) {
-      pdfPath = await this.generateDanfe(
-        company,
-        nfeData,
-        accessKey,
+    try {
+      await this.storageService.saveXml(
+        storagePaths.xmlPath,
         sefazReturn.signedXml,
-        storagePaths.pdfPath,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Nota autorizada (${accessKey}) mas falha ao salvar XML: ${error}`,
       );
     }
 
-    await this.updateSaleAsEmitted(
-      dto.saleId,
-      accessKey,
-      sefazReturn.signedXml,
-      sefazReturn.protocol,
-    );
+    let pdfPath = '';
+    if (dto.generateDanfe && storagePaths.pdfPath) {
+      try {
+        pdfPath = await this.generateDanfe(
+          company,
+          nfeData,
+          accessKey,
+          sefazReturn.signedXml,
+          storagePaths.pdfPath,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Nota autorizada (${accessKey}) mas falha ao gerar DANFE: ${error}`,
+        );
+      }
+    }
+
+    // Persiste o status final — se falhar, loga com todos os dados para recuperação
+    try {
+      await this.updateSaleAsEmitted(
+        dto.saleId,
+        accessKey,
+        sefazReturn.signedXml,
+        sefazReturn.protocol,
+      );
+    } catch (error) {
+      this.logger.error(
+        `CRÍTICO: Nota autorizada pelo SEFAZ mas falha ao atualizar venda. ` +
+          `Venda: ${dto.saleId} | Chave: ${accessKey} | Protocolo: ${sefazReturn.protocol} | Erro: ${error}`,
+      );
+      throw new FiscalException(
+        `Nota fiscal autorizada (chave: ${accessKey}) mas houve falha ao registrar no sistema. ` +
+          `Anote a chave e protocolo para regularização manual.`,
+      );
+    }
 
     this.logger.log(`NFC-e emitida com sucesso: ${accessKey}`);
 
@@ -124,6 +172,81 @@ export class EmissionService {
     };
   }
 
+  // Incrementa atomicamente e retorna o número reservado
+  private async reserveNfceNumber(): Promise<number> {
+    const company = await this.prisma.client.$transaction(async (tx) => {
+      const current = await tx.company.findUnique({ where: { id: 1 } });
+
+      if (!current) {
+        throw new FiscalException('Empresa não configurada');
+      }
+
+      const next = current.nfceCurrentNumber + 1;
+
+      return tx.company.update({
+        where: { id: 1 },
+        data: { nfceCurrentNumber: next },
+      });
+    });
+
+    return company.nfceCurrentNumber;
+  }
+
+  // Reverte o número caso a emissão falhe antes de chegar ao SEFAZ
+  private async releaseNfceNumber(number: number): Promise<void> {
+    try {
+      await this.prisma.client.$transaction(async (tx) => {
+        const current = await tx.company.findUnique({ where: { id: 1 } });
+
+        // Só reverte se ninguém avançou o número enquanto isso
+        if (current && current.nfceCurrentNumber === number) {
+          await tx.company.update({
+            where: { id: 1 },
+            data: { nfceCurrentNumber: number - 1 },
+          });
+        }
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Falha ao liberar número NFC-e reservado (${number}): ${error}`,
+      );
+    }
+  }
+
+  private validateInfAdic(nfeData: NFeOptions, accessKey: string): void {
+    const infCpl = nfeData.infAdic;
+
+    if (!infCpl || infCpl.trim().length === 0) {
+      throw new FiscalException(
+        'Campo infAdic/infCpl não foi gerado. Emissão bloqueada para evitar multas fiscais.',
+      );
+    }
+
+    const checks = [
+      {
+        pattern: /Tributos aproximados R\$\s[\d.,]+/,
+        label: 'valor total de tributos',
+      },
+      { pattern: /federais/i, label: 'tributos federais' },
+      { pattern: /estaduais/i, label: 'tributos estaduais' },
+      { pattern: /municipais/i, label: 'tributos municipais' },
+      { pattern: /IBPT/i, label: 'fonte IBPT' },
+    ];
+
+    const failures = checks
+      .filter(({ pattern }) => !pattern.test(infCpl))
+      .map(({ label }) => label);
+
+    if (failures.length > 0) {
+      this.logger.error(`infCpl inválido para chave ${accessKey}: ${infCpl}`);
+      throw new FiscalException(
+        `infAdic incompleto. Campos ausentes: ${failures.join(', ')}. Emissão bloqueada.`,
+      );
+    }
+
+    this.logger.log(`infAdic validado com sucesso para chave ${accessKey}`);
+  }
+
   private saveXmlDebug(accessKey: string, xml: string, stage: string): void {
     try {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -131,6 +254,23 @@ export class EmissionService {
       writeFileSync(join(this.sefazTempDir, fileName), xml, 'utf8');
     } catch (error) {
       this.logger.warn(`Falha ao salvar XML de debug (${stage}): ${error}`);
+    }
+  }
+
+  private cleanOldDebugFiles(): void {
+    try {
+      const cutoff = Date.now() - DEBUG_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+      const files = readdirSync(this.sefazTempDir);
+
+      for (const file of files) {
+        const filePath = join(this.sefazTempDir, file);
+        const { mtimeMs } = statSync(filePath);
+        if (mtimeMs < cutoff) {
+          unlinkSync(filePath);
+        }
+      }
+    } catch (error) {
+      this.logger.warn(`Falha ao limpar XMLs de debug antigos: ${error}`);
     }
   }
 
@@ -269,7 +409,5 @@ export class EmissionService {
         fiscalEmitDate: nowBrasilia(),
       },
     });
-
-    await this.companyService.incrementNfceNumber();
   }
 }

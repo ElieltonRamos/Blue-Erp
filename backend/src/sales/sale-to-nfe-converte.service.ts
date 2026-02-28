@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Injectable, Logger } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/client';
 import { CompanyService } from 'src/company/company.service';
@@ -25,11 +26,9 @@ export class SaleToNfeConverterService {
     private readonly companyService: CompanyService,
   ) {}
 
-  async convert(saleId: number): Promise<NFeOptions> {
+  async convert(saleId: number, nfceNumber: number): Promise<NFeOptions> {
     const sale = await this.findSaleWithRelations(saleId);
     const company = await this.companyService.getCompany();
-    const { data: nfceNumber } = await this.companyService.getNextNfceNumber();
-
     const items = this.normalizeItems(sale);
     const taxes = this.calculateTaxes(items);
     const taxText = this.buildTaxText(taxes, company.ibptVersion);
@@ -159,8 +158,8 @@ export class SaleToNfeConverterService {
         nItem: item.itemNumber ?? index + 1,
         cProd: product.code || String(product.id),
         xProd: item.xProd || product.name || 'PRODUTO SEM NOME',
-        ncm: product.ncm || '0',
-        cfop: item.cfop || sale.cfop || '5102',
+        ncm: product.ncm || null,
+        cfop: item.cfop || this.resolveCfop(product.csosn, sale.cfop),
         csosn: product.csosn || '102',
         origem: product.origin ?? 0,
         uCom,
@@ -170,9 +169,18 @@ export class SaleToNfeConverterService {
         uTrib: item.taxUnit || uCom,
         qTrib: this.toNumber(item.taxQuantity ?? qCom, 4),
         vUnTrib: this.toNumber(item.taxUnitPrice ?? vUnCom, 4),
-        aliqFederal: this.toNumber(product.federalTaxRate ?? 13.45, 2),
-        aliqEstadual: this.toNumber(product.stateTaxRate ?? 18.0, 2),
-        aliqMunicipal: this.toNumber(product.municipalTaxRate ?? 0.0, 2),
+        aliqFederal:
+          product.federalTaxRate != null
+            ? this.toNumber(product.federalTaxRate, 2)
+            : null,
+        aliqEstadual:
+          product.stateTaxRate != null
+            ? this.toNumber(product.stateTaxRate, 2)
+            : null,
+        aliqMunicipal:
+          product.municipalTaxRate != null
+            ? this.toNumber(product.municipalTaxRate, 2)
+            : null,
         vTotTrib:
           item.totalTaxValue != null
             ? this.toNumber(item.totalTaxValue, 2)
@@ -185,6 +193,18 @@ export class SaleToNfeConverterService {
     });
   }
 
+  private resolveCfop(csosn: string | null, saleCfop: string): string {
+    switch (csosn) {
+      case '500':
+        return '5405';
+      case '102':
+      case '400':
+        return saleCfop || '5102';
+      default:
+        return saleCfop || '5102';
+    }
+  }
+
   private calculateTaxes(items: NFeProduct[]): TaxSummary {
     let totalValue = 0;
     let federalTax = 0;
@@ -192,6 +212,22 @@ export class SaleToNfeConverterService {
     let municipalTax = 0;
 
     for (const item of items) {
+      if (!item.ncm || item.ncm === '0' || item.ncm === '00000000') {
+        throw new FiscalException(
+          `Produto "${item.xProd}" (ID: ${item.cProd}) não possui NCM cadastrado. Emissão bloqueada.`,
+        );
+      }
+
+      if (
+        item.aliqFederal == null ||
+        item.aliqEstadual == null ||
+        item.aliqMunicipal == null
+      ) {
+        throw new FiscalException(
+          `Produto "${item.xProd}" (NCM: ${item.ncm}) sem alíquota IBPT calculada. Atualize a tabela IBPT ou verifique o NCM cadastrado. Emissão bloqueada.`,
+        );
+      }
+
       const itemTotal = item.qCom * item.vUnCom;
       totalValue += itemTotal;
       federalTax += itemTotal * (item.aliqFederal / 100);
@@ -218,7 +254,12 @@ export class SaleToNfeConverterService {
       ? (taxes.totalTax / taxes.totalValue) * 100
       : 0;
 
-    const base = `Tributos aproximados R$ ${taxes.totalTax.toFixed(2)} (${totalPercent.toFixed(2)}% do valor da nota) sendo R$ ${taxes.federalTax.toFixed(2)} federais, R$ ${taxes.stateTax.toFixed(2)} estaduais e R$ ${taxes.municipalTax.toFixed(2)} municipais`;
+    const base =
+      `Tributos aproximados R$ ${taxes.totalTax.toFixed(2)}` +
+      ` (${totalPercent.toFixed(2)}% do valor da nota)` +
+      ` sendo R$ ${taxes.federalTax.toFixed(2)} federais,` +
+      ` R$ ${taxes.stateTax.toFixed(2)} estaduais` +
+      ` e R$ ${taxes.municipalTax.toFixed(2)} municipais`;
 
     return ibptVersion
       ? `${base}. Fonte: IBPT ${ibptVersion}`

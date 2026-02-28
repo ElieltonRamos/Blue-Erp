@@ -156,11 +156,19 @@ export class IbptService {
     for (const item of sale.items) {
       const ncm = this.cleanNcm(item.product.ncm || '');
 
-      const ibpt = await this.prisma.client.ibpt.findFirst({
-        where: { ncm },
-      });
+      if (!ncm || ncm === '00000000') {
+        throw new BadRequestException(
+          `Produto "${item.product.name}" (ID: ${item.productId}) não possui NCM cadastrado`,
+        );
+      }
 
-      if (!ibpt) continue;
+      const ibpt = await this.prisma.client.ibpt.findFirst({ where: { ncm } });
+
+      if (!ibpt) {
+        throw new NotFoundException(
+          `NCM ${ncm} do produto "${item.product.name}" não encontrado na tabela IBPT`,
+        );
+      }
 
       const federalTaxRate = ibpt.federalTaxRate;
       const stateTaxRate = ibpt.stateTaxRate;
