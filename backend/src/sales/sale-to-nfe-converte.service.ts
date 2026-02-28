@@ -159,7 +159,13 @@ export class SaleToNfeConverterService {
         cProd: product.code || String(product.id),
         xProd: item.xProd || product.name || 'PRODUTO SEM NOME',
         ncm: product.ncm || null,
-        cfop: item.cfop || this.resolveCfop(product.csosn, sale.cfop),
+        cfop:
+          item.cfop ||
+          this.resolveCfop(
+            product.csosn,
+            sale.cfop,
+            product.productType === 'MANUFACTURED',
+          ),
         csosn: product.csosn || '102',
         origem: product.origin ?? 0,
         uCom,
@@ -193,15 +199,19 @@ export class SaleToNfeConverterService {
     });
   }
 
-  private resolveCfop(csosn: string | null, saleCfop: string): string {
+  private resolveCfop(
+    csosn: string | null,
+    saleCfop: string,
+    isManufactured: boolean = false,
+  ): string {
     switch (csosn) {
       case '500':
         return '5405';
       case '102':
       case '400':
-        return saleCfop || '5102';
+        return isManufactured ? '5101' : saleCfop || '5102';
       default:
-        return saleCfop || '5102';
+        return isManufactured ? '5101' : saleCfop || '5102';
     }
   }
 

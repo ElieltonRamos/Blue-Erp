@@ -357,6 +357,7 @@ export class SalesService {
                 costPrice: true,
                 ncm: true,
                 unit: true,
+                productType: true,
                 csosn: true,
               },
             },
@@ -423,7 +424,12 @@ export class SalesService {
               taxQuantity: item.quantity,
               taxUnitPrice: item.unitPrice,
               composesTotal: 1,
-              cfop: item.product.csosn === '500' ? '5405' : dto.cfop || '5102',
+              cfop:
+                item.product.csosn === '500'
+                  ? '5405'
+                  : item.product.productType === 'MANUFACTURED'
+                    ? '5101'
+                    : dto.cfop || '5102',
               totalTaxValue: null,
               importTaxValue: new Decimal(0),
               iofValue: new Decimal(0),
