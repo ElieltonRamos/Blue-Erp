@@ -3,12 +3,14 @@ import { CompanyService } from '../../company/company.service';
 import {
   DigitalCertificate,
   NFeConfiguration,
-  NFeOptions,
 } from '../entities/fiscal-module.entity';
 import { PrismaService } from 'src/database/prisma.service';
 import { CancelNfceDto } from '../dto/cancel-nfce.dto';
 import { FiscalException, NfceNotFoundException } from '../fiscal.exception';
 import { NfeSender } from '../lib/nfe-sender';
+import { Sale } from 'generated/prisma/client';
+
+const CANCELLATION_DEADLINE_MINUTES = 30;
 
 @Injectable()
 export class CancellationService {
@@ -22,7 +24,7 @@ export class CancellationService {
   async cancel(
     dto: CancelNfceDto,
   ): Promise<{ message: string; protocol?: string }> {
-    this.logger.log(`Starting cancellation for NFC-e: ${dto.accessKey}`);
+    this.logger.log(`Iniciando cancelamento NFC-e: ${dto.accessKey}`);
 
     const sale = await this.findSaleByAccessKey(dto.accessKey);
     this.validateCancellation(sale);
@@ -36,23 +38,30 @@ export class CancellationService {
     };
 
     const sender = new NfeSender(sefazConfig, certificate);
-    const result = await sender.send('', {} as NFeOptions);
+    const result = await sender.cancelNFe({
+      accessKey: dto.accessKey,
+      protocol: sale.fiscalProtocol as string,
+      justification: dto.justification,
+      cnpj: company.cnpj,
+    });
 
     if (!result.success) {
-      throw new FiscalException(`Cancellation failed: ${result.message}`);
+      throw new FiscalException(
+        `Cancelamento rejeitado pela SEFAZ: ${result.message}`,
+      );
     }
 
-    await this.updateSaleAsCanceled(sale.id, result.protocol as string);
+    await this.updateSaleAsCanceled(sale.id, result.protocol);
 
-    this.logger.log(`NFC-e canceled successfully: ${dto.accessKey}`);
+    this.logger.log(`NFC-e cancelada com sucesso: ${dto.accessKey}`);
 
     return {
-      message: 'NFC-e canceled successfully',
+      message: 'NFC-e cancelada com sucesso',
       protocol: result.protocol,
     };
   }
 
-  private async findSaleByAccessKey(accessKey: string) {
+  private async findSaleByAccessKey(accessKey: string): Promise<Sale> {
     const sale = await this.prisma.client.sale.findFirst({
       where: { fiscalKey: accessKey },
     });
@@ -64,50 +73,49 @@ export class CancellationService {
     return sale;
   }
 
-  private validateCancellation(sale: any): void {
+  private validateCancellation(sale: Sale): void {
     if (sale.fiscalStatus !== 'EMITIDA') {
-      throw new FiscalException('Only emitted NFC-e can be canceled');
+      throw new FiscalException('Apenas NFC-e emitidas podem ser canceladas');
     }
 
     if (!sale.fiscalProtocol) {
-      throw new FiscalException('Protocol not found for this NFC-e');
+      throw new FiscalException('Protocolo de autorização não encontrado');
     }
 
-    const emissionDate = new Date(sale.fiscalEmitDate as Date);
-    const hoursSinceEmission =
-      (Date.now() - emissionDate.getTime()) / (1000 * 60 * 60);
+    if (!sale.fiscalEmitDate) {
+      throw new FiscalException('Data de emissão não encontrada');
+    }
 
-    if (hoursSinceEmission > 24) {
+    const minutesSinceEmission =
+      (Date.now() - new Date(sale.fiscalEmitDate).getTime()) / (1000 * 60);
+
+    if (minutesSinceEmission > CANCELLATION_DEADLINE_MINUTES) {
       throw new FiscalException(
-        'NFC-e can only be canceled within 24 hours of emission',
+        `NFC-e só pode ser cancelada em até ${CANCELLATION_DEADLINE_MINUTES} minutos após a emissão`,
       );
     }
   }
 
   private async loadCertificate(): Promise<DigitalCertificate> {
-    const certConfig = await this.companyService.getCertificateConfig();
-
-    if (!certConfig) {
-      throw new FiscalException('Error loading digital certificate');
-    }
-
-    const certficado = await this.companyService.getCertificateBuffer();
-
-    return {
-      pfxBuffer: certficado.pfxBuffer,
-      password: certficado.password,
-    };
+    const { pfxBuffer, password } =
+      await this.companyService.getCertificateBuffer();
+    return { pfxBuffer, password };
   }
 
   private async updateSaleAsCanceled(
     saleId: number,
     protocol?: string,
   ): Promise<void> {
+    const now = new Date();
+    const offset = -3 * 60;
+    const cancelDate = new Date(now.getTime() + offset * 60 * 1000);
+
     await this.prisma.client.sale.update({
       where: { id: saleId },
       data: {
         fiscalStatus: 'CANCELADA',
         fiscalProtocol: protocol,
+        fiscalEmitDate: cancelDate,
       },
     });
   }

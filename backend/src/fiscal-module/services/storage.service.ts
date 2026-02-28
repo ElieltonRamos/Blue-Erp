@@ -6,8 +6,22 @@ import { StoragePaths } from '../entities/fiscal-module.entity';
 @Injectable()
 export class StorageService {
   private readonly logger = new Logger(StorageService.name);
-  private readonly xmlBaseDir = './output/nfce/xml';
-  private readonly pdfBaseDir = './output/nfce/pdf';
+  private readonly xmlBaseDir = path.join(
+    process.cwd(),
+    'output',
+    'nfce',
+    'xml',
+  );
+  private readonly pdfBaseDir = path.join(
+    process.cwd(),
+    'output',
+    'nfce',
+    'pdf',
+  );
+
+  constructor() {
+    this.ensureDirectoriesExist([this.xmlBaseDir, this.pdfBaseDir]);
+  }
 
   private ensureDirectoriesExist(directories: string[]): void {
     directories.forEach((dir) => {
@@ -19,6 +33,10 @@ export class StorageService {
   }
 
   getStoragePaths(accessKey: string, emissionDate: Date): StoragePaths {
+    if (!accessKey || accessKey.length !== 44) {
+      throw new Error(`Invalid access key: ${accessKey}`);
+    }
+
     const yearMonth = this.getYearMonthFolder(emissionDate);
 
     const xmlDir = path.join(this.xmlBaseDir, yearMonth);
@@ -34,13 +52,13 @@ export class StorageService {
     };
   }
 
-  saveXml(xmlPath: string, xmlContent: string): void {
+  async saveXml(xmlPath: string, xmlContent: string): Promise<void> {
     try {
-      fs.writeFileSync(xmlPath, xmlContent);
+      await fs.promises.writeFile(xmlPath, xmlContent, 'utf8');
       this.logger.log(`XML saved: ${xmlPath}`);
     } catch (error) {
       this.logger.error(`Error saving XML: ${error.message}`, error.stack);
-      throw error;
+      throw new Error(`Failed to save XML at ${xmlPath}: ${error.message}`);
     }
   }
 
@@ -54,13 +72,15 @@ export class StorageService {
   }
 
   private getYearMonthFolder(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const offset = -3 * 60;
+    const local = new Date(date.getTime() + offset * 60 * 1000);
+    const year = local.getUTCFullYear();
+    const month = String(local.getUTCMonth() + 1).padStart(2, '0');
     return `${year}-${month}`;
   }
 
   extractAccessKey(xml: string): string | null {
-    const match = xml.match(/\d{44}/);
-    return match ? match[0] : null;
+    const match = xml.match(/Id="NFe(\d{44})"/);
+    return match ? match[1] : null;
   }
 }

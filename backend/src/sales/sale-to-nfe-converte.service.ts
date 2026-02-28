@@ -12,6 +12,7 @@ import {
   TaxSummary,
   UF_CODES,
 } from './entities/sale-converter-nfe';
+import { nowBrasilia, toSefazDateTime } from 'src/common/date-utils';
 
 const CARD_PAYMENT_METHODS = ['CARTAO_CREDITO', 'CARTAO_DEBITO'];
 
@@ -48,7 +49,7 @@ export class SaleToNfeConverterService {
         mod: '65',
         serie: company.nfceSeries,
         nNF: String(nfceNumber).padStart(9, '0'),
-        dhEmi: new Date().toISOString(),
+        dhEmi: toSefazDateTime(nowBrasilia()),
         tpNF: '1',
         idDest: '1',
         cMunFG: company.cityCode,

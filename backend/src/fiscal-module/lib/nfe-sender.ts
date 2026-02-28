@@ -7,21 +7,32 @@ import {
   DigitalCertificate,
   SefazReturn,
   NFeOptions,
+  CancelNFeParams,
 } from '../entities/fiscal-module.entity';
 import { NfeSigner } from './nfe-signer';
 import { buildQrCodeUrl } from './nfe-xml-builder';
+import { nowBrasilia, toSefazDateTime } from 'src/common/date-utils';
 
 const parseXML = promisify(parseString);
 
 const WEBSERVICES: Record<
   string,
-  Record<string, { authorization: string; status: string; query: string }>
+  Record<
+    string,
+    {
+      authorization: string;
+      status: string;
+      query: string;
+      cancellation: string;
+    }
+  >
 > = {
   MG: {
     staging: {
       authorization: '/nfce/services/NFeAutorizacao4',
       status: '/nfce/services/NFeStatusServico4',
       query: '/nfce/services/NFeConsultaProtocolo4',
+      cancellation: '/nfce/services/NFeRecepcaoEvento4',
     },
   },
   SVRS: {
@@ -29,6 +40,7 @@ const WEBSERVICES: Record<
       authorization: '/ws/NfeAutorizacao/NFeAutorizacao4.asmx',
       status: '/ws/NfeStatusServico/NFeStatusServico4.asmx',
       query: '/ws/NfeConsulta/NFeConsulta4.asmx',
+      cancellation: '/ws/NfeRecepcaoEvento/NFeRecepcaoEvento4.asmx',
     },
   },
 };
@@ -274,8 +286,23 @@ export class NfeSender {
   }
 
   private buildSoapEnvelope(action: string, content: string): string {
+    const namespaceMap: Record<string, string> = {
+      nfeAutorizacaoLote:
+        'http://www.portalfiscal.inf.br/nfe/wsdl/NFeAutorizacao4',
+      nfeConsultaNF:
+        'http://www.portalfiscal.inf.br/nfe/wsdl/NFeConsultaProtocolo4',
+      nfeStatusServicoNF:
+        'http://www.portalfiscal.inf.br/nfe/wsdl/NFeStatusServico4',
+      nfeRecepcaoEvento:
+        'http://www.portalfiscal.inf.br/nfe/wsdl/NFeRecepcaoEvento4',
+    };
+
+    const namespace =
+      namespaceMap[action] ||
+      'http://www.portalfiscal.inf.br/nfe/wsdl/NFeAutorizacao4';
+
     return `<?xml version="1.0" encoding="UTF-8"?>
-<soap12:Envelope xmlns:soap12="http://www.w3.org/2003/05/soap-envelope" xmlns:nfe="http://www.portalfiscal.inf.br/nfe/wsdl/NFeAutorizacao4">
+<soap12:Envelope xmlns:soap12="http://www.w3.org/2003/05/soap-envelope" xmlns:nfe="${namespace}">
   <soap12:Body>
     <nfe:nfeDadosMsg>${content}</nfe:nfeDadosMsg>
   </soap12:Body>
@@ -356,39 +383,58 @@ export class NfeSender {
     if (!body) return parsed;
 
     const nfeResultMsg = body['nfeResultMsg']?.[0];
-
     if (!nfeResultMsg) return body;
 
-    const retEnviNFe = nfeResultMsg['retEnviNFe']?.[0];
-
-    return retEnviNFe || nfeResultMsg;
+    return (
+      nfeResultMsg['retEnviNFe']?.[0] ||
+      nfeResultMsg['retConsSitNFe']?.[0] ||
+      nfeResultMsg['retConsStatServ']?.[0] ||
+      nfeResultMsg
+    );
   }
 
   private parseResponse(ret: any): SefazReturn {
     try {
       const cStat = ret?.cStat?.[0] || ret?.cStat;
       const xMotivo = ret?.xMotivo?.[0] || ret?.xMotivo;
+      const chNFe = ret?.chNFe?.[0] || ret?.chNFe;
+      const dhRecbto = ret?.dhRecbto?.[0] || ret?.dhRecbto;
 
-      if (cStat === '104') {
-        const protNFe = ret?.protNFe?.[0];
-        const infProt = protNFe?.infProt?.[0];
+      const protNFe = ret?.protNFe?.[0];
+      const infProt = protNFe?.infProt?.[0];
+      const protStatus = infProt?.cStat?.[0] || infProt?.cStat;
+      const protMotivo = infProt?.xMotivo?.[0] || infProt?.xMotivo;
+      const nProt = infProt?.nProt?.[0] || infProt?.nProt;
+      const protChNFe = infProt?.chNFe?.[0] || infProt?.chNFe;
+      const protDhRecbto = infProt?.dhRecbto?.[0] || infProt?.dhRecbto;
 
-        if (infProt) {
-          const protStatus = infProt.cStat?.[0];
-          const protMotivo = infProt.xMotivo?.[0];
+      // Autorizado — com ou sem protNFe
+      if (cStat === '100' || cStat === '104') {
+        if (infProt && protStatus === '100') {
+          return {
+            success: true,
+            accessKey: protChNFe || chNFe,
+            protocol: nProt,
+            authorizationDate: protDhRecbto || dhRecbto,
+            message: protMotivo || xMotivo || 'Autorizado',
+            statusCode: protStatus,
+            xmlProtocol: JSON.stringify(infProt),
+          };
+        }
 
-          if (protStatus === '100') {
-            return {
-              success: true,
-              accessKey: infProt.chNFe?.[0],
-              protocol: infProt.nProt?.[0],
-              authorizationDate: infProt.dhRecbto?.[0],
-              message: protMotivo || 'Autorizado',
-              statusCode: protStatus,
-              xmlProtocol: JSON.stringify(infProt),
-            };
-          }
+        // cStat 100 no raiz sem protNFe (ex: status serviço)
+        if (!infProt && cStat === '100') {
+          return {
+            success: true,
+            accessKey: chNFe,
+            authorizationDate: dhRecbto,
+            message: xMotivo || 'Autorizado',
+            statusCode: cStat,
+          };
+        }
 
+        // protNFe presente mas rejeitado dentro do lote (cStat 104 com erro interno)
+        if (infProt && protStatus !== '100') {
           return {
             success: false,
             message: protMotivo || xMotivo || 'Erro desconhecido',
@@ -396,14 +442,6 @@ export class NfeSender {
             errors: [`cStat: ${protStatus} - ${protMotivo}`],
           };
         }
-      }
-
-      if (cStat === '100') {
-        return {
-          success: true,
-          message: xMotivo || 'Autorizado',
-          statusCode: cStat,
-        };
       }
 
       return {
@@ -423,7 +461,9 @@ export class NfeSender {
     }
   }
 
-  private getEndpoint(service: 'authorization' | 'status' | 'query'): {
+  private getEndpoint(
+    service: 'authorization' | 'status' | 'query' | 'cancellation',
+  ): {
     host: string;
     path: string;
   } {
@@ -446,5 +486,124 @@ export class NfeSender {
     }
 
     return { host, path };
+  }
+
+  async cancelNFe(params: CancelNFeParams): Promise<SefazReturn> {
+    try {
+      const { accessKey, protocol, justification, cnpj } = params;
+      const environment = this.config.environment === 'production' ? '1' : '2';
+
+      const cOrgao = accessKey.substring(0, 2);
+      const nSeqEvento = '1';
+      const eventId = `ID110111${accessKey}${nSeqEvento.padStart(2, '0')}`;
+      const dhEvento = toSefazDateTime(nowBrasilia());
+
+      const infEvento =
+        `<infEvento Id="${eventId}">` +
+        `<cOrgao>${cOrgao}</cOrgao>` +
+        `<tpAmb>${environment}</tpAmb>` +
+        `<CNPJ>${cnpj.replace(/\D/g, '')}</CNPJ>` +
+        `<chNFe>${accessKey}</chNFe>` +
+        `<dhEvento>${dhEvento}</dhEvento>` +
+        `<tpEvento>110111</tpEvento>` +
+        `<nSeqEvento>${nSeqEvento}</nSeqEvento>` +
+        `<verEvento>1.00</verEvento>` +
+        `<detEvento versao="1.00">` +
+        `<descEvento>Cancelamento</descEvento>` +
+        `<nProt>${protocol}</nProt>` +
+        `<xJust>${justification}</xJust>` +
+        `</detEvento>` +
+        `</infEvento>`;
+
+      const eventoXml =
+        `<evento xmlns="http://www.portalfiscal.inf.br/nfe" versao="1.00">` +
+        infEvento +
+        `</evento>`;
+
+      const signedEvento = this.signer.signXmlById(eventoXml, eventId);
+
+      const content =
+        `<envEvento xmlns="http://www.portalfiscal.inf.br/nfe" versao="1.00">` +
+        `<idLote>${Date.now()}</idLote>` +
+        signedEvento +
+        `</envEvento>`;
+
+      const { host, path } = this.getEndpoint('cancellation');
+      const soapEnvelope = this.buildSoapEnvelope('nfeRecepcaoEvento', content);
+
+      const responseXml = await this.postSoap(
+        host,
+        path,
+        soapEnvelope,
+        'nfeRecepcaoEvento',
+      );
+
+      return this.extractAndParseCancellation(responseXml);
+    } catch (error) {
+      const err = error as Error;
+      return {
+        success: false,
+        message: err.message,
+        statusCode: '999',
+        errors: [err.stack || err.message],
+      };
+    }
+  }
+
+  private async extractAndParseCancellation(
+    responseXml: string,
+  ): Promise<SefazReturn> {
+    const parsed: any = await parseXML(responseXml);
+
+    const envelope =
+      parsed?.['S:Envelope'] ||
+      parsed?.['soap:Envelope'] ||
+      parsed?.['soap12:Envelope'];
+
+    const body =
+      envelope?.['S:Body']?.[0] ||
+      envelope?.['soap:Body']?.[0] ||
+      envelope?.['soap12:Body']?.[0];
+
+    const nfeResultMsg = body?.['nfeResultMsg']?.[0];
+    const retEnvEvento = nfeResultMsg?.['retEnvEvento']?.[0];
+
+    if (!retEnvEvento) {
+      throw new Error('Resposta de cancelamento inválida da SEFAZ');
+    }
+
+    const cStat = retEnvEvento?.cStat?.[0];
+    const xMotivo = retEnvEvento?.xMotivo?.[0];
+
+    if (cStat === '128') {
+      const retEvento = retEnvEvento?.retEvento?.[0];
+      const infRetEvento = retEvento?.infEvento?.[0];
+      const eventoCStat = infRetEvento?.cStat?.[0];
+      const eventoXMotivo = infRetEvento?.xMotivo?.[0];
+      const nProt = infRetEvento?.nProt?.[0];
+
+      if (eventoCStat === '135') {
+        return {
+          success: true,
+          protocol: nProt,
+          message: eventoXMotivo || 'Cancelamento autorizado',
+          statusCode: eventoCStat,
+        };
+      }
+
+      return {
+        success: false,
+        message: eventoXMotivo || 'Cancelamento rejeitado',
+        statusCode: eventoCStat || '999',
+        errors: [`cStat: ${eventoCStat} - ${eventoXMotivo}`],
+      };
+    }
+
+    return {
+      success: false,
+      message: xMotivo || 'Erro desconhecido no cancelamento',
+      statusCode: cStat || '999',
+      errors: [`cStat: ${cStat} - ${xMotivo}`],
+    };
   }
 }

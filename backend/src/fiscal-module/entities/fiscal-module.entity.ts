@@ -152,3 +152,10 @@ export interface StoragePaths {
   xmlPath: string;
   pdfPath?: string;
 }
+
+export interface CancelNFeParams {
+  accessKey: string;
+  protocol: string;
+  justification: string;
+  cnpj: string;
+}

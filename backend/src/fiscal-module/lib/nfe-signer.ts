@@ -139,4 +139,45 @@ export class NfeSigner {
       issuer: issuerName,
     };
   }
+
+  public signXmlById(xml: string, elementId: string): string {
+    try {
+      const certBase64 = this.publicCertPem.replace(
+        /-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|\n|\r/g,
+        '',
+      );
+
+      const sig = new SignedXml({
+        privateKey: this.privateKeyPem,
+        publicCert: certBase64,
+        canonicalizationAlgorithm:
+          'http://www.w3.org/TR/2001/REC-xml-c14n-20010315',
+        signatureAlgorithm: 'http://www.w3.org/2000/09/xmldsig#rsa-sha1',
+      });
+
+      sig.getKeyInfoContent = () =>
+        `<X509Data><X509Certificate>${certBase64}</X509Certificate></X509Data>`;
+
+      sig.addReference({
+        xpath: `//*[@Id='${elementId}']`,
+        transforms: [
+          'http://www.w3.org/2000/09/xmldsig#enveloped-signature',
+          'http://www.w3.org/TR/2001/REC-xml-c14n-20010315',
+        ],
+        digestAlgorithm: 'http://www.w3.org/2000/09/xmldsig#sha1',
+      });
+
+      sig.computeSignature(xml, {
+        location: {
+          reference: `//*[@Id='${elementId}']`,
+          action: 'after',
+        },
+      });
+
+      return sig.getSignedXml();
+    } catch (error) {
+      const err = error as Error;
+      throw new Error(`Error signing XML by ID: ${err.message}`);
+    }
+  }
 }

@@ -18,10 +18,11 @@ function calculateCheckDigit(key43: string): string {
 
 function formatDateTimeBR(isoDate: string): string {
   const date = new Date(isoDate);
-  const offset = '-03:00';
+  const offset = -3 * 60;
+  const local = new Date(date.getTime() + offset * 60 * 1000);
   const pad = (n: number) => n.toString().padStart(2, '0');
 
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}${offset}`;
+  return `${local.getUTCFullYear()}-${pad(local.getUTCMonth() + 1)}-${pad(local.getUTCDate())}T${pad(local.getUTCHours())}:${pad(local.getUTCMinutes())}:${pad(local.getUTCSeconds())}-03:00`;
 }
 
 function generateAccessKey(ide: NFeOptions['ide'], cnpj: string): string {

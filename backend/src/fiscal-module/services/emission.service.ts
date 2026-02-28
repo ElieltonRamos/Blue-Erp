@@ -25,6 +25,7 @@ import { NfeSender } from '../lib/nfe-sender';
 import { DanfeGenerator } from '../lib/danfe-generator';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { nowBrasilia } from 'src/common/date-utils';
 
 @Injectable()
 export class EmissionService {
@@ -88,7 +89,10 @@ export class EmissionService {
       new Date(nfeData.ide.dhEmi),
     );
 
-    this.storageService.saveXml(storagePaths.xmlPath, sefazReturn.signedXml);
+    await this.storageService.saveXml(
+      storagePaths.xmlPath,
+      sefazReturn.signedXml,
+    );
 
     let pdfPath = '';
     if (dto.generateDanfe && storagePaths.pdfPath) {
@@ -101,7 +105,12 @@ export class EmissionService {
       );
     }
 
-    await this.updateSaleAsEmitted(dto.saleId, accessKey, sefazReturn.protocol);
+    await this.updateSaleAsEmitted(
+      dto.saleId,
+      accessKey,
+      sefazReturn.signedXml,
+      sefazReturn.protocol,
+    );
 
     this.logger.log(`NFC-e emitida com sucesso: ${accessKey}`);
 
@@ -207,7 +216,7 @@ export class EmissionService {
         fiscalStatus: 'ERRO',
         fiscalKey: accessKey,
         fiscalProtocol: sefazReturn.protocol,
-        fiscalEmitDate: new Date(),
+        fiscalEmitDate: nowBrasilia(),
       },
     });
 
@@ -247,6 +256,7 @@ export class EmissionService {
   private async updateSaleAsEmitted(
     saleId: number,
     accessKey: string,
+    signedXml: string,
     protocol?: string,
   ): Promise<void> {
     await this.prisma.client.sale.update({
@@ -254,8 +264,9 @@ export class EmissionService {
       data: {
         fiscalStatus: 'EMITIDA',
         fiscalKey: accessKey,
+        fiscalXml: signedXml,
         fiscalProtocol: protocol,
-        fiscalEmitDate: new Date(),
+        fiscalEmitDate: nowBrasilia(),
       },
     });
 

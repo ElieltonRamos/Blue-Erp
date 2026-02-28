@@ -107,11 +107,7 @@ export class DanfeGenerator {
 
   private drawInvoiceInfo(ctx: DrawContext, data: NFeOptions): void {
     this.drawLeft(ctx, `Número: ${data.ide.nNF} Série: ${data.ide.serie}`, 8);
-    this.drawLeft(
-      ctx,
-      `Data Emissão: ${new Date(data.ide.dhEmi).toLocaleString('pt-BR')}`,
-      8,
-    );
+    this.drawLeft(ctx, `Data Emissão: ${formatDisplayDate(data.ide.dhEmi)}`, 8);
     ctx.y -= 10;
   }
 
@@ -173,11 +169,7 @@ export class DanfeGenerator {
     }
 
     this.drawCenter(ctx, `NFC-e nº ${data.ide.nNF} Série ${data.ide.serie}`, 8);
-    this.drawCenter(
-      ctx,
-      `Emissão: ${new Date(data.ide.dhEmi).toLocaleString('pt-BR')}`,
-      8,
-    );
+    this.drawCenter(ctx, `Emissão: ${formatDisplayDate(data.ide.dhEmi)}`, 8);
     this.drawCenter(ctx, 'Via consumidor', 8);
     ctx.y -= 12;
   }
@@ -399,4 +391,12 @@ interface DrawContext {
   font: PDFFont;
   widthPt: number;
   y: number;
+}
+
+function formatDisplayDate(isoDate: string): string {
+  // Extrai diretamente da string sem converter timezone
+  const [datePart, timePart] = isoDate.split('T');
+  const [year, month, day] = datePart.split('-');
+  const time = timePart.substring(0, 8); // HH:MM:SS
+  return `${day}/${month}/${year} ${time}`;
 }
