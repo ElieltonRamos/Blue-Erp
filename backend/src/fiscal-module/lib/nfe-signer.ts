@@ -48,7 +48,16 @@ export class NfeSigner {
       this.publicCertPem = forge.pki.certificateToPem(this.publicCert);
     } catch (error) {
       const err = error as Error;
-      throw new Error(`Error loading certificate: ${err.message}`);
+      const isPasswordError =
+        err.message.toLowerCase().includes('invalid') ||
+        err.message.toLowerCase().includes('password') ||
+        err.message.toLowerCase().includes('decrypt');
+
+      if (isPasswordError) {
+        throw new Error('Senha do certificado inválida');
+      }
+
+      throw new Error(`Erro ao carregar certificado: ${err.message}`);
     }
   }
 

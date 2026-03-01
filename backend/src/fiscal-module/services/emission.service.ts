@@ -82,7 +82,6 @@ export class EmissionService {
     const accessKey = this.extractAccessKey(xml);
     this.validateInfAdic(nfeData, accessKey);
 
-    this.saveXmlDebug(accessKey, xml, 'envio');
     this.cleanOldDebugFiles();
 
     const sefazConfig: NFeConfiguration = {
@@ -96,7 +95,12 @@ export class EmissionService {
     const sefazReturn = await sender.send(xml, nfeData);
 
     if (!sefazReturn.success || sefazReturn.statusCode !== '100') {
-      await this.handleRejection(dto.saleId, accessKey, sefazReturn);
+      await this.handleRejection(
+        dto.saleId,
+        accessKey,
+        sefazReturn,
+        nfceNumber,
+      );
     }
 
     if (!sefazReturn.signedXml) {
@@ -349,7 +353,9 @@ export class EmissionService {
     saleId: number,
     accessKey: string,
     sefazReturn: SefazReturn,
+    nfceNumber: number,
   ): Promise<never> {
+    await this.releaseNfceNumber(nfceNumber);
     await this.prisma.client.sale.update({
       where: { id: saleId },
       data: {

@@ -18,6 +18,9 @@ import {
   PORTAL_URLS,
   ServiceType,
 } from './nfe-endpoints.config';
+import { writeFileSync } from 'fs';
+import { join } from 'path';
+import { Logger } from '@nestjs/common';
 
 export class NfeSender {
   private readonly config: NFeConfiguration;
@@ -25,6 +28,8 @@ export class NfeSender {
   public readonly signer: NfeSigner;
   private readonly http: NfeHttpClient;
   private readonly parser: NfeResponseParser;
+  private readonly logger = new Logger(NfeSender.name);
+  private readonly sefazTempDir = join(process.cwd(), 'sefaz-temp');
 
   constructor(config: NFeConfiguration, certificate: DigitalCertificate) {
     this.config = config;
@@ -81,6 +86,7 @@ export class NfeSender {
       }
 
       const batchId = Date.now().toString();
+      this.saveXmlDebug(accessKey, finalXml, 'envio');
       const batchXml = this.buildBatch(finalXml, batchId);
 
       const { host, path } = this.getEndpoint('authorization');
@@ -105,6 +111,16 @@ export class NfeSender {
         statusCode: '999',
         errors: [err.stack || err.message],
       };
+    }
+  }
+
+  private saveXmlDebug(accessKey: string, xml: string, stage: string): void {
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const fileName = `${stage}_${accessKey}_${timestamp}.xml`;
+      writeFileSync(join(this.sefazTempDir, fileName), xml, 'utf8');
+    } catch (error) {
+      this.logger.warn(`Falha ao salvar XML de debug (${stage}): ${error}`);
     }
   }
 

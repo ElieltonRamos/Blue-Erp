@@ -19,18 +19,24 @@ export class Company {
   private notification = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef);
 
+  readonly SENSITIVE_PLACEHOLDER = '••••••';
+  nfceCscConfigured = false;
+  nfceCscIdConfigured = false;
+  certificatePasswordConfigured = false;
+  certificateConfigured = false;
+
   companyForm: FormGroup;
-  isLoading: boolean = false;
-  showValidationErrors: boolean = false;
+  isLoading = false;
+  showValidationErrors = false;
 
   canAccessFiscalFeatures = this.licenseService.getCurrentPlan() === 'pro';
 
-  selectedFileName: string = '';
+  selectedFileName = '';
   selectedFile: File | null = null;
 
-  selectedIbptFileName: string = '';
+  selectedIbptFileName = '';
   selectedIbptFile: File | null = null;
-  isUploadingIbpt: boolean = false;
+  isUploadingIbpt = false;
 
   constructor() {
     this.companyForm = this.fb.group({
@@ -54,7 +60,7 @@ export class Company {
       nfceEnvironment: ['staging', Validators.required],
       nfceCsc: ['', Validators.required],
       nfceCscId: ['', Validators.required],
-      certificatePath: ['', Validators.required],
+      // certificatePath removido — gerenciado pelo enviarCertificado()
       certificatePassword: ['', Validators.required],
     });
   }
@@ -75,10 +81,35 @@ export class Company {
     this.isLoading = true;
     this.companyService.getCompanyInfo().subscribe({
       next: (company) => {
+        this.nfceCscConfigured = company.nfceCscConfigured;
+        this.nfceCscIdConfigured = company.nfceCscIdConfigured;
+        this.certificatePasswordConfigured = company.certificatePasswordConfigured;
+        this.certificateConfigured = company.certificateConfigured;
+
         this.companyForm.patchValue(company);
-        if (company.certificatePath) {
-          this.selectedFileName = this.getFileName(company.certificatePath);
+
+        if (company.nfceCscConfigured) {
+          this.companyForm.get('nfceCsc')?.setValue('');
+          this.companyForm.get('nfceCsc')?.clearValidators();
+          this.companyForm.get('nfceCsc')?.updateValueAndValidity();
         }
+
+        if (company.nfceCscIdConfigured) {
+          this.companyForm.get('nfceCscId')?.setValue('');
+          this.companyForm.get('nfceCscId')?.clearValidators();
+          this.companyForm.get('nfceCscId')?.updateValueAndValidity();
+        }
+
+        if (company.certificatePasswordConfigured) {
+          this.companyForm.get('certificatePassword')?.setValue('');
+          this.companyForm.get('certificatePassword')?.clearValidators();
+          this.companyForm.get('certificatePassword')?.updateValueAndValidity();
+        }
+
+        if (company.certificateConfigured) {
+          this.selectedFileName = 'Certificado configurado';
+        }
+
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -90,8 +121,8 @@ export class Company {
     });
   }
 
-  getFileName(path: string): string {
-    return path.split(/[/\\]/).pop() || path;
+  getFileName(filePath: string): string {
+    return filePath.split(/[/\\]/).pop() || filePath;
   }
 
   // ===== CERTIFICADO =====
@@ -107,7 +138,6 @@ export class Company {
       const file = input.files[0];
       this.selectedFile = file;
       this.selectedFileName = file.name;
-      this.companyForm.patchValue({ certificatePath: file.name });
     }
   }
 
@@ -126,6 +156,13 @@ export class Company {
     this.companyService.uploadCompanyCertificate(this.selectedFile, certificatePassword).subscribe({
       next: () => {
         this.notification.success('Certificado enviado com sucesso!');
+        this.certificateConfigured = true;
+        this.certificatePasswordConfigured = true;
+        this.selectedFileName = 'Certificado configurado';
+        this.selectedFile = null;
+        this.companyForm.get('certificatePassword')?.setValue('');
+        this.companyForm.get('certificatePassword')?.clearValidators();
+        this.companyForm.get('certificatePassword')?.updateValueAndValidity();
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -188,7 +225,15 @@ export class Company {
     if (this.companyForm.valid) {
       this.showValidationErrors = false;
       this.isLoading = true;
-      this.companyService.updateCompany(this.companyForm.value).subscribe({
+
+      const formValue = { ...this.companyForm.value };
+
+      // Remove campos sensíveis vazios — backend mantém o valor atual
+      if (!formValue.nfceCsc) delete formValue.nfceCsc;
+      if (!formValue.nfceCscId) delete formValue.nfceCscId;
+      if (!formValue.certificatePassword) delete formValue.certificatePassword;
+
+      this.companyService.updateCompany(formValue).subscribe({
         next: () => {
           this.notification.success('Empresa atualizada com sucesso!');
           this.isLoading = false;
@@ -203,34 +248,54 @@ export class Company {
       this.showValidationErrors = true;
       this.markAllAsTouched();
       const invalidFields = this.getInvalidFields();
-      this.notification.error(`Por favor, preencha os campos obrigatórios: ${invalidFields.join(', ')}`);
+      this.notification.error(
+        `Por favor, preencha os campos obrigatórios: ${invalidFields.join(', ')}`,
+      );
     }
   }
 
   markAllAsTouched(): void {
-    Object.keys(this.companyForm.controls).forEach(key => {
+    Object.keys(this.companyForm.controls).forEach((key) => {
       this.companyForm.get(key)?.markAsTouched();
     });
   }
 
   getInvalidFields(): string[] {
     const fieldLabels: { [key: string]: string } = {
-      cnpj: 'CNPJ', corporateName: 'Razão Social', tradeName: 'Nome Fantasia',
-      stateRegistration: 'Inscrição Estadual', taxRegime: 'Regime Tributário',
-      street: 'Logradouro', number: 'Número', neighborhood: 'Bairro',
-      city: 'Município', cityCode: 'Código do Município', state: 'UF',
-      zipCode: 'CEP', phone: 'Telefone', email: 'E-mail',
-      nfceSeries: 'Série NFC-e', nfceCurrentNumber: 'Número Atual NFC-e',
-      nfceEnvironment: 'Ambiente NFC-e', nfceCsc: 'CSC', nfceCscId: 'ID do CSC',
-      certificatePath: 'Certificado', certificatePassword: 'Senha do Certificado',
+      cnpj: 'CNPJ',
+      corporateName: 'Razão Social',
+      tradeName: 'Nome Fantasia',
+      stateRegistration: 'Inscrição Estadual',
+      taxRegime: 'Regime Tributário',
+      street: 'Logradouro',
+      number: 'Número',
+      neighborhood: 'Bairro',
+      city: 'Município',
+      cityCode: 'Código do Município',
+      state: 'UF',
+      zipCode: 'CEP',
+      phone: 'Telefone',
+      email: 'E-mail',
+      nfceSeries: 'Série NFC-e',
+      nfceCurrentNumber: 'Número Atual NFC-e',
+      nfceEnvironment: 'Ambiente NFC-e',
+      nfceCsc: 'CSC',
+      nfceCscId: 'ID do CSC',
+      certificatePassword: 'Senha do Certificado',
     };
 
+    const configuredFields = new Set<string>();
+    if (this.nfceCscConfigured) configuredFields.add('nfceCsc');
+    if (this.nfceCscIdConfigured) configuredFields.add('nfceCscId');
+    if (this.certificatePasswordConfigured) configuredFields.add('certificatePassword');
+
     return Object.keys(this.companyForm.controls)
-      .filter(key => {
+      .filter((key) => {
+        if (configuredFields.has(key)) return false;
         const control = this.companyForm.get(key);
         return control?.invalid && control?.errors?.['required'];
       })
-      .map(key => fieldLabels[key] || key);
+      .map((key) => fieldLabels[key] || key);
   }
 
   goToMenu(): void {

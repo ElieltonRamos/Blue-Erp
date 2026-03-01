@@ -17,8 +17,8 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-//        buildConfigField("String", "BASE_URL", "\"https://pl-servidor-02.tail240759.ts.net/\"")
-        buildConfigField("String", "BASE_URL", "\"http://192.168.1.141:3000/\"")
+        buildConfigField("String", "BASE_URL", "\"https://pl-servidor-02.tail240759.ts.net/\"")
+//        buildConfigField("String", "BASE_URL", "\"http://192.168.1.141:3000/\"")
     }
 
     buildTypes {
@@ -48,6 +48,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
+
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test:runner:1.5.2")
 
     // Compose
     implementation(platform(libs.androidx.compose.bom))

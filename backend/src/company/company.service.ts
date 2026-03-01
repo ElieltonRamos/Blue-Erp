@@ -11,7 +11,6 @@ import { UpdateCompanyDto } from './dto/update-company.dto.js';
 import { CompanyResponseDto } from './dto/company-response.dto.js';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { plainToInstance } from 'class-transformer';
 
 interface UploadedFile {
   originalname: string;
@@ -283,10 +282,32 @@ export class CompanyService {
       },
     });
 
-    return plainToInstance(CompanyResponseDto, {
+    return new CompanyResponseDto({
       ...updatedCompany,
       cnpj: this.formatCnpj(updatedCompany.cnpj),
     });
+  }
+
+  async getCscConfig(): Promise<{ nfceCsc: string; nfceCscId: string }> {
+    const company = await this.prisma.client.company.findUnique({
+      where: { id: 1 },
+      select: { nfceCsc: true, nfceCscId: true },
+    });
+
+    if (!company) {
+      throw new NotFoundException('Empresa não configurada');
+    }
+
+    if (!company.nfceCsc || !company.nfceCscId) {
+      throw new NotFoundException(
+        'CSC e ID do CSC não configurados. Acesse as configurações da empresa e informe os dados do CSC.',
+      );
+    }
+
+    return {
+      nfceCsc: company.nfceCsc,
+      nfceCscId: company.nfceCscId,
+    };
   }
 
   async deleteCertificate(): Promise<{ message: string }> {
@@ -345,10 +366,6 @@ export class CompanyService {
 
   private cleanUpdateData(data: UpdateCompanyDto): UpdateCompanyDto {
     const cleanedData = { ...data };
-
-    if (cleanedData.certificatePassword === '') {
-      delete cleanedData.certificatePassword;
-    }
 
     Object.keys(cleanedData).forEach((key) => {
       const value = cleanedData[key as keyof UpdateCompanyDto];

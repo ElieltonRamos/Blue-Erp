@@ -147,9 +147,7 @@
 
   <!-- Seção: Endereço -->
   <div class="bg-[#2c3e5c] rounded-xl shadow-2xl overflow-hidden mb-6 border border-gray-700/50">
-    <div
-      class="bg-linear-to-r from-[#10b981] to-[#059669] px-6 py-4 border-b border-green-600/50"
-    >
+    <div class="bg-linear-to-r from-[#10b981] to-[#059669] px-6 py-4 border-b border-green-600/50">
       <h2 class="text-xl font-semibold text-white flex items-center gap-2">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -273,8 +271,7 @@
             placeholder="0000000"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
-              companyForm.get('cityCode')?.invalid &&
-              companyForm.get('cityCode')?.touched
+              companyForm.get('cityCode')?.invalid && companyForm.get('cityCode')?.touched
             "
           />
         </div>
@@ -333,9 +330,7 @@
         ⚠️ Configurações fiscais disponíveis apenas no plano Pro
       </div>
     }
-    <div
-      class="bg-linear-to-r from-[#f59e0b] to-[#d97706] px-6 py-4 border-b border-orange-600/50"
-    >
+    <div class="bg-linear-to-r from-[#f59e0b] to-[#d97706] px-6 py-4 border-b border-orange-600/50">
       <h2 class="text-xl font-semibold text-white flex items-center gap-2">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -406,7 +401,7 @@
           <input
             type="text"
             formControlName="nfceCsc"
-            placeholder="Digite o CSC"
+            [placeholder]="nfceCscConfigured ? SENSITIVE_PLACEHOLDER : 'Digite o CSC'"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
               companyForm.get('nfceCsc')?.invalid && companyForm.get('nfceCsc')?.touched
@@ -422,7 +417,7 @@
           <input
             type="text"
             formControlName="nfceCscId"
-            placeholder="1"
+            [placeholder]="nfceCscIdConfigured ? SENSITIVE_PLACEHOLDER : 'Digite o ID do CSC'"
             class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30 transition-all duration-200 outline-none"
             [class.border-red-500]="
               companyForm.get('nfceCscId')?.invalid && companyForm.get('nfceCscId')?.touched
@@ -493,10 +488,17 @@
           </button>
 
           <!-- mostra o arquivo atual salvo no banco quando não há novo selecionado -->
-          @if (companyForm.get('certificatePath')?.value && !selectedFileName) {
-            <p class="text-xs text-gray-400 mt-2">
-              Arquivo atual:
-              {{ getFileName(companyForm.get('certificatePath')?.value) }}
+          @if (certificateConfigured && !selectedFileName) {
+            <p class="text-xs text-emerald-400 mt-2 flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              Certificado configurado
             </p>
           }
         </div>

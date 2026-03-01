@@ -29,6 +29,7 @@ export class SaleToNfeConverterService {
   async convert(saleId: number, nfceNumber: number): Promise<NFeOptions> {
     const sale = await this.findSaleWithRelations(saleId);
     const company = await this.companyService.getCompany();
+    const cscConfig = await this.companyService.getCscConfig();
     const items = this.normalizeItems(sale);
     const taxes = this.calculateTaxes(items);
     const taxText = this.buildTaxText(taxes, company.ibptVersion);
@@ -116,7 +117,7 @@ export class SaleToNfeConverterService {
       },
       infAdic: infoText,
       fonteIBPT: company.ibptVersion,
-      csc: { csc: company.nfceCsc, idCSC: company.nfceCscId },
+      csc: { csc: cscConfig.nfceCsc, idCSC: cscConfig.nfceCscId },
     };
   }
 
