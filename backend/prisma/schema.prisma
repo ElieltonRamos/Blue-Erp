@@ -22,6 +22,7 @@ enum Unit {
 enum ProductType {
   MANUFACTURED
   RESALE
+  SEMI_MANUFACTURED
 }
 
 enum FiscalStatus {
@@ -201,7 +202,8 @@ model Product {
   productType        ProductType       @default(RESALE) @map("product_type")
   categoryId         Int?              @map("category_id")
   category           Category?         @relation(fields: [categoryId], references: [id])
-  compositionItems   CompositionItem[]
+  compositionItems   CompositionItem[] @relation("ProductComposition")
+  usedInCompositions CompositionItem[] @relation("SubProductComposition")
   preparationSteps   PreparationStep[]
   saleItems          SaleItem[]
   orderItems         OrderItem[]
@@ -382,18 +384,22 @@ model PrimaryMaterial {
 }
 
 model CompositionItem {
-  id         Int             @id @default(autoincrement())
-  quantity   Decimal         @db.Decimal(10, 3)
-  productId  Int             @map("product_id")
-  product    Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
-  materialId Int             @map("material_id")
-  material   PrimaryMaterial @relation(fields: [materialId], references: [id], onDelete: Restrict)
-  createdAt  DateTime        @default(now()) @map("created_at")
-  updatedAt  DateTime        @updatedAt @map("updated_at")
+  id           Int              @id @default(autoincrement())
+  quantity     Decimal          @db.Decimal(10, 3)
+  productId    Int              @map("product_id")
+  product      Product          @relation("ProductComposition", fields: [productId], references: [id], onDelete: Cascade)
+  materialId   Int?             @map("material_id")
+  material     PrimaryMaterial? @relation(fields: [materialId], references: [id], onDelete: Restrict)
+  subProductId Int?             @map("sub_product_id")
+  subProduct   Product?         @relation("SubProductComposition", fields: [subProductId], references: [id], onDelete: Restrict)
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
 
   @@unique([productId, materialId])
+  @@unique([productId, subProductId])
   @@index([productId])
   @@index([materialId])
+  @@index([subProductId])
   @@map("composition_items")
 }
 

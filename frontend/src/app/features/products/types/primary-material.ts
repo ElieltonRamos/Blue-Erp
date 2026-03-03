@@ -1,4 +1,3 @@
-// primary-material.service.ts
 export interface CreatePrimaryMaterialDTO {
   name: string;
   code: string;
@@ -13,7 +12,7 @@ export interface CreatePrimaryMaterialDTO {
 }
 
 export interface PrimaryMaterial {
-  id: string;
+  id: number;
   name: string;
   code: string;
   unit: string;
@@ -51,7 +50,7 @@ export interface MaterialSummary {
 }
 
 export interface StockAlert {
-  id: string;
+  id: number;
   name: string;
   code: string;
   unit: string;

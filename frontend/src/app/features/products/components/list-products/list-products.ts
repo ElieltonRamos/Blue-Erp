@@ -8,7 +8,7 @@ import { ModalUpdatePreparationProduct } from '../modal-update-preparation-produ
 import { ProductService } from '../../services/product.service';
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
-import { FilterProductParams, Product } from '../../types/product';
+import { FilterProductParams, Product, ProductType } from '../../types/product';
 
 @Component({
   selector: 'app-list-products',
@@ -37,13 +37,11 @@ export class ListProducts {
   showModalPreparation: boolean = false;
   editProduct: Product | null = null;
 
-  // Filtros
   searchTerm: string = '';
   filterActive: string = 'active';
-  filterProductType: string = 'all'; // 'all' | 'MANUFACTURED' | 'RESALE'
+  filterProductType: string = 'all';
   filterLowStock: boolean = false;
 
-  // Ordenação
   sortKey: string = 'name';
   sortAsc: boolean = true;
 
@@ -87,25 +85,20 @@ export class ListProducts {
 
     const filters: FilterProductParams = {};
 
-    // Busca por nome ou código
     if (this.searchTerm) {
       filters.search = this.searchTerm;
     }
 
-    // Filtro de ativo/inativo
     if (this.filterActive === 'active') {
       filters.active = true;
     } else if (this.filterActive === 'inactive') {
       filters.active = false;
     }
-    // Se 'all', não adiciona filtro
 
-    // Filtro de tipo de produto
     if (this.filterProductType !== 'all') {
-      filters.productType = this.filterProductType as 'MANUFACTURED' | 'RESALE';
+      filters.productType = this.filterProductType as ProductType;
     }
 
-    // Filtro de estoque baixo
     if (this.filterLowStock) {
       filters.lowStock = true;
     }
@@ -193,6 +186,10 @@ export class ListProducts {
     this.showModalPreparation = true;
   }
 
+  hasComposition(productType: ProductType | string): boolean {
+    return productType === 'MANUFACTURED' || productType === 'SEMI_MANUFACTURED';
+  }
+
   formatCurrency(value: number): string {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -202,9 +199,7 @@ export class ListProducts {
 
   calculateProfitMargin(product: Product): number {
     const totalCost = product.costPrice + (product.extraCosts || 0);
-
     if (totalCost === 0) return 0;
-
     return ((product.price - totalCost) / totalCost) * 100;
   }
 
@@ -222,14 +217,26 @@ export class ListProducts {
     return 'Normal';
   }
 
-  getProductTypeBadge(productType: string): string {
-    return productType === 'MANUFACTURED'
-      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
-      : 'bg-purple-500/20 text-purple-400 border border-purple-500/50';
+  getProductTypeBadge(productType: ProductType | string): string {
+    switch (productType) {
+      case 'MANUFACTURED':
+        return 'bg-blue-500/20 text-blue-400 border border-blue-500/50';
+      case 'SEMI_MANUFACTURED':
+        return 'bg-orange-500/20 text-orange-400 border border-orange-500/50';
+      default:
+        return 'bg-purple-500/20 text-purple-400 border border-purple-500/50';
+    }
   }
 
-  getProductTypeText(productType: string): string {
-    return productType === 'MANUFACTURED' ? 'Manufaturado' : 'Revenda';
+  getProductTypeText(productType: ProductType | string): string {
+    switch (productType) {
+      case 'MANUFACTURED':
+        return 'Manufaturado';
+      case 'SEMI_MANUFACTURED':
+        return 'Semipronto';
+      default:
+        return 'Revenda';
+    }
   }
 
   onPageChange(newPage: number) {

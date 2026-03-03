@@ -269,6 +269,12 @@ export class ProductionService {
             new Decimal(production.quantityRequested),
           );
 
+          if (!comp.materialId) {
+            throw new BadRequestException(
+              `Composição inválida: material não definido`,
+            );
+          }
+
           await tx.primaryMaterial.update({
             where: { id: comp.materialId },
             data: {

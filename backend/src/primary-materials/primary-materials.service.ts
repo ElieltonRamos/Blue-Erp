@@ -30,13 +30,8 @@ export class PrimaryMaterialsService {
       );
     }
 
-    // Verificar se o nome já existe
     const existingName = await this.prisma.client.primaryMaterial.findFirst({
-      where: {
-        name: {
-          equals: createDto.name,
-        },
-      },
+      where: { name: { equals: createDto.name } },
     });
 
     if (existingName) {
@@ -78,19 +73,16 @@ export class PrimaryMaterialsService {
 
     const where: Prisma.PrimaryMaterialWhereInput = {};
 
-    // Filtro de active: se não for fornecido, busca apenas ativos
     if (filters?.active !== undefined) {
       where.active = filters.active;
     } else {
       where.active = true;
     }
 
-    // Filtro por unidade
     if (filters?.unit) {
       where.unit = filters.unit;
     }
 
-    // Busca por nome ou código
     if (filters?.search) {
       where.OR = [
         { name: { contains: filters.search } },
@@ -98,7 +90,6 @@ export class PrimaryMaterialsService {
       ];
     }
 
-    // Filtro de estoque baixo
     if (filters?.lowStock) {
       where.AND = [
         {
@@ -106,11 +97,7 @@ export class PrimaryMaterialsService {
             lte: this.prisma.client.primaryMaterial.fields.minStock,
           },
         },
-        {
-          minStock: {
-            not: null,
-          },
-        },
+        { minStock: { not: null } },
       ];
     }
 
@@ -121,22 +108,14 @@ export class PrimaryMaterialsService {
       take: limit,
     });
 
-    const total = await this.prisma.client.primaryMaterial.count({
-      where,
-    });
+    const total = await this.prisma.client.primaryMaterial.count({ where });
 
     const data = materials.map(
       (material) => new PrimaryMaterialResponseDto(material),
     );
     const totalPages = Math.ceil(total / limit);
 
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages,
-    };
+    return { data, total, page, limit, totalPages };
   }
 
   async findOne(id: number) {
@@ -146,11 +125,7 @@ export class PrimaryMaterialsService {
         compositionItems: {
           include: {
             product: {
-              select: {
-                id: true,
-                name: true,
-                code: true,
-              },
+              select: { id: true, name: true, code: true },
             },
           },
         },
@@ -192,10 +167,7 @@ export class PrimaryMaterialsService {
 
     if (updateDto.code) {
       const existingCode = await this.prisma.client.primaryMaterial.findFirst({
-        where: {
-          code: updateDto.code,
-          id: { not: id },
-        },
+        where: { code: updateDto.code, id: { not: id } },
       });
 
       if (existingCode) {
@@ -205,15 +177,9 @@ export class PrimaryMaterialsService {
       }
     }
 
-    // Verificar nome duplicado (se estiver sendo alterado)
     if (updateDto.name) {
       const existingName = await this.prisma.client.primaryMaterial.findFirst({
-        where: {
-          name: {
-            equals: updateDto.name,
-          },
-          id: { not: id },
-        },
+        where: { name: { equals: updateDto.name }, id: { not: id } },
       });
 
       if (existingName) {
@@ -223,13 +189,11 @@ export class PrimaryMaterialsService {
       }
     }
 
-    // Atualizar matéria-prima
     const updatedMaterial = await this.prisma.client.primaryMaterial.update({
       where: { id },
       data: updateDto,
     });
 
-    // Se o custo unitário foi alterado, atualizar produtos que usam esta matéria-prima
     if (updateDto.unitCost !== undefined) {
       await this.updateProductsCost(id);
     }
@@ -237,6 +201,10 @@ export class PrimaryMaterialsService {
     return updatedMaterial;
   }
 
+  /**
+   * Recalcula o costPrice de todos os produtos que usam esta matéria-prima.
+   * Considera tanto itens com material quanto itens com subProduto na composição.
+   */
   private async updateProductsCost(materialId: number) {
     const compositionItems = await this.prisma.client.compositionItem.findMany({
       where: { materialId },
@@ -246,6 +214,9 @@ export class PrimaryMaterialsService {
             compositionItems: {
               include: {
                 material: true,
+                subProduct: {
+                  select: { id: true, costPrice: true },
+                },
               },
             },
           },
@@ -253,18 +224,26 @@ export class PrimaryMaterialsService {
       },
     });
 
-    // Atualizar o custo de cada produto
     const updates = compositionItems.map(async (item) => {
       const product = item.product;
 
-      // Calcular novo custo baseado em todas as matérias-primas
-      const totalCost = product.compositionItems.reduce((sum, compItem) => {
-        const materialCost = compItem.material.unitCost.toNumber();
-        const quantity = compItem.quantity.toNumber();
-        return sum + materialCost * quantity;
-      }, 0);
+      const totalCost = product.compositionItems.reduce(
+        (sum: number, compItem): number => {
+          const quantity = compItem.quantity.toNumber();
 
-      // Atualizar custo do produto
+          if (compItem.materialId && compItem.material) {
+            return sum + compItem.material.unitCost.toNumber() * quantity;
+          }
+
+          if (compItem.subProductId && compItem.subProduct) {
+            return sum + compItem.subProduct.costPrice.toNumber() * quantity;
+          }
+
+          return sum;
+        },
+        0,
+      );
+
       return this.prisma.client.product.update({
         where: { id: product.id },
         data: { costPrice: totalCost },
@@ -273,7 +252,6 @@ export class PrimaryMaterialsService {
 
     await Promise.all(updates);
 
-    // Log informativo
     if (compositionItems.length > 0) {
       console.log(
         `Custos atualizados para ${compositionItems.length} produto(s) que usam a matéria-prima #${materialId}`,
@@ -282,17 +260,14 @@ export class PrimaryMaterialsService {
   }
 
   async remove(id: number) {
-    // Verificar se existe
     const material = await this.findOne(id);
 
-    // Verificar se está sendo usada em produtos
     if (material.totalProductsUsing > 0) {
       throw new BadRequestException(
         `Não é possível remover a matéria-prima ${material.name} pois está sendo usada em ${material.totalProductsUsing} produto(s)`,
       );
     }
 
-    // Soft delete - apenas marca como inativo
     return this.prisma.client.primaryMaterial.update({
       where: { id },
       data: { active: false },
@@ -300,19 +275,15 @@ export class PrimaryMaterialsService {
   }
 
   async forceDelete(id: number) {
-    // Verificar se existe
     const material = await this.findOne(id);
 
-    // Verificar se está sendo usada em produtos
     if (material.totalProductsUsing > 0) {
       throw new BadRequestException(
         `Não é possível deletar a matéria-prima ${material.name} pois está sendo usada em ${material.totalProductsUsing} produto(s)`,
       );
     }
 
-    return this.prisma.client.primaryMaterial.delete({
-      where: { id },
-    });
+    return this.prisma.client.primaryMaterial.delete({ where: { id } });
   }
 
   async adjustStock(id: number, adjustDto: AdjustStockDto) {
@@ -329,12 +300,10 @@ export class PrimaryMaterialsService {
 
     switch (adjustDto.type) {
       case StockAdjustmentType.IN:
-        // Entrada - adiciona ao estoque
         newStock = Number(previousStock) + Number(adjustDto.quantity);
         break;
 
       case StockAdjustmentType.OUT:
-        // Saída - remove do estoque
         newStock = Number(previousStock) - Number(adjustDto.quantity);
         if (newStock < 0) {
           throw new BadRequestException(
@@ -344,7 +313,6 @@ export class PrimaryMaterialsService {
         break;
 
       case StockAdjustmentType.SET:
-        // Definir valor exato
         newStock = Number(adjustDto.quantity);
         break;
 
@@ -352,7 +320,6 @@ export class PrimaryMaterialsService {
         throw new BadRequestException('Tipo de ajuste inválido');
     }
 
-    // Atualizar estoque
     const updatedMaterial = await this.prisma.client.primaryMaterial.update({
       where: { id },
       data: { currentStock: newStock },
@@ -375,7 +342,6 @@ export class PrimaryMaterialsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Tenta extrair número do código
     if (lastMaterial && lastMaterial.code) {
       const match = lastMaterial.code.match(/\d+/);
       if (match) {
@@ -389,26 +355,23 @@ export class PrimaryMaterialsService {
 
   async getSummary(): Promise<MaterialSummaryResponseDto> {
     const materials = await this.prisma.client.primaryMaterial.findMany({
-      select: {
-        active: true,
-        currentStock: true,
-        unitCost: true,
-      },
+      select: { active: true, currentStock: true, unitCost: true },
     });
 
     const totalMaterials = materials.length;
     const activeMaterials = materials.filter((m) => m.active).length;
     const inactiveMaterials = totalMaterials - activeMaterials;
 
-    const totalStockValue = materials.reduce((sum, material) => {
-      return sum + Number(material.currentStock) * Number(material.unitCost);
-    }, 0);
+    const totalStockValue = materials.reduce(
+      (sum, m) => sum + Number(m.currentStock) * Number(m.unitCost),
+      0,
+    );
 
-    const totalItems = materials.reduce((sum, material) => {
-      return sum + Number(material.currentStock);
-    }, 0);
+    const totalItems = materials.reduce(
+      (sum, m) => sum + Number(m.currentStock),
+      0,
+    );
 
-    // Materiais com estoque zero ou baixo (você pode ajustar a lógica)
     const materialsLowStock = materials.filter(
       (m) => Number(m.currentStock) === 0,
     ).length;
@@ -425,12 +388,7 @@ export class PrimaryMaterialsService {
 
   async getStockAlerts(): Promise<StockAlertResponseDto[]> {
     const materials = await this.prisma.client.primaryMaterial.findMany({
-      where: {
-        active: true,
-        currentStock: {
-          lte: 0, // Estoque zero ou negativo
-        },
-      },
+      where: { active: true, currentStock: { lte: 0 } },
       orderBy: { currentStock: 'asc' },
     });
 

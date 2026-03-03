@@ -50,7 +50,7 @@
 
       <!-- Filtro de Status -->
       <div>
-        <label class="block text-gray-300 font-medium mb-2 text-sm"> Status </label>
+        <label class="block text-gray-300 font-medium mb-2 text-sm">Status</label>
         <select
           [(ngModel)]="filterActive"
           (ngModelChange)="onFilterChange()"
@@ -70,7 +70,7 @@
 
       <!-- Filtro de Tipo de Produto -->
       <div>
-        <label class="block text-gray-300 font-medium mb-2 text-sm"> Tipo </label>
+        <label class="block text-gray-300 font-medium mb-2 text-sm">Tipo</label>
         <select
           [(ngModel)]="filterProductType"
           (ngModelChange)="onFilterChange()"
@@ -84,13 +84,14 @@
         >
           <option value="all">Todos</option>
           <option value="MANUFACTURED">Manufaturado</option>
+          <option value="SEMI_MANUFACTURED">Semipronto</option>
           <option value="RESALE">Revenda</option>
         </select>
       </div>
 
       <!-- Filtro de Estoque Baixo -->
       <div>
-        <label class="block text-gray-300 font-medium mb-2 text-sm"> Estoque </label>
+        <label class="block text-gray-300 font-medium mb-2 text-sm">Estoque</label>
         <label
           class="flex items-center gap-3 p-3 rounded-lg bg-white/95 cursor-pointer hover:bg-white transition-colors"
         >
@@ -148,7 +149,6 @@
       <table class="min-w-full text-white">
         <thead class="bg-linear-to-r from-[#0f1b2e] to-[#1a2942]">
           <tr>
-            <!-- ID - Ordenável -->
             <th
               class="py-4 px-4 text-left text-xs font-semibold text-blue-400 uppercase tracking-wider cursor-pointer select-none hover:bg-white/5 transition-colors"
               (click)="sortBy('id')"
@@ -160,8 +160,6 @@
                 }
               </div>
             </th>
-
-            <!-- Produto - Ordenável -->
             <th
               class="py-4 px-4 text-left text-xs font-semibold text-blue-400 uppercase tracking-wider cursor-pointer select-none hover:bg-white/5 transition-colors"
               (click)="sortBy('name')"
@@ -173,8 +171,6 @@
                 }
               </div>
             </th>
-
-            <!-- Código - Ordenável -->
             <th
               class="py-4 px-4 text-left text-xs font-semibold text-blue-400 uppercase tracking-wider cursor-pointer select-none hover:bg-white/5 transition-colors"
               (click)="sortBy('code')"
@@ -186,29 +182,21 @@
                 }
               </div>
             </th>
-
-            <!-- Tipo - Não ordenável -->
             <th
               class="py-4 px-4 text-left text-xs font-semibold text-purple-400 uppercase tracking-wider"
             >
               Tipo
             </th>
-
-            <!-- Info Fiscais - Não ordenável -->
             <th
               class="py-4 px-4 text-left text-xs font-semibold text-yellow-400 uppercase tracking-wider"
             >
               Info. Fiscais
             </th>
-
-            <!-- Unidade - Não ordenável -->
             <th
               class="py-4 px-4 text-left text-xs font-semibold text-blue-400 uppercase tracking-wider"
             >
               Unidade
             </th>
-
-            <!-- Preço Venda - Ordenável -->
             <th
               class="py-4 px-4 text-right text-xs font-semibold text-green-400 uppercase tracking-wider cursor-pointer select-none hover:bg-white/5 transition-colors"
               (click)="sortBy('price')"
@@ -220,8 +208,6 @@
                 }
               </div>
             </th>
-
-            <!-- Custo - Ordenável -->
             <th
               class="py-4 px-4 text-right text-xs font-semibold text-green-400 uppercase tracking-wider cursor-pointer select-none hover:bg-white/5 transition-colors"
               (click)="sortBy('costPrice')"
@@ -233,15 +219,11 @@
                 }
               </div>
             </th>
-
-            <!-- Margem - Não ordenável -->
             <th
               class="py-4 px-4 text-center text-xs font-semibold text-yellow-400 uppercase tracking-wider"
             >
               Margem
             </th>
-
-            <!-- Estoque - Ordenável -->
             <th
               class="py-4 px-4 text-center text-xs font-semibold text-blue-400 uppercase tracking-wider cursor-pointer select-none hover:bg-white/5 transition-colors"
               (click)="sortBy('quantity')"
@@ -253,8 +235,6 @@
                 }
               </div>
             </th>
-
-            <!-- Ações - Não ordenável -->
             <th
               class="py-4 px-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider"
             >
@@ -265,17 +245,12 @@
         <tbody class="divide-y divide-gray-700/50">
           @for (product of listProducts; track product.id) {
             <tr class="hover:bg-[#243447] transition-colors duration-150">
-              <!-- ID -->
               <td class="py-4 px-4">
                 <span class="text-gray-400 font-mono text-sm">#{{ product.id }}</span>
               </td>
-
-              <!-- Nome do Produto -->
               <td class="py-4 px-4">
                 <div class="font-semibold text-white">{{ product.name }}</div>
               </td>
-
-              <!-- Código -->
               <td class="py-4 px-4">
                 <span class="font-mono text-sm bg-gray-800 px-2 py-1 rounded">{{
                   product.code
@@ -292,10 +267,9 @@
                 </span>
               </td>
 
-              <!-- Informações Fiscais (NCM, CEST, CSOSN, Status) -->
+              <!-- Informações Fiscais -->
               <td class="py-4 px-4">
                 <div class="flex flex-col gap-1.5">
-                  <!-- Status Ativo/Inativo -->
                   <div class="flex items-center gap-1.5">
                     @if (product.active) {
                       <span
@@ -325,22 +299,16 @@
                       </span>
                     }
                   </div>
-
-                  <!-- NCM -->
                   <div class="text-xs text-gray-300">
                     <span class="text-yellow-400 font-semibold">NCM:</span>
                     <span class="font-mono ml-1">{{ product.ncm }}</span>
                   </div>
-
-                  <!-- CEST (se existir) -->
                   @if (product.cest && product.cest !== '0') {
                     <div class="text-xs text-gray-300">
                       <span class="text-yellow-400 font-semibold">CEST:</span>
                       <span class="font-mono ml-1">{{ product.cest }}</span>
                     </div>
                   }
-
-                  <!-- CSOSN -->
                   @if (product.csosn) {
                     <div class="text-xs text-gray-300">
                       <span class="text-yellow-400 font-semibold">CSOSN:</span>
@@ -350,7 +318,6 @@
                 </div>
               </td>
 
-              <!-- Unidade -->
               <td class="py-4 px-4">
                 <span
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/50"
@@ -358,18 +325,12 @@
                   {{ product.unit }}
                 </span>
               </td>
-
-              <!-- Preço de Venda -->
               <td class="py-4 px-4 text-right">
                 <span class="font-bold text-green-400">{{ formatCurrency(product.price) }}</span>
               </td>
-
-              <!-- Preço de Custo -->
               <td class="py-4 px-4 text-right">
                 <span class="text-gray-300">{{ formatCurrency(product.costPrice) }}</span>
               </td>
-
-              <!-- Margem de Lucro -->
               <td class="py-4 px-4 text-center">
                 <span
                   [class]="
@@ -384,8 +345,6 @@
                   {{ calculateProfitMargin(product).toFixed(1) }}%
                 </span>
               </td>
-
-              <!-- Estoque -->
               <td class="py-4 px-4 text-center">
                 <div class="flex flex-col items-center gap-1">
                   <span class="font-bold text-white">{{ product.quantity }}</span>
@@ -401,7 +360,6 @@
               <!-- Ações -->
               <td class="py-2 px-2">
                 <div class="grid grid-cols-1 gap-1 justify-items-center w-full">
-                  <!-- Info -->
                   <button
                     (click)="openModalBasic(product)"
                     class="action-btn bg-indigo-500/90 hover:bg-indigo-600"
@@ -418,8 +376,7 @@
                     <span>Editar</span>
                   </button>
 
-                  @if (product.productType === 'MANUFACTURED') {
-                    <!-- Composição -->
+                  @if (hasComposition(product.productType)) {
                     <button
                       (click)="openModalMaterials(product)"
                       class="action-btn bg-blue-500/90 hover:bg-blue-600"
@@ -441,7 +398,6 @@
                       <span>Composição</span>
                     </button>
 
-                    <!-- Preparo -->
                     <button
                       (click)="openModalPreparation(product)"
                       class="action-btn bg-purple-500/90 hover:bg-purple-600"
@@ -464,7 +420,6 @@
                     </button>
                   }
 
-                  <!-- Status -->
                   @if (product.active) {
                     <button
                       (click)="toggleProductStatus(product)"

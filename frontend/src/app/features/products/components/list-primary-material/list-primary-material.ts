@@ -10,7 +10,13 @@ import { PrimaryMaterial } from '../../types/primary-material';
 
 @Component({
   selector: 'app-list-primary-material',
-  imports: [CommonModule, FormsModule, PaginatorComponent, ModalUpdatePrimaryMaterial, ModalUpdatePrimaryMaterial],
+  imports: [
+    CommonModule,
+    FormsModule,
+    PaginatorComponent,
+    ModalUpdatePrimaryMaterial,
+    ModalUpdatePrimaryMaterial,
+  ],
   templateUrl: './list-primary-material.html',
 })
 export class ListPrimaryMaterial {
@@ -25,7 +31,7 @@ export class ListPrimaryMaterial {
   totalItems: number = 0;
   showModalEdit: boolean = false;
   editMaterial: PrimaryMaterial = {
-    id: '',
+    id: 0,
     name: '',
     code: '',
     unit: 'UN',

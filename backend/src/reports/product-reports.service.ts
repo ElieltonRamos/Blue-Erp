@@ -147,6 +147,12 @@ export class ProductReportService {
     for (const saleItem of saleItems) {
       const soldQty = Number(saleItem.quantity);
       for (const comp of saleItem.product.compositionItems) {
+        if (!comp.material) {
+          throw new InternalServerErrorException(
+            `Composição inválida: produto possui item sem matéria-prima vinculada.`,
+          );
+        }
+
         const materialName = comp.material.name;
         const used = Number(comp.quantity) * soldQty;
 

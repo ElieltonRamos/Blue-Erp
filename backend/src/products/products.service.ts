@@ -15,6 +15,28 @@ import { PrismaService } from 'src/database/prisma.service';
 import { PaginatedResponse } from 'src/common/paginated-response';
 import { ProductResponseDto } from './dto/response-product.dto';
 
+const COMPOSITION_INCLUDE = {
+  compositionItems: {
+    include: {
+      material: true,
+      subProduct: {
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          quantity: true,
+          unit: true,
+        },
+      },
+    },
+  },
+};
+
+const TYPES_WITH_COMPOSITION: ProductType[] = [
+  ProductType.MANUFACTURED,
+  ProductType.SEMI_MANUFACTURED,
+];
+
 @Injectable()
 export class ProductService {
   constructor(private readonly prisma: PrismaService) {}
@@ -23,7 +45,6 @@ export class ProductService {
    * Criar produto (com ou sem composição/preparo)
    */
   async create(createDto: CreateProductDto) {
-    // Verificar se o código já existe
     const existingCode = await this.prisma.client.product.findUnique({
       where: { code: createDto.code },
     });
@@ -34,13 +55,8 @@ export class ProductService {
       );
     }
 
-    // Verificar se o nome já existe
     const existingName = await this.prisma.client.product.findFirst({
-      where: {
-        name: {
-          equals: createDto.name,
-        },
-      },
+      where: { name: { equals: createDto.name } },
     });
 
     if (existingName) {
@@ -49,7 +65,6 @@ export class ProductService {
       );
     }
 
-    // Verificar se a categoria existe (se fornecida)
     if (createDto.categoryId) {
       const category = await this.prisma.client.category.findUnique({
         where: { id: createDto.categoryId },
@@ -62,45 +77,27 @@ export class ProductService {
       }
     }
 
-    // Verificar se as matérias-primas existem (se fornecidas)
+    const hasComposition = TYPES_WITH_COMPOSITION.includes(
+      createDto.productType,
+    );
+
     if (
-      createDto.productType === ProductType.MANUFACTURED &&
+      hasComposition &&
       createDto.composition &&
       createDto.composition.length > 0
     ) {
-      const materialIds = createDto.composition.map((item) => item.materialId);
-      const materials = await this.prisma.client.primaryMaterial.findMany({
-        where: { id: { in: materialIds } },
-      });
-
-      if (materials.length !== materialIds.length) {
-        const foundIds = materials.map((m) => m.id);
-        const missingIds = materialIds.filter((id) => !foundIds.includes(id));
-        throw new NotFoundException(
-          `Matéria(s)-prima(s) com ID(s) ${missingIds.join(', ')} não encontrada(s)`,
-        );
-      }
-
-      // Verificar se as matérias-primas estão ativas
-      const inactiveMaterials = materials.filter((m) => !m.active);
-      if (inactiveMaterials.length > 0) {
-        throw new BadRequestException(
-          `Matéria(s)-prima(s) inativa(s): ${inactiveMaterials.map((m) => m.name).join(', ')}`,
-        );
-      }
+      await this.validateCompositionItems(createDto.composition);
     }
 
-    // Validar que produto MANUFACTURED deve ter composição
     if (
-      createDto.productType === ProductType.MANUFACTURED &&
+      hasComposition &&
       (!createDto.composition || createDto.composition.length === 0)
     ) {
       throw new BadRequestException(
-        'Produtos manufaturados devem ter ao menos uma matéria-prima na composição',
+        'Produtos manufaturados ou semiprontos devem ter ao menos um item na composição',
       );
     }
 
-    // Validar que produto RESALE não deve ter composição
     if (
       createDto.productType === ProductType.RESALE &&
       (createDto.composition || createDto.preparationSteps)
@@ -110,7 +107,6 @@ export class ProductService {
       );
     }
 
-    // Criar produto com composição e preparo (se fornecidos)
     return this.prisma.client.product.create({
       data: {
         name: createDto.name,
@@ -138,21 +134,18 @@ export class ProductService {
         active: createDto.active ?? true,
         productType: createDto.productType,
         categoryId: createDto.categoryId,
-        // Criar composição se fornecida e produto for MANUFACTURED
         compositionItems:
-          createDto.productType === ProductType.MANUFACTURED &&
-          createDto.composition
+          hasComposition && createDto.composition
             ? {
                 create: createDto.composition.map((item) => ({
-                  materialId: item.materialId,
+                  materialId: item.materialId ?? null,
+                  subProductId: item.subProductId ?? null,
                   quantity: item.quantity,
                 })),
               }
             : undefined,
-        // Criar passos de preparo se fornecidos e produto for MANUFACTURED
         preparationSteps:
-          createDto.productType === ProductType.MANUFACTURED &&
-          createDto.preparationSteps
+          hasComposition && createDto.preparationSteps
             ? {
                 create: createDto.preparationSteps.map((step) => ({
                   order: step.order,
@@ -162,11 +155,7 @@ export class ProductService {
             : undefined,
       },
       include: {
-        compositionItems: {
-          include: {
-            material: true,
-          },
-        },
+        ...COMPOSITION_INCLUDE,
         preparationSteps: true,
         category: true,
       },
@@ -193,29 +182,24 @@ export class ProductService {
 
     const where: Prisma.ProductWhereInput = {};
 
-    // Filtro de active: se não for fornecido, busca apenas ativos
     if (filters?.active !== undefined) {
       where.active = filters.active;
     } else {
       where.active = true;
     }
 
-    // Filtro por tipo de produto
     if (filters?.productType) {
       where.productType = filters.productType;
     }
 
-    // Filtro por unidade
     if (filters?.unit) {
       where.unit = filters.unit;
     }
 
-    // Filtro por categoria
     if (filters?.categoryId) {
       where.categoryId = filters.categoryId;
     }
 
-    // Busca por nome ou código
     if (filters?.search) {
       where.OR = [
         { name: { contains: filters.search } },
@@ -223,7 +207,6 @@ export class ProductService {
       ];
     }
 
-    // Filtro de estoque baixo
     if (filters?.lowStock) {
       where.AND = [
         {
@@ -246,38 +229,28 @@ export class ProductService {
       take: limit,
       include: {
         category: true,
-        compositionItems: {
-          include: {
-            material: true,
-          },
-        },
+        ...COMPOSITION_INCLUDE,
       },
     });
 
-    const total = await this.prisma.client.product.count({
-      where,
-    });
+    const total = await this.prisma.client.product.count({ where });
 
-    // Sincronizar e atualizar estoque de produtos manufaturados
     const updatedProducts = await Promise.all(
       products.map(async (product) => {
-        // Se for produto manufaturado, calcular e atualizar estoque
         if (
-          product.productType === 'MANUFACTURED' &&
+          TYPES_WITH_COMPOSITION.includes(product.productType) &&
           product.compositionItems.length > 0
         ) {
           const availableStock = this.calculateAvailableStock(
             product.compositionItems,
           );
 
-          // Sempre sobrescrever o estoque
           if (product.quantity.toNumber() !== availableStock) {
             await this.prisma.client.product.update({
               where: { id: product.id },
               data: { quantity: availableStock },
             });
 
-            // Atualizar o objeto product com o novo estoque
             product.quantity = new Prisma.Decimal(availableStock);
           }
         }
@@ -298,27 +271,29 @@ export class ProductService {
   }
 
   /**
-   * Calcular quantas unidades do produto podem ser produzidas com o estoque atual de matérias-primas
+   * Calcular quantas unidades do produto podem ser produzidas com o estoque atual
+   * Suporta matérias-primas e subprodutos semiprontos
    */
   private calculateAvailableStock(compositionItems: any[]): number {
-    if (compositionItems.length === 0) {
-      return 0;
-    }
+    if (compositionItems.length === 0) return 0;
 
-    // Calcular quantas unidades podem ser produzidas com cada matéria-prima
     const possibleQuantities = compositionItems.map((item) => {
-      const materialStock = item.material.currentStock.toNumber();
       const requiredQuantity = item.quantity.toNumber();
+      if (requiredQuantity === 0) return 0;
 
-      if (requiredQuantity === 0) {
-        return 0;
+      if (item.materialId && item.material) {
+        const stock = item.material.currentStock.toNumber();
+        return Math.floor(stock / requiredQuantity);
       }
 
-      // Quantas unidades do produto podem ser feitas com o estoque desta matéria-prima
-      return Math.floor(materialStock / requiredQuantity);
+      if (item.subProductId && item.subProduct) {
+        const stock = item.subProduct.quantity.toNumber();
+        return Math.floor(stock / requiredQuantity);
+      }
+
+      return 0;
     });
 
-    // O estoque disponível é limitado pela matéria-prima com menor disponibilidade
     return Math.min(...possibleQuantities);
   }
 
@@ -330,11 +305,7 @@ export class ProductService {
       where: { id },
       include: {
         category: true,
-        compositionItems: {
-          include: {
-            material: true,
-          },
-        },
+        ...COMPOSITION_INCLUDE,
         preparationSteps: {
           orderBy: { order: 'asc' },
         },
@@ -345,9 +316,8 @@ export class ProductService {
       throw new NotFoundException(`Produto com ID ${id} não encontrado`);
     }
 
-    // Sincronizar estoque se for manufaturado
     if (
-      product.productType === 'MANUFACTURED' &&
+      TYPES_WITH_COMPOSITION.includes(product.productType) &&
       product.compositionItems.length > 0
     ) {
       const availableStock = this.calculateAvailableStock(
@@ -375,11 +345,7 @@ export class ProductService {
       where: { code },
       include: {
         category: true,
-        compositionItems: {
-          include: {
-            material: true,
-          },
-        },
+        ...COMPOSITION_INCLUDE,
         preparationSteps: {
           orderBy: { order: 'asc' },
         },
@@ -390,9 +356,8 @@ export class ProductService {
       throw new NotFoundException(`Produto com código ${code} não encontrado`);
     }
 
-    // Sincronizar estoque se for manufaturado
     if (
-      product.productType === 'MANUFACTURED' &&
+      TYPES_WITH_COMPOSITION.includes(product.productType) &&
       product.compositionItems.length > 0
     ) {
       const availableStock = this.calculateAvailableStock(
@@ -418,9 +383,9 @@ export class ProductService {
   async getComposition(id: number) {
     const product = await this.findOne(id);
 
-    if (product.productType !== ProductType.MANUFACTURED) {
+    if (!TYPES_WITH_COMPOSITION.includes(product.productType)) {
       throw new BadRequestException(
-        'Apenas produtos manufaturados possuem composição',
+        'Apenas produtos manufaturados ou semiprontos possuem composição',
       );
     }
 
@@ -433,9 +398,9 @@ export class ProductService {
   async getPreparation(id: number) {
     const product = await this.findOne(id);
 
-    if (product.productType !== ProductType.MANUFACTURED) {
+    if (!TYPES_WITH_COMPOSITION.includes(product.productType)) {
       throw new BadRequestException(
-        'Apenas produtos manufaturados possuem modo de preparo',
+        'Apenas produtos manufaturados ou semiprontos possuem modo de preparo',
       );
     }
 
@@ -448,13 +413,9 @@ export class ProductService {
   async update(id: number, updateDto: UpdateProductDto) {
     await this.findOne(id);
 
-    // Verificar código duplicado (se estiver sendo alterado)
     if (updateDto.code) {
       const existingCode = await this.prisma.client.product.findFirst({
-        where: {
-          code: updateDto.code,
-          id: { not: id },
-        },
+        where: { code: updateDto.code, id: { not: id } },
       });
 
       if (existingCode) {
@@ -464,15 +425,9 @@ export class ProductService {
       }
     }
 
-    // Verificar nome duplicado (se estiver sendo alterado)
     if (updateDto.name) {
       const existingName = await this.prisma.client.product.findFirst({
-        where: {
-          name: {
-            equals: updateDto.name,
-          },
-          id: { not: id },
-        },
+        where: { name: { equals: updateDto.name }, id: { not: id } },
       });
 
       if (existingName) {
@@ -482,14 +437,10 @@ export class ProductService {
       }
     }
 
-    // Preparar dados para atualização
     const { categoryId, ...restData } = updateDto;
 
-    const updateData: any = {
-      ...restData,
-    };
+    const updateData: any = { ...restData };
 
-    // Adicionar categoryId apenas se fornecido
     if (categoryId !== undefined) {
       updateData.categoryId = categoryId;
     }
@@ -499,11 +450,7 @@ export class ProductService {
       data: updateData,
       include: {
         category: true,
-        compositionItems: {
-          include: {
-            material: true,
-          },
-        },
+        ...COMPOSITION_INCLUDE,
         preparationSteps: {
           orderBy: { order: 'asc' },
         },
@@ -513,37 +460,22 @@ export class ProductService {
 
   /**
    * Atualizar composição do produto
+   * Suporta itens com materialId ou subProductId
    */
   async updateComposition(id: number, compositionDto: UpdateCompositionDto) {
     const product = await this.findOne(id);
 
-    if (product.productType !== ProductType.MANUFACTURED) {
+    if (!TYPES_WITH_COMPOSITION.includes(product.productType)) {
       throw new BadRequestException(
-        'Apenas produtos manufaturados podem ter composição',
+        'Apenas produtos manufaturados ou semiprontos podem ter composição',
       );
     }
 
-    const materialIds = compositionDto.composition.map(
-      (item) => item.materialId,
+    await this.validateCompositionItems(compositionDto.composition);
+
+    const costPrice = await this.calculateCompositionCost(
+      compositionDto.composition,
     );
-    const materials = await this.prisma.client.primaryMaterial.findMany({
-      where: { id: { in: materialIds } },
-    });
-
-    if (materials.length !== materialIds.length) {
-      throw new BadRequestException('Uma ou mais matérias-primas não existem');
-    }
-
-    // Calcular preço de custo
-    const costPrice = compositionDto.composition.reduce((total, item) => {
-      const material = materials.find((m) => m.id === item.materialId);
-      if (!material) {
-        throw new BadRequestException(
-          `Material ${item.materialId} não encontrado`,
-        );
-      }
-      return total + Number(material.unitCost) * item.quantity;
-    }, 0);
 
     await this.prisma.client.$transaction([
       this.prisma.client.compositionItem.deleteMany({
@@ -552,7 +484,8 @@ export class ProductService {
       this.prisma.client.compositionItem.createMany({
         data: compositionDto.composition.map((item) => ({
           productId: id,
-          materialId: item.materialId,
+          materialId: item.materialId ?? null,
+          subProductId: item.subProductId ?? null,
           quantity: item.quantity,
         })),
       }),
@@ -571,13 +504,12 @@ export class ProductService {
   async updatePreparation(id: number, preparationDto: UpdatePreparationDto) {
     const product = await this.findOne(id);
 
-    if (product.productType !== ProductType.MANUFACTURED) {
+    if (!TYPES_WITH_COMPOSITION.includes(product.productType)) {
       throw new BadRequestException(
-        'Apenas produtos manufaturados podem ter modo de preparo',
+        'Apenas produtos manufaturados ou semiprontos podem ter modo de preparo',
       );
     }
 
-    // Deletar passos atuais e criar novos
     await this.prisma.client.$transaction([
       this.prisma.client.preparationStep.deleteMany({
         where: { productId: id },
@@ -595,14 +527,16 @@ export class ProductService {
   }
 
   /**
-   * Produzir produto (baixa matérias-primas, aumenta estoque)
+   * Produzir produto:
+   * - Baixa matérias-primas e/ou subprodutos
+   * - Aumenta estoque do produto produzido
    */
   async produce(id: number, produceDto: ProduceProductDto) {
     const product = await this.findOne(id);
 
-    if (product.productType !== ProductType.MANUFACTURED) {
+    if (!TYPES_WITH_COMPOSITION.includes(product.productType)) {
       throw new BadRequestException(
-        'Apenas produtos manufaturados podem ser produzidos',
+        'Apenas produtos manufaturados ou semiprontos podem ser produzidos',
       );
     }
 
@@ -610,39 +544,52 @@ export class ProductService {
       throw new BadRequestException('Produto não possui composição cadastrada');
     }
 
-    // Verificar se há matérias-primas suficientes
+    // Verificar estoque de cada item da composição
     for (const item of product.compositionItems) {
       const requiredQuantity = item.quantity.toNumber() * produceDto.quantity;
-      const availableStock = item.material.currentStock.toNumber();
 
-      if (availableStock < requiredQuantity) {
-        throw new BadRequestException(
-          `Estoque insuficiente de ${item.material.name}. Necessário: ${requiredQuantity}, Disponível: ${availableStock}`,
-        );
+      if (item.materialId && item.material) {
+        const available = item.material.currentStock.toNumber();
+        if (available < requiredQuantity) {
+          throw new BadRequestException(
+            `Estoque insuficiente de "${item.material.name}". Necessário: ${requiredQuantity}, Disponível: ${available}`,
+          );
+        }
+      }
+
+      if (item.subProductId && item.subProduct) {
+        const available = item.subProduct.quantity.toNumber();
+        if (available < requiredQuantity) {
+          throw new BadRequestException(
+            `Estoque insuficiente do semiproduto "${item.subProduct.name}". Necessário: ${requiredQuantity}, Disponível: ${available}`,
+          );
+        }
       }
     }
 
-    // Baixar matérias-primas e aumentar estoque do produto
-    await this.prisma.client.$transaction([
-      // Baixar matérias-primas
-      ...product.compositionItems.map((item) =>
-        this.prisma.client.primaryMaterial.update({
+    // Montar operações de baixa
+    const decrementOps = product.compositionItems.map((item) => {
+      const qty = item.quantity.toNumber() * produceDto.quantity;
+
+      if (item.materialId) {
+        return this.prisma.client.primaryMaterial.update({
           where: { id: item.materialId },
-          data: {
-            currentStock: {
-              decrement: item.quantity.toNumber() * produceDto.quantity,
-            },
-          },
-        }),
-      ),
-      // Aumentar estoque do produto
+          data: { currentStock: { decrement: qty } },
+        });
+      }
+
+      // subProduct
+      return this.prisma.client.product.update({
+        where: { id: item.subProductId! },
+        data: { quantity: { decrement: qty } },
+      });
+    });
+
+    await this.prisma.client.$transaction([
+      ...decrementOps,
       this.prisma.client.product.update({
         where: { id },
-        data: {
-          quantity: {
-            increment: produceDto.quantity,
-          },
-        },
+        data: { quantity: { increment: produceDto.quantity } },
       }),
     ]);
 
@@ -659,13 +606,9 @@ export class ProductService {
   async remove(id: number) {
     await this.findOne(id);
 
-    await this.prisma.client.product.delete({
-      where: { id },
-    });
+    await this.prisma.client.product.delete({ where: { id } });
 
-    return {
-      message: 'Produto deletado com sucesso',
-    };
+    return { message: 'Produto deletado com sucesso' };
   }
 
   /**
@@ -679,11 +622,7 @@ export class ProductService {
     const inactiveProducts = totalProducts - activeProducts;
 
     const products = await this.prisma.client.product.findMany({
-      select: {
-        quantity: true,
-        price: true,
-        minStock: true,
-      },
+      select: { quantity: true, price: true, minStock: true },
     });
 
     const totalStockValue = products.reduce(
@@ -725,9 +664,7 @@ export class ProductService {
           },
         ],
       },
-      include: {
-        category: true,
-      },
+      include: { category: true },
     });
 
     return products.map((product) => ({
@@ -753,8 +690,139 @@ export class ProductService {
     const nextNumber = lastProduct ? lastProduct.id + 1 : 1;
     const suggestedCode = `PROD-${String(nextNumber).padStart(4, '0')}`;
 
-    return {
-      code: suggestedCode,
-    };
+    return { code: suggestedCode };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Privados
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Valida itens da composição:
+   * - Cada item deve ter exatamente materialId OU subProductId
+   * - Matérias-primas devem existir e estar ativas
+   * - Subprodutos devem existir, estar ativos e ser SEMI_MANUFACTURED
+   */
+  private async validateCompositionItems(
+    items: Array<{
+      materialId?: number;
+      subProductId?: number;
+      quantity: number;
+    }>,
+  ) {
+    for (const item of items) {
+      const hasMaterial = !!item.materialId;
+      const hasSubProduct = !!item.subProductId;
+
+      if (hasMaterial === hasSubProduct) {
+        throw new BadRequestException(
+          'Cada item da composição deve ter exatamente materialId ou subProductId, não ambos nem nenhum',
+        );
+      }
+    }
+
+    const materialIds = items
+      .filter((i) => i.materialId)
+      .map((i) => i.materialId!);
+
+    if (materialIds.length > 0) {
+      const materials = await this.prisma.client.primaryMaterial.findMany({
+        where: { id: { in: materialIds } },
+      });
+
+      if (materials.length !== materialIds.length) {
+        const foundIds = materials.map((m) => m.id);
+        const missing = materialIds.filter((id) => !foundIds.includes(id));
+        throw new NotFoundException(
+          `Matéria(s)-prima(s) com ID(s) ${missing.join(', ')} não encontrada(s)`,
+        );
+      }
+
+      const inactive = materials.filter((m) => !m.active);
+      if (inactive.length > 0) {
+        throw new BadRequestException(
+          `Matéria(s)-prima(s) inativa(s): ${inactive.map((m) => m.name).join(', ')}`,
+        );
+      }
+    }
+
+    const subProductIds = items
+      .filter((i) => i.subProductId)
+      .map((i) => i.subProductId!);
+
+    if (subProductIds.length > 0) {
+      const subProducts = await this.prisma.client.product.findMany({
+        where: { id: { in: subProductIds } },
+      });
+
+      if (subProducts.length !== subProductIds.length) {
+        const foundIds = subProducts.map((p) => p.id);
+        const missing = subProductIds.filter((id) => !foundIds.includes(id));
+        throw new NotFoundException(
+          `Subproduto(s) com ID(s) ${missing.join(', ')} não encontrado(s)`,
+        );
+      }
+
+      const invalid = subProducts.filter(
+        (p) => !p.active || p.productType !== ProductType.SEMI_MANUFACTURED,
+      );
+
+      if (invalid.length > 0) {
+        throw new BadRequestException(
+          `Produto(s) inválido(s) como subproduto (deve ser ativo e SEMI_MANUFACTURED): ${invalid.map((p) => p.name).join(', ')}`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Calcula custo total da composição somando matérias-primas e subprodutos
+   */
+  private async calculateCompositionCost(
+    items: Array<{
+      materialId?: number;
+      subProductId?: number;
+      quantity: number;
+    }>,
+  ): Promise<number> {
+    let total = 0;
+
+    const materialIds = items
+      .filter((i) => i.materialId)
+      .map((i) => i.materialId!);
+
+    const subProductIds = items
+      .filter((i) => i.subProductId)
+      .map((i) => i.subProductId!);
+
+    const [materials, subProducts] = await Promise.all([
+      materialIds.length > 0
+        ? this.prisma.client.primaryMaterial.findMany({
+            where: { id: { in: materialIds } },
+          })
+        : ([] as { id: number; unitCost: Prisma.Decimal }[]),
+      subProductIds.length > 0
+        ? this.prisma.client.product.findMany({
+            where: { id: { in: subProductIds } },
+            select: { id: true, costPrice: true },
+          })
+        : ([] as { id: number; costPrice: Prisma.Decimal }[]),
+    ]);
+
+    for (const item of items) {
+      if (item.materialId) {
+        const material = materials.find((m) => m.id === item.materialId);
+        if (material) {
+          total += material.unitCost.toNumber() * item.quantity;
+        }
+      } else if (item.subProductId) {
+        const subProduct = subProducts.find((p) => p.id === item.subProductId);
+        if (subProduct) {
+          total += subProduct.costPrice.toNumber() * item.quantity;
+        }
+      }
+    }
+
+    return total;
   }
 }

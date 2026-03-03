@@ -42,7 +42,7 @@ export class PrimaryMaterialService {
     return this.client.get<PaginatedResponse<PrimaryMaterial>>(this.apiUrl, { params });
   }
 
-  getById(id: string): Observable<PrimaryMaterial> {
+  getById(id: number): Observable<PrimaryMaterial> {
     return this.client.get<PrimaryMaterial>(`${this.apiUrl}/${id}`);
   }
 
@@ -62,11 +62,11 @@ export class PrimaryMaterialService {
     return this.client.post<PrimaryMaterial>(this.apiUrl, material);
   }
 
-  update(id: string, material: UpdatePrimaryMaterialDTO): Observable<PrimaryMaterial> {
+  update(id: number, material: UpdatePrimaryMaterialDTO): Observable<PrimaryMaterial> {
     return this.client.patch<PrimaryMaterial>(`${this.apiUrl}/${id}`, material);
   }
 
-  delete(id: string): Observable<void> {
+  delete(id: number): Observable<void> {
     return this.client.delete<void>(`${this.apiUrl}/${id}`);
   }
 

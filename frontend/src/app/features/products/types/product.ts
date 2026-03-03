@@ -6,15 +6,17 @@ export const productionLocationOptions = [
 ];
 
 export enum Unit {
-  UN = 'UN', // Unidade
-  KG = 'KG', // Quilograma
-  LT = 'LT', // Litro
-  MT = 'MT', // Metro
-  CX = 'CX', // Caixa
-  ML = 'ML', // Mililitro
-  GR = 'GR', // Grama
-  DZ = 'DZ', // Dúzia
+  UN = 'UN',
+  KG = 'KG',
+  LT = 'LT',
+  MT = 'MT',
+  CX = 'CX',
+  ML = 'ML',
+  GR = 'GR',
+  DZ = 'DZ',
 }
+
+export type ProductType = 'MANUFACTURED' | 'RESALE' | 'SEMI_MANUFACTURED';
 
 export interface Product {
   id: number;
@@ -41,7 +43,7 @@ export interface Product {
   quantity: number;
   minStock?: number;
   active: boolean;
-  productType: 'MANUFACTURED' | 'RESALE';
+  productType: ProductType;
   categoryId?: number;
   createdAt: Date;
   updatedAt: Date;
@@ -54,10 +56,13 @@ export interface ProductComposition {
 }
 
 export interface CompositionItem {
+  materialId?: number;
+  subProductId?: number;
   materialName: string;
-  materialId: number;
   quantity: number;
   unitCost: number;
+  unit?: string;
+  totalCost?: number;
 }
 
 export interface PreparationStep {
@@ -89,7 +94,7 @@ export interface CreateProductDTO {
   quantity?: number;
   minStock?: number;
   active?: boolean;
-  productType: 'MANUFACTURED' | 'RESALE';
+  productType: ProductType;
   categoryId?: number;
   composition?: CompositionItem[];
   preparationSteps?: PreparationStep[];
@@ -119,7 +124,7 @@ export interface UpdateProductDTO {
   quantity?: number;
   minStock?: number;
   active?: boolean;
-  productType?: 'MANUFACTURED' | 'RESALE';
+  productType?: ProductType;
   categoryId?: number;
 }
 
@@ -157,7 +162,7 @@ export interface StockAlert {
 
 export interface FilterProductParams {
   search?: string;
-  productType?: 'MANUFACTURED' | 'RESALE';
+  productType?: ProductType;
   unit?: string;
   active?: boolean;
   lowStock?: boolean;
