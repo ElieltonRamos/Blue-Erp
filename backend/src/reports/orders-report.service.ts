@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Prisma } from 'generated/prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { validateDateFilters } from './utils/sale-report-utils';
 import { OrderReportFilterDto } from './dto/create-report-order.dto';
 import { OrderReportResponseDto } from './dto/response-report-order.dto';
+import { fromZonedTime } from 'date-fns-tz';
 import {
   LocationReport,
   OrderSummary,
@@ -18,6 +17,7 @@ import {
 const TOP_LIMIT = 10;
 const RECENT_LIMIT = 20;
 const PERFORMANCE_LIMIT = 5;
+const TZ = 'America/Sao_Paulo';
 
 type OrderWithIncludes = Prisma.OrderGetPayload<{
   include: {
@@ -77,8 +77,8 @@ export class OrderReportService {
     return this.prisma.client.order.findMany({
       where: {
         createdAt: {
-          gte: this.getStartOfDay(startDate),
-          lte: this.getEndOfDay(endDate),
+          gte: fromZonedTime(`${startDate} 00:00:00`, TZ),
+          lte: fromZonedTime(`${endDate} 23:59:59`, TZ),
         },
       },
       include: {

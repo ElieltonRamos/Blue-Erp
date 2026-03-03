@@ -169,8 +169,12 @@ export class OrdersService {
       ...(startDate || endDate
         ? {
             createdAt: {
-              ...(startDate && { gte: new Date(`${startDate}T00:00:00.000Z`) }),
-              ...(endDate && { lte: new Date(`${endDate}T23:59:59.999Z`) }),
+              ...(startDate && {
+                gte: new Date(`${startDate}T00:00:00.000-03:00`),
+              }),
+              ...(endDate && {
+                lte: new Date(`${endDate}T23:59:59.999-03:00`),
+              }),
             },
           }
         : {}),
@@ -653,7 +657,6 @@ export class OrdersService {
           (p) => p.status === 'IN_PROGRESS' || Number(p.quantityProduced) > 0,
         );
 
-        // Se houver produções PENDING e nada produzido, cancela as produções e remove o item
         if (pendingProductions.length > 0 && !hasProduced) {
           await tx.orderProduction.updateMany({
             where: { orderItemId: item.id, status: 'PENDING' },
@@ -664,14 +667,12 @@ export class OrdersService {
         }
       }
 
-      // Atualiza status do pedido
       await tx.order.update({
         where: { id },
         data: { status: OrderStatus.CANCELED },
       });
     });
 
-    // Retorna o pedido atualizado
     const canceledOrder = await this.prisma.client.order.findUnique({
       where: { id },
       include: {

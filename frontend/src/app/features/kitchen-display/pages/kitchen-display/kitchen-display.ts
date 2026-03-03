@@ -35,7 +35,7 @@ export class KitchenDisplay implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private authService = inject(AuthService);
   private locationsService = inject(ProductionLocationsService);
-  private notificationSound = new Audio('meme-galo-cego.mp3');
+  private notificationSound = new Audio('notification.mp3');
   private refreshSubscription?: Subscription;
   private timeUpdateSubscription?: Subscription;
   private readonly KITCHEN_STORAGE_KEY = 'default_kitchen';

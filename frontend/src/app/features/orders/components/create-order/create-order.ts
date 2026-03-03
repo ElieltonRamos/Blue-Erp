@@ -30,7 +30,7 @@ export class CreateOrder implements OnInit {
   isSearching: boolean = false;
   searchResults: Product[] = [];
   orderItems: OrderItem[] = [];
-  productionLocations: { id: number, code: string; name: string }[] = [];
+  productionLocations: { id: number; code: string; name: string }[] = [];
   availableTables: Table[] = [];
 
   formCreateOrder = new FormGroup({
@@ -62,7 +62,6 @@ export class CreateOrder implements OnInit {
   }
 
   loadAvailableTables(locationCode: string) {
-    // Converter code para locationId ou ajustar backend
     const location = this.productionLocations.find((l) => l.code === locationCode);
     if (!location) return;
 
@@ -174,18 +173,20 @@ export class CreateOrder implements OnInit {
     this.orderService.getByCode(code).subscribe({
       next: (product: Product) => {
         if (!product) {
+          this.isSearching = false;
           this.notification.error('Produto não encontrado');
+          this.cdr.detectChanges();
           return;
         }
 
         this.addOrIncrementProduct(product);
         this.searchCode = '';
+        this.isSearching = false;
+        this.cdr.detectChanges();
       },
       error: () => {
-        this.notification.error('Produto não encontrado');
-      },
-      complete: () => {
         this.isSearching = false;
+        this.notification.error('Produto não encontrado');
         this.cdr.detectChanges();
       },
     });
@@ -199,19 +200,21 @@ export class CreateOrder implements OnInit {
         const products = response.data ?? [];
 
         if (products.length === 0) {
+          this.isSearching = false;
           this.notification.error('Nenhum produto encontrado');
           this.searchResults = [];
+          this.cdr.detectChanges();
           return;
         }
 
         this.searchResults = products;
+        this.isSearching = false;
+        this.cdr.detectChanges();
       },
       error: () => {
+        this.isSearching = false;
         this.notification.error('Erro ao buscar produto');
         this.searchResults = [];
-      },
-      complete: () => {
-        this.isSearching = false;
         this.cdr.detectChanges();
       },
     });
@@ -232,7 +235,7 @@ export class CreateOrder implements OnInit {
   }
 
   // =============================
-  // CART LOGIC (CORRIGIDO)
+  // CART LOGIC
   // =============================
 
   private addOrIncrementProduct(product: Product) {
@@ -296,11 +299,6 @@ export class CreateOrder implements OnInit {
       this.notification.error('Preencha todos os campos obrigatórios');
       return;
     }
-
-    // if (this.orderItems.length === 0) {
-    //   this.notification.error('Adicione pelo menos um produto ao pedido');
-    //   return;
-    // }
 
     const formValue = this.formCreateOrder.value;
 

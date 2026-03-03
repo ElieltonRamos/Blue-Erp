@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { ServiceLogin } from '../services/login.service';
 import { NotificationService } from '../../../shared/toastr/notification.service';
 import { LicenseService } from '../../../core/services/license.service';
+import { version } from '../../../../../package.json';
 
 @Component({
   selector: 'app-login',
@@ -12,6 +13,7 @@ import { LicenseService } from '../../../core/services/license.service';
   templateUrl: './login.html',
 })
 export class Login {
+  version = version;
   private route = inject(Router);
   private loginService = inject(ServiceLogin);
   private notification = inject(NotificationService);
