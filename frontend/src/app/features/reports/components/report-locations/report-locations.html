@@ -56,7 +56,7 @@
     </div>
   </div>
 
-  <!-- Conteúdo do relatório -->
+  <!-- Conteúdo -->
   @if (report.locations.length > 0) {
     <div class="text-white mt-4">
       <h2 class="text-2xl font-bold mb-6">Relatório por Local {{ getFullDate() }}</h2>
@@ -158,14 +158,79 @@
                 formatCurrency(loc.totalValue)
               }}</span>
             </div>
-            <p class="text-xs text-gray-400 mb-4">🏆 {{ loc.topProduct }}</p>
+            <p class="text-xs text-gray-400 mb-3">🏆 {{ loc.topProduct }}</p>
+
+            <!-- Métricas rápidas -->
+            <div class="grid grid-cols-3 gap-2 mb-4">
+              <div class="bg-white/5 rounded-lg px-3 py-2 text-center">
+                <p class="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Comandas</p>
+                <p class="text-sm font-bold text-white">{{ loc.totalOrders }}</p>
+              </div>
+              <div class="bg-white/5 rounded-lg px-3 py-2 text-center">
+                <p class="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Tempo médio</p>
+                <p class="text-sm font-bold text-indigo-300">
+                  {{ formatMinutes(loc.averageCommandaMinutes) }}
+                </p>
+              </div>
+              <div class="bg-white/5 rounded-lg px-3 py-2 text-center">
+                <p class="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Ocup. mesa</p>
+                <p class="text-sm font-bold text-indigo-300">
+                  {{ formatMinutes(loc.averageTableOccupationMinutes) }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Operadores -->
+            @if (loc.operators.length > 0) {
+              <div class="mb-4">
+                <button
+                  (click)="toggleOperators(loc.id)"
+                  class="w-full flex justify-between items-center bg-white/5 border border-white/10 rounded px-3 py-2 cursor-pointer text-left hover:bg-white/10 transition"
+                  [style.border-left]="'3px solid #f59e0b'"
+                >
+                  <span class="text-sm font-semibold text-amber-400">👤 Operadores</span>
+                  <span class="text-xs text-gray-500">{{
+                    isOperatorsOpen(loc.id) ? '▲' : '▼'
+                  }}</span>
+                </button>
+
+                @if (isOperatorsOpen(loc.id)) {
+                  <div class="mt-2">
+                    <div class="grid grid-cols-[1fr_56px_56px_96px] px-2 pb-1 gap-2">
+                      @for (
+                        header of ['Operador', 'Abriu', 'Fechou', 'Total'];
+                        track header;
+                        let i = $index
+                      ) {
+                        <span
+                          class="text-[10px] text-gray-500 uppercase tracking-wide"
+                          [class.text-right]="i >= 1"
+                          >{{ header }}</span
+                        >
+                      }
+                    </div>
+                    @for (op of loc.operators; track op.id) {
+                      <div
+                        class="grid grid-cols-[1fr_56px_56px_96px] items-center px-2 py-1.5 gap-2 rounded bg-white/2"
+                      >
+                        <span class="text-sm text-gray-300 truncate">{{ op.username }}</span>
+                        <span class="text-xs text-gray-400 text-right">{{ op.opened }}</span>
+                        <span class="text-xs text-gray-400 text-right">{{ op.closed }}</span>
+                        <span class="text-xs text-amber-300 text-right font-medium">{{
+                          formatCurrency(op.totalValue)
+                        }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
 
             <div class="border-t border-white/10 mb-4"></div>
 
             <!-- Categorias -->
             @for (cat of loc.categories; track cat.name) {
               <div class="mb-3">
-                <!-- Header da categoria -->
                 <button
                   (click)="toggleCategory(loc.id, cat.name)"
                   class="w-full flex justify-between items-center bg-white/5 border border-white/10 rounded px-3 py-2 cursor-pointer text-left hover:bg-white/10 transition"
@@ -189,7 +254,6 @@
 
                 @if (isCategoryOpen(loc.id, cat.name)) {
                   <div class="mt-2">
-                    <!-- Cabeçalho tabela -->
                     <div class="grid grid-cols-[1fr_140px_64px_88px] px-2 pb-1 gap-2">
                       @for (
                         header of ['Produto', 'Produzido em', 'Qtd', 'Total'];
@@ -204,7 +268,6 @@
                       }
                     </div>
 
-                    <!-- Itens -->
                     @let maxQty = cat.items[0].qty;
                     @for (item of cat.items; track item.name) {
                       <div class="mb-1">
@@ -222,7 +285,6 @@
                             formatCurrency(item.value)
                           }}</span>
                         </div>
-                        <!-- Barra proporcional -->
                         <div class="h-0.5 bg-white/5 rounded mx-2 mt-0.5">
                           <div
                             class="h-full bg-indigo-400 rounded opacity-50"

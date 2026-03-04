@@ -109,17 +109,18 @@ model Client {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  username  String    @unique
-  password  String
-  role      String    @default("USER")
-  active    Boolean   @default(true)
-  workplace String
-  sales     Sale[]
-  orders    Order[]
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
+  id           Int       @id @default(autoincrement())
+  username     String    @unique
+  password     String
+  role         String    @default("USER")
+  active       Boolean   @default(true)
+  workplace    String
+  sales        Sale[]
+  orders       Order[]   @relation("OrderOperator")
+  closedOrders Order[]   @relation("OrderClosedBy")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
 
   @@index([role])
   @@index([active])
@@ -229,30 +230,30 @@ model Category {
 }
 
 model Order {
-  id                Int         @id @default(autoincrement())
-  type              OrderType
-  locationId        String      @map("location_id")
-  customerName      String?
-  table             String?
-  address           String?
-  status            OrderStatus @default(OPEN)
-  total             Decimal     @db.Decimal(10, 2)
-  createdAt         DateTime    @default(now()) @map("created_at")
-  updatedAt         DateTime    @updatedAt @map("updated_at")
-  kitchenSentAt     DateTime?   @map("kitchen_sent_at")
-  kitchenReadyAt    DateTime?   @map("kitchen_ready_at")
-  finishedAt        DateTime?   @map("finished_at")
-  deliveredAt       DateTime?   @map("delivered_at")
-  tableOccupiedUtil DateTime?   @map("table_occupied_until")
-  operatorId        Int?        @map("operator_id")
-  operator          User?       @relation(fields: [operatorId], references: [id])
-  items             OrderItem[]
-  tableRef          Table?
+  id                 Int         @id @default(autoincrement())
+  type               OrderType
+  locationId         String      @map("location_id")
+  customerName       String?
+  table              String?
+  address            String?
+  status             OrderStatus @default(OPEN)
+  total              Decimal     @db.Decimal(10, 2)
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
+  finishedAt         DateTime?   @map("finished_at")
+  tableOccupiedUntil DateTime?   @map("table_occupied_until") // fix typo: Util -> Until
+  operatorId         Int?        @map("operator_id")
+  operator           User?       @relation("OrderOperator", fields: [operatorId], references: [id])
+  closedByOperatorId Int?        @map("closed_by_operator_id") // novo campo
+  closedByOperator   User?       @relation("OrderClosedBy", fields: [closedByOperatorId], references: [id])
+  items              OrderItem[]
+  tableRef           Table?
 
   @@index([status])
   @@index([locationId])
   @@index([type])
   @@index([operatorId])
+  @@index([closedByOperatorId])
   @@index([createdAt])
   @@map("orders")
 }

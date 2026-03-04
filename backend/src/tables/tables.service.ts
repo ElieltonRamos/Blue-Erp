@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 // src/tables/tables.service.ts
 import {
   Injectable,
@@ -65,9 +66,7 @@ export class TablesService {
         order: {
           include: {
             items: {
-              include: {
-                productions: true,
-              },
+              include: { productions: true },
             },
           },
         },
@@ -75,10 +74,7 @@ export class TablesService {
       orderBy: { number: 'asc' },
     });
 
-    const result: TableResponseDto[] = tables.map(
-      (t) => new TableResponseDto(t),
-    );
-    return result;
+    return tables.map((t) => new TableResponseDto(t));
   }
 
   async findOne(id: number): Promise<TableResponseDto> {
@@ -89,9 +85,7 @@ export class TablesService {
         order: {
           include: {
             items: {
-              include: {
-                productions: true,
-              },
+              include: { productions: true },
             },
           },
         },
@@ -115,7 +109,6 @@ export class TablesService {
       throw new NotFoundException('Mesa não encontrada');
     }
 
-    // Validar se nova location existe
     if (dto.locationId && dto.locationId !== table.locationId) {
       const location = await this.prisma.client.productionLocation.findUnique({
         where: { id: dto.locationId },
@@ -125,7 +118,6 @@ export class TablesService {
         throw new NotFoundException('Localização não encontrada');
       }
 
-      // Verificar conflito de número na nova location
       const numberToCheck = dto.number ?? table.number;
       const existing = await this.prisma.client.table.findUnique({
         where: {
@@ -143,7 +135,6 @@ export class TablesService {
       }
     }
 
-    // Verificar conflito de número na mesma location
     if (dto.number && dto.number !== table.number) {
       const locationToCheck = dto.locationId ?? table.locationId;
       const existing = await this.prisma.client.table.findUnique({
@@ -163,14 +154,12 @@ export class TablesService {
     }
 
     const updated = await this.prisma.client.$transaction(async (tx) => {
-      // Atualizar mesa
       const updatedTable = await tx.table.update({
         where: { id },
         data: dto,
         include: { location: true },
       });
 
-      // Se mesa tem order ativa e mudou location ou customer, atualizar order
       if (table.orderId && (dto.locationId || dto.customer)) {
         const orderUpdate: any = {};
 
@@ -200,9 +189,7 @@ export class TablesService {
   }
 
   async remove(id: number): Promise<{ message: string }> {
-    const table = await this.prisma.client.table.findUnique({
-      where: { id },
-    });
+    const table = await this.prisma.client.table.findUnique({ where: { id } });
 
     if (!table) {
       throw new NotFoundException('Mesa não encontrada');
@@ -212,9 +199,7 @@ export class TablesService {
       throw new BadRequestException('Só é possível excluir mesas disponíveis');
     }
 
-    await this.prisma.client.table.delete({
-      where: { id },
-    });
+    await this.prisma.client.table.delete({ where: { id } });
 
     return { message: 'Mesa excluída com sucesso' };
   }
@@ -237,7 +222,7 @@ export class TablesService {
       throw new BadRequestException('Mesa já está ocupada');
     }
 
-    const updatedTable = await this.prisma.client.$transaction(
+    return this.prisma.client.$transaction(
       async (tx): Promise<TableResponseDto> => {
         const order = await tx.order.create({
           data: {
@@ -269,16 +254,12 @@ export class TablesService {
         return new TableResponseDto(result);
       },
     );
-
-    return updatedTable;
   }
 
   async release(id: number): Promise<TableResponseDto> {
     const table = await this.prisma.client.table.findUnique({
       where: { id },
-      include: {
-        order: { include: { items: true } },
-      },
+      include: { order: { include: { items: true } } },
     });
 
     if (!table) {
@@ -295,7 +276,7 @@ export class TablesService {
       );
     }
 
-    const updatedTable = await this.prisma.client.$transaction(
+    return this.prisma.client.$transaction(
       async (tx): Promise<TableResponseDto> => {
         if (table.orderId) {
           await tx.order.update({
@@ -318,14 +299,10 @@ export class TablesService {
         return new TableResponseDto(result);
       },
     );
-
-    return updatedTable;
   }
 
   async reserve(id: number, dto: ReserveTableDto): Promise<TableResponseDto> {
-    const table = await this.prisma.client.table.findUnique({
-      where: { id },
-    });
+    const table = await this.prisma.client.table.findUnique({ where: { id } });
 
     if (!table) {
       throw new NotFoundException('Mesa não encontrada');
@@ -337,23 +314,17 @@ export class TablesService {
 
     const updated = await this.prisma.client.table.update({
       where: { id },
-      data: {
-        status: 'RESERVED',
-        customer: dto.customer,
-        time: dto.time,
-      },
+      data: { status: 'RESERVED', customer: dto.customer, time: dto.time },
       include: { location: true },
     });
 
     return new TableResponseDto(updated);
   }
 
-  async closeTab(id: number): Promise<CloseTabResponseDto> {
+  async closeTab(id: number, operatorId: number): Promise<CloseTabResponseDto> {
     const table = await this.prisma.client.table.findUnique({
       where: { id },
-      include: {
-        order: { include: { items: true } },
-      },
+      include: { order: { include: { items: true } } },
     });
 
     if (!table) {
@@ -368,13 +339,20 @@ export class TablesService {
       throw new BadRequestException('Não há produtos na comanda');
     }
 
+    const now = new Date();
+
     const result = await this.prisma.client.$transaction(
       async (
         tx,
       ): Promise<{ orderId: number; total: number; message: string }> => {
         const closedOrder = await tx.order.update({
           where: { id: table.orderId! },
-          data: { status: 'CLOSED' },
+          data: {
+            status: 'CLOSED',
+            finishedAt: now,
+            tableOccupiedUntil: now,
+            closedByOperatorId: operatorId,
+          },
         });
 
         await tx.table.update({

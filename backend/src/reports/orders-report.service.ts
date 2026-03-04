@@ -35,23 +35,13 @@ type OrderWithIncludes = Prisma.OrderGetPayload<{
       };
     };
   };
-}>;
+}> & {
+  tableOccupiedUntil: Date | null;
+};
 
 @Injectable()
 export class OrderReportService {
   constructor(private prisma: PrismaService) {}
-
-  // ─────────────────────────────────────────────────────────
-  // Utils
-  // ─────────────────────────────────────────────────────────
-
-  private getStartOfDay(d: string): Date {
-    return new Date(d + ' 00:00:00');
-  }
-
-  private getEndOfDay(d: string): Date {
-    return new Date(d + ' 23:59:59.999');
-  }
 
   private diffMinutes(a: Date, b: Date): number {
     return (b.getTime() - a.getTime()) / 60000;
@@ -65,10 +55,6 @@ export class OrderReportService {
     if (values.length === 0) return 0;
     return values.reduce((a, b) => a + b, 0) / values.length;
   }
-
-  // ─────────────────────────────────────────────────────────
-  // Fetch
-  // ─────────────────────────────────────────────────────────
 
   private async fetchOrders(
     startDate: string,
@@ -97,7 +83,7 @@ export class OrderReportService {
         },
       },
       orderBy: { createdAt: 'desc' },
-    });
+    }) as Promise<OrderWithIncludes[]>;
   }
 
   private async fetchLocationMap(): Promise<Map<string, string>> {
@@ -113,12 +99,6 @@ export class OrderReportService {
     });
     return new Map(locations.map((l) => [l.code, l._count.tables]));
   }
-
-  // ─────────────────────────────────────────────────────────
-  // Tempo de preparo por local
-  // Considera apenas as productions do productionLocation informado
-  // MIN(startedAt) → MAX(completedAt) dos itens daquele local
-  // ─────────────────────────────────────────────────────────
 
   private calcPreparationTimeForLocation(
     order: OrderWithIncludes,
@@ -143,10 +123,6 @@ export class OrderReportService {
     return (end - start) / 60000;
   }
 
-  // ─────────────────────────────────────────────────────────
-  // Tempo total do pedido: createdAt → MAX(deliveredAt) de todas as productions
-  // ─────────────────────────────────────────────────────────
-
   private calcTotalOrderTime(order: OrderWithIncludes): number | null {
     const deliveredTimes = order.items
       .flatMap((i) => i.productions)
@@ -158,11 +134,6 @@ export class OrderReportService {
     const lastDelivered = Math.max(...deliveredTimes);
     return (lastDelivered - order.createdAt.getTime()) / 60000;
   }
-
-  // ─────────────────────────────────────────────────────────
-  // Tempo de preparo por item de produto (para ProductPerformance)
-  // startedAt → completedAt da production individual
-  // ─────────────────────────────────────────────────────────
 
   private calcItemPrepTime(
     productions: {
@@ -179,10 +150,6 @@ export class OrderReportService {
     if (times.length === 0) return null;
     return this.avg(times);
   }
-
-  // ─────────────────────────────────────────────────────────
-  // Pico de pedidos simultâneos (sweep line)
-  // ─────────────────────────────────────────────────────────
 
   private calcPeakConcurrentOrders(orders: OrderWithIncludes[]): number {
     const events: { time: number; delta: number }[] = [];
@@ -212,10 +179,6 @@ export class OrderReportService {
     }
     return peak;
   }
-
-  // ─────────────────────────────────────────────────────────
-  // Distribuições
-  // ─────────────────────────────────────────────────────────
 
   private buildStatusDistribution(
     orders: OrderWithIncludes[],
@@ -275,11 +238,6 @@ export class OrderReportService {
       }))
       .sort((a, b) => a.hour - b.hour);
   }
-
-  // ─────────────────────────────────────────────────────────
-  // Top Produtos
-  // averagePreparationTime = média de (startedAt → completedAt) por production individual
-  // ─────────────────────────────────────────────────────────
 
   private buildTopProducts(orders: OrderWithIncludes[]): ProductPerformance[] {
     const map = new Map<
@@ -388,8 +346,6 @@ export class OrderReportService {
     order: OrderWithIncludes,
     locationNameMap: Map<string, string>,
   ): OrderSummary {
-    // Para o summary, preparationTime = tempo de todas as productions juntas
-    // MIN(startedAt) → MAX(completedAt) independente do local
     const allProductions = order.items.flatMap((i) => i.productions);
 
     const startTimes = allProductions
@@ -425,12 +381,6 @@ export class OrderReportService {
     };
   }
 
-  // ─────────────────────────────────────────────────────────
-  // LocationReport
-  // averagePreparationTime = média dos tempos de preparo deste local
-  // calculado apenas com productions de productionLocation === locationId
-  // ─────────────────────────────────────────────────────────
-
   private buildLocationReport(
     locationId: string,
     locationName: string,
@@ -442,12 +392,6 @@ export class OrderReportService {
     const revenue = orders.reduce((s, o) => s + Number(o.total), 0);
     const canceled = orders.filter((o) => o.status === 'CANCELED').length;
 
-    // Productions filtradas por este local
-    const locationProductions = orders.flatMap((o) =>
-      o.items.flatMap((i) =>
-        i.productions.filter((p) => p.productionLocation === locationId),
-      ),
-    );
     const withKitchen = orders.filter((o) =>
       o.items.some((i) =>
         i.productions.some(
@@ -456,23 +400,19 @@ export class OrderReportService {
       ),
     ).length;
 
-    // averagePreparationTime: por pedido, usando só as productions deste local
     const prepTimesPerOrder = orders
       .map((o) => this.calcPreparationTimeForLocation(o, locationId))
       .filter((t): t is number => t !== null);
 
-    // averageTotalOrderTime: createdAt → MAX(deliveredAt) de TODAS as productions do pedido
     const totalTimesPerOrder = orders
       .map((o) => this.calcTotalOrderTime(o))
       .filter((t): t is number => t !== null);
 
-    // Itens por pedido
     const totalItems = orders.reduce(
       (s, o) => s + o.items.reduce((si, i) => si + Number(i.quantity), 0),
       0,
     );
 
-    // Hora de pico
     const hourDist = this.buildHourDistribution(orders);
     const peakHourEntry =
       hourDist.length > 0
@@ -481,7 +421,6 @@ export class OrderReportService {
           )
         : null;
 
-    // Ocupação de mesas
     const tablesUsed = new Set(
       orders.filter((o) => o.table).map((o) => o.table!),
     ).size;
@@ -490,16 +429,19 @@ export class OrderReportService {
         ? this.round2((tablesUsed / tableCount) * 100)
         : null;
 
-    // Tempo médio de ocupação de mesa via tableOccupiedUtil
+    // fix 1: removido locationProductions (não era usado)
+    // fix 2: tableOccupiedUntil agora está no type OrderWithIncludes
     const occupationTimes = orders
-      .filter((o) => o.table && o.tableOccupiedUtil)
-      .map((o) => this.diffMinutes(o.createdAt, o.tableOccupiedUtil!));
+      .filter(
+        (o): o is OrderWithIncludes & { tableOccupiedUntil: Date } =>
+          o.table !== null && o.tableOccupiedUntil !== null,
+      )
+      .map((o) => this.diffMinutes(o.createdAt, o.tableOccupiedUntil));
     const avgTableOccupation =
       occupationTimes.length > 0
         ? this.round2(this.avg(occupationTimes))
         : null;
 
-    // Top produtos do local — usando productions deste local para prepTime
     const productMap = new Map<
       number,
       {
@@ -543,7 +485,6 @@ export class OrderReportService {
       .sort((a, b) => b.totalOrdered - a.totalOrdered)
       .slice(0, PERFORMANCE_LIMIT);
 
-    // Top mesas do local
     const tableMap = new Map<
       string,
       { totalOrders: number; totalRevenue: number }
@@ -578,12 +519,10 @@ export class OrderReportService {
           ? this.round2((revenue / totalRevenueGlobal) * 100)
           : 0,
       averageOrderValue: total > 0 ? this.round2(revenue / total) : 0,
-      // Tempo de preparo: apenas productions deste local
       averagePreparationTime:
         prepTimesPerOrder.length > 0
           ? this.round2(this.avg(prepTimesPerOrder))
           : 0,
-      // Tempo total: do pedido completo (todas as productions)
       averageTotalOrderTime:
         totalTimesPerOrder.length > 0
           ? this.round2(this.avg(totalTimesPerOrder))
@@ -603,10 +542,6 @@ export class OrderReportService {
     };
   }
 
-  // ─────────────────────────────────────────────────────────
-  // Entry point
-  // ─────────────────────────────────────────────────────────
-
   async generateOrderReport(
     filters: OrderReportFilterDto,
   ): Promise<OrderReportResponseDto> {
@@ -624,12 +559,8 @@ export class OrderReportService {
       const totalRevenue = orders.reduce((s, o) => s + Number(o.total), 0);
       const canceled = orders.filter((o) => o.status === 'CANCELED').length;
 
-      // Tempos globais
-      // averagePreparationTime global = média dos tempos de preparo por local dentro de cada pedido
-      // Calculamos agrupando todas as productions por locationCode, independente do pedido
       const allPreparationTimes: number[] = [];
       for (const order of orders) {
-        // Coletar locationCodes únicos nas productions deste pedido
         const locationCodes = new Set(
           order.items.flatMap((i) =>
             i.productions.map((p) => p.productionLocation),
@@ -650,7 +581,6 @@ export class OrderReportService {
         0,
       );
 
-      // Agrupar pedidos por Order.locationId
       const locationOrdersMap = new Map<string, OrderWithIncludes[]>();
       for (const o of orders) {
         const list = locationOrdersMap.get(o.locationId) ?? [];
@@ -672,7 +602,6 @@ export class OrderReportService {
         })
         .sort((a, b) => b.totalRevenue - a.totalRevenue);
 
-      // fastest/slowest baseado em totalOrderTime
       const ordersWithTime = orders
         .map((o) => ({ order: o, time: this.calcTotalOrderTime(o) }))
         .filter(

@@ -6,7 +6,7 @@ export class OrderItemEntity {
   unitPrice: number;
   total: number;
   kitchenReadyAt: Date | null;
-  orderId: string;
+  orderId: number;
   productId: number;
   createdAt: Date;
   updatedAt: Date;
@@ -23,11 +23,9 @@ export class OrderEntity {
   total: number;
   createdAt: Date;
   updatedAt: Date;
-  kitchenSentAt: Date | null;
-  kitchenReadyAt: Date | null;
   finishedAt: Date | null;
-  deliveredAt: Date | null;
-  tableOccupiedUtil: Date | null;
+  tableOccupiedUntil: Date | null;
   operatorId: number | null;
+  closedByOperatorId: number | null;
   items: OrderItemEntity[];
 }

@@ -2,11 +2,7 @@ import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ReportService } from '../../services/report.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
-import {
-  LocationReportData,
-  LocationReportLocation,
-  locationReportMock,
-} from '../../types/reportLocations';
+import { LocationReportData, locationReportMock } from '../../types/reportLocations';
 
 @Component({
   selector: 'app-report-locations',
@@ -27,9 +23,8 @@ export class ReportLocations {
   ngOnInit() {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    const localDate = now.toISOString().split('T')[0];
-    this.startDate = localDate;
-    this.endDate = localDate;
+    this.startDate = this.formatDate(now);
+    this.endDate = this.formatDate(now);
   }
 
   getFullDate(): string {
@@ -92,7 +87,6 @@ export class ReportLocations {
     });
   }
 
-  // Monta a matriz: { soldAt -> { producedAt -> value } }
   getMatrix(): { matrix: Record<string, Record<string, number>>; productionLocations: string[] } {
     const productionLocations = new Set<string>();
     const matrix: Record<string, Record<string, number>> = {};
@@ -150,12 +144,16 @@ export class ReportLocations {
     return Math.max(...values, 1);
   }
 
-  getTotalValue(): number {
-    return this.report.locations.reduce((s, l) => s + l.totalValue, 0);
-  }
-
   formatCurrency(value: number): string {
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  formatMinutes(minutes: number | null): string {
+    if (minutes === null) return '—';
+    if (minutes < 60) return `${minutes.toFixed(0)} min`;
+    const h = Math.floor(minutes / 60);
+    const m = Math.round(minutes % 60);
+    return `${h}h ${m}min`;
   }
 
   toggleCategory(locationId: number, categoryName: string) {
@@ -165,8 +163,17 @@ export class ReportLocations {
 
   isCategoryOpen(locationId: number, categoryName: string): boolean {
     const key = `${locationId}-${categoryName}`;
-    return this.openCategories[key] !== false; // aberto por padrão
+    return this.openCategories[key] !== false;
+  }
+
+  toggleOperators(locationId: number) {
+    this.openOperators[locationId] = !this.openOperators[locationId];
+  }
+
+  isOperatorsOpen(locationId: number): boolean {
+    return this.openOperators[locationId] === true;
   }
 
   private openCategories: Record<string, boolean> = {};
+  private openOperators: Record<number, boolean> = {};
 }

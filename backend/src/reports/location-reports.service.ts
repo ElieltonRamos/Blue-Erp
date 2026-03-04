@@ -14,15 +14,18 @@ type OrderWithIncludes = Prisma.OrderGetPayload<{
             id: true;
             name: true;
             productionLocation: true;
-            category: {
-              select: { name: true };
-            };
+            category: { select: { name: true } };
           };
         };
       };
     };
+    operator: { select: { id: true; username: true } };
+    closedByOperator: { select: { id: true; username: true } };
   };
-}>;
+}> & {
+  finishedAt: Date | null;
+  tableOccupiedUntil: Date | null;
+};
 
 type ItemAggregator = {
   name: string;
@@ -38,11 +41,23 @@ type CategoryAggregator = {
   items: Record<string, ItemAggregator>;
 };
 
+type OperatorStats = {
+  id: number;
+  username: string;
+  opened: number;
+  closed: number;
+  totalValue: number;
+};
+
 type LocationAggregator = {
   id: number;
   code: string;
   name: string;
   totalValue: number;
+  totalOrders: number;
+  commandaDurations: number[];
+  tableOccupationTimes: number[];
+  operators: Record<number, OperatorStats>;
   categories: Record<string, CategoryAggregator>;
 };
 
@@ -58,13 +73,24 @@ export class LocationReportService {
     return new Date(dateString + ' 23:59:59.999');
   }
 
+  private diffMinutes(a: Date, b: Date): number {
+    return (b.getTime() - a.getTime()) / 60000;
+  }
+
+  private avg(values: number[]): number | null {
+    if (values.length === 0) return null;
+    return Number(
+      (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2),
+    );
+  }
+
   private async fetchOrdersData(
     startDate: string,
     endDate: string,
   ): Promise<OrderWithIncludes[]> {
     return this.prisma.client.order.findMany({
       where: {
-        status: { not: 'CANCELED' },
+        status: 'PAID',
         createdAt: {
           gte: this.getStartOfDay(startDate),
           lte: this.getEndOfDay(endDate),
@@ -78,16 +104,16 @@ export class LocationReportService {
                 id: true,
                 name: true,
                 productionLocation: true,
-                category: {
-                  select: { name: true },
-                },
+                category: { select: { name: true } },
               },
             },
           },
         },
+        operator: { select: { id: true, username: true } },
+        closedByOperator: { select: { id: true, username: true } },
       },
       orderBy: { createdAt: 'desc' },
-    });
+    }) as Promise<OrderWithIncludes[]>;
   }
 
   private async fetchLocationNames(): Promise<
@@ -97,14 +123,9 @@ export class LocationReportService {
       where: { active: true },
       select: { id: true, code: true, name: true },
     });
-
     return Object.fromEntries(
       locations.map((l) => [l.code, { id: l.id, name: l.name }]),
     );
-  }
-
-  private initializeAggregators(): Record<string, LocationAggregator> {
-    return {};
   }
 
   private ensureLocation(
@@ -119,6 +140,10 @@ export class LocationReportService {
         code: locationCode,
         name: loc?.name ?? locationCode,
         totalValue: 0,
+        totalOrders: 0,
+        commandaDurations: [],
+        tableOccupationTimes: [],
+        operators: {},
         categories: {},
       };
     }
@@ -140,18 +165,74 @@ export class LocationReportService {
     return location.categories[categoryName];
   }
 
+  private ensureOperator(
+    location: LocationAggregator,
+    id: number,
+    username: string,
+  ): OperatorStats {
+    if (!location.operators[id]) {
+      location.operators[id] = {
+        id,
+        username,
+        opened: 0,
+        closed: 0,
+        totalValue: 0,
+      };
+    }
+    return location.operators[id];
+  }
+
   private processOrder(
     order: OrderWithIncludes,
     aggregators: Record<string, LocationAggregator>,
     locationMap: Record<string, { id: number; name: string }>,
   ) {
-    const locationCode = order.locationId;
     const location = this.ensureLocation(
       aggregators,
-      locationCode,
+      order.locationId,
       locationMap,
     );
+    const orderValue = Number(order.total);
 
+    location.totalOrders += 1;
+    location.totalValue += orderValue;
+
+    // Tempo de comanda: abertura → fechamento
+    if (order.finishedAt) {
+      location.commandaDurations.push(
+        this.diffMinutes(order.createdAt, order.finishedAt),
+      );
+    }
+
+    // Tempo de ocupação de mesa
+    if (order.tableOccupiedUntil && order.table) {
+      location.tableOccupationTimes.push(
+        this.diffMinutes(order.createdAt, order.tableOccupiedUntil),
+      );
+    }
+
+    // Operador que abriu
+    if (order.operator) {
+      const op = this.ensureOperator(
+        location,
+        order.operator.id,
+        order.operator.username,
+      );
+      op.opened += 1;
+    }
+
+    // Operador que fechou
+    if (order.closedByOperator) {
+      const op = this.ensureOperator(
+        location,
+        order.closedByOperator.id,
+        order.closedByOperator.username,
+      );
+      op.closed += 1;
+      op.totalValue += orderValue;
+    }
+
+    // Itens por categoria
     for (const item of order.items) {
       const categoryName = item.product.category?.name ?? 'Sem Categoria';
       const producedAt = item.product.productionLocation
@@ -162,30 +243,26 @@ export class LocationReportService {
       const qty = Number(item.quantity);
       const value = Number(item.total);
 
-      location.totalValue += value;
-
       const category = this.ensureCategory(location, categoryName);
       category.totalValue += value;
       category.totalQty += qty;
 
-      const productKey = item.product.name;
-      if (!category.items[productKey]) {
-        category.items[productKey] = {
+      if (!category.items[item.product.name]) {
+        category.items[item.product.name] = {
           name: item.product.name,
           qty: 0,
           value: 0,
           producedAt,
         };
       }
-      category.items[productKey].qty += qty;
-      category.items[productKey].value += value;
+      category.items[item.product.name].qty += qty;
+      category.items[item.product.name].value += value;
     }
   }
 
   private getTopProduct(location: LocationAggregator): string {
     let topName = '';
     let topValue = 0;
-
     for (const cat of Object.values(location.categories)) {
       for (const item of Object.values(cat.items)) {
         if (item.value > topValue) {
@@ -194,7 +271,6 @@ export class LocationReportService {
         }
       }
     }
-
     return topName;
   }
 
@@ -206,7 +282,19 @@ export class LocationReportService {
       code: loc.code,
       name: loc.name,
       totalValue: fmt(loc.totalValue),
+      totalOrders: loc.totalOrders,
       topProduct: this.getTopProduct(loc),
+      averageCommandaMinutes: this.avg(loc.commandaDurations),
+      averageTableOccupationMinutes: this.avg(loc.tableOccupationTimes),
+      operators: Object.values(loc.operators)
+        .sort((a, b) => b.totalValue - a.totalValue)
+        .map((op) => ({
+          id: op.id,
+          username: op.username,
+          opened: op.opened,
+          closed: op.closed,
+          totalValue: fmt(op.totalValue),
+        })),
       categories: Object.values(loc.categories).map((cat) => ({
         name: cat.name,
         totalValue: fmt(cat.totalValue),
@@ -237,7 +325,7 @@ export class LocationReportService {
         this.fetchLocationNames(),
       ]);
 
-      const aggregators = this.initializeAggregators();
+      const aggregators: Record<string, LocationAggregator> = {};
 
       for (const order of orders) {
         this.processOrder(order, aggregators, locationMap);

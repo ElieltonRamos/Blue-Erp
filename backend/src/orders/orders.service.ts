@@ -74,11 +74,7 @@ export class OrdersService {
             },
           },
           operator: {
-            select: {
-              id: true,
-              username: true,
-              role: true,
-            },
+            select: { id: true, username: true, role: true },
           },
         },
       });
@@ -92,45 +88,32 @@ export class OrdersService {
           for (const item of resaleItems) {
             await tx.product.update({
               where: { id: item.productId },
-              data: {
-                quantity: {
-                  decrement: item.quantity,
-                },
-              },
+              data: { quantity: { decrement: item.quantity } },
             });
           }
         });
       }
 
-      const hasManufacturedItems = order.items.some(
+      const manufacturedItems = order.items.filter(
         (item) => item.product.productType === 'MANUFACTURED',
       );
 
-      if (hasManufacturedItems) {
+      if (manufacturedItems.length > 0) {
         await this.prisma.client.$transaction(async (tx) => {
-          await tx.order.update({
-            where: { id: order.id },
-            data: { kitchenSentAt: new Date() },
-          });
-
-          for (const item of order.items) {
-            if (item.product.productType === 'MANUFACTURED') {
-              await tx.orderProduction.create({
-                data: {
-                  orderItemId: item.id,
-                  productionLocation:
-                    item.product.productionLocation || 'LOCAL_01',
-                  status: 'PENDING',
-                  quantityRequested: item.quantity,
-                  quantityProduced: 0,
-                  pendingAt: new Date(),
-                },
-              });
-            }
+          for (const item of manufacturedItems) {
+            await tx.orderProduction.create({
+              data: {
+                orderItemId: item.id,
+                productionLocation:
+                  item.product.productionLocation || 'LOCAL_01',
+                status: 'PENDING',
+                quantityRequested: item.quantity,
+                quantityProduced: 0,
+                pendingAt: new Date(),
+              },
+            });
           }
         });
-
-        order.kitchenSentAt = new Date();
       }
 
       return this.mapToEntity(order);
@@ -187,17 +170,9 @@ export class OrdersService {
         take: limit,
         include: {
           items: true,
-          operator: {
-            select: {
-              id: true,
-              username: true,
-              role: true,
-            },
-          },
+          operator: { select: { id: true, username: true, role: true } },
         },
-        orderBy: {
-          createdAt: 'desc',
-        },
+        orderBy: { createdAt: 'desc' },
       }),
       this.prisma.client.order.count({ where }),
     ]);
@@ -216,13 +191,7 @@ export class OrdersService {
       where: { id },
       include: {
         items: true,
-        operator: {
-          select: {
-            id: true,
-            username: true,
-            role: true,
-          },
-        },
+        operator: { select: { id: true, username: true, role: true } },
       },
     });
 
@@ -252,13 +221,7 @@ export class OrdersService {
             },
           },
         },
-        operator: {
-          select: {
-            id: true,
-            username: true,
-            role: true,
-          },
-        },
+        operator: { select: { id: true, username: true, role: true } },
       },
     });
 
@@ -292,7 +255,11 @@ export class OrdersService {
       return this.mapToEntity(updatedOrder);
     }
 
-    const isInProduction = !!existingOrder.kitchenSentAt;
+    // Substituído: era !!existingOrder.kitchenSentAt
+    const isInProduction = existingOrder.items.some((item) =>
+      item.productions.some((p) => p.status !== 'CANCELED'),
+    );
+
     const { items, ...orderData } = updateOrderDto;
 
     await this.prisma.client.$transaction(async (tx) => {
@@ -300,12 +267,10 @@ export class OrdersService {
 
       if (!items) {
         totalPedido = Number(existingOrder.total);
-
         await tx.order.update({
           where: { id },
           data: { ...orderData, total: totalPedido },
         });
-
         return;
       }
 
@@ -345,13 +310,10 @@ export class OrdersService {
 
         await tx.orderItem.delete({ where: { id: item.id } });
 
-        // Estorna estoque se RESALE
         if (item.product.productType === 'RESALE') {
           await tx.product.update({
             where: { id: item.productId },
-            data: {
-              quantity: { increment: item.quantity },
-            },
+            data: { quantity: { increment: item.quantity } },
           });
         }
       }
@@ -372,7 +334,6 @@ export class OrdersService {
           );
         }
 
-        // Aumento de quantidade
         if (novaQuantidade > quantidadeAtual) {
           const diferenca = novaQuantidade - quantidadeAtual;
 
@@ -391,7 +352,6 @@ export class OrdersService {
           }
         }
 
-        // Redução de quantidade
         if (novaQuantidade < quantidadeAtual) {
           if (existing.product.productType === 'MANUFACTURED') {
             const pendingProductions = existing.productions.filter(
@@ -414,9 +374,7 @@ export class OrdersService {
               } else {
                 await tx.orderProduction.update({
                   where: { id: prod.id },
-                  data: {
-                    quantityRequested: qty - restanteParaCancelar,
-                  },
+                  data: { quantityRequested: qty - restanteParaCancelar },
                 });
                 restanteParaCancelar = 0;
               }
@@ -435,13 +393,9 @@ export class OrdersService {
 
         await tx.orderItem.update({
           where: { id: existing.id },
-          data: {
-            quantity: novaQuantidade,
-            total: totalItem,
-          },
+          data: { quantity: novaQuantidade, total: totalItem },
         });
 
-        // Ajusta estoque se RESALE
         if (existing.product.productType === 'RESALE') {
           const diferenca = novaQuantidade - quantidadeAtual;
           if (diferenca > 0) {
@@ -466,11 +420,7 @@ export class OrdersService {
 
         const products = await tx.product.findMany({
           where: { id: { in: productIds } },
-          select: {
-            id: true,
-            productType: true,
-            productionLocation: true,
-          },
+          select: { id: true, productType: true, productionLocation: true },
         });
 
         for (const newItem of newItems) {
@@ -506,7 +456,6 @@ export class OrdersService {
             },
           });
 
-          // Baixa estoque se RESALE
           if (product.productType === 'RESALE') {
             await tx.product.update({
               where: { id: newItem.productId },
@@ -531,10 +480,7 @@ export class OrdersService {
 
       await tx.order.update({
         where: { id },
-        data: {
-          ...orderData,
-          total: totalPedido,
-        },
+        data: { ...orderData, total: totalPedido },
       });
     });
 
@@ -542,13 +488,7 @@ export class OrdersService {
       where: { id },
       include: {
         items: true,
-        operator: {
-          select: {
-            id: true,
-            username: true,
-            role: true,
-          },
-        },
+        operator: { select: { id: true, username: true, role: true } },
       },
     });
 
@@ -557,10 +497,7 @@ export class OrdersService {
 
   async remove(id: number): Promise<void> {
     await this.findOne(id);
-
-    await this.prisma.client.order.delete({
-      where: { id },
-    });
+    await this.prisma.client.order.delete({ where: { id } });
   }
 
   async sendToKitchen(id: number, _sendToKitchenDto: SendToKitchenDto) {
@@ -572,33 +509,33 @@ export class OrdersService {
       );
     }
 
-    if (order.kitchenSentAt) {
-      throw new BadRequestException('Pedido já foi enviado para cozinha');
-    }
-
     const orderWithProducts = await this.prisma.client.order.findUnique({
       where: { id },
       include: {
         items: {
           include: {
+            productions: true,
             product: {
-              select: {
-                id: true,
-                productionLocation: true,
-                productType: true,
-              },
+              select: { id: true, productionLocation: true, productType: true },
             },
           },
         },
       },
     });
 
-    await this.prisma.client.$transaction(async (tx) => {
-      await tx.order.update({
-        where: { id },
-        data: { kitchenSentAt: new Date() },
-      });
+    if (!orderWithProducts) {
+      throw new BadRequestException('Pedido não encontrado');
+    }
 
+    const alreadyInProduction = orderWithProducts.items.some((item) =>
+      item.productions.some((p) => p.status !== 'CANCELED'),
+    );
+
+    if (alreadyInProduction) {
+      throw new BadRequestException('Pedido já possui itens em produção');
+    }
+
+    await this.prisma.client.$transaction(async (tx) => {
       if (orderWithProducts === null) {
         throw new BadRequestException('Lista de pedidos vazia');
       }
@@ -621,7 +558,6 @@ export class OrdersService {
 
     return {
       orderId: id,
-      kitchenSentAt: new Date(),
       message: 'Pedido enviado para cozinha com sucesso',
     };
   }
@@ -630,9 +566,7 @@ export class OrdersService {
     const order = await this.prisma.client.order.findUnique({
       where: { id },
       include: {
-        items: {
-          include: { productions: true, product: true },
-        },
+        items: { include: { productions: true, product: true } },
         operator: { select: { id: true, username: true, role: true } },
       },
     });
@@ -696,12 +630,10 @@ export class OrdersService {
       total: Number(order.total),
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
-      kitchenSentAt: order.kitchenSentAt,
-      kitchenReadyAt: order.kitchenReadyAt,
       finishedAt: order.finishedAt,
-      deliveredAt: order.deliveredAt,
-      tableOccupiedUtil: order.tableOccupiedUtil,
+      tableOccupiedUntil: order.tableOccupiedUntil,
       operatorId: order.operatorId,
+      closedByOperatorId: order.closedByOperatorId,
       items:
         order.items?.map((item: any) => ({
           id: item.id,

@@ -12,12 +12,24 @@ export interface LocationReportCategory {
   items: LocationReportItem[];
 }
 
+export interface LocationReportOperator {
+  id: number;
+  username: string;
+  opened: number;
+  closed: number;
+  totalValue: number;
+}
+
 export interface LocationReportLocation {
   id: number;
   code: string;
   name: string;
   totalValue: number;
+  totalOrders: number;
   topProduct: string;
+  averageCommandaMinutes: number | null;
+  averageTableOccupationMinutes: number | null;
+  operators: LocationReportOperator[];
   categories: LocationReportCategory[];
 }
 

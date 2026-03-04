@@ -53,10 +53,7 @@ export class OrderResponseDto {
   })
   type: OrderType;
 
-  @ApiProperty({
-    description: 'Local do pedido',
-    example: 'LOCAL_01',
-  })
+  @ApiProperty({ description: 'Local do pedido', example: 'LOCAL_01' })
   locationId: string;
 
   @ApiPropertyOptional({
@@ -97,37 +94,22 @@ export class OrderResponseDto {
   updatedAt: Date;
 
   @ApiPropertyOptional({
-    description: 'Data/hora enviado para cozinha',
-    example: '2024-01-15T10:05:00Z',
-  })
-  kitchenSentAt?: Date;
-
-  @ApiPropertyOptional({
-    description: 'Data/hora que ficou pronto',
-    example: '2024-01-15T10:30:00Z',
-  })
-  kitchenReadyAt?: Date;
-
-  @ApiPropertyOptional({
     description: 'Data/hora finalizado',
     example: '2024-01-15T10:35:00Z',
   })
   finishedAt?: Date;
 
   @ApiPropertyOptional({
-    description: 'Data/hora entregue (delivery)',
-    example: '2024-01-15T11:00:00Z',
-  })
-  deliveredAt?: Date;
-
-  @ApiPropertyOptional({
     description: 'Data/hora mesa liberada',
     example: '2024-01-15T11:00:00Z',
   })
-  tableOccupiedUtil?: Date;
+  tableOccupiedUntil?: Date;
 
-  @ApiPropertyOptional({ description: 'ID do operador', example: 1 })
+  @ApiPropertyOptional({ description: 'ID do operador que abriu', example: 1 })
   operatorId?: number;
+
+  @ApiPropertyOptional({ description: 'ID do operador que fechou', example: 2 })
+  closedByOperatorId?: number;
 
   @ApiProperty({
     description: 'Itens do pedido',
@@ -137,11 +119,14 @@ export class OrderResponseDto {
   items: OrderItemResponseDto[];
 
   @ApiPropertyOptional({
-    description: 'Informações do operador',
+    description: 'Operador que abriu',
     example: { id: 1, username: 'joao.silva' },
   })
-  operator?: {
-    id: number;
-    username: string;
-  };
+  operator?: { id: number; username: string };
+
+  @ApiPropertyOptional({
+    description: 'Operador que fechou',
+    example: { id: 2, username: 'maria.souza' },
+  })
+  closedByOperator?: { id: number; username: string };
 }

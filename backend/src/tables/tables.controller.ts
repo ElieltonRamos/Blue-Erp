@@ -154,6 +154,7 @@ export class TablesController {
 
   @Post(':id/close-tab')
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Fechar comanda da mesa (redireciona para /comandas/:orderId)',
   })
@@ -173,7 +174,10 @@ export class TablesController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Mesa sem comanda ativa',
   })
-  closeTab(@Param('id', ParseIntPipe) id: number) {
-    return this.tablesService.closeTab(id);
+  closeTab(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('userId') operatorId: number,
+  ) {
+    return this.tablesService.closeTab(id, operatorId);
   }
 }
