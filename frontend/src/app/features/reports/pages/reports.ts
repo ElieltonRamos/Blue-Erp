@@ -4,10 +4,11 @@ import { ReportSales } from "../components/report-sales/report-sales";
 import { ReportProducts } from "../components/report-products/report-products";
 import { ReportsExpensesComponent } from "../components/reports-expenses/reports-expenses";
 import { ReportOrders } from "../components/report-orders/report-orders";
+import { ReportLocations } from "../components/report-locations/report-locations";
 
 @Component({
   selector: 'app-reports',
-  imports: [ReportSales, ReportProducts, ReportsExpensesComponent, ReportOrders],
+  imports: [ReportSales, ReportProducts, ReportsExpensesComponent, ReportOrders, ReportLocations],
   templateUrl: './reports.html',
 })
 export class Reports {

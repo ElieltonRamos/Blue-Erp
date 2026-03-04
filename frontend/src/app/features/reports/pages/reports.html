@@ -41,6 +41,13 @@
         >
           <i class="fas fa-user-plus"></i> Relatório de Comandas
         </button>
+        <button
+          (click)="changeMenuContext('reports-locations')"
+          [attr.class]="menuContext === 'reports-locations' ? classBtnSelected : classBtnUnselected"
+          class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-semibold"
+        >
+          <i class="fas fa-user-plus"></i> Relatório de Locais
+        </button>
       </div>
     </div>
 
@@ -53,6 +60,8 @@
       <app-reports-expenses />
     } @else if (menuContext === 'reports-orders') {
       <app-report-orders />
+    } @else if (menuContext === 'reports-locations') {
+      <app-report-locations />
     }
   </div>
 </div>
