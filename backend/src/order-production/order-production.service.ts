@@ -84,6 +84,7 @@ export class ProductionService {
       },
     }));
   }
+
   /**
    * Listar todas produções com filtros
    */
@@ -127,9 +128,7 @@ export class ProductionService {
           },
         },
       },
-      orderBy: {
-        pendingAt: 'asc',
-      },
+      orderBy: { pendingAt: 'asc' },
     });
 
     return productions.map((prod) => ({
@@ -209,7 +208,77 @@ export class ProductionService {
   }
 
   /**
+   * Resolve recursivamente os consumos de matérias-primas.
+   *
+   * Para cada item da composição do produto:
+   *   - Se materialId → acumula o consumo direto na matéria-prima
+   *   - Se subProductId → busca a composição do subproduto e recursa,
+   *     multiplicando a quantidade pelo fator da camada acima.
+   *     O estoque do subproduto NÃO é decrementado.
+   *
+   * Retorna um Map<materialId, Decimal> com o total a consumir por matéria-prima.
+   */
+  private async resolveMaterialConsumption(
+    productId: number,
+    multiplier: Decimal,
+    visited: Set<number> = new Set(),
+  ): Promise<Map<number, Decimal>> {
+    if (visited.has(productId)) {
+      throw new BadRequestException(
+        `Referência circular detectada na composição do produto ${productId}`,
+      );
+    }
+    visited.add(productId);
+
+    const product = await this.prisma.client.product.findUnique({
+      where: { id: productId },
+      include: {
+        compositionItems: {
+          include: {
+            material: { select: { id: true } },
+            subProduct: { select: { id: true } },
+          },
+        },
+      },
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Produto ${productId} não encontrado`);
+    }
+
+    const consumption = new Map<number, Decimal>();
+
+    for (const comp of product.compositionItems) {
+      const qtd = new Decimal(comp.quantity).times(multiplier);
+
+      if (comp.materialId) {
+        const current = consumption.get(comp.materialId) ?? new Decimal(0);
+        consumption.set(comp.materialId, current.plus(qtd));
+      } else if (comp.subProductId) {
+        // Recursa na composição do subproduto sem decrementar seu estoque
+        const subConsumption = await this.resolveMaterialConsumption(
+          comp.subProductId,
+          qtd,
+          new Set(visited),
+        );
+
+        for (const [materialId, amount] of subConsumption) {
+          const current = consumption.get(materialId) ?? new Decimal(0);
+          consumption.set(materialId, current.plus(amount));
+        }
+      } else {
+        throw new BadRequestException(
+          `Composição inválida: item sem material ou subproduto definido`,
+        );
+      }
+    }
+
+    return consumption;
+  }
+
+  /**
    * Completar produção (IN_PROGRESS -> COMPLETED)
+   * Consome matérias-primas recursivamente (semiprontos não têm estoque decrementado)
    */
   async completeProduction(productionId: number) {
     const production = await this.prisma.client.orderProduction.findUnique({
@@ -217,15 +286,7 @@ export class ProductionService {
       include: {
         orderItem: {
           include: {
-            product: {
-              include: {
-                compositionItems: {
-                  include: {
-                    material: true,
-                  },
-                },
-              },
-            },
+            product: true,
           },
         },
       },
@@ -241,8 +302,22 @@ export class ProductionService {
       );
     }
 
+    const productType = production.orderItem.product.productType;
+    const hasComposition =
+      productType === ProductType.MANUFACTURED ||
+      productType === ProductType.SEMI_MANUFACTURED;
+
+    // Resolve todo o consumo de matérias-primas antes de abrir a transaction
+    let materialConsumption = new Map<number, Decimal>();
+
+    if (hasComposition) {
+      materialConsumption = await this.resolveMaterialConsumption(
+        production.orderItem.product.id,
+        new Decimal(production.quantityRequested),
+      );
+    }
+
     await this.prisma.client.$transaction(async (tx) => {
-      // Marcar produção como completa
       await tx.orderProduction.update({
         where: { id: productionId },
         data: {
@@ -252,38 +327,16 @@ export class ProductionService {
         },
       });
 
-      // Marcar item como pronto na cozinha
       await tx.orderItem.update({
         where: { id: production.orderItemId },
-        data: {
-          kitchenReadyAt: new Date(),
-        },
+        data: { kitchenReadyAt: new Date() },
       });
 
-      // Consumir estoque se for produto manufaturado
-      if (
-        production.orderItem.product.productType === ProductType.MANUFACTURED
-      ) {
-        for (const comp of production.orderItem.product.compositionItems) {
-          const qtdNecessaria = new Decimal(comp.quantity).times(
-            new Decimal(production.quantityRequested),
-          );
-
-          if (!comp.materialId) {
-            throw new BadRequestException(
-              `Composição inválida: material não definido`,
-            );
-          }
-
-          await tx.primaryMaterial.update({
-            where: { id: comp.materialId },
-            data: {
-              currentStock: {
-                decrement: qtdNecessaria,
-              },
-            },
-          });
-        }
+      for (const [materialId, amount] of materialConsumption) {
+        await tx.primaryMaterial.update({
+          where: { id: materialId },
+          data: { currentStock: { decrement: amount } },
+        });
       }
     });
 
@@ -315,9 +368,7 @@ export class ProductionService {
 
     const updated = await this.prisma.client.orderProduction.update({
       where: { id: productionId },
-      data: {
-        deliveredAt: new Date(),
-      },
+      data: { deliveredAt: new Date() },
     });
 
     return {
@@ -347,9 +398,7 @@ export class ProductionService {
 
     const updated = await this.prisma.client.orderProduction.update({
       where: { id: productionId },
-      data: {
-        status: ProductionStatus.CANCELED,
-      },
+      data: { status: ProductionStatus.CANCELED },
     });
 
     return {
@@ -367,10 +416,9 @@ export class ProductionService {
     end: Date | null,
   ): number | null {
     if (!start) return null;
-
     const endDate = end || new Date();
     const diff = endDate.getTime() - start.getTime();
-    return Math.floor(diff / 1000 / 60); // retorna em minutos
+    return Math.floor(diff / 1000 / 60);
   }
 
   /**
@@ -424,7 +472,6 @@ export class ProductionService {
   private calculateAverageTime(times: (number | null)[]): number | null {
     const validTimes = times.filter((t) => t !== null);
     if (validTimes.length === 0) return null;
-
     const sum = validTimes.reduce((acc, t) => acc + t, 0);
     return Math.round(sum / validTimes.length);
   }

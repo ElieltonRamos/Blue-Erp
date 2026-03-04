@@ -45,11 +45,15 @@ export class CreateProduct implements OnInit {
   productionLocationOptions: { code: string; name: string }[] = [];
 
   csosnOptions = [
-    { value: '102', label: '102 - Tributação SN sem permissão de crédito' },
-    { value: '103', label: '103 - Tributação SN com isenção' },
+    { value: '101', label: '101 - Tributada pelo SN com permissão de crédito' },
+    { value: '102', label: '102 - Tributada pelo SN sem permissão de crédito' },
+    { value: '103', label: '103 - Isenção do ICMS no SN para faixa de receita' },
+    { value: '201', label: '201 - Tributada pelo SN com crédito e com ST' },
+    { value: '202', label: '202 - Tributada pelo SN sem crédito e com ST' },
+    { value: '203', label: '203 - Isenção do ICMS no SN e com ST' },
     { value: '300', label: '300 - Imune' },
     { value: '400', label: '400 - Não tributada pelo SN' },
-    { value: '500', label: '500 - ICMS cobrado anteriormente' },
+    { value: '500', label: '500 - ICMS cobrado anteriormente por ST ou antecipação' },
     { value: '900', label: '900 - Outros' },
   ];
 

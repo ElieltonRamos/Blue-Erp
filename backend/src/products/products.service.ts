@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import {
   Injectable,
   NotFoundException,
@@ -26,6 +27,7 @@ const COMPOSITION_INCLUDE = {
           code: true,
           quantity: true,
           unit: true,
+          costPrice: true,
         },
       },
     },
@@ -241,7 +243,7 @@ export class ProductService {
           TYPES_WITH_COMPOSITION.includes(product.productType) &&
           product.compositionItems.length > 0
         ) {
-          const availableStock = this.calculateAvailableStock(
+          const availableStock = await this.calculateAvailableStock(
             product.compositionItems,
           );
 
@@ -274,25 +276,50 @@ export class ProductService {
    * Calcular quantas unidades do produto podem ser produzidas com o estoque atual
    * Suporta matérias-primas e subprodutos semiprontos
    */
-  private calculateAvailableStock(compositionItems: any[]): number {
+  private async calculateAvailableStock(
+    compositionItems: any[],
+    visited: Set<number> = new Set(),
+  ): Promise<number> {
     if (compositionItems.length === 0) return 0;
 
-    const possibleQuantities = compositionItems.map((item) => {
-      const requiredQuantity = item.quantity.toNumber();
-      if (requiredQuantity === 0) return 0;
+    const possibleQuantities = await Promise.all(
+      compositionItems.map(async (item) => {
+        const requiredQuantity = item.quantity.toNumber();
+        if (requiredQuantity === 0) return 0;
 
-      if (item.materialId && item.material) {
-        const stock = item.material.currentStock.toNumber();
-        return Math.floor(stock / requiredQuantity);
-      }
+        if (item.materialId && item.material) {
+          const stock = item.material.currentStock.toNumber();
+          return Math.floor(stock / requiredQuantity);
+        }
 
-      if (item.subProductId && item.subProduct) {
-        const stock = item.subProduct.quantity.toNumber();
-        return Math.floor(stock / requiredQuantity);
-      }
+        if (item.subProductId) {
+          if (visited.has(item.subProductId)) return 0;
 
-      return 0;
-    });
+          const subProduct = await this.prisma.client.product.findUnique({
+            where: { id: item.subProductId },
+            include: {
+              compositionItems: {
+                include: {
+                  material: true,
+                  subProduct: { select: { id: true } },
+                },
+              },
+            },
+          });
+
+          if (!subProduct || subProduct.compositionItems.length === 0) return 0;
+
+          const subStock = await this.calculateAvailableStock(
+            subProduct.compositionItems,
+            new Set([...visited, item.subProductId]),
+          );
+
+          return Math.floor(subStock / requiredQuantity);
+        }
+
+        return 0;
+      }),
+    );
 
     return Math.min(...possibleQuantities);
   }
@@ -320,7 +347,7 @@ export class ProductService {
       TYPES_WITH_COMPOSITION.includes(product.productType) &&
       product.compositionItems.length > 0
     ) {
-      const availableStock = this.calculateAvailableStock(
+      const availableStock = await this.calculateAvailableStock(
         product.compositionItems,
       );
 
@@ -360,7 +387,7 @@ export class ProductService {
       TYPES_WITH_COMPOSITION.includes(product.productType) &&
       product.compositionItems.length > 0
     ) {
-      const availableStock = this.calculateAvailableStock(
+      const availableStock = await this.calculateAvailableStock(
         product.compositionItems,
       );
 
@@ -537,6 +564,12 @@ export class ProductService {
     if (!TYPES_WITH_COMPOSITION.includes(product.productType)) {
       throw new BadRequestException(
         'Apenas produtos manufaturados ou semiprontos podem ser produzidos',
+      );
+    }
+
+    if (product.productType === ProductType.SEMI_MANUFACTURED) {
+      throw new BadRequestException(
+        'Produtos semiprontos não podem ser produzidos manualmente. O estoque é calculado automaticamente com base nas matérias-primas.',
       );
     }
 
