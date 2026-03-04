@@ -228,7 +228,7 @@ export class CreateProduct implements OnInit {
       csosn: formValue.csosn ?? '',
       unit: formValue.unit ?? Unit.UN,
       origin: formValue.origin ?? 0,
-      categoryId: formValue.categoryId ?? undefined,
+      categoryId: formValue.categoryId ? Number(formValue.categoryId) : undefined,
       quantity: formValue.quantity ? parseInt(formValue.quantity.toString(), 10) : 0,
       active: formValue.active ?? true,
       composition:

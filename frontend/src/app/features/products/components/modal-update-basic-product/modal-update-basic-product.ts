@@ -3,9 +3,11 @@ import { ProductService } from '../../services/product.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Product, productionLocationOptions, UpdateProductDTO } from '../../types/product';
+import { Product, ProductType, UpdateProductDTO } from '../../types/product';
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 import { ProductionLocationsService } from '../../../users/services/location.service';
+import { CategoryService } from '../../services/category.service';
+import Category from '../../types/category';
 
 @Component({
   selector: 'app-modal-update-basic-product',
@@ -16,14 +18,16 @@ export class ModalUpdateBasicProduct {
   private notification = inject(NotificationService);
   private productService = inject(ProductService);
   private locationsService = inject(ProductionLocationsService);
-    private cdr = inject(ChangeDetectorRef);
+  private cdr = inject(ChangeDetectorRef);
+  private categoryService = inject(CategoryService);
 
   @Input() product!: Product;
   @Output() closeModal = new EventEmitter<void>();
   @Output() productUpdated = new EventEmitter<Product>();
 
-  editableProductType: 'MANUFACTURED' | 'RESALE' = 'RESALE';
+  editableProductType: ProductType = 'RESALE';
   productionLocationOptions: { code: string; name: string }[] = [];
+  categories: Category[] = [];
 
   unitOptions = ['UN', 'KG', 'LT', 'MT', 'CX', 'ML', 'GR', 'DZ'];
 
@@ -49,9 +53,9 @@ export class ModalUpdateBasicProduct {
   ];
 
   ngOnInit() {
-    this.editableProductType = this.product.productType as 'MANUFACTURED' | 'RESALE';
+    this.editableProductType = this.product.productType as ProductType;
     this.loadProductionLocations();
-    // Garante valor default
+    this.loadCategories();
     if (this.product.extraCosts == null) {
       this.product.extraCosts = 0;
     }
@@ -74,14 +78,29 @@ export class ModalUpdateBasicProduct {
     });
   }
 
+  loadCategories() {
+    this.categoryService.getCategories(1, 100).subscribe({
+      next: (res) => {
+        this.categories = res.data;
+        this.cdr.detectChanges();
+      },
+      error: (e) =>
+        this.notification.error(`Erro ao carregar categorias: ${e.error?.message || e.message}`),
+    });
+  }
+
   async onProductTypeChange() {
-    if (this.editableProductType === 'RESALE') {
+    const isLeavingComposition =
+      this.editableProductType === 'RESALE' &&
+      (this.product.productType === 'MANUFACTURED' ||
+        this.product.productType === 'SEMI_MANUFACTURED');
+
+    if (isLeavingComposition) {
       const confirmed = await alertConfirm(
         'Ao mudar para Revenda, a composição e o modo de preparo serão perdidos. Deseja continuar?',
       );
-
       if (!confirmed) {
-        this.editableProductType = 'MANUFACTURED';
+        this.editableProductType = this.product.productType as ProductType;
       }
     }
   }
@@ -97,7 +116,8 @@ export class ModalUpdateBasicProduct {
       code: this.product.code,
       price: this.product.price,
       costPrice: this.product.costPrice,
-      extraCosts: this.product.extraCosts || 0, // 👈 NOVO
+      extraCosts: this.product.extraCosts || 0,
+      categoryId: this.product.categoryId ? Number(this.product.categoryId) : undefined,
       ncm: this.product.ncm,
       cest: this.product.cest || undefined,
       csosn: this.product.csosn || undefined,
@@ -124,7 +144,6 @@ export class ModalUpdateBasicProduct {
 
   validateForm(): boolean {
     const { name, code, price, ncm, unit, origin } = this.product;
-
     return !!(name && code && price != null && ncm && unit && origin !== undefined);
   }
 
@@ -136,17 +155,15 @@ export class ModalUpdateBasicProduct {
     const price = this.product.price || 0;
     const cost = this.product.costPrice || 0;
     const extra = this.product.extraCosts || 0;
-
     const totalCost = cost + extra;
-
-    if (price === 0 || totalCost === 0) {
-      return 0;
-    }
-
+    if (price === 0 || totalCost === 0) return 0;
     return ((price - totalCost) / totalCost) * 100;
   }
 
-  get isManufactured(): boolean {
-    return this.editableProductType === 'MANUFACTURED';
+  get hasComposition(): boolean {
+    return (
+      this.editableProductType === 'MANUFACTURED' ||
+      this.editableProductType === 'SEMI_MANUFACTURED'
+    );
   }
 }
