@@ -6,6 +6,8 @@ import { CommonModule } from '@angular/common';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { ProductCompositionComponent } from '../product-composition/product-composition';
 import { ProductionLocationsService } from '../../../users/services/location.service';
+import { CategoryService } from '../../services/category.service';
+import Category from '../../types/category';
 
 @Component({
   selector: 'app-create-product',
@@ -20,6 +22,7 @@ export class CreateProduct implements OnInit {
   private notification = inject(NotificationService);
   private productService = inject(ProductService);
   private locationsService = inject(ProductionLocationsService);
+  private categoryService = inject(CategoryService);
 
   formCreateProduct = new FormGroup({
     name: new FormControl<string>('', [Validators.required]),
@@ -35,6 +38,7 @@ export class CreateProduct implements OnInit {
     unit: new FormControl<Unit>(Unit.UN, [Validators.required]),
     origin: new FormControl<number>(0, [Validators.required, Validators.min(0), Validators.max(8)]),
     quantity: new FormControl<number | null>(null, [Validators.required, Validators.min(0)]),
+    categoryId: new FormControl<number | null>(null),
     active: new FormControl<boolean>(true, [Validators.required]),
   });
 
@@ -43,6 +47,7 @@ export class CreateProduct implements OnInit {
   unitOptions = Object.values(Unit);
 
   productionLocationOptions: { code: string; name: string }[] = [];
+  categories: Category[] = [];
 
   csosnOptions = [
     { value: '101', label: '101 - Tributada pelo SN com permissão de crédito' },
@@ -72,6 +77,7 @@ export class CreateProduct implements OnInit {
   ngOnInit() {
     this.loadProductionLocations();
     this.getSugestionCode();
+    this.loadCategories();
     this.setupProductTypeListener();
   }
 
@@ -89,6 +95,17 @@ export class CreateProduct implements OnInit {
           `Erro ao carregar locais de produção: ${e.error?.message || e.message}`,
         );
       },
+    });
+  }
+
+  loadCategories() {
+    this.categoryService.getCategories(1, 100).subscribe({
+      next: (res) => {
+        this.categories = res.data;
+        this.cdr.detectChanges();
+      },
+      error: (e) =>
+        this.notification.error(`Erro ao carregar categorias: ${e.error?.message || e.message}`),
     });
   }
 
@@ -211,6 +228,7 @@ export class CreateProduct implements OnInit {
       csosn: formValue.csosn ?? '',
       unit: formValue.unit ?? Unit.UN,
       origin: formValue.origin ?? 0,
+      categoryId: formValue.categoryId ?? undefined,
       quantity: formValue.quantity ? parseInt(formValue.quantity.toString(), 10) : 0,
       active: formValue.active ?? true,
       composition:

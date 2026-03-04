@@ -1,0 +1,138 @@
+<div class="p-6 space-y-8">
+  <!-- Formulário -->
+  <form (ngSubmit)="onSubmit()" [formGroup]="form" class="bg-[#1d2a3c] p-6 rounded-lg">
+    <h2 class="text-white font-bold text-lg mb-4">Nova Categoria</h2>
+    <div class="flex gap-4 items-end">
+      <div class="flex-1">
+        <label for="name" class="block text-white font-bold mb-2">Nome</label>
+        <input
+          id="name"
+          formControlName="name"
+          type="text"
+          placeholder="Digite o nome da categoria"
+          class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+        />
+        @if (form.get('name')?.touched && form.get('name')?.invalid) {
+          <p class="msg-error">Digite o nome da categoria!</p>
+        }
+      </div>
+      <button
+        type="submit"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-lg font-bold h-10.5"
+      >
+        Salvar
+      </button>
+    </div>
+  </form>
+
+  <!-- Filtros -->
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+    <div class="md:col-span-5">
+      <label class="block text-sm font-medium text-gray-300 mb-2">Filtrar por Nome</label>
+      <input
+        type="text"
+        class="w-full px-4 py-2 bg-gray-800 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder-gray-400"
+        [(ngModel)]="filterSearch"
+        placeholder="Digite o nome"
+        (keyup.enter)="applyFilters()"
+      />
+    </div>
+    <div class="md:col-span-3">
+      <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+      <select
+        class="w-full px-4 py-2 bg-gray-800 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+        [(ngModel)]="filterStatus"
+      >
+        <option value="all">Todos</option>
+        <option value="active">Ativos</option>
+        <option value="inactive">Inativos</option>
+      </select>
+    </div>
+    <div class="md:col-span-4 flex gap-3">
+      <button
+        class="flex-1 px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white font-medium rounded-lg transition-colors"
+        (click)="applyFilters()"
+      >
+        Filtrar
+      </button>
+      <button
+        class="flex-1 px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors"
+        (click)="clearFilters()"
+      >
+        Limpar
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="overflow-x-auto rounded-lg border border-gray-700">
+    <table class="w-full text-left">
+      <thead class="bg-gray-800">
+        <tr>
+          <th class="px-6 py-3 text-cyan-400 font-semibold text-sm uppercase tracking-wider">ID</th>
+          <th class="px-6 py-3 text-cyan-400 font-semibold text-sm uppercase tracking-wider">
+            Nome
+          </th>
+          <th class="px-6 py-3 text-cyan-400 font-semibold text-sm uppercase tracking-wider">
+            Status
+          </th>
+          <th class="px-6 py-3 text-cyan-400 font-semibold text-sm uppercase tracking-wider">
+            Ações
+          </th>
+        </tr>
+      </thead>
+      <tbody class="bg-gray-900 divide-y divide-gray-700">
+        @for (category of listCategories; track category.id) {
+          <tr class="hover:bg-gray-800 transition-colors">
+            <td class="px-6 py-4 text-gray-300">{{ category.id }}</td>
+            <td class="px-6 py-4 text-gray-300">{{ category.name }}</td>
+            <td class="px-6 py-4">
+              <span
+                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white"
+                [class.bg-green-500]="category.active"
+                [class.bg-red-500]="!category.active"
+              >
+                {{ category.active ? 'Ativo' : 'Inativo' }}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex gap-2">
+                <button
+                  class="px-4 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded transition-colors"
+                  (click)="openModalEdit(category)"
+                >
+                  Editar
+                </button>
+                <button
+                  class="px-4 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded transition-colors"
+                  (click)="deleteCategory(category)"
+                >
+                  Excluir
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginação -->
+  <app-paginator
+    [totalItems]="totalItems"
+    [itemsPerPage]="limit"
+    [totalPages]="totalPages"
+    [page]="page"
+    (pageChanged)="getCategories($event, limit)"
+  ></app-paginator>
+</div>
+
+<!-- Modal -->
+<app-modal-edit-entity
+  [title]="'Editar Categoria'"
+  [show]="showModalEdit"
+  [entity]="editCategory"
+  [fields]="categoryFields"
+  (close)="closeModalEdit()"
+  (save)="onSaveModal($event)"
+></app-modal-edit-entity>

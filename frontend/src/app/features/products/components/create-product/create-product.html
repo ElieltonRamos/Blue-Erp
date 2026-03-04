@@ -108,6 +108,29 @@
       </div>
     </div>
 
+    <!-- Categoria - adicionar no grid da seção "Informações Básicas", após o campo unit -->
+    <div>
+      <label for="categoryId" class="block text-gray-300 font-medium mb-2 text-sm">
+        Categoria <span class="text-gray-400 text-xs">(opcional)</span>
+      </label>
+      <select
+        id="categoryId"
+        formControlName="categoryId"
+        class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
+        style="
+          background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
+          background-repeat: no-repeat;
+          background-position: right 0.7rem center;
+          background-size: 1.2em;
+        "
+      >
+        <option [value]="null">Sem categoria</option>
+        <option *ngFor="let cat of categories" [value]="cat.id">
+          {{ cat.name }}
+        </option>
+      </select>
+    </div>
+
     <!-- Tipo de Produto e Local de Produção -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
       <div>

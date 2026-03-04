@@ -19,6 +19,7 @@ import { ReportsModule } from './reports/reports.module';
 import { LicenseSystemModule } from './license-system/license-system.module';
 import { LicenseSystemService } from './license-system/license-system.service';
 import { FiscalModule } from './fiscal-module/fiscal.module';
+import { CategoryProductModule } from './category-product/category-product.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { FiscalModule } from './fiscal-module/fiscal.module';
     ReportsModule,
     LicenseSystemModule,
     FiscalModule,
+    CategoryProductModule,
   ],
   controllers: [AppController],
   providers: [AppService, LicenseSystemService],
