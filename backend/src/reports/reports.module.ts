@@ -4,6 +4,7 @@ import { ReportsController } from './reports.controller';
 import { ProductReportService } from './product-reports.service';
 import { ExpenseReportService } from './expense-reports.service';
 import { OrderReportService } from './orders-report.service';
+import { LocationReportService } from './location-reports.service';
 
 @Module({
   controllers: [ReportsController],
@@ -12,6 +13,7 @@ import { OrderReportService } from './orders-report.service';
     ProductReportService,
     ExpenseReportService,
     OrderReportService,
+    LocationReportService,
   ],
 })
 export class ReportsModule {}
