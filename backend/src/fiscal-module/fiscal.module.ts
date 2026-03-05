@@ -7,6 +7,7 @@ import { StorageService } from './services/storage.service';
 import { CompanyModule } from '../company/company.module';
 import { SalesModule } from '../sales/sales.module';
 import { IbptModule } from '../ibpt/ibpt.module';
+import { FiscalReportsService } from './services/fiscal-report.service';
 
 @Module({
   imports: [CompanyModule, SalesModule, IbptModule],
@@ -16,6 +17,7 @@ import { IbptModule } from '../ibpt/ibpt.module';
     EmissionService,
     CancellationService,
     StorageService,
+    FiscalReportsService,
   ],
   exports: [FiscalService],
 })

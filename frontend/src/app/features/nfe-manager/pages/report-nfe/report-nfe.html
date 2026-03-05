@@ -1,0 +1,296 @@
+<div class="bg-linear-to-br from-[#1d2a3c] to-[#2a3f5f] p-8 rounded-2xl shadow-2xl space-y-8">
+  <!-- Cabeçalho -->
+  <div class="border-b border-gray-600 pb-4 flex items-center justify-between">
+    <div>
+      <h2 class="text-3xl font-bold text-white mb-2">Relatório Fiscal</h2>
+      <p class="text-gray-300 text-sm">Consolidado mensal para o contador</p>
+    </div>
+    <button
+      (click)="exportCsv()"
+      [disabled]="!report || exporting"
+      class="px-6 py-3 rounded-lg font-semibold text-white bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-green-500/50 transition-all duration-200 transform hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+        />
+      </svg>
+      {{ exporting ? 'Exportando...' : 'Exportar CSV' }}
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="space-y-4">
+    <h3 class="text-xl font-semibold text-blue-400 flex items-center gap-2">
+      <span class="w-1 h-6 bg-blue-400 rounded"></span>
+      Período
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+      <div>
+        <label class="block text-gray-300 font-medium mb-2 text-sm">Mês</label>
+        <select
+          [formControl]="$any(filterForm.get('month'))"
+          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
+          style="
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            background-size: 1.2em;
+          "
+        >
+          <option *ngFor="let m of monthOptions" [value]="m.value">{{ m.label }}</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-gray-300 font-medium mb-2 text-sm">Ano</label>
+        <select
+          [formControl]="$any(filterForm.get('year'))"
+          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
+          style="
+            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            background-size: 1.2em;
+          "
+        >
+          <option *ngFor="let y of yearOptions" [value]="y">{{ y }}</option>
+        </select>
+      </div>
+
+      <div>
+        <button
+          (click)="loadReport()"
+          [disabled]="loading"
+          class="w-full px-6 py-3 rounded-lg font-semibold text-white bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-blue-500/50 transition-all duration-200 transform hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
+        >
+          {{ loading ? 'Carregando...' : 'Consultar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading) {
+    <div class="flex items-center justify-center py-16">
+      <div class="flex flex-col items-center gap-4">
+        <svg class="animate-spin w-10 h-10 text-blue-400" fill="none" viewBox="0 0 24 24">
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          />
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+        </svg>
+        <p class="text-gray-400 text-sm">Carregando relatório...</p>
+      </div>
+    </div>
+  }
+
+  <!-- Conteúdo do Relatório -->
+  @if (report && !loading) {
+    <!-- Cards de Resumo -->
+    <div class="space-y-4">
+      <h3 class="text-xl font-semibold text-blue-400 flex items-center gap-2">
+        <span class="w-1 h-6 bg-blue-400 rounded"></span>
+        Resumo — {{ selectedPeriodLabel }}
+      </h3>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <!-- Receita Bruta -->
+        <div class="bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col gap-2">
+          <div class="flex items-center gap-2 text-gray-400 text-sm font-medium">
+            <svg
+              class="w-4 h-4 text-green-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            Receita Bruta
+          </div>
+          <p class="text-2xl font-bold text-white">{{ formatCurrency(report.totalRevenue) }}</p>
+        </div>
+
+        <!-- Total de Notas -->
+        <div class="bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col gap-2">
+          <div class="flex items-center gap-2 text-gray-400 text-sm font-medium">
+            <svg
+              class="w-4 h-4 text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            Notas Emitidas
+          </div>
+          <p class="text-2xl font-bold text-white">{{ report.totalNotes }}</p>
+        </div>
+
+        <!-- Notas Canceladas -->
+        <div class="bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col gap-2">
+          <div class="flex items-center gap-2 text-gray-400 text-sm font-medium">
+            <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            Notas Canceladas
+          </div>
+          <p class="text-2xl font-bold text-white">{{ report.canceledNotes }}</p>
+        </div>
+
+        <!-- Valor Cancelado -->
+        <div class="bg-white/5 border border-white/10 rounded-xl p-5 flex flex-col gap-2">
+          <div class="flex items-center gap-2 text-gray-400 text-sm font-medium">
+            <svg
+              class="w-4 h-4 text-orange-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            Valor Cancelado
+          </div>
+          <p class="text-2xl font-bold text-white">{{ formatCurrency(report.canceledValue) }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabela por CFOP -->
+    <div class="space-y-4">
+      <h3 class="text-xl font-semibold text-blue-400 flex items-center gap-2">
+        <span class="w-1 h-6 bg-blue-400 rounded"></span>
+        Por CFOP
+      </h3>
+
+      @if (report.byCfop.length === 0) {
+        <p class="text-gray-400 text-sm">Nenhum dado de CFOP para o período.</p>
+      } @else {
+        <div class="overflow-x-auto rounded-xl border border-white/10">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-white/5 text-gray-300 text-left">
+                <th class="px-4 py-3 font-semibold">CFOP</th>
+                <th class="px-4 py-3 font-semibold">Descrição</th>
+                <th class="px-4 py-3 font-semibold text-right">Qtd. Notas</th>
+                <th class="px-4 py-3 font-semibold text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let row of report.byCfop; let odd = odd"
+                [class]="odd ? 'bg-white/2' : ''"
+                class="border-t border-white/5 text-gray-200"
+              >
+                <td class="px-4 py-3 font-mono font-semibold text-blue-300">{{ row.cfop }}</td>
+                <td class="px-4 py-3 text-gray-300">{{ row.description }}</td>
+                <td class="px-4 py-3 text-right">{{ row.count }}</td>
+                <td class="px-4 py-3 text-right font-semibold text-green-300">
+                  {{ formatCurrency(row.totalValue) }}
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="border-t border-white/20 bg-white/5 text-white font-bold">
+                <td class="px-4 py-3" colspan="2">Total</td>
+                <td class="px-4 py-3 text-right">{{ cfopTotalCount }}</td>
+                <td class="px-4 py-3 text-right text-green-300">
+                  {{ formatCurrency(cfopTotalValue) }}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      }
+    </div>
+
+    <!-- Tabela por NCM -->
+    <div class="space-y-4">
+      <h3 class="text-xl font-semibold text-blue-400 flex items-center gap-2">
+        <span class="w-1 h-6 bg-blue-400 rounded"></span>
+        Por NCM
+      </h3>
+
+      @if (report.byNcm.length === 0) {
+        <p class="text-gray-400 text-sm">Nenhum dado de NCM para o período.</p>
+      } @else {
+        <div class="overflow-x-auto rounded-xl border border-white/10">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-white/5 text-gray-300 text-left">
+                <th class="px-4 py-3 font-semibold">NCM</th>
+                <th class="px-4 py-3 font-semibold text-right">Qtd. Itens</th>
+                <th class="px-4 py-3 font-semibold text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let row of report.byNcm; let odd = odd"
+                [class]="odd ? 'bg-white/2' : ''"
+                class="border-t border-white/5 text-gray-200"
+              >
+                <td class="px-4 py-3 font-mono font-semibold text-yellow-300">{{ row.ncm }}</td>
+                <td class="px-4 py-3 text-right">{{ row.count }}</td>
+                <td class="px-4 py-3 text-right font-semibold text-green-300">
+                  {{ formatCurrency(row.totalValue) }}
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="border-t border-white/20 bg-white/5 text-white font-bold">
+                <td class="px-4 py-3">Total</td>
+                <td class="px-4 py-3 text-right">{{ ncmTotalCount }}</td>
+                <td class="px-4 py-3 text-right text-green-300">
+                  {{ formatCurrency(ncmTotalValue) }}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Estado vazio -->
+  @if (!report && !loading) {
+    <div class="flex flex-col items-center justify-center py-16 text-gray-400">
+      <svg class="w-16 h-16 mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+          d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
+      </svg>
+      <p class="text-sm">Selecione o período e clique em Consultar</p>
+    </div>
+  }
+</div>

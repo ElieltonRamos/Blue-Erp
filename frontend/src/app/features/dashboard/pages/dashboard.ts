@@ -17,6 +17,7 @@ const PERMISSIONS: Record<string, Role[]> = {
   '/relatorios': ['admin', 'caixa'],
   '/financeiro': ['admin', 'caixa'],
   '/empresa': ['admin'],
+  '/fiscal': ['admin']
 };
 
 @Component({

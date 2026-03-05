@@ -13,6 +13,7 @@ import { TableManagement } from './features/table-management/pages/table-managem
 import { Orders } from './features/orders/pages/orders/orders';
 import { CloseOrder } from './features/orders/pages/close-order/close-order';
 import { KitchenDisplay } from './features/kitchen-display/pages/kitchen-display/kitchen-display';
+import { NfeManager } from './features/nfe-manager/pages/nfe-manager';
 
 export const routes: Routes = [
   {
@@ -77,6 +78,11 @@ export const routes: Routes = [
   {
     path: 'cozinha',
     component: KitchenDisplay,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'fiscal',
+    component: NfeManager,
     canActivate: [authGuard],
   },
 ];
