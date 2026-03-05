@@ -14,65 +14,61 @@
       [title]="'Cadastro de Cliente'"
       [icon]="'👤➕'"
       [path]="'/clientes'"
-      [isActive]="isActive()"
+      [isActive]="canAccess('/clientes')"
     />
-
     <app-card-menu
       [title]="'Comandas'"
       [icon]="'🛒📄'"
       [path]="'/comandas'"
-      [isActive]="isActive()"
+      [isActive]="canAccess('/comandas')"
     />
-
     <app-card-menu
       [title]="'Cozinha'"
       [icon]="'🍳'"
       [path]="'/cozinha'"
-      [isActive]="isActive()"
+      [isActive]="canAccess('/cozinha')"
     />
-
     <app-card-menu
       [title]="'Salão de Mesas'"
       [icon]="'🍽️🪑'"
       [path]="'/mesas'"
-      [isActive]="isActive()"
+      [isActive]="canAccess('/mesas')"
     />
-
     <app-card-menu
       [title]="'Cadastro de Produto'"
       [icon]="'🏷️'"
       [path]="'/produtos'"
-      [isActive]="isActive()"
+      [isActive]="canAccess('/produtos')"
     />
-
     <app-card-menu
-      [title]="'Cadastro de Usuario'"
+      [title]="'Cadastro de Usuário'"
       [icon]="'🧑‍💼'"
       [path]="'/usuarios'"
-      [isActive]="isActive()"
+      [isActive]="canAccess('/usuarios')"
     />
-
-    <app-card-menu [title]="'Histórico de Vendas'" [icon]="'🔁'" [path]="'/historico-vendas'" />
-
+    <app-card-menu
+      [title]="'Histórico de Vendas'"
+      [icon]="'🔁'"
+      [path]="'/historico-vendas'"
+      [isActive]="canAccess('/historico-vendas')"
+    />
     <app-card-menu
       [title]="'Relatórios'"
       [icon]="'📄'"
       [path]="'/relatorios'"
-      [isActive]="isActive()"
+      [isActive]="canAccess('/relatorios')"
     />
-
     <app-card-menu
       [title]="'Financeiro'"
       [icon]="'💰'"
       [path]="'/financeiro'"
-      [isActive]="isActive()"
+      [isActive]="canAccess('/financeiro')"
     />
-
     <app-card-menu
       [title]="'Dados da Empresa'"
       [icon]="'🏢'"
       [path]="'/empresa'"
-      [isActive]="isActive()"
+      [isActive]="canAccess('/empresa')"
     />
   </div>
 

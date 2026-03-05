@@ -24,7 +24,6 @@ import { CreateSaleDto } from './dto/create-sale.dto.js';
 import { UpdateSaleDto } from './dto/update-sale.dto.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
-import { Role } from '../common/decorators/roles.enum.js';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import {
   PaginatedSalesResponseDto,
@@ -33,7 +32,6 @@ import {
 import { SaleFiltersDto } from './dto/filters-sale.dto.js';
 import { ConvertOrderToSaleDto } from '../orders/dto/convert-order-to-sale.js';
 import { MarkAsReceivedDto } from './dto/mark-as-received.dto.js';
-import { Roles } from '../common/decorators/roles.decorator.js';
 
 @ApiTags('Sales')
 @Controller('sales')
@@ -43,7 +41,6 @@ export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
   @Patch('mark-as-received')
-  @Roles(Role.ADMIN, Role.CAIXA)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Marcar múltiplas vendas como recebidas/pagas' })
   @ApiResponse({
@@ -71,7 +68,6 @@ export class SalesController {
   }
 
   @Post()
-  @Roles(Role.ADMIN, Role.CAIXA)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Criar nova venda' })
   @ApiResponse({
@@ -92,7 +88,6 @@ export class SalesController {
   }
 
   @Get()
-  @Roles(Role.ADMIN, Role.CAIXA)
   @ApiOperation({ summary: 'Listar vendas com filtros e paginação' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -104,7 +99,6 @@ export class SalesController {
   }
 
   @Get(':id')
-  @Roles(Role.ADMIN, Role.CAIXA)
   @ApiOperation({ summary: 'Buscar venda por ID' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({
@@ -121,7 +115,6 @@ export class SalesController {
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN, Role.CAIXA)
   @ApiOperation({ summary: 'Atualizar venda' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({
@@ -145,7 +138,6 @@ export class SalesController {
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Excluir venda' })
   @ApiParam({ name: 'id', type: Number })
@@ -167,7 +159,6 @@ export class SalesController {
   }
 
   @Post('convert/:orderId')
-  @Roles(Role.ADMIN, Role.CAIXA)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Converter pedido em venda' })
   @ApiParam({ name: 'orderId', type: Number })

@@ -4,6 +4,21 @@ import { CardMenu } from '../components/card-menu/card-menu';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../shared/toastr/notification.service';
 
+type Role = 'admin' | 'caixa' | 'garcom' | 'cozinheiro';
+
+const PERMISSIONS: Record<string, Role[]> = {
+  '/clientes': ['admin', 'caixa'],
+  '/comandas': ['admin', 'caixa', 'garcom'],
+  '/cozinha': ['admin', 'cozinheiro'],
+  '/mesas': ['admin', 'caixa', 'garcom'],
+  '/produtos': ['admin'],
+  '/usuarios': ['admin'],
+  '/historico-vendas': ['admin', 'caixa'],
+  '/relatorios': ['admin', 'caixa'],
+  '/financeiro': ['admin', 'caixa'],
+  '/empresa': ['admin'],
+};
+
 @Component({
   selector: 'app-dashboard',
   imports: [CardMenu],
@@ -15,8 +30,7 @@ export class Dashboard implements OnInit {
   private notification = inject(NotificationService);
 
   userName: string = '';
-  role: string = '';
-  isAdmin: boolean = false;
+  role: Role = 'garcom';
 
   ngOnInit() {
     const payload = this.auth.getTokenPayload();
@@ -29,18 +43,16 @@ export class Dashboard implements OnInit {
     }
 
     this.userName = payload.username;
-    this.role = payload.role || 'garcom';
-    this.isAdmin = this.role === 'admin';
+    this.role = (payload.role as Role) || 'garcom';
+  }
 
+  canAccess(path: string): boolean {
+    return PERMISSIONS[path]?.includes(this.role) ?? false;
   }
 
   logout() {
     localStorage.removeItem('token');
     this.notification.info('Logout realizado');
     this.router.navigate(['/']);
-  }
-
-  isActive(): boolean {
-    return this.isAdmin;
   }
 }
