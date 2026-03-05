@@ -257,6 +257,14 @@ export class ProductReportSummaryDto {
     type: 'number',
   })
   totalReplenishmentCost: number;
+
+  @ApiProperty({
+    description:
+      'Valor total do estoque atual (produtos × costPrice + matérias-primas × unitCost)',
+    example: 35000.0,
+    type: 'number',
+  })
+  totalStockValue: number;
 }
 
 export class ProductReportResponseDto {

@@ -51,4 +51,5 @@ export interface ProductReportSummary {
   totalRevenue: number;
   grandTotalConsumedCost: number;
   totalReplenishmentCost: number;
+  totalStockValue: number;
 }

@@ -51,6 +51,7 @@ export interface ProductReportSummary {
   totalRevenue: number;
   grandTotalConsumedCost: number;
   totalReplenishmentCost: number;
+  totalStockValue: number;
 }
 
 export interface ProductReport {
@@ -69,4 +70,5 @@ export const productReportMock: ProductReportSummary = {
   totalRevenue: 0,
   grandTotalConsumedCost: 0,
   totalReplenishmentCost: 0,
+  totalStockValue: 0
 };

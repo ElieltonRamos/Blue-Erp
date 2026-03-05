@@ -83,6 +83,15 @@
           Estimativa para repor itens abaixo do estoque mínimo
         </p>
       </div>
+      <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Valor em Estoque</h3>
+        <p class="text-2xl font-semibold text-blue-400">
+          R$ {{ report.totalStockValue.toFixed(2) }}
+        </p>
+        <p class="text-xs text-gray-500 mt-1">
+          Valor total do estoque atual (produtos + matérias-primas)
+        </p>
+      </div>
       <!-- Card explicativo CMV -->
       <div
         class="bg-[#1a2a1a] border border-yellow-700 p-4 rounded-xl shadow col-span-1 sm:col-span-2 lg:col-span-4"

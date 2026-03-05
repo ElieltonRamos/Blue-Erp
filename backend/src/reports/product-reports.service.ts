@@ -15,12 +15,11 @@ const EXPIRY_ALERT_DAYS = 30;
 const TOP_ITEMS_LIMIT = 10;
 const STOCK_ITEMS_LIMIT = 10;
 
-// Tipo interno para representar um material resolvido após recursão de SEMI_MANUFACTURED
 type ResolvedMaterial = {
   name: string;
   unit: string;
   unitCost: number;
-  quantity: number; // quantidade já multiplicada pelo fator do pai
+  quantity: number;
 };
 
 @Injectable()
@@ -41,10 +40,6 @@ export class ProductReportService {
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
   }
 
-  // ──────────────────────────────────────────────
-  // Resolve recursivamente materiais de um produto (incluindo SEMI_MANUFACTURED)
-  // Retorna lista flat de materiais com quantidade já escalonada pelo fator pai
-  // ──────────────────────────────────────────────
   private async resolveCompositionMaterials(
     productId: number,
     factor: number,
@@ -92,9 +87,6 @@ export class ProductReportService {
     return resolved;
   }
 
-  // ──────────────────────────────────────────────
-  // Top produtos vendidos + totalProductsSold + totalRevenue
-  // ──────────────────────────────────────────────
   private async fetchTopSellingProducts(
     startDate: string,
     endDate: string,
@@ -161,10 +153,6 @@ export class ProductReportService {
     };
   }
 
-  // ──────────────────────────────────────────────
-  // Matérias-primas mais usadas + custo consumido
-  // Resolve SEMI_MANUFACTURED recursivamente
-  // ──────────────────────────────────────────────
   private async fetchMostUsedRawMaterials(
     startDate: string,
     endDate: string,
@@ -241,9 +229,6 @@ export class ProductReportService {
     };
   }
 
-  // ──────────────────────────────────────────────
-  // Matérias-primas próximas do vencimento
-  // ──────────────────────────────────────────────
   private async fetchExpiringRawMaterials(): Promise<RawMaterialExpiring[]> {
     const alertDate = new Date();
     alertDate.setDate(alertDate.getDate() + EXPIRY_ALERT_DAYS);
@@ -275,23 +260,34 @@ export class ProductReportService {
     }));
   }
 
-  // ──────────────────────────────────────────────
-  // Níveis de estoque (produtos + matérias-primas)
-  // ──────────────────────────────────────────────
   private async fetchStockLevels(): Promise<{
     lowest: StockLevel[];
     highest: StockLevel[];
+    totalStockValue: number;
   }> {
     const [products, materials] = await Promise.all([
       this.prisma.client.product.findMany({
-        where: { active: true },
-        select: { name: true, quantity: true, unit: true },
+        where: { active: true, productType: 'RESALE' },
+        select: { name: true, quantity: true, unit: true, costPrice: true },
       }),
       this.prisma.client.primaryMaterial.findMany({
         where: { active: true },
-        select: { name: true, currentStock: true, unit: true },
+        select: { name: true, currentStock: true, unit: true, unitCost: true },
       }),
     ]);
+
+    const totalStockValue = Number(
+      (
+        products.reduce(
+          (acc, p) => acc + Number(p.quantity) * Number(p.costPrice),
+          0,
+        ) +
+        materials.reduce(
+          (acc, m) => acc + Number(m.currentStock) * Number(m.unitCost),
+          0,
+        )
+      ).toFixed(2),
+    );
 
     const allStocks: StockLevel[] = [
       ...products.map((p) => ({
@@ -317,14 +313,10 @@ export class ProductReportService {
     return {
       lowest: sorted.slice(0, STOCK_ITEMS_LIMIT),
       highest: sorted.slice(-STOCK_ITEMS_LIMIT).reverse(),
+      totalStockValue,
     };
   }
 
-  // ──────────────────────────────────────────────
-  // Sugestões de compra (estoque < mínimo) + custo de reposição
-  // Produtos RESALE/MANUFACTURED/SEMI_MANUFACTURED → costPrice
-  // Matérias-primas → unitCost
-  // ──────────────────────────────────────────────
   private async fetchPurchaseSuggestions(): Promise<{
     items: PurchaseSuggestion[];
     totalReplenishmentCost: number;
@@ -422,9 +414,6 @@ export class ProductReportService {
     };
   }
 
-  // ──────────────────────────────────────────────
-  // Entry point
-  // ──────────────────────────────────────────────
   async generateProductReport(
     filters: ProductReportFilterDto,
   ): Promise<ProductReportResponseDto> {
@@ -459,6 +448,7 @@ export class ProductReportService {
           totalRevenue: topSelling.totalRevenue,
           grandTotalConsumedCost: rawMaterials.grandTotalConsumedCost,
           totalReplenishmentCost: purchaseSuggestions.totalReplenishmentCost,
+          totalStockValue: stocks.totalStockValue,
         },
       };
     } catch (error) {
