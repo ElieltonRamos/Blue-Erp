@@ -15,6 +15,14 @@ const EXPIRY_ALERT_DAYS = 30;
 const TOP_ITEMS_LIMIT = 10;
 const STOCK_ITEMS_LIMIT = 10;
 
+// Tipo interno para representar um material resolvido após recursão de SEMI_MANUFACTURED
+type ResolvedMaterial = {
+  name: string;
+  unit: string;
+  unitCost: number;
+  quantity: number; // quantidade já multiplicada pelo fator do pai
+};
+
 @Injectable()
 export class ProductReportService {
   constructor(private prisma: PrismaService) {}
@@ -31,6 +39,57 @@ export class ProductReportService {
     const now = new Date();
     const diff = expiryDate.getTime() - now.getTime();
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  }
+
+  // ──────────────────────────────────────────────
+  // Resolve recursivamente materiais de um produto (incluindo SEMI_MANUFACTURED)
+  // Retorna lista flat de materiais com quantidade já escalonada pelo fator pai
+  // ──────────────────────────────────────────────
+  private async resolveCompositionMaterials(
+    productId: number,
+    factor: number,
+    visited: Set<number> = new Set(),
+  ): Promise<ResolvedMaterial[]> {
+    if (visited.has(productId)) return []; // evita loop circular
+    visited.add(productId);
+
+    const compositionItems = await this.prisma.client.compositionItem.findMany({
+      where: { productId },
+      select: {
+        quantity: true,
+        material: {
+          select: { name: true, unit: true, unitCost: true },
+        },
+        subProduct: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    const resolved: ResolvedMaterial[] = [];
+
+    for (const item of compositionItems) {
+      const itemQty = Number(item.quantity) * factor;
+
+      if (item.material) {
+        resolved.push({
+          name: item.material.name,
+          unit: item.material.unit,
+          unitCost: Number(item.material.unitCost),
+          quantity: itemQty,
+        });
+      } else if (item.subProduct) {
+        // SEMI_MANUFACTURED — desce recursivamente
+        const subMaterials = await this.resolveCompositionMaterials(
+          item.subProduct.id,
+          itemQty,
+          visited,
+        );
+        resolved.push(...subMaterials);
+      }
+    }
+
+    return resolved;
   }
 
   // ──────────────────────────────────────────────
@@ -64,7 +123,6 @@ export class ProductReportService {
     });
 
     const map = new Map<string, { totalSold: number; revenue: number }>();
-
     let totalSold = 0;
     let totalRevenue = 0;
 
@@ -104,13 +162,13 @@ export class ProductReportService {
   }
 
   // ──────────────────────────────────────────────
-  // Matérias-primas mais usadas (cross SaleItem × CompositionItem)
+  // Matérias-primas mais usadas + custo consumido
+  // Resolve SEMI_MANUFACTURED recursivamente
   // ──────────────────────────────────────────────
   private async fetchMostUsedRawMaterials(
     startDate: string,
     endDate: string,
-  ): Promise<RawMaterialUsage[]> {
-    // Busca itens de venda com a composição do produto
+  ): Promise<{ items: RawMaterialUsage[]; grandTotalConsumedCost: number }> {
     const saleItems = await this.prisma.client.saleItem.findMany({
       where: {
         sale: {
@@ -124,58 +182,63 @@ export class ProductReportService {
       select: {
         quantity: true,
         saleId: true,
-        product: {
-          select: {
-            compositionItems: {
-              select: {
-                quantity: true,
-                material: {
-                  select: { name: true, unit: true },
-                },
-              },
-            },
-          },
-        },
+        productId: true,
       },
     });
 
     const map = new Map<
       string,
-      { totalUsed: number; unit: string; saleIds: Set<number> }
+      {
+        totalUsed: number;
+        unit: string;
+        unitCost: number;
+        saleIds: Set<number>;
+      }
     >();
 
     for (const saleItem of saleItems) {
       const soldQty = Number(saleItem.quantity);
-      for (const comp of saleItem.product.compositionItems) {
-        if (!comp.material) {
-          throw new InternalServerErrorException(
-            `Composição inválida: produto possui item sem matéria-prima vinculada.`,
-          );
-        }
 
-        const materialName = comp.material.name;
-        const used = Number(comp.quantity) * soldQty;
+      const resolvedMaterials = await this.resolveCompositionMaterials(
+        saleItem.productId,
+        soldQty,
+      );
 
-        const existing = map.get(materialName) ?? {
+      for (const mat of resolvedMaterials) {
+        const existing = map.get(mat.name) ?? {
           totalUsed: 0,
-          unit: comp.material.unit,
+          unit: mat.unit,
+          unitCost: mat.unitCost,
           saleIds: new Set<number>(),
         };
-        existing.totalUsed += used;
+        existing.totalUsed += mat.quantity;
         existing.saleIds.add(saleItem.saleId);
-        map.set(materialName, existing);
+        map.set(mat.name, existing);
       }
     }
 
-    return Array.from(map.entries())
-      .map(([materialName, agg]) => ({
-        materialName,
-        totalUsed: Number(agg.totalUsed.toFixed(3)),
-        unit: agg.unit,
-        usageFrequency: agg.saleIds.size,
-      }))
-      .sort((a, b) => b.totalUsed - a.totalUsed)
+    let grandTotalConsumedCost = 0;
+
+    const items: RawMaterialUsage[] = Array.from(map.entries())
+      .map(([materialName, agg]) => {
+        const totalCost = Number((agg.totalUsed * agg.unitCost).toFixed(2));
+        grandTotalConsumedCost += totalCost;
+        return {
+          materialName,
+          totalUsed: Number(agg.totalUsed.toFixed(3)),
+          unit: agg.unit,
+          usageFrequency: agg.saleIds.size,
+          unitCost: Number(agg.unitCost.toFixed(2)),
+          totalCost,
+        };
+      })
+      .sort((a, b) => b.totalCost - a.totalCost)
       .slice(0, TOP_ITEMS_LIMIT);
+
+    return {
+      items,
+      grandTotalConsumedCost: Number(grandTotalConsumedCost.toFixed(2)),
+    };
   }
 
   // ──────────────────────────────────────────────
@@ -258,40 +321,67 @@ export class ProductReportService {
   }
 
   // ──────────────────────────────────────────────
-  // Sugestões de compra (estoque < mínimo)
+  // Sugestões de compra (estoque < mínimo) + custo de reposição
+  // Produtos RESALE/MANUFACTURED/SEMI_MANUFACTURED → costPrice
+  // Matérias-primas → unitCost
   // ──────────────────────────────────────────────
-  private async fetchPurchaseSuggestions(): Promise<PurchaseSuggestion[]> {
+  private async fetchPurchaseSuggestions(): Promise<{
+    items: PurchaseSuggestion[];
+    totalReplenishmentCost: number;
+  }> {
     const [products, materials] = await Promise.all([
       this.prisma.client.product.findMany({
         where: {
           active: true,
           minStock: { not: null },
         },
-        select: { name: true, quantity: true, minStock: true, unit: true },
+        select: {
+          name: true,
+          quantity: true,
+          minStock: true,
+          unit: true,
+          costPrice: true,
+        },
       }),
       this.prisma.client.primaryMaterial.findMany({
         where: {
           active: true,
           minStock: { not: null },
         },
-        select: { name: true, currentStock: true, minStock: true, unit: true },
+        select: {
+          name: true,
+          currentStock: true,
+          minStock: true,
+          unit: true,
+          unitCost: true,
+        },
       }),
     ]);
 
     const suggestions: PurchaseSuggestion[] = [];
+    let totalReplenishmentCost = 0;
 
     for (const p of products) {
       const current = Number(p.quantity);
       const min = Number(p.minStock!);
       if (current < min) {
         const deficit = min - current;
+        const suggestedQuantity = Number((deficit * 1.5).toFixed(3));
+        const unitCost = Number(p.costPrice);
+        const replenishmentCost = Number(
+          (suggestedQuantity * unitCost).toFixed(2),
+        );
+        totalReplenishmentCost += replenishmentCost;
+
         suggestions.push({
           itemName: p.name,
-          suggestedQuantity: Number((deficit * 1.5).toFixed(3)),
+          suggestedQuantity,
           unit: p.unit,
           reason: `Estoque atual (${current}) abaixo do mínimo (${min})`,
           priority:
             current === 0 ? 'high' : current < min * 0.5 ? 'high' : 'medium',
+          unitCost,
+          replenishmentCost,
         });
       }
     }
@@ -301,21 +391,35 @@ export class ProductReportService {
       const min = Number(m.minStock!);
       if (current < min) {
         const deficit = min - current;
+        const suggestedQuantity = Number((deficit * 1.5).toFixed(3));
+        const unitCost = Number(m.unitCost);
+        const replenishmentCost = Number(
+          (suggestedQuantity * unitCost).toFixed(2),
+        );
+        totalReplenishmentCost += replenishmentCost;
+
         suggestions.push({
           itemName: m.name,
-          suggestedQuantity: Number((deficit * 1.5).toFixed(3)),
+          suggestedQuantity,
           unit: m.unit,
           reason: `Estoque atual (${current}) abaixo do mínimo (${min})`,
           priority:
             current === 0 ? 'high' : current < min * 0.5 ? 'high' : 'medium',
+          unitCost,
+          replenishmentCost,
         });
       }
     }
 
-    return suggestions.sort((a, b) => {
+    const sorted = suggestions.sort((a, b) => {
       const order = { high: 0, medium: 1, low: 2 };
       return order[a.priority] - order[b.priority];
     });
+
+    return {
+      items: sorted,
+      totalReplenishmentCost: Number(totalReplenishmentCost.toFixed(2)),
+    };
   }
 
   // ──────────────────────────────────────────────
@@ -330,7 +434,7 @@ export class ProductReportService {
     try {
       const [
         topSelling,
-        mostUsedRawMaterials,
+        rawMaterials,
         expiringRawMaterials,
         stocks,
         purchaseSuggestions,
@@ -346,13 +450,15 @@ export class ProductReportService {
         status: 'OK',
         data: {
           topSellingProducts: topSelling.items,
-          mostUsedRawMaterials,
+          mostUsedRawMaterials: rawMaterials.items,
           expiringRawMaterials,
           lowestStocks: stocks.lowest,
           highestStocks: stocks.highest,
-          purchaseSuggestions,
+          purchaseSuggestions: purchaseSuggestions.items,
           totalProductsSold: topSelling.totalSold,
           totalRevenue: topSelling.totalRevenue,
+          grandTotalConsumedCost: rawMaterials.grandTotalConsumedCost,
+          totalReplenishmentCost: purchaseSuggestions.totalReplenishmentCost,
         },
       };
     } catch (error) {

@@ -10,6 +10,8 @@ export interface RawMaterialUsage {
   totalUsed: number;
   unit: string;
   usageFrequency: number;
+  unitCost: number;
+  totalCost: number;
 }
 
 export interface RawMaterialExpiring {
@@ -34,6 +36,8 @@ export interface PurchaseSuggestion {
   unit: string;
   reason: string;
   priority: 'high' | 'medium' | 'low';
+  unitCost: number;
+  replenishmentCost: number;
 }
 
 export interface ProductReportSummary {
@@ -45,4 +49,6 @@ export interface ProductReportSummary {
   purchaseSuggestions: PurchaseSuggestion[];
   totalProductsSold: number;
   totalRevenue: number;
+  grandTotalConsumedCost: number;
+  totalReplenishmentCost: number;
 }

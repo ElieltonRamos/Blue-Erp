@@ -4,18 +4,24 @@ export class ProductSalesItemDto {
   @ApiProperty({ description: 'Nome do produto', example: 'X-Burguer' })
   productName: string;
 
-  @ApiProperty({ description: 'Quantidade total vendida', example: 120 })
+  /** Soma de saleItem.quantity no período */
+  @ApiProperty({
+    description: 'Quantidade total vendida no período',
+    example: 120,
+  })
   totalSold: number;
 
+  /** Soma de saleItem.totalPrice no período */
   @ApiProperty({
-    description: 'Receita total gerada pelo produto',
+    description: 'Receita bruta gerada pelo produto no período',
     example: 1800.0,
     type: 'number',
   })
   revenue: number;
 
+  /** revenue / totalSold */
   @ApiProperty({
-    description: 'Preço médio de venda',
+    description: 'Ticket médio por unidade vendida',
     example: 15.0,
     type: 'number',
   })
@@ -29,8 +35,10 @@ export class RawMaterialUsageDto {
   })
   materialName: string;
 
+  /** Σ (compositionItem.quantity × saleItem.quantity) */
   @ApiProperty({
-    description: 'Quantidade total consumida no período',
+    description:
+      'Quantidade teórica consumida no período (ficha técnica × vendas)',
     example: 50.5,
     type: 'number',
   })
@@ -39,11 +47,29 @@ export class RawMaterialUsageDto {
   @ApiProperty({ description: 'Unidade de medida', example: 'KG' })
   unit: string;
 
+  /** Número de sales distintas onde o material apareceu */
   @ApiProperty({
-    description: 'Quantidade de vendas distintas que utilizaram este material',
+    description: 'Em quantas vendas distintas o material foi utilizado',
     example: 30,
   })
   usageFrequency: number;
+
+  /** primaryMaterial.unitCost */
+  @ApiProperty({
+    description: 'Custo unitário cadastrado da matéria-prima',
+    example: 3.5,
+    type: 'number',
+  })
+  unitCost: number;
+
+  /** totalUsed × unitCost */
+  @ApiProperty({
+    description:
+      'Custo total teórico consumido no período (totalUsed × unitCost)',
+    example: 176.75,
+    type: 'number',
+  })
+  totalCost: number;
 }
 
 export class RawMaterialExpiringDto {
@@ -62,7 +88,11 @@ export class RawMaterialExpiringDto {
   @ApiProperty({ description: 'Dias restantes até o vencimento', example: 7 })
   daysUntilExpiry: number;
 
-  @ApiProperty({ description: 'Estoque atual', example: 10.5, type: 'number' })
+  @ApiProperty({
+    description: 'Quantidade atual em estoque',
+    example: 10.5,
+    type: 'number',
+  })
   currentStock: number;
 
   @ApiProperty({ description: 'Unidade de medida', example: 'LT' })
@@ -70,23 +100,30 @@ export class RawMaterialExpiringDto {
 }
 
 export class StockLevelDto {
-  @ApiProperty({ description: 'Nome do item', example: 'X-Burguer' })
+  @ApiProperty({
+    description: 'Nome do item (produto ou matéria-prima)',
+    example: 'X-Burguer',
+  })
   itemName: string;
 
-  @ApiProperty({ description: 'Estoque atual', example: 5.0, type: 'number' })
+  @ApiProperty({
+    description: 'Quantidade atual em estoque',
+    example: 5.0,
+    type: 'number',
+  })
   currentStock: number;
 
   @ApiProperty({ description: 'Unidade de medida', example: 'UN' })
   unit: string;
 
   @ApiProperty({
-    description: 'Tipo do item',
+    description: 'Origem do item',
     enum: ['product', 'raw_material'],
   })
   type: 'product' | 'raw_material';
 
   @ApiProperty({
-    description: 'Data da última reposição',
+    description: 'Data da última reposição (não implementado — sempre null)',
     example: null,
     nullable: true,
     type: String,
@@ -95,11 +132,15 @@ export class StockLevelDto {
 }
 
 export class PurchaseSuggestionDto {
-  @ApiProperty({ description: 'Nome do item', example: 'Farinha de trigo' })
+  @ApiProperty({
+    description: 'Nome do item (produto ou matéria-prima)',
+    example: 'Farinha de trigo',
+  })
   itemName: string;
 
+  /** deficit × 1.5 — déficit com margem de segurança */
   @ApiProperty({
-    description: 'Quantidade sugerida para compra',
+    description: 'Quantidade sugerida para compra (déficit × 1.5)',
     example: 20,
     type: 'number',
   })
@@ -109,67 +150,113 @@ export class PurchaseSuggestionDto {
   unit: string;
 
   @ApiProperty({
-    description: 'Motivo da sugestão',
-    example: 'Estoque abaixo do mínimo',
+    description: 'Motivo da sugestão de compra',
+    example: 'Estoque atual (2) abaixo do mínimo (10)',
   })
   reason: string;
 
   @ApiProperty({
-    description: 'Prioridade da compra',
+    description:
+      'Prioridade: high = zerado ou < 50% do mínimo; medium = entre 50% e 100%',
     enum: ['high', 'medium', 'low'],
   })
   priority: 'high' | 'medium' | 'low';
+
+  /**
+   * Matéria-prima  → primaryMaterial.unitCost
+   * Produto RESALE → product.costPrice
+   * Produto MANUFACTURED/SEMI_MANUFACTURED → product.costPrice (custo cadastrado)
+   */
+  @ApiProperty({
+    description: 'Custo unitário de referência para reposição',
+    example: 3.5,
+    type: 'number',
+  })
+  unitCost: number;
+
+  /** suggestedQuantity × unitCost */
+  @ApiProperty({
+    description:
+      'Custo estimado para repor este item (suggestedQuantity × unitCost)',
+    example: 70.0,
+    type: 'number',
+  })
+  replenishmentCost: number;
 }
 
 export class ProductReportSummaryDto {
   @ApiProperty({
-    description: 'Produtos mais vendidos no período',
+    description: 'Top 10 produtos mais vendidos no período',
     type: [ProductSalesItemDto],
   })
   topSellingProducts: ProductSalesItemDto[];
 
   @ApiProperty({
-    description: 'Matérias-primas mais utilizadas no período',
+    description:
+      'Top 10 matérias-primas mais consumidas no período (cruzamento ficha técnica × vendas)',
     type: [RawMaterialUsageDto],
   })
   mostUsedRawMaterials: RawMaterialUsageDto[];
 
   @ApiProperty({
-    description: 'Matérias-primas próximas do vencimento (30 dias)',
+    description: 'Matérias-primas com vencimento nos próximos 30 dias',
     type: [RawMaterialExpiringDto],
   })
   expiringRawMaterials: RawMaterialExpiringDto[];
 
   @ApiProperty({
-    description: 'Itens com menor estoque',
+    description:
+      'Itens com menor quantidade em estoque (produtos + matérias-primas)',
     type: [StockLevelDto],
   })
   lowestStocks: StockLevelDto[];
 
   @ApiProperty({
-    description: 'Itens com maior estoque',
+    description:
+      'Itens com maior quantidade em estoque (produtos + matérias-primas)',
     type: [StockLevelDto],
   })
   highestStocks: StockLevelDto[];
 
   @ApiProperty({
-    description: 'Sugestões de compra baseadas no estoque mínimo',
+    description:
+      'Itens com estoque abaixo do mínimo cadastrado, ordenados por prioridade',
     type: [PurchaseSuggestionDto],
   })
   purchaseSuggestions: PurchaseSuggestionDto[];
 
+  /** Σ saleItem.quantity no período (composesTotal = 1) */
   @ApiProperty({
     description: 'Total de unidades vendidas no período',
     example: 350,
   })
   totalProductsSold: number;
 
+  /** Σ saleItem.totalPrice no período (composesTotal = 1) */
   @ApiProperty({
-    description: 'Receita total do período',
+    description: 'Receita bruta total do período',
     example: 12500.75,
     type: 'number',
   })
   totalRevenue: number;
+
+  /** Σ RawMaterialUsageDto.totalCost — custo teórico de MP consumida */
+  @ApiProperty({
+    description:
+      'CMV de matéria-prima: custo total teórico consumido no período (baseado em ficha técnica × vendas × unitCost)',
+    example: 4200.0,
+    type: 'number',
+  })
+  grandTotalConsumedCost: number;
+
+  /** Σ PurchaseSuggestionDto.replenishmentCost */
+  @ApiProperty({
+    description:
+      'Custo total estimado para repor todos os itens abaixo do estoque mínimo',
+    example: 1850.0,
+    type: 'number',
+  })
+  totalReplenishmentCost: number;
 }
 
 export class ProductReportResponseDto {
@@ -181,7 +268,7 @@ export class ProductReportResponseDto {
   status: 'OK' | 'ERROR';
 
   @ApiProperty({
-    description: 'Dados do relatório de produtos',
+    description: 'Dados do relatório',
     type: ProductReportSummaryDto,
     required: false,
   })
@@ -189,7 +276,6 @@ export class ProductReportResponseDto {
 
   @ApiProperty({
     description: 'Mensagem de erro quando status for ERROR',
-    example: 'Erro interno do servidor ao gerar relatório',
     required: false,
   })
   message?: string;

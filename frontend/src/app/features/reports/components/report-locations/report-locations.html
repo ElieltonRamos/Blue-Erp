@@ -1,6 +1,5 @@
 <!-- Container Principal -->
 <div class="w-full max-w-7xl bg-[#182233] rounded-2xl shadow-lg p-6">
-  <!-- Título -->
   <div class="mb-4">
     <h1 class="text-3xl font-bold text-white">Relatório por Local</h1>
     <p class="text-sm text-gray-400 mt-1">
@@ -56,17 +55,44 @@
     </div>
   </div>
 
-  <!-- Conteúdo -->
   @if (report.locations.length > 0) {
     <div class="text-white mt-4">
-      <h2 class="text-2xl font-bold mb-6">Relatório por Local {{ getFullDate() }}</h2>
+      <h2 class="text-2xl font-bold mb-2">Relatório por Local {{ getFullDate() }}</h2>
+      <p class="text-gray-400 text-sm mb-4">
+        Considera apenas pedidos com status <span class="text-green-400 font-medium">PAGO</span> no
+        período. Pedidos abertos, fechados ou cancelados não entram neste relatório.
+      </p>
+
+      <!-- Card explicativo geral -->
+      <div class="bg-[#1a1f2a] border border-cyan-700 p-4 rounded-xl shadow mb-6">
+        <h3 class="text-cyan-400 font-semibold mb-1">💡 Como ler este relatório</h3>
+        <p class="text-gray-300 text-sm">
+          Cada <span class="text-white font-medium">local de venda</span> representa onde o pedido
+          foi criado (mesa ou delivery). O
+          <span class="text-white font-medium">local de produção</span> é o campo
+          <code class="text-indigo-300">Locais de produção</code> cadastrado no produto — indica
+          onde aquele item é preparado. Produtos sem local de produção cadastrado assumem o próprio
+          local de venda.
+        </p>
+        <p class="text-gray-400 text-sm mt-2">
+          O <span class="text-white font-medium">Tempo de Comanda</span> é calculado entre a criação
+          e o fechamento do pedido (<code class="text-indigo-300">criado → finalizado</code>). O
+          <span class="text-white font-medium">Tempo de Mesa</span> usa
+          <code class="text-indigo-300">criado → tempo de ocupação</code> — apenas pedidos com
+          mesa e esse campo preenchido entram no cálculo.
+        </p>
+      </div>
 
       <!-- Matriz Consolidada -->
       @let matrixData = getMatrix();
       <div class="bg-[#2a3445] p-4 rounded-xl mb-6">
         <h3 class="text-lg font-bold mb-1">Consumo Consolidado por Local</h3>
-        <p class="text-xs text-gray-400 mb-4">
+        <p class="text-xs text-gray-400 mb-1">
           Linhas = local de venda · Colunas = local de produção
+        </p>
+        <p class="text-xs text-gray-500 mb-4">
+          Cada célula mostra o faturamento dos itens vendidos no local da linha e produzidos no
+          local da coluna. A barra indica proporção em relação à célula de maior valor da tabela.
         </p>
 
         <div class="overflow-x-auto">
@@ -158,25 +184,30 @@
                 formatCurrency(loc.totalValue)
               }}</span>
             </div>
-            <p class="text-xs text-gray-400 mb-3">🏆 {{ loc.topProduct }}</p>
+            <p class="text-xs text-gray-400 mb-1">
+              🏆 Produto com maior faturamento: <span class="text-white">{{ loc.topProduct }}</span>
+            </p>
 
             <!-- Métricas rápidas -->
-            <div class="grid grid-cols-3 gap-2 mb-4">
+            <div class="grid grid-cols-3 gap-2 mb-4 mt-3">
               <div class="bg-white/5 rounded-lg px-3 py-2 text-center">
                 <p class="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Comandas</p>
                 <p class="text-sm font-bold text-white">{{ loc.totalOrders }}</p>
+                <p class="text-[10px] text-gray-600 mt-1">pedidos pagos</p>
               </div>
               <div class="bg-white/5 rounded-lg px-3 py-2 text-center">
                 <p class="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Tempo médio</p>
                 <p class="text-sm font-bold text-indigo-300">
                   {{ formatMinutes(loc.averageCommandaMinutes) }}
                 </p>
+                <p class="text-[10px] text-gray-600 mt-1">abertura → fechamento</p>
               </div>
               <div class="bg-white/5 rounded-lg px-3 py-2 text-center">
                 <p class="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Ocup. mesa</p>
                 <p class="text-sm font-bold text-indigo-300">
                   {{ formatMinutes(loc.averageTableOccupationMinutes) }}
                 </p>
+                <p class="text-[10px] text-gray-600 mt-1">criação → lib. mesa</p>
               </div>
             </div>
 
@@ -196,6 +227,12 @@
 
                 @if (isOperatorsOpen(loc.id)) {
                   <div class="mt-2">
+                    <p class="text-xs text-gray-500 px-2 mb-2">
+                      <span class="font-medium text-gray-400">Abriu</span> = pedidos que o operador
+                      criou · <span class="font-medium text-gray-400">Fechou</span> = pedidos que o
+                      operador pagou · <span class="font-medium text-amber-300">Total</span> =
+                      faturamento dos pedidos que fechou
+                    </p>
                     <div class="grid grid-cols-[1fr_56px_56px_96px] px-2 pb-1 gap-2">
                       @for (
                         header of ['Operador', 'Abriu', 'Fechou', 'Total'];
@@ -229,6 +266,9 @@
             <div class="border-t border-white/10 mb-4"></div>
 
             <!-- Categorias -->
+            <p class="text-xs text-gray-500 mb-3">
+              Itens ordenados por quantidade vendida (maior → menor)
+            </p>
             @for (cat of loc.categories; track cat.name) {
               <div class="mb-3">
                 <button

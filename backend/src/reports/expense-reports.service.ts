@@ -28,8 +28,8 @@ export class ExpenseReportService {
       const expenses = await this.prisma.client.expense.findMany({
         where: {
           datePayment: {
-            gte: this.getStartOfDay(filters.startDate as string),
-            lte: this.getEndOfDay(filters.endDate as string),
+            gte: this.getStartOfDay(filters.startDate),
+            lte: this.getEndOfDay(filters.endDate),
           },
           deletedAt: null,
         },

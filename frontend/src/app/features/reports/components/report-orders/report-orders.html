@@ -53,36 +53,52 @@
   </div>
 
   <div class="w-full max-w-6xl mx-auto bg-[#182233] rounded-2xl shadow-lg p-6 mt-6 text-white">
-    <h2 class="text-2xl font-bold mb-6">Relatório de Pedidos {{ getFullDate() }}</h2>
+    <h2 class="text-2xl font-bold mb-2">Relatório de Pedidos {{ getFullDate() }}</h2>
+    <p class="text-gray-400 text-sm mb-6">
+      Análise completa dos pedidos do período: desempenho por local, tempos de preparo, distribuição
+      por horário, produtos mais pedidos e performance de atendimento.
+    </p>
 
     <!-- ── RESUMO GLOBAL ── -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-        <h3 class="text-xs text-gray-400">Total de Pedidos</h3>
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Total de Pedidos</h3>
         <p class="text-2xl font-semibold">{{ report.totalOrders }}</p>
+        <p class="text-xs text-gray-500 mt-1">
+          Todos os pedidos criados no período, independente do status
+        </p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-        <h3 class="text-xs text-gray-400">Faturamento Total</h3>
-        <p class="text-2xl font-semibold">R$ {{ report.totalRevenue.toFixed(2) }}</p>
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Faturamento Total</h3>
+        <p class="text-2xl font-semibold text-green-400">R$ {{ report.totalRevenue.toFixed(2) }}</p>
+        <p class="text-xs text-gray-500 mt-1">Soma do valor total de todos os pedidos no período</p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-        <h3 class="text-xs text-gray-400">Ticket Médio</h3>
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Ticket Médio</h3>
         <p class="text-2xl font-semibold">R$ {{ report.averageOrderValue.toFixed(2) }}</p>
+        <p class="text-xs text-gray-500 mt-1">Faturamento total ÷ número de pedidos</p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-        <h3 class="text-xs text-gray-400">Itens por Pedido</h3>
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Itens por Pedido</h3>
         <p class="text-2xl font-semibold">{{ report.averageItemsPerOrder.toFixed(1) }}</p>
+        <p class="text-xs text-gray-500 mt-1">Média de itens (soma de quantidades) por pedido</p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-        <h3 class="text-xs text-gray-400">Tempo Médio de Preparo</h3>
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Tempo Médio de Preparo</h3>
         <p class="text-2xl font-semibold">{{ formatTime(report.averagePreparationTime) }}</p>
+        <p class="text-xs text-gray-500 mt-1">
+          Média do tempo entre início e conclusão das produções na cozinha
+        </p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-        <h3 class="text-xs text-gray-400">Tempo Médio do Pedido</h3>
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Tempo Médio do Pedido</h3>
         <p class="text-2xl font-semibold">{{ formatTime(report.averageTotalOrderTime) }}</p>
+        <p class="text-xs text-gray-500 mt-1">
+          Média do tempo entre criação do pedido e última entrega ao cliente
+        </p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-        <h3 class="text-xs text-gray-400">Taxa de Cancelamento</h3>
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Taxa de Cancelamento</h3>
         <p
           class="text-2xl font-semibold"
           [class.text-red-400]="report.cancellationRate > 10"
@@ -91,13 +107,36 @@
         >
           {{ report.cancellationRate.toFixed(1) }}%
         </p>
+        <p class="text-xs text-gray-500 mt-1">Verde ≤5% · Amarelo 5–10% · Vermelho >10%</p>
       </div>
+    </div>
+
+    <!-- Card explicativo resumo -->
+    <div class="bg-[#1a1a2a] border border-indigo-700 p-4 rounded-xl shadow mb-8">
+      <h3 class="text-indigo-400 font-semibold mb-1">💡 Tempos de preparo e atendimento</h3>
+      <p class="text-gray-300 text-sm">
+        O <span class="text-white font-medium">Tempo de Preparo</span> mede o intervalo entre o
+        início e a conclusão das produções registradas na cozinha (via
+        <code class="text-indigo-300">Ordem de Produção</code>). O
+        <span class="text-white font-medium">Tempo Total do Pedido</span> mede desde a criação do
+        pedido até a última entrega registrada — representa a experiência real do cliente.
+      </p>
+      <p class="text-gray-400 text-sm mt-2">
+        <span class="text-yellow-300">Atenção:</span> pedidos sem produções registradas não entram
+        no cálculo de tempo. Certifique-se de que a cozinha está registrando início e conclusão
+        corretamente.
+      </p>
     </div>
 
     <!-- ── DESEMPENHO POR LOCAL ── -->
     @if (report.byLocation.length > 0) {
       <div class="mb-8">
-        <h3 class="text-xl font-bold mb-4">🏪 Desempenho por Local</h3>
+        <h3 class="text-xl font-bold mb-1">🏪 Desempenho por Local</h3>
+        <p class="text-gray-400 text-sm mb-4">
+          Métricas segmentadas por local de produção. O percentual representa a participação de cada
+          local no faturamento total. A taxa de ocupação de mesas é calculada sobre o total de mesas
+          cadastradas no local.
+        </p>
 
         <!-- Cards resumo por local -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -127,11 +166,21 @@
                   <p class="font-semibold">{{ loc.averageItemsPerOrder.toFixed(1) }}</p>
                 </div>
                 <div class="bg-[#1f2a40] p-2 rounded">
-                  <p class="text-gray-400 text-xs">Tempo Preparo</p>
+                  <p
+                    class="text-gray-400 text-xs"
+                    title="Tempo entre início e conclusão das produções deste local"
+                  >
+                    Tempo Preparo
+                  </p>
                   <p class="font-semibold">{{ formatTime(loc.averagePreparationTime) }}</p>
                 </div>
                 <div class="bg-[#1f2a40] p-2 rounded">
-                  <p class="text-gray-400 text-xs">Tempo Total</p>
+                  <p
+                    class="text-gray-400 text-xs"
+                    title="Tempo entre criação do pedido e última entrega"
+                  >
+                    Tempo Total
+                  </p>
                   <p class="font-semibold">{{ formatTime(loc.averageTotalOrderTime) }}</p>
                 </div>
                 <div class="bg-[#1f2a40] p-2 rounded">
@@ -146,30 +195,55 @@
                   </p>
                 </div>
                 <div class="bg-[#1f2a40] p-2 rounded">
-                  <p class="text-gray-400 text-xs">Passou pela Cozinha</p>
+                  <p
+                    class="text-gray-400 text-xs"
+                    title="% de pedidos que tiveram pelo menos um item iniciado na cozinha deste local"
+                  >
+                    Passou pela Cozinha
+                  </p>
                   <p class="font-semibold">{{ loc.kitchenPassRate.toFixed(1) }}%</p>
                 </div>
                 @if (loc.peakHour !== null) {
                   <div class="bg-[#1f2a40] p-2 rounded">
-                    <p class="text-gray-400 text-xs">Hora de Pico</p>
+                    <p
+                      class="text-gray-400 text-xs"
+                      title="Horário com maior volume de pedidos criados"
+                    >
+                      Hora de Pico
+                    </p>
                     <p class="font-semibold">{{ loc.peakHour }}:00</p>
                   </div>
                 }
                 @if (loc.peakConcurrentOrders > 0) {
                   <div class="bg-[#1f2a40] p-2 rounded">
-                    <p class="text-gray-400 text-xs">Pico Simultâneo</p>
+                    <p
+                      class="text-gray-400 text-xs"
+                      title="Maior número de pedidos em aberto simultaneamente"
+                    >
+                      Pico Simultâneo
+                    </p>
                     <p class="font-semibold">{{ loc.peakConcurrentOrders }} pedidos</p>
                   </div>
                 }
                 @if (loc.tableOccupancyRate !== null) {
                   <div class="bg-[#1f2a40] p-2 rounded">
-                    <p class="text-gray-400 text-xs">Ocupação de Mesas</p>
+                    <p
+                      class="text-gray-400 text-xs"
+                      title="Mesas distintas utilizadas ÷ total de mesas cadastradas no local"
+                    >
+                      Ocupação de Mesas
+                    </p>
                     <p class="font-semibold">{{ loc.tableOccupancyRate.toFixed(1) }}%</p>
                   </div>
                 }
                 @if (loc.averageTableOccupationTime !== null) {
                   <div class="bg-[#1f2a40] p-2 rounded">
-                    <p class="text-gray-400 text-xs">Tempo Médio Mesa</p>
+                    <p
+                      class="text-gray-400 text-xs"
+                      title="Média do tempo entre criação do pedido e tableOccupiedUntil"
+                    >
+                      Tempo Médio Mesa
+                    </p>
                     <p class="font-semibold">{{ formatTime(loc.averageTableOccupationTime) }}</p>
                   </div>
                 }
@@ -199,7 +273,6 @@
 
             @if (isLocationExpanded(loc.locationId)) {
               <div class="p-5 space-y-5">
-                <!-- Status / Tipo / Top Produtos -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   <div>
                     <h5 class="text-sm font-bold text-gray-300 mb-2">Status dos Pedidos</h5>
@@ -251,6 +324,9 @@
 
                   <div>
                     <h5 class="text-sm font-bold text-gray-300 mb-2">Top Produtos</h5>
+                    <p class="text-xs text-gray-500 mb-2">
+                      Ordenado por quantidade pedida neste local
+                    </p>
                     <div class="space-y-2">
                       @for (p of loc.topProducts; track p.productId) {
                         <div class="bg-[#1f2a40] px-3 py-2 rounded">
@@ -267,10 +343,13 @@
                   </div>
                 </div>
 
-                <!-- Receita por hora do local -->
                 @if (loc.revenueByHour.length > 0) {
                   <div>
-                    <h5 class="text-sm font-bold text-gray-300 mb-2">⏰ Receita por Hora</h5>
+                    <h5 class="text-sm font-bold text-gray-300 mb-1">⏰ Receita por Hora</h5>
+                    <p class="text-xs text-gray-500 mb-2">
+                      Agrupado pela hora de criação do pedido. Linha destacada = hora de pico do
+                      local.
+                    </p>
                     <div class="overflow-x-auto">
                       <table class="w-full text-left text-sm">
                         <thead class="border-b border-gray-600">
@@ -304,10 +383,12 @@
                   </div>
                 }
 
-                <!-- Mesas mais ativas -->
                 @if (loc.topTables.length > 0) {
                   <div>
-                    <h5 class="text-sm font-bold text-gray-300 mb-2">🪑 Mesas Mais Ativas</h5>
+                    <h5 class="text-sm font-bold text-gray-300 mb-1">🪑 Mesas Mais Ativas</h5>
+                    <p class="text-xs text-gray-500 mb-2">
+                      Top 5 mesas por número de pedidos neste local
+                    </p>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       @for (table of loc.topTables; track table.table) {
                         <div class="bg-[#1f2a40] px-3 py-2 rounded text-center">
@@ -331,7 +412,13 @@
     <!-- ── DISTRIBUIÇÕES GLOBAIS ── -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-xl font-bold mb-4">📊 Status dos Pedidos</h4>
+        <h4 class="text-xl font-bold mb-1">📊 Status dos Pedidos</h4>
+        <p class="text-gray-400 text-sm mb-4">
+          Distribuição global por status. <span class="text-yellow-400">Aberto</span>: em andamento.
+          <span class="text-blue-400">Fechado</span>: finalizado sem pagamento registrado.
+          <span class="text-green-400">Pago</span>: finalizado e pago.
+          <span class="text-red-400">Cancelado</span>: cancelado.
+        </p>
         <div class="space-y-3">
           @for (status of report.ordersByStatus; track status.status) {
             <div class="flex justify-between items-center bg-[#1f2a40] p-3 rounded-lg">
@@ -359,7 +446,12 @@
       </div>
 
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-xl font-bold mb-4">🍽️ Tipo de Pedidos</h4>
+        <h4 class="text-xl font-bold mb-1">🍽️ Tipo de Pedidos</h4>
+        <p class="text-gray-400 text-sm mb-4">
+          Comparativo entre <span class="text-white font-medium">Mesa (DINE_IN)</span> e
+          <span class="text-white font-medium">Delivery</span>. Útil para entender o mix de
+          atendimento e alocar recursos de forma adequada.
+        </p>
         <div class="space-y-3">
           @for (type of report.ordersByType; track type.type) {
             <div class="bg-[#1f2a40] p-3 rounded-lg">
@@ -382,7 +474,11 @@
 
     <!-- Top Produtos Global -->
     <div class="bg-[#2a3445] p-4 rounded-xl mb-6">
-      <h4 class="text-xl font-bold mb-4">🏆 Produtos Mais Pedidos</h4>
+      <h4 class="text-xl font-bold mb-1">🏆 Produtos Mais Pedidos</h4>
+      <p class="text-gray-400 text-sm mb-4">
+        Top 10 produtos por quantidade total pedida (soma das quantidades nos itens de pedido). O
+        tempo médio é calculado a partir das produções registradas na cozinha para cada produto.
+      </p>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead class="border-b border-gray-600">
@@ -390,7 +486,7 @@
               <th class="py-2 px-3 text-gray-300">Produto</th>
               <th class="py-2 px-3 text-gray-300">Qtd.</th>
               <th class="py-2 px-3 text-gray-300">Faturamento</th>
-              <th class="py-2 px-3 text-gray-300">Tempo Médio</th>
+              <th class="py-2 px-3 text-gray-300">Tempo Médio Preparo</th>
             </tr>
           </thead>
           <tbody>
@@ -416,7 +512,11 @@
 
     <!-- Distribuição por Horário Global -->
     <div class="bg-[#2a3445] p-4 rounded-xl mb-6">
-      <h4 class="text-xl font-bold mb-4">⏰ Distribuição por Horário</h4>
+      <h4 class="text-xl font-bold mb-1">⏰ Distribuição por Horário</h4>
+      <p class="text-gray-400 text-sm mb-4">
+        Volume de pedidos agrupado pela hora de criação. Use para identificar horários de pico e
+        planejar escala de equipe.
+      </p>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead class="border-b border-gray-600">
@@ -447,7 +547,11 @@
     <!-- Mesas e Clientes -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-xl font-bold mb-4">🪑 Mesas Mais Ativas</h4>
+        <h4 class="text-xl font-bold mb-1">🪑 Mesas Mais Ativas</h4>
+        <p class="text-gray-400 text-sm mb-4">
+          Top 10 mesas por número de pedidos, consolidado entre todos os locais. A chave é única por
+          local + número de mesa.
+        </p>
         <div class="space-y-3">
           @for (table of report.topTables; track table.table) {
             <div class="bg-[#1f2a40] p-3 rounded-lg">
@@ -471,7 +575,11 @@
       </div>
 
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-xl font-bold mb-4">🚚 Clientes Mais Frequentes (Delivery)</h4>
+        <h4 class="text-xl font-bold mb-1">🚚 Clientes Mais Frequentes (Delivery)</h4>
+        <p class="text-gray-400 text-sm mb-4">
+          Considera apenas pedidos do tipo <span class="text-white font-medium">DELIVERY</span> com
+          nome de cliente preenchido. Pedidos de mesa não entram nesta listagem.
+        </p>
         <div class="space-y-3">
           @for (customer of report.topCustomers; track customer.customerName) {
             <div class="bg-[#1f2a40] p-3 rounded-lg">
@@ -496,7 +604,11 @@
     <!-- Performance de Tempo -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-xl font-bold mb-4">⚡ Pedidos Mais Rápidos</h4>
+        <h4 class="text-xl font-bold mb-1">⚡ Pedidos Mais Rápidos</h4>
+        <p class="text-gray-400 text-sm mb-4">
+          Top 5 pedidos com menor tempo total (criação → última entrega). Apenas pedidos com
+          entregas registradas entram neste ranking.
+        </p>
         <div class="space-y-3">
           @for (order of report.fastestOrders; track order.orderId) {
             <div class="bg-[#1f2a40] p-3 rounded-lg">
@@ -526,7 +638,11 @@
       </div>
 
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-xl font-bold mb-4">🐌 Pedidos Mais Lentos</h4>
+        <h4 class="text-xl font-bold mb-1">🐌 Pedidos Mais Lentos</h4>
+        <p class="text-gray-400 text-sm mb-4">
+          Top 5 pedidos com maior tempo total (criação → última entrega). Útil para identificar
+          gargalos operacionais recorrentes.
+        </p>
         <div class="space-y-3">
           @for (order of report.slowestOrders; track order.orderId) {
             <div class="bg-[#1f2a40] p-3 rounded-lg">
@@ -558,7 +674,10 @@
 
     <!-- Pedidos Recentes -->
     <div class="bg-[#2a3445] p-4 rounded-xl">
-      <h4 class="text-xl font-bold mb-4">📋 Pedidos Recentes</h4>
+      <h4 class="text-xl font-bold mb-1">📋 Pedidos Recentes</h4>
+      <p class="text-gray-400 text-sm mb-4">
+        Últimos 20 pedidos criados no período, ordenados do mais recente para o mais antigo.
+      </p>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead class="border-b border-gray-600">

@@ -1,13 +1,11 @@
 <!-- Container Principal -->
 <div class="w-full max-w-6xl bg-[#182233] rounded-2xl shadow-lg p-6">
-  <!-- Título Principal -->
   <div class="mb-4">
-    <h1 class="text-3xl font-bold text-white">Relatorio de Vendas</h1>
+    <h1 class="text-3xl font-bold text-white">Relatório de Vendas</h1>
   </div>
 
   <!-- Filtros -->
   <div class="flex flex-wrap gap-4 mb-6">
-    <!-- Data Inicial -->
     <div class="flex flex-col">
       <label class="text-white text-sm mb-1">Data Início</label>
       <input
@@ -16,8 +14,6 @@
         class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
       />
     </div>
-
-    <!-- Data Final -->
     <div class="flex flex-col">
       <label class="text-white text-sm mb-1">Data Fim</label>
       <input
@@ -26,8 +22,6 @@
         class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
       />
     </div>
-
-    <!-- Botões Rápidos -->
     <div class="flex items-end gap-2">
       <button
         (click)="setToday()"
@@ -42,8 +36,6 @@
         Este Mês
       </button>
     </div>
-
-    <!-- Gerar Relatório -->
     <div class="flex items-end">
       <button
         (click)="generateReport()"
@@ -55,83 +47,119 @@
   </div>
 
   <div class="w-full max-w-6xl mx-auto bg-[#182233] rounded-2xl shadow-lg p-6 mt-6 text-white">
-    <h2 class="text-2xl font-bold mb-6">Relatorio de Vendas {{ getFullDate() }}</h2>
+    <h2 class="text-2xl font-bold mb-2">Relatório de Vendas {{ getFullDate() }}</h2>
+    <p class="text-gray-400 text-sm mb-6">
+      Consolidação das vendas realizadas no período selecionado, com detalhamento por forma de
+      pagamento e por operador de caixa.
+    </p>
 
-    <!-- Totals -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+    <!-- Totais -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-        <h3 class="text-sm text-gray-300">Vendas Feitas</h3>
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Vendas Realizadas</h3>
         <p class="text-2xl font-semibold">{{ report.totalSales }}</p>
+        <p class="text-xs text-gray-500 mt-1">Número de transações concluídas no período</p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-        <h3 class="text-sm text-gray-300">Faturamento Bruto</h3>
-        <p class="text-2xl font-semibold">R$ {{ report.grossRevenue }}</p>
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Faturamento Bruto</h3>
+        <p class="text-2xl font-semibold text-green-400">R$ {{ report.grossRevenue }}</p>
+        <p class="text-xs text-gray-500 mt-1">
+          Soma total dos valores recebidos após descontos aplicados
+        </p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-        <h3 class="text-sm text-gray-300">Lucro Bruto</h3>
-        <p class="text-2xl font-semibold">R$ {{ report.grossProfit }}</p>
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Lucro Bruto</h3>
+        <p class="text-2xl font-semibold text-indigo-400">R$ {{ report.grossProfit }}</p>
+        <p class="text-xs text-gray-500 mt-1">
+          Faturamento menos o custo de aquisição/produção dos itens vendidos
+        </p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-        <h3 class="text-sm text-gray-300">Descontos</h3>
-        <p class="text-2xl font-semibold">R$ {{ report.totalDiscounts }}</p>
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Descontos Concedidos</h3>
+        <p class="text-2xl font-semibold text-red-400">R$ {{ report.totalDiscounts }}</p>
+        <p class="text-xs text-gray-500 mt-1">
+          Total abatido do valor original das vendas no período
+        </p>
       </div>
     </div>
 
-    <!-- Payment Breakdown -->
+    <!-- Card explicativo -->
+    <div class="bg-[#1a2a1a] border border-indigo-700 p-4 rounded-xl shadow mb-6">
+      <h3 class="text-indigo-400 font-semibold mb-1">💡 Faturamento Bruto × Lucro Bruto</h3>
+      <p class="text-gray-300 text-sm">
+        O <span class="text-white font-medium">Faturamento Bruto</span> é o valor total recebido dos
+        clientes já com descontos aplicados. O
+        <span class="text-white font-medium">Lucro Bruto</span> desconta o custo de aquisição ou
+        produção dos itens vendidos — ou seja, o quanto sobra antes de considerar despesas
+        operacionais (aluguel, salários, etc.).
+      </p>
+      <p class="text-gray-400 text-sm mt-2">
+        <span class="text-yellow-300">Atenção:</span> descontos reduzem diretamente o faturamento e,
+        consequentemente, o lucro bruto. Acompanhe o total de descontos para avaliar se estão
+        impactando a margem.
+      </p>
+    </div>
+
+    <!-- Formas de Pagamento -->
+    <div class="mb-2">
+      <h4 class="text-xl font-bold text-white mb-1">💳 Receita por Forma de Pagamento</h4>
+      <p class="text-gray-400 text-sm mb-4">
+        Distribuição do faturamento bruto entre as formas de pagamento aceitas. Útil para entender o
+        perfil de pagamento dos clientes e planejar o fluxo de caixa (ex: PIX e dinheiro são
+        imediatos; cartão pode ter prazo de liquidação).
+      </p>
+    </div>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-sm text-gray-300">PIX</h4>
+        <h4 class="text-xs text-gray-400 uppercase tracking-wide mb-1">PIX</h4>
         <p class="text-xl font-semibold">R$ {{ report.salesByPaymentMethod.pix }}</p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-sm text-gray-300">Dinheiro</h4>
+        <h4 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Dinheiro</h4>
         <p class="text-xl font-semibold">R$ {{ report.salesByPaymentMethod.dinheiro }}</p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-sm text-gray-300">Cartão</h4>
+        <h4 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Cartão de Crédito</h4>
         <p class="text-xl font-semibold">R$ {{ report.salesByPaymentMethod.cartaoCredito }}</p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-sm text-gray-300">Cartão</h4>
+        <h4 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Cartão de Débito</h4>
         <p class="text-xl font-semibold">R$ {{ report.salesByPaymentMethod.cartaoDebito }}</p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl">
-        <h4 class="text-sm text-gray-300">Notinha</h4>
+        <h4 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Notinha (Crédito Loja)</h4>
         <p class="text-xl font-semibold">R$ {{ report.salesByPaymentMethod.creditoLoja }}</p>
       </div>
     </div>
 
-    <!-- Sales by Operator - Caixa Resumo -->
+    <!-- Resumo por Operador -->
     <div class="bg-[#2a3445] p-4 rounded-xl mb-6 w-full">
-      <h4 class="text-xl font-bold text-white mb-4">Resumo por Operador</h4>
-
-      <!-- Scroll Container -->
+      <h4 class="text-xl font-bold text-white mb-1">👤 Resumo por Operador</h4>
+      <p class="text-gray-400 text-sm mb-4">
+        Desempenho individual de cada operador de caixa no período. Mostra quantas vendas realizou,
+        o valor total e o detalhamento por forma de pagamento. Útil para conferência de caixa e
+        avaliação de produtividade.
+      </p>
       <div class="flex gap-4 overflow-x-auto pb-2">
         @for (item of report.salesByOperator; track $index) {
           <div class="w-full sm:w-1/2 bg-[#1f2a40] p-4 rounded-xl shadow-md text-white shrink-0">
             <div class="text-lg font-bold mb-1">{{ item.operator }}</div>
-
             <div class="text-md font-semibold text-indigo-300 mb-2">
               {{ item.totalSales }} Vendas – R$ {{ item.revenue }}
             </div>
-
-            <div class="text-xl text-gray-300 space-y-1">
+            <div class="text-sm text-gray-300 space-y-1">
               <div>
-                <span class="font-semibold">Dinheiro:</span> R$
-                {{ item.paymentBreakdown.dinheiro }}
+                <span class="font-semibold">Dinheiro:</span> R$ {{ item.paymentBreakdown.dinheiro }}
               </div>
               <div>
-                <span class="font-semibold">Cartão Credito:</span> R$
+                <span class="font-semibold">Cartão Crédito:</span> R$
                 {{ item.paymentBreakdown.cartaoCredito }}
               </div>
               <div>
-                <span class="font-semibold">Cartão Debito:</span> R$
+                <span class="font-semibold">Cartão Débito:</span> R$
                 {{ item.paymentBreakdown.cartaoDebito }}
               </div>
-              <div>
-                <span class="font-semibold">PIX:</span> R$
-                {{ item.paymentBreakdown.pix }}
-              </div>
+              <div><span class="font-semibold">PIX:</span> R$ {{ item.paymentBreakdown.pix }}</div>
               <div>
                 <span class="font-semibold">Notinha:</span> R$
                 {{ item.paymentBreakdown.creditoLoja }}
