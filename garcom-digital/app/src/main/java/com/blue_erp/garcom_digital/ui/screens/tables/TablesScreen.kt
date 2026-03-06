@@ -41,7 +41,9 @@ fun TablesScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        viewModel.loadTables()
+        if (!uiState.isLoading) {
+            viewModel.loadTables()
+        }
     }
 
     LaunchedEffect(uiState.isLoggedOut) {

@@ -32,15 +32,4 @@ class OrderRepository @Inject constructor(
             Resource.Error("Erro de conexão: ${e.message}")
         }
     }
-
-    suspend fun getProducts(search: String? = null): Resource<List<ProductResponse>> {
-        return try {
-            val response = apiService.getProducts(search = search)
-            if (response.isSuccessful) {
-                Resource.Success(response.body()?.data ?: emptyList())
-            } else Resource.Error(parseError(response, "Erro ao buscar produtos"))
-        } catch (e: Exception) {
-            Resource.Error("Erro de conexão: ${e.message}")
-        }
-    }
 }

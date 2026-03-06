@@ -40,12 +40,19 @@ interface ApiService {
     @POST("orders/{id}/send-to-kitchen")
     suspend fun sendToKitchen(@Path("id") id: Int): Response<Unit>
 
-    // Products
+    @GET("categories")
+    suspend fun getCategories(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 100,
+        @Query("active") active: Boolean = true
+    ): Response<PaginatedCategoryResponse>
+
     @GET("products")
     suspend fun getProducts(
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 500,
         @Query("search") search: String? = null,
-        @Query("active") active: Boolean = true
+        @Query("active") active: Boolean = true,
+        @Query("categoryId") categoryId: Int? = null
     ): Response<PaginatedProductResponse>
 }

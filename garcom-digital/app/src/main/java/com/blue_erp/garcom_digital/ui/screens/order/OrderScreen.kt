@@ -2,6 +2,7 @@ package com.blue_erp.garcom_digital.ui.screens.order
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -16,6 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.blue_erp.garcom_digital.data.model.CategoryResponse
 import com.blue_erp.garcom_digital.data.model.ProductResponse
 import com.blue_erp.garcom_digital.data.model.TableOrder
 import com.blue_erp.garcom_digital.data.model.TableOrderItem
@@ -63,6 +65,7 @@ fun OrderScreen(
         onCloseTab = viewModel::closeTab,
         onOpenCloseTabDialog = viewModel::openCloseTabDialog,
         onCloseCloseTabDialog = viewModel::closeCloseTabDialog,
+        onCategorySelect = viewModel::selectCategory,
     )
 }
 
@@ -83,6 +86,7 @@ private fun OrderScreenContent(
     onCloseTab: () -> Unit,
     onOpenCloseTabDialog: () -> Unit,
     onCloseCloseTabDialog: () -> Unit,
+    onCategorySelect: (Int?) -> Unit,
 ) {
     val table = uiState.table
     val order = uiState.order
@@ -218,8 +222,11 @@ private fun OrderScreenContent(
         ProductSearchSheet(
             query = uiState.productQuery,
             products = uiState.products,
+            categories = uiState.categories,
+            selectedCategoryId = uiState.selectedCategoryId,
             isLoading = uiState.isSearchingProducts,
             onQueryChange = onProductQueryChange,
+            onCategorySelect = onCategorySelect,
             onProductClick = onAddProduct,
             onDismiss = onCloseProductSearch
         )
@@ -337,8 +344,11 @@ private fun OrderBottomBar(
 private fun ProductSearchSheet(
     query: String,
     products: List<ProductResponse>,
+    categories: List<CategoryResponse>,
+    selectedCategoryId: Int?,
     isLoading: Boolean,
     onQueryChange: (String) -> Unit,
+    onCategorySelect: (Int?) -> Unit,
     onProductClick: (ProductResponse) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -367,21 +377,38 @@ private fun ProductSearchSheet(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
+            if (categories.isNotEmpty()) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(bottom = 8.dp)
+                ) {
+                    item {
+                        FilterChip(
+                            selected = selectedCategoryId == null,
+                            onClick = { onCategorySelect(null) },
+                            label = { Text("Todos") }
+                        )
+                    }
+                    items(categories) { category ->
+                        FilterChip(
+                            selected = selectedCategoryId == category.id,
+                            onClick = { onCategorySelect(if (selectedCategoryId == category.id) null else category.id) },
+                            label = { Text(category.name) }
+                        )
+                    }
+                }
+            }
+
             when {
                 isLoading -> Box(
                     modifier = Modifier.fillMaxWidth().height(120.dp),
                     contentAlignment = Alignment.Center
                 ) { CircularProgressIndicator() }
 
-                products.isEmpty() && query.isNotBlank() -> Box(
-                    modifier = Modifier.fillMaxWidth().height(120.dp),
-                    contentAlignment = Alignment.Center
-                ) { Text("Nenhum produto encontrado", color = MaterialTheme.colorScheme.onSurfaceVariant) }
-
                 products.isEmpty() -> Box(
                     modifier = Modifier.fillMaxWidth().height(120.dp),
                     contentAlignment = Alignment.Center
-                ) { CircularProgressIndicator() } // ainda carregando a lista inicial
+                ) { Text("Nenhum produto encontrado", color = MaterialTheme.colorScheme.onSurfaceVariant) }
 
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp),
@@ -448,7 +475,7 @@ private fun OrderScreenPreview() {
             onBack = {}, onSave = {},
             onIncrement = {}, onDecrement = {}, onRemove = {},
             onOpenProductSearch = {}, onCloseProductSearch = {},
-            onProductQueryChange = {}, onAddProduct = {},
+            onProductQueryChange = {}, onAddProduct = {}, onCategorySelect = {},
             onCloseTab = {}, onCloseCloseTabDialog = {}, onOpenCloseTabDialog = {}
         )
     }
@@ -464,7 +491,7 @@ private fun OrderScreenEmptyPreview() {
             onIncrement = {}, onDecrement = {}, onRemove = {},
             onOpenProductSearch = {}, onCloseProductSearch = {},
             onProductQueryChange = {}, onAddProduct = {}, onOpenCloseTabDialog = {},
-            onCloseCloseTabDialog = {}, onCloseTab = {}
+            onCloseCloseTabDialog = {}, onCloseTab = {}, onCategorySelect = {},
         )
     }
 }
@@ -479,7 +506,7 @@ private fun OrderScreenLoadingPreview() {
             onIncrement = {}, onDecrement = {}, onRemove = {},
             onOpenProductSearch = {}, onCloseProductSearch = {},
             onProductQueryChange = {}, onAddProduct = {}, onCloseTab = {}, onCloseCloseTabDialog = {},
-            onOpenCloseTabDialog = {},
+            onOpenCloseTabDialog = {}, onCategorySelect = {},
         )
     }
 }

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.blue_erp.garcom_digital.data.model.*
 import com.blue_erp.garcom_digital.data.repository.OrderRepository
+import com.blue_erp.garcom_digital.data.repository.ProductRepository
 import com.blue_erp.garcom_digital.data.repository.TableRepository
 import com.blue_erp.garcom_digital.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,6 +31,8 @@ data class OrderUiState(
     val showCloseTabDialog: Boolean = false,
     val shouldNavigateBack: Boolean = false,
     val isClosingTab: Boolean = false,
+    val categories: List<CategoryResponse> = emptyList(),
+    val selectedCategoryId: Int? = null,
 )
 
 @OptIn(FlowPreview::class)
@@ -37,6 +40,7 @@ data class OrderUiState(
 class OrderViewModel @Inject constructor(
     private val tableRepository: TableRepository,
     private val orderRepository: OrderRepository,
+    private val productRepository: ProductRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -49,11 +53,26 @@ class OrderViewModel @Inject constructor(
 
     init {
         loadTable()
+        loadCategories()
         viewModelScope.launch {
             _productQuery
                 .debounce(400)
                 .collectLatest { query -> searchProducts(query) }
         }
+    }
+
+    private fun loadCategories() {
+        viewModelScope.launch {
+            when (val result = productRepository.getCategories()) {
+                is Resource.Success -> _uiState.update { it.copy(categories = result.data) }
+                else -> {}
+            }
+        }
+    }
+
+    fun selectCategory(categoryId: Int?) {
+        _uiState.update { it.copy(selectedCategoryId = categoryId) }
+        viewModelScope.launch { searchProducts(_uiState.value.productQuery, categoryId) }
     }
 
     fun openCloseTabDialog() = _uiState.update { it.copy(showCloseTabDialog = true) }
@@ -205,7 +224,7 @@ class OrderViewModel @Inject constructor(
     // ── Busca de produtos ──────────────────────────────────────────────────────
 
     fun openProductSearch() {
-        _uiState.update { it.copy(showProductSearch = true, productQuery = "", products = emptyList()) }
+        _uiState.update { it.copy(showProductSearch = true, productQuery = "", products = emptyList(), selectedCategoryId = null) }
         viewModelScope.launch { searchProducts("") }
     }
 
@@ -218,10 +237,10 @@ class OrderViewModel @Inject constructor(
         _productQuery.value = query
     }
 
-    private fun searchProducts(query: String) {
+    private fun searchProducts(query: String, categoryId: Int? = _uiState.value.selectedCategoryId) {
         viewModelScope.launch {
             _uiState.update { it.copy(isSearchingProducts = true) }
-            when (val result = orderRepository.getProducts(query)) {
+            when (val result = productRepository.getProducts(search = query, categoryId = categoryId)) {
                 is Resource.Success -> _uiState.update {
                     it.copy(products = result.data, isSearchingProducts = false)
                 }
