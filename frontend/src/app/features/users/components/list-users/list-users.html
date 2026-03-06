@@ -91,18 +91,20 @@
           </td>
           <td class="py-3 px-4">{{ user.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
           <td class="py-3 px-4 space-x-2">
-            <button
-              (click)="openModalEdit(user)"
-              class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm"
-            >
-              Editar
-            </button>
-            <button
-              (click)="deleteUser(user)"
-              class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
-            >
-              Excluir
-            </button>
+            @if (user.id !== 1) {
+              <button
+                (click)="openModalEdit(user)"
+                class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm"
+              >
+                Editar
+              </button>
+              <button
+                (click)="deleteUser(user)"
+                class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+              >
+                Excluir
+              </button>
+            }
           </td>
         </tr>
       } @empty {

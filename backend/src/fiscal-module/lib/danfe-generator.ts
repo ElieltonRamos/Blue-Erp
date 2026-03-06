@@ -308,6 +308,7 @@ export class DanfeGenerator {
     const parser = new XMLParser({
       ignoreAttributes: false,
       processEntities: false,
+      parseTagValue: false,
     });
     const parsed = parser.parse(xml);
 

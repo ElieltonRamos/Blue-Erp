@@ -28,8 +28,9 @@ import {
   OrderFiltersDto,
   OrderPaginatedResponseDto,
 } from './dto/order-filters.dto';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { JwtAuthGuard, JwtPayload } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('Orders')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -113,8 +114,9 @@ export class OrdersController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateOrderDto: UpdateOrderDto,
+    @CurrentUser() user: JwtPayload,
   ): Promise<OrderEntity> {
-    return this.ordersService.update(id, updateOrderDto);
+    return this.ordersService.update(id, updateOrderDto, user.role);
   }
 
   @Delete(':id')

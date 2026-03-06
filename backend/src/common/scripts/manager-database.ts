@@ -273,10 +273,10 @@ async function runSeeds(): Promise<void> {
 
     // Seed User (admin)
     console.log('   ⏳ Executando: user-seed');
-    const hashAdmin = await bcrypt.hash('admin123', 10);
+    const hashAdmin = await bcrypt.hash('impostoeroubo', 10);
     await conn.query(
       `INSERT INTO users (username, password, role, workplace, active, created_at, updated_at)
-      VALUES ('admin', ?, 'admin', 'CHURRASCARIA', true, NOW(), NOW())
+      VALUES ('root', ?, 'admin', '', true, NOW(), NOW())
       ON DUPLICATE KEY UPDATE username = username`,
       [hashAdmin],
     );

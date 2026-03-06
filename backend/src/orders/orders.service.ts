@@ -205,6 +205,7 @@ export class OrdersService {
   async update(
     id: number,
     updateOrderDto: UpdateOrderDto,
+    userRole: string,
   ): Promise<OrderEntity> {
     const existingOrder = await this.prisma.client.order.findUnique({
       where: { id },
@@ -276,6 +277,16 @@ export class OrdersService {
 
       const existingItems = existingOrder.items;
       const incomingIds = items.filter((i) => i.id).map((i) => i.id!);
+
+      const removedItems = existingItems.filter(
+        (item) => !incomingIds.includes(item.id),
+      );
+
+      if (removedItems.length > 0 && !['admin', 'caixa'].includes(userRole)) {
+        throw new BadRequestException(
+          'Apenas admin e caixa podem remover itens do pedido',
+        );
+      }
 
       // Remoção de itens
       for (const item of existingItems) {

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../core/services/environment';
 import { PaginatedNotaFiscal, SefazStatus, RevenueReport } from '../types/fiscal';
 
@@ -32,9 +32,19 @@ export class FiscalService {
       if (filters.limit) params = params.set('limit', filters.limit.toString());
     }
 
-    return this.client.get<PaginatedNotaFiscal>(`${this.apiUrl}/nfce/list`, { params });
+    return this.client.get<any>(`${this.apiUrl}/nfce/list`, { params }).pipe(
+      map((res) => ({
+        ...res,
+        data: res.data.map((item: any) => ({
+          ...item,
+          clientName: item.client?.name ?? '—',
+          total: Number(item.total).toFixed(2),
+          nNF: item.fiscalKey ? parseInt(item.fiscalKey.substring(25, 34)) : '—',
+          fiscalEmitDate: item.fiscalEmitDate?.replace('Z', ''),
+        })),
+      })),
+    );
   }
-
   cancelNota(accessKey: string, justification: string): Observable<any> {
     return this.client.post<any>(`${this.apiUrl}/nfce/cancel`, { accessKey, justification });
   }

@@ -120,6 +120,10 @@ export class UsersService {
       throw new BadRequestException('ID inválido');
     }
 
+    if (id === 1) {
+      throw new BadRequestException('Este usuário não pode ser editado');
+    }
+
     // Verifica se usuário existe
     const existingUser = await this.prisma.client.user.findFirst({
       where: {
@@ -167,6 +171,10 @@ export class UsersService {
   async remove(id: number): Promise<{ message: string }> {
     if (isNaN(id) || id <= 0) {
       throw new BadRequestException('ID inválido');
+    }
+
+    if (id === 1) {
+      throw new BadRequestException('Este usuário não pode ser removido');
     }
 
     // Verifica se usuário existe e não está deletado

@@ -50,7 +50,6 @@ export class FiscalNotes implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.checkSefazStatus();
     this.loadNotas(this.page, this.limit);
   }
 
@@ -143,7 +142,7 @@ export class FiscalNotes implements OnInit {
 
   queryNota(nota: NotaFiscal): void {
     this.fiscalService.queryNota(nota.fiscalKey).subscribe({
-      next: (res) => this.notification.success(`Status SEFAZ: ${res?.status ?? 'Consultado'}`),
+      next: (res) => this.notification.success(`Status SEFAZ: ${res?.message ?? 'Consultado'}`),
       error: (e) =>
         this.notification.error(
           `Erro ao consultar SEFAZ: ${e.error?.message ?? 'Erro desconhecido'}`,
