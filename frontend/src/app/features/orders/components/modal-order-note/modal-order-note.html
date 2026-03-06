@@ -1,0 +1,100 @@
+<ng-template cdkPortal>
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg max-h-[90vh] flex flex-col">
+    <div id="orderInvoiceContent" class="overflow-y-auto grow">
+      <!-- Cabeçalho -->
+      <div class="text-center mb-4">
+        <h2 class="text-lg font-bold">Resumo da Comanda</h2>
+        <p class="text-gray-400 text-xs mt-1">Venda ainda não finalizada</p>
+      </div>
+
+      @if (companyData) {
+        <div class="mb-3 pb-3 border-b border-gray-200 text-center">
+          <p class="font-bold">{{ companyData.tradeName }}</p>
+        </div>
+      }
+
+      <!-- Dados da comanda -->
+      <div class="text-sm space-y-1 mb-3">
+        <p>
+          <strong>Comanda #{{ orderData.id }}</strong>
+        </p>
+        @if (orderData.customerName) {
+          <p><strong>Cliente:</strong> {{ orderData.customerName }}</p>
+        }
+        @if (orderData.table) {
+          <p><strong>Mesa:</strong> {{ orderData.table }}</p>
+        }
+        <p><strong>Data:</strong> {{ getFormattedDate() }}</p>
+        @if (orderData.closedByOperatorId) {
+          <p><strong>Operador:</strong> {{ orderData.closedByOperatorId }}</p>
+        }
+      </div>
+
+      <hr class="border-dashed border-gray-300 mb-3" />
+
+      <!-- Itens -->
+      <table class="table-auto w-full text-sm">
+        <thead>
+          <tr class="text-gray-500">
+            <th class="py-1 text-left">Produto</th>
+            <th class="py-1 text-center">Qtd</th>
+            <th class="py-1 text-right">Unit.</th>
+            <th class="py-1 text-right">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of orderData.items; track item.productId) {
+            <tr class="border-t border-gray-100">
+              <td class="py-1">{{ item.name }}</td>
+              <td class="py-1 text-center">{{ item.quantity }}</td>
+              <td class="py-1 text-right">R$ {{ formatNumber(item.unitPrice) }}</td>
+              <td class="py-1 text-right">R$ {{ formatNumber(item.total) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <hr class="border-dashed border-gray-300 mt-3" />
+
+      <p class="text-right font-bold mt-2">Total: R$ {{ formatNumber(orderData.total) }}</p>
+
+      <div
+        class="mt-8 pt-2 border-t border-gray-200 text-center text-gray-400"
+        style="font-size: 12px"
+      >
+        <p>⚙️ Blue ERP © 2026 | Email: elieltonramos14&#64;gmail.com</p>
+      </div>
+    </div>
+
+    <div class="mt-4 flex justify-end gap-2 print:hidden">
+      <button
+        (click)="print()"
+        class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition flex items-center gap-2 text-sm"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+          />
+        </svg>
+        Imprimir
+      </button>
+      <button
+        (click)="close()"
+        class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition flex items-center gap-2 text-sm"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+        Fechar
+      </button>
+    </div>
+  </div>
+</ng-template>

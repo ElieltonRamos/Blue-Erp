@@ -7,10 +7,11 @@ import { Order, OrderStatus } from '../../types/order';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 import { OrderService } from '../../services/order.service';
+import { ModalOrderNote } from '../modal-order-note/modal-order-note';
 
 @Component({
   selector: 'app-list-orders',
-  imports: [FormsModule, CommonModule, EditOrderModal],
+  imports: [FormsModule, CommonModule, EditOrderModal, ModalOrderNote],
   templateUrl: './list-orders.html',
 })
 export class ListOrders implements OnInit {
@@ -29,6 +30,8 @@ export class ListOrders implements OnInit {
   itemsPerPage: number = 10;
   totalPages: number = 1;
   totalOrders: number = 0;
+  isPrintModalOpen: boolean = false;
+  selectedOrderForPrint: Order | null = null;
 
   orders: Order[] = [];
   isLoading: boolean = false;
@@ -103,7 +106,7 @@ export class ListOrders implements OnInit {
       OPEN: 'Aberto',
       CLOSED: 'Fechado',
       CANCELED: 'Cancelado',
-      PAID: 'Pago'
+      PAID: 'Pago',
     };
     return labels[status];
   }
@@ -173,9 +176,7 @@ export class ListOrders implements OnInit {
   }
 
   async cancelOrder(orderId: number): Promise<void> {
-    const confirmed = await alertConfirm(
-      'Deseja realmente cancelar este pedido?',
-    );
+    const confirmed = await alertConfirm('Deseja realmente cancelar este pedido?');
 
     if (confirmed) {
       this.orderService.cancelOrder(orderId).subscribe({
@@ -189,6 +190,19 @@ export class ListOrders implements OnInit {
         },
       });
     }
+  }
+
+  printOrder(orderId: number): void {
+    const order = this.orders.find((o) => o.id === orderId);
+    if (order) {
+      this.selectedOrderForPrint = order;
+      this.isPrintModalOpen = true;
+    }
+  }
+
+  closePrintModal(): void {
+    this.isPrintModalOpen = false;
+    this.selectedOrderForPrint = null;
   }
 
   previousPage(): void {

@@ -32,6 +32,7 @@ export interface Order {
   finishedAt?: Date;
   deliveredAt?: Date;
   tableOccupiedUtil?: Date;
+  closedByOperatorId?: number;
   operatorId?: number;
   operator?: {
     id: number;

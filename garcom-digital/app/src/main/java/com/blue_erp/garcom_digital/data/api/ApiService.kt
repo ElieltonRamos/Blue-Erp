@@ -55,4 +55,7 @@ interface ApiService {
         @Query("active") active: Boolean = true,
         @Query("categoryId") categoryId: Int? = null
     ): Response<PaginatedProductResponse>
+
+    @GET("orders/{id}")
+    suspend fun getOrder(@Path("id") id: Int): Response<TableOrder>
 }

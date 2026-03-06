@@ -33,6 +33,9 @@ data class OrderUiState(
     val isClosingTab: Boolean = false,
     val categories: List<CategoryResponse> = emptyList(),
     val selectedCategoryId: Int? = null,
+    val showTabSummaryDialog: Boolean = false,
+    val tabSummaryOrder: TableOrder? = null,
+    val isLoadingTabSummary: Boolean = false,
 )
 
 @OptIn(FlowPreview::class)
@@ -75,12 +78,35 @@ class OrderViewModel @Inject constructor(
         viewModelScope.launch { searchProducts(_uiState.value.productQuery, categoryId) }
     }
 
-    fun openCloseTabDialog() = _uiState.update { it.copy(showCloseTabDialog = true) }
     fun closeCloseTabDialog() = _uiState.update { it.copy(showCloseTabDialog = false) }
+
+    fun closeTabSummaryDialog() {
+        _uiState.update { it.copy(showTabSummaryDialog = false, tabSummaryOrder = null) }
+    }
+
+    fun openCloseTabDialog() {
+        val orderId = _uiState.value.order?.id ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingTabSummary = true, showCloseTabDialog = false) }
+            when (val result = orderRepository.getOrder(orderId)) {
+                is Resource.Success -> _uiState.update {
+                    it.copy(
+                        isLoadingTabSummary = false,
+                        tabSummaryOrder = result.data,
+                        showTabSummaryDialog = true
+                    )
+                }
+                is Resource.Error -> _uiState.update {
+                    it.copy(isLoadingTabSummary = false, error = result.message)
+                }
+                is Resource.Loading -> {}
+            }
+        }
+    }
 
     fun closeTab() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isClosingTab = true, showCloseTabDialog = false, error = null) }
+            _uiState.update { it.copy(isClosingTab = true, showTabSummaryDialog = false, error = null) }
             when (val result = tableRepository.closeTab(tableId)) {
                 is Resource.Success -> _uiState.update {
                     it.copy(isClosingTab = false, shouldNavigateBack = true)

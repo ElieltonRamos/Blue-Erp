@@ -32,4 +32,15 @@ class OrderRepository @Inject constructor(
             Resource.Error("Erro de conexão: ${e.message}")
         }
     }
+
+    suspend fun getOrder(orderId: Int): Resource<TableOrder> {
+        return try {
+            val response = apiService.getOrder(orderId)
+            if (response.isSuccessful) {
+                response.body()?.let { Resource.Success(it) } ?: Resource.Error("Erro ao buscar comanda")
+            } else Resource.Error(parseError(response, "Erro ao buscar comanda"))
+        } catch (e: Exception) {
+            Resource.Error("Erro de conexão: ${e.message}")
+        }
+    }
 }
