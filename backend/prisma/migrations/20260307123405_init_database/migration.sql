@@ -147,7 +147,7 @@ CREATE TABLE `products` (
     `quantity` DECIMAL(10, 3) NOT NULL DEFAULT 0,
     `min_stock` DECIMAL(10, 3) NULL,
     `active` BOOLEAN NOT NULL DEFAULT true,
-    `product_type` ENUM('MANUFACTURED', 'RESALE') NOT NULL DEFAULT 'RESALE',
+    `product_type` ENUM('MANUFACTURED', 'RESALE', 'SEMI_MANUFACTURED') NOT NULL DEFAULT 'RESALE',
     `category_id` INTEGER NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
@@ -183,17 +183,16 @@ CREATE TABLE `orders` (
     `total` DECIMAL(10, 2) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
-    `kitchen_sent_at` DATETIME(3) NULL,
-    `kitchen_ready_at` DATETIME(3) NULL,
     `finished_at` DATETIME(3) NULL,
-    `delivered_at` DATETIME(3) NULL,
     `table_occupied_until` DATETIME(3) NULL,
     `operator_id` INTEGER NULL,
+    `closed_by_operator_id` INTEGER NULL,
 
     INDEX `orders_status_idx`(`status`),
     INDEX `orders_location_id_idx`(`location_id`),
     INDEX `orders_type_idx`(`type`),
     INDEX `orders_operator_id_idx`(`operator_id`),
+    INDEX `orders_closed_by_operator_id_idx`(`closed_by_operator_id`),
     INDEX `orders_created_at_idx`(`created_at`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -325,13 +324,16 @@ CREATE TABLE `composition_items` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `quantity` DECIMAL(10, 3) NOT NULL,
     `product_id` INTEGER NOT NULL,
-    `material_id` INTEGER NOT NULL,
+    `material_id` INTEGER NULL,
+    `sub_product_id` INTEGER NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
     INDEX `composition_items_product_id_idx`(`product_id`),
     INDEX `composition_items_material_id_idx`(`material_id`),
+    INDEX `composition_items_sub_product_id_idx`(`sub_product_id`),
     UNIQUE INDEX `composition_items_product_id_material_id_key`(`product_id`, `material_id`),
+    UNIQUE INDEX `composition_items_product_id_sub_product_id_key`(`product_id`, `sub_product_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -376,6 +378,9 @@ ALTER TABLE `products` ADD CONSTRAINT `products_category_id_fkey` FOREIGN KEY (`
 ALTER TABLE `orders` ADD CONSTRAINT `orders_operator_id_fkey` FOREIGN KEY (`operator_id`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `orders` ADD CONSTRAINT `orders_closed_by_operator_id_fkey` FOREIGN KEY (`closed_by_operator_id`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `order_items` ADD CONSTRAINT `order_items_order_id_fkey` FOREIGN KEY (`order_id`) REFERENCES `orders`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -401,6 +406,9 @@ ALTER TABLE `composition_items` ADD CONSTRAINT `composition_items_product_id_fke
 
 -- AddForeignKey
 ALTER TABLE `composition_items` ADD CONSTRAINT `composition_items_material_id_fkey` FOREIGN KEY (`material_id`) REFERENCES `primary_materials`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `composition_items` ADD CONSTRAINT `composition_items_sub_product_id_fkey` FOREIGN KEY (`sub_product_id`) REFERENCES `products`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `preparation_steps` ADD CONSTRAINT `preparation_steps_product_id_fkey` FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
