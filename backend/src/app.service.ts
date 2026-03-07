@@ -8,6 +8,7 @@ import { promisify } from 'util';
 import { exec } from 'child_process';
 import { Cron } from '@nestjs/schedule';
 import { LicenseSystemService } from './license-system/license-system.service';
+import { version } from '../package.json';
 
 const INSTALADOR_INFO = {
   nome: 'BlueTech Informática',
@@ -36,15 +37,7 @@ export class AppService {
     const uptime = process.uptime();
     const memoryUsage = process.memoryUsage();
 
-    let packageVersion = '1.0.0';
-    try {
-      const packageJson = JSON.parse(
-        fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8'),
-      );
-      packageVersion = packageJson.version || '1.0.0';
-    } catch {
-      // Ignora erro
-    }
+    const packageVersion = version;
 
     // Verificação do banco
     let dbStatus = '🔴 Offline';

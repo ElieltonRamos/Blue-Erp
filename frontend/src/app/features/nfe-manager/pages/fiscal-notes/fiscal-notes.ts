@@ -6,6 +6,8 @@ import { FiscalService } from '../../services/fiscal.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { PaginatorComponent } from '../../../../shared/paginator/paginator.component';
 import { NotaFiscal, SefazStatus } from '../../types/fiscal';
+import { save } from '@tauri-apps/plugin-dialog';
+import { writeFile } from '@tauri-apps/plugin-fs';
 
 @Component({
   selector: 'app-fiscal-notes',
@@ -18,12 +20,10 @@ export class FiscalNotes implements OnInit {
   private fiscalService = inject(FiscalService);
   private notification = inject(NotificationService);
 
-  // Filtros — status inicial EMITIDA
   filterStartDate: string = '';
   filterEndDate: string = '';
   filterStatus: string = 'EMITIDA';
 
-  // Paginação
   notas: NotaFiscal[] = [];
   page: number = 1;
   limit: number = 20;
@@ -35,7 +35,6 @@ export class FiscalNotes implements OnInit {
   loading = false;
   checkingSefaz = false;
 
-  // Modal cancelamento
   showCancelModal = false;
   cancelTarget: NotaFiscal | null = null;
   cancelJustification = new FormControl<string>('', []);
@@ -118,7 +117,7 @@ export class FiscalNotes implements OnInit {
 
   downloadPdf(nota: NotaFiscal): void {
     this.fiscalService.downloadPdf(nota.fiscalKey).subscribe({
-      next: (blob) => this.downloadFile(blob, `nfce-${nota.nNF}.pdf`),
+      next: (blob) => this.downloadFile(blob, `nfce-${nota.nNF}.pdf`, 'PDF'),
       error: (e) =>
         this.notification.error(`Erro ao baixar PDF: ${e.error?.message ?? 'Erro desconhecido'}`),
     });
@@ -126,7 +125,7 @@ export class FiscalNotes implements OnInit {
 
   reemitirPdf(nota: NotaFiscal): void {
     this.fiscalService.reemitirPdf(nota.id).subscribe({
-      next: (blob) => this.downloadFile(blob, `nfce-reemissao-${nota.nNF}.pdf`),
+      next: (blob) => this.downloadFile(blob, `nfce-reemissao-${nota.nNF}.pdf`, 'PDF'),
       error: (e) =>
         this.notification.error(`Erro ao reemitir PDF: ${e.error?.message ?? 'Erro desconhecido'}`),
     });
@@ -134,7 +133,7 @@ export class FiscalNotes implements OnInit {
 
   downloadXml(nota: NotaFiscal): void {
     this.fiscalService.downloadXml(nota.id).subscribe({
-      next: (blob) => this.downloadFile(blob, `nfce-${nota.nNF}.xml`),
+      next: (blob) => this.downloadFile(blob, `nfce-${nota.nNF}.xml`, 'XML'),
       error: (e) =>
         this.notification.error(`Erro ao baixar XML: ${e.error?.message ?? 'Erro desconhecido'}`),
     });
@@ -193,13 +192,22 @@ export class FiscalNotes implements OnInit {
     return nota.fiscalStatus === 'EMITIDA';
   }
 
-  private downloadFile(blob: Blob, filename: string): void {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+  private async downloadFile(blob: Blob, filename: string, type: 'PDF' | 'XML'): Promise<void> {
+    try {
+      const filePath = await save({
+        defaultPath: filename,
+        filters: [{ name: type, extensions: [type.toLowerCase()] }],
+      });
+
+      if (!filePath) return;
+
+      const buffer = await blob.arrayBuffer();
+      await writeFile(filePath, new Uint8Array(buffer));
+
+      this.notification.success(`${type} salvo com sucesso`);
+    } catch (e: any) {
+      this.notification.error(`Erro ao salvar ${type}: ${e?.message ?? 'Erro desconhecido'}`);
+    }
   }
 
   get justificationLength(): number {
