@@ -23,6 +23,14 @@ export class CreateOrderItemDto {
   @IsNotEmpty()
   code: string;
 
+  @ApiPropertyOptional({
+    description: 'Observação do item',
+    example: 'Sem cebola',
+  })
+  @IsString()
+  @IsOptional()
+  observation?: string;
+
   @ApiProperty({ description: 'Nome do produto', example: 'Filé Mignon' })
   @IsString()
   @IsNotEmpty()

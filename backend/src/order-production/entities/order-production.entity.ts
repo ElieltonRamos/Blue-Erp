@@ -7,6 +7,7 @@ export class OrderProductionEntity {
   status: ProductionStatus;
   quantityRequested: number;
   quantityProduced: number;
+  observation: string | null;
   pendingAt: Date;
   startedAt: Date | null;
   completedAt: Date | null;

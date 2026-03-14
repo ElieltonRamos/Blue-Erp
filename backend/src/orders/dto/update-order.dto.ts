@@ -23,6 +23,14 @@ export class UpdateOrderItemDto {
   productId: number;
 
   @ApiPropertyOptional({
+    description: 'Observação do item',
+    example: 'Sem cebola',
+  })
+  @IsString()
+  @IsOptional()
+  observation?: string;
+
+  @ApiPropertyOptional({
     description: 'Código do produto',
     example: 'PROD-001',
   })

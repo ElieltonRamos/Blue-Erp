@@ -59,6 +59,7 @@ export class ProductionService {
       startedAt: prod.startedAt,
       completedAt: prod.completedAt,
       deliveredAt: prod.deliveredAt,
+      observation: prod.observation,
       pendingDuration: this.calculateDuration(prod.pendingAt, prod.startedAt),
       inProgressDuration: this.calculateDuration(
         prod.startedAt,
@@ -142,6 +143,7 @@ export class ProductionService {
       startedAt: prod.startedAt,
       completedAt: prod.completedAt,
       deliveredAt: prod.deliveredAt,
+      observation: prod.observation,
       pendingDuration: this.calculateDuration(prod.pendingAt, prod.startedAt),
       inProgressDuration: this.calculateDuration(
         prod.startedAt,

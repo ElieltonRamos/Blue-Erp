@@ -1,5 +1,3 @@
-// Types para o módulo de Orders no Angular
-
 export interface OrderItem {
   id?: number;
   productId: number;
@@ -8,6 +6,7 @@ export interface OrderItem {
   quantity: number;
   unitPrice: number;
   total: number;
+  observation?: string;
   kitchenReadyAt?: Date;
 }
 
@@ -81,7 +80,6 @@ export interface OrderPaginatedResponse {
   totalPages: number;
 }
 
-// Product types (para busca)
 export interface Product {
   id: number;
   code: string;

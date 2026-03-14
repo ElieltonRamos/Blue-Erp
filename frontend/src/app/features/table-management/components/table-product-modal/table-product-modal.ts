@@ -1,13 +1,4 @@
-import {
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-  ViewChild,
-  ElementRef,
-  inject,
-  ChangeDetectorRef,
-} from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Table, OrderItem } from '../../types/table';
@@ -35,6 +26,7 @@ export class TableProductModal {
   searchName = '';
   isSearching = false;
   isSaving = false;
+  searchResults: any[] = [];
 
   get items(): OrderItem[] {
     return this.table.order?.items || [];
@@ -44,7 +36,10 @@ export class TableProductModal {
     return this.items.reduce((sum, item) => sum + item.total, 0);
   }
 
-  // Busca por código de barras
+  get hasInvalidObservations(): boolean {
+    return this.items.some((item) => !item.observation || item.observation.trim().length < 2);
+  }
+
   searchByCode(): void {
     if (!this.searchCode.trim()) return;
 
@@ -63,9 +58,6 @@ export class TableProductModal {
       },
     });
   }
-
-  // Busca por nome
-  searchResults: any[] = [];
 
   searchByName(): void {
     if (!this.searchName.trim()) return;
@@ -109,6 +101,7 @@ export class TableProductModal {
     if (existingItem) {
       existingItem.quantity += 1;
       existingItem.total = existingItem.quantity * existingItem.unitPrice;
+      this.notification.success('Quantidade atualizada');
     } else {
       this.table.order.items.push({
         id: 0,
@@ -118,11 +111,13 @@ export class TableProductModal {
         quantity: 1,
         unitPrice,
         total: unitPrice,
+        observation: '',
       });
+      this.notification.success('Produto adicionado');
     }
 
     this.table.order.total = this.orderTotal;
-    this.saveOrder();
+    this.cdr.markForCheck();
   }
 
   updateQuantity(item: OrderItem, change: number): void {
@@ -137,19 +132,26 @@ export class TableProductModal {
     if (this.table.order) {
       this.table.order.total = this.orderTotal;
     }
-    this.saveOrder();
+    this.cdr.markForCheck();
   }
 
   removeItem(item: OrderItem): void {
     if (!this.table.order) return;
-
     this.table.order.items = this.table.order.items.filter((i) => i !== item);
     this.table.order.total = this.orderTotal;
-    this.saveOrder();
+    this.cdr.markForCheck();
   }
 
-  private saveOrder(): void {
-    if (!this.table.order) return;
+  onClose(): void {
+    if (this.hasInvalidObservations) {
+      this.notification.error('Preencha a observação de todos os itens (mínimo 2 caracteres)');
+      return;
+    }
+
+    if (!this.table.order) {
+      this.close.emit();
+      return;
+    }
 
     this.isSaving = true;
     const orderId = this.table.order.id;
@@ -163,6 +165,7 @@ export class TableProductModal {
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         total: item.total,
+        observation: item.observation,
       })),
       total: this.orderTotal,
     };
@@ -178,11 +181,18 @@ export class TableProductModal {
             quantity: Number(i.quantity),
             unitPrice: Number(i.unitPrice),
             total: Number(i.total),
+            observation: i.observation ?? '',
           }));
           this.table.order.total = Number(updatedOrder.total);
         }
         this.isSaving = false;
+        this.searchCode = '';
+        this.searchName = '';
+        this.searchResults = [];
+        this.updated.emit();
+        this.close.emit();
         this.cdr.markForCheck();
+        this.notification.success("Atualizado!")
       },
       error: (error) => {
         this.notification.error(`Erro ao salvar: ${error.error?.message || error.message}`);
@@ -190,13 +200,5 @@ export class TableProductModal {
         this.cdr.markForCheck();
       },
     });
-  }
-
-  onClose(): void {
-    this.searchCode = '';
-    this.searchName = '';
-    this.searchResults = [];
-    this.updated.emit();
-    this.close.emit();
   }
 }

@@ -58,6 +58,7 @@ export class OrdersService {
               quantity: item.quantity,
               unitPrice: item.unitPrice,
               total: item.total,
+              observation: item.observation ?? null,
             })),
           },
         },
@@ -110,6 +111,7 @@ export class OrdersService {
                 quantityRequested: item.quantity,
                 quantityProduced: 0,
                 pendingAt: new Date(),
+                observation: item.observation ?? null,
               },
             });
           }
@@ -256,7 +258,6 @@ export class OrdersService {
       return this.mapToEntity(updatedOrder);
     }
 
-    // Substituído: era !!existingOrder.kitchenSentAt
     const isInProduction = existingOrder.items.some((item) =>
       item.productions.some((p) => p.status !== 'CANCELED'),
     );
@@ -358,6 +359,7 @@ export class OrdersService {
                 quantityRequested: diferenca,
                 quantityProduced: 0,
                 pendingAt: new Date(),
+                observation: existing.observation ?? null,
               },
             });
           }
@@ -404,8 +406,23 @@ export class OrdersService {
 
         await tx.orderItem.update({
           where: { id: existing.id },
-          data: { quantity: novaQuantidade, total: totalItem },
+          data: {
+            quantity: novaQuantidade,
+            total: totalItem,
+            observation: incoming.observation ?? existing.observation ?? null,
+          },
         });
+
+        // Sincroniza observation nas produções pendentes
+        if (
+          incoming.observation !== undefined &&
+          incoming.observation !== existing.observation
+        ) {
+          await tx.orderProduction.updateMany({
+            where: { orderItemId: existing.id, status: 'PENDING' },
+            data: { observation: incoming.observation ?? null },
+          });
+        }
 
         if (existing.product.productType === 'RESALE') {
           const diferenca = novaQuantidade - quantidadeAtual;
@@ -464,6 +481,7 @@ export class OrdersService {
               quantity: newItem.quantity,
               unitPrice: newItem.unitPrice,
               total: totalItem,
+              observation: newItem.observation ?? null,
             },
           });
 
@@ -483,6 +501,7 @@ export class OrdersService {
                 quantityRequested: createdItem.quantity,
                 quantityProduced: 0,
                 pendingAt: new Date(),
+                observation: newItem.observation ?? null,
               },
             });
           }
@@ -561,6 +580,7 @@ export class OrdersService {
               quantityRequested: item.quantity,
               quantityProduced: 0,
               pendingAt: new Date(),
+              observation: item.observation ?? null,
             },
           });
         }
@@ -656,6 +676,7 @@ export class OrdersService {
           kitchenReadyAt: item.kitchenReadyAt,
           orderId: item.orderId,
           productId: item.productId,
+          observation: item.observation ?? null,
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
         })) || [],

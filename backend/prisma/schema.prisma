@@ -271,6 +271,7 @@ model OrderItem {
   productId      Int               @map("product_id")
   product        Product           @relation(fields: [productId], references: [id])
   productions    OrderProduction[]
+  observation    String?
   createdAt      DateTime          @default(now()) @map("created_at")
   updatedAt      DateTime          @updatedAt @map("updated_at")
 
@@ -291,6 +292,7 @@ model OrderProduction {
   startedAt          DateTime?        @map("started_at")
   completedAt        DateTime?        @map("completed_at")
   deliveredAt        DateTime?        @map("delivered_at")
+  observation        String?
   createdAt          DateTime         @default(now()) @map("created_at")
   updatedAt          DateTime         @updatedAt @map("updated_at")
 

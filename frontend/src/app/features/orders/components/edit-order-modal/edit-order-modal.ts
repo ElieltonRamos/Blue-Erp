@@ -55,6 +55,13 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
     maxHeight: '90vh',
   });
 
+  get hasInvalidObservations(): boolean {
+    return (
+      this.order?.items.some((item) => !item.observation || item.observation.trim().length < 2) ??
+      false
+    );
+  }
+
   ngAfterViewInit(): void {
     if (this.isOpen) {
       this.openModal();
@@ -199,6 +206,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
         quantity: 1,
         unitPrice: product.price,
         total: product.price,
+        observation: '',
       };
       this.order.items.push(newItem);
       this.notification.success('Produto adicionado');
@@ -247,6 +255,11 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
       return;
     }
 
+    if (this.hasInvalidObservations) {
+      this.notification.error('Preencha a observação de todos os itens (mínimo 2 caracteres)');
+      return;
+    }
+
     if (
       this.order.type === 'DELIVERY' &&
       (!this.order.address || this.order.address.trim() === '')
@@ -270,6 +283,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         total: item.total,
+        observation: item.observation,
       })),
       total: this.order.total,
     };

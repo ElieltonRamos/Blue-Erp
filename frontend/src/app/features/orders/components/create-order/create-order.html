@@ -170,6 +170,9 @@
             <th class="text-left py-2 px-2 text-blue-400 text-xs font-semibold uppercase">
               Produto
             </th>
+            <th class="text-left py-2 px-2 text-orange-400 text-xs font-semibold uppercase">
+              Observação
+            </th>
             <th class="text-center py-2 px-2 text-yellow-400 text-xs font-semibold uppercase">
               VLR. UN.
             </th>
@@ -189,6 +192,18 @@
           >
             <td class="py-2 px-2 text-slate-300 text-xs">{{ item.code }}</td>
             <td class="py-2 px-2 text-white text-xs">{{ item.name }}</td>
+            <td class="py-2 px-2">
+              <input
+                type="text"
+                [value]="item.observation"
+                (blur)="updateObservation(item.productId!, $any($event.target).value)"
+                placeholder="Obrigatório - Digite 'ok' se nao tiver observacao"
+                minlength="2"
+                class="w-full bg-slate-800 border rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-cyan-500"
+                [class.border-red-500]="!item.observation || item.observation.trim().length < 2"
+                [class.border-slate-600]="item.observation && item.observation.trim().length >= 2"
+              />
+            </td>
             <td class="py-2 px-2 text-center text-slate-300 text-xs">
               R$ {{ item.unitPrice.toFixed(2) }}
             </td>
@@ -263,7 +278,7 @@
   <div class="flex justify-center pt-4">
     <button
       type="submit"
-      [disabled]="formCreateOrder.invalid || orderItems.length === 0"
+      [disabled]="formCreateOrder.invalid || orderItems.length === 0 || hasInvalidObservations"
       class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
       Criar Pedido

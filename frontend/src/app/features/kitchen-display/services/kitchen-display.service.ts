@@ -64,6 +64,7 @@ export class KitchenService {
       table: prod.orderItem.order.table,
       customerName: prod.orderItem.order.customerName,
       type: prod.orderItem.order.type,
+      observation: prod.observation ?? null,
       kitchen: this.formatKitchenName(prod.productionLocation),
       preparationSteps: prod.orderItem.product.preparationSteps ?? [],
     }));

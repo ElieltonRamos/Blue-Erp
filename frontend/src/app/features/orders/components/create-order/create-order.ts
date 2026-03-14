@@ -45,6 +45,10 @@ export class CreateOrder implements OnInit {
     return this.orderItems.reduce((sum, item) => sum + item.total, 0);
   }
 
+  get hasInvalidObservations(): boolean {
+    return this.orderItems.some((item) => !item.observation || item.observation.trim().length < 2);
+  }
+
   ngOnInit() {
     this.loadProductionLocations();
     this.setupTypeChangeListener();
@@ -242,17 +246,11 @@ export class CreateOrder implements OnInit {
     const existingItem = this.orderItems.find((item) => item.productId === product.id);
 
     if (existingItem) {
-      const updatedItems = this.orderItems.map((item) =>
+      this.orderItems = this.orderItems.map((item) =>
         item.productId === product.id
-          ? {
-              ...item,
-              quantity: item.quantity + 1,
-              total: (item.quantity + 1) * item.unitPrice,
-            }
+          ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.unitPrice }
           : item,
       );
-
-      this.orderItems = updatedItems;
       this.notification.success('Quantidade atualizada');
       return;
     }
@@ -264,6 +262,7 @@ export class CreateOrder implements OnInit {
       quantity: 1,
       unitPrice: product.price,
       total: product.price,
+      observation: '',
     };
 
     this.orderItems = [...this.orderItems, newItem];
@@ -272,15 +271,16 @@ export class CreateOrder implements OnInit {
 
   updateQuantity(productId: number, newQuantity: number) {
     if (newQuantity <= 0) return;
-
     this.orderItems = this.orderItems.map((item) =>
       item.productId === productId
-        ? {
-            ...item,
-            quantity: newQuantity,
-            total: newQuantity * item.unitPrice,
-          }
+        ? { ...item, quantity: newQuantity, total: newQuantity * item.unitPrice }
         : item,
+    );
+  }
+
+  updateObservation(productId: number, observation: string) {
+    this.orderItems = this.orderItems.map((item) =>
+      item.productId === productId ? { ...item, observation } : item,
     );
   }
 
@@ -300,6 +300,11 @@ export class CreateOrder implements OnInit {
       return;
     }
 
+    if (this.hasInvalidObservations) {
+      this.notification.error('Preencha a observação de todos os itens (mínimo 2 caracteres)');
+      return;
+    }
+
     const formValue = this.formCreateOrder.value;
 
     const newOrder: CreateOrderDto = {
@@ -313,6 +318,7 @@ export class CreateOrder implements OnInit {
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         total: item.total,
+        observation: item.observation,
       })),
       total: this.calculatedTotal,
     };

@@ -14,6 +14,7 @@ export interface OrderItem {
   unitPrice: number;
   total: number;
   productId: number;
+  observation?: string;
 }
 
 export interface TableOrder {

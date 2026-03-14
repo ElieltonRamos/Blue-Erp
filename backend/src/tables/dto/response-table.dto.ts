@@ -87,7 +87,7 @@ export class TableOrderItemDto {
   productId: number;
 
   @ApiPropertyOptional({ example: 'Sem cebola' })
-  observations: string | null;
+  observation: string | null;
 
   @ApiProperty({ example: 'COZINHA' })
   productionLocation: string;
@@ -118,7 +118,7 @@ export class TableOrderItemDto {
     this.unitPrice = Number(data.unitPrice);
     this.total = Number(data.total);
     this.productId = data.productId;
-    this.observations = data.observations;
+    this.observation = data.observation;
     this.productionLocation = data.productionLocation;
     this.sentToKitchenAt = data.sentToKitchenAt;
     this.kitchenReadyAt = data.kitchenReadyAt;
