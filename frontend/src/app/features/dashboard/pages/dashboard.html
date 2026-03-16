@@ -1,0 +1,87 @@
+<div
+  class="min-h-screen bg-linear-to-b from-purple-900 to-purple-950 flex flex-col items-center justify-start py-12"
+>
+  <span
+    class="bg-indigo-600 text-white px-6 py-2 rounded-full mb-8 shadow-md hover:bg-indigo-700 transition"
+  >
+    Menu
+  </span>
+
+  <div
+    class="bg-slate-800 rounded-xl p-10 grid grid-cols-1 md:grid-cols-3 gap-6 shadow-lg w-[90%] max-w-5xl"
+  >
+    <app-card-menu
+      [title]="'Cadastro de Cliente'"
+      [icon]="'👤➕'"
+      [path]="'/clientes'"
+      [isActive]="canAccess('/clientes')"
+    />
+    <app-card-menu
+      [title]="'Comandas'"
+      [icon]="'🛒📄'"
+      [path]="'/comandas'"
+      [isActive]="canAccess('/comandas')"
+    />
+    <app-card-menu
+      [title]="'Cozinha'"
+      [icon]="'🍳'"
+      [path]="'/cozinha'"
+      [isActive]="canAccess('/cozinha')"
+    />
+    <app-card-menu
+      [title]="'Salão de Mesas'"
+      [icon]="'🍽️🪑'"
+      [path]="'/mesas'"
+      [isActive]="canAccess('/mesas')"
+    />
+    <app-card-menu
+      [title]="'Cadastro de Produto'"
+      [icon]="'🏷️'"
+      [path]="'/produtos'"
+      [isActive]="canAccess('/produtos')"
+    />
+    <app-card-menu
+      [title]="'Cadastro de Usuário'"
+      [icon]="'🧑‍💼'"
+      [path]="'/usuarios'"
+      [isActive]="canAccess('/usuarios')"
+    />
+    <app-card-menu
+      [title]="'Histórico de Vendas'"
+      [icon]="'🔁'"
+      [path]="'/historico-vendas'"
+      [isActive]="canAccess('/historico-vendas')"
+    />
+    <app-card-menu
+      [title]="'Relatórios'"
+      [icon]="'📄'"
+      [path]="'/relatorios'"
+      [isActive]="canAccess('/relatorios')"
+    />
+    <app-card-menu
+      [title]="'Financeiro'"
+      [icon]="'💰'"
+      [path]="'/financeiro'"
+      [isActive]="canAccess('/financeiro')"
+    />
+    <app-card-menu
+      [title]="'Dados da Empresa'"
+      [icon]="'🏢'"
+      [path]="'/empresa'"
+      [isActive]="canAccess('/empresa')"
+    />
+    <app-card-menu
+      [title]="'Gerenciamento Fiscal'"
+      [icon]="'🧾'"
+      [path]="'/fiscal'"
+      [isActive]="canAccess('/fiscal')"
+    />
+  </div>
+
+  <button
+    (click)="logout()"
+    class="fixed bottom-6 right-6 bg-gray-600 text-white px-5 py-2 rounded shadow hover:bg-gray-700 transition"
+  >
+    Sair
+  </button>
+</div>

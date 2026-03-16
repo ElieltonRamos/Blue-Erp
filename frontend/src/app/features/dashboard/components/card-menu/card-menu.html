@@ -1,0 +1,13 @@
+<button
+  (click)="isActive && navigateTo(path)"
+  [class.cursor-not-allowed]="!isActive"
+  [class.opacity-50]="!isActive"
+  [disabled]="!isActive"
+  [ngClass]="{
+    'hover:scale-105': isActive,
+  }"
+  class="bg-white w-full h-full rounded-lg flex flex-col items-center justify-center py-6 shadow transition focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none"
+>
+  <div class="text-4xl mb-2">{{ icon }}</div>
+  <p class="text-center font-medium">{{ title }}</p>
+</button>

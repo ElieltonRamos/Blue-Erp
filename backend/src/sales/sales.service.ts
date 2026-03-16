@@ -1,0 +1,492 @@
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { PrismaService } from '../database/prisma.service.js';
+import { Prisma, FiscalStatus, OrderStatus } from 'generated/prisma/client';
+import { Decimal } from '@prisma/client/runtime/client';
+import { CreateSaleDto } from './dto/create-sale.dto.js';
+import { UpdateSaleDto } from './dto/update-sale.dto.js';
+import {
+  PaginatedSalesResponseDto,
+  SaleResponseDto,
+} from './dto/response-sale.dto.js';
+import { SaleFiltersDto } from './dto/filters-sale.dto.js';
+import { ConvertOrderToSaleDto } from '../orders/dto/convert-order-to-sale.js';
+
+@Injectable()
+export class SalesService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  private getBrasiliaTime(): Date {
+    const now = new Date();
+    const brasiliaOffset = -3; // UTC-3
+    return new Date(now.getTime() + brasiliaOffset * 60 * 60 * 1000);
+  }
+
+  private getStartOfDayBrasilia(dateString: string): Date {
+    const date = new Date(`${dateString}T00:00:00-03:00`);
+    return date;
+  }
+
+  private getEndOfDayBrasilia(dateString: string): Date {
+    const date = new Date(`${dateString}T23:59:59-03:00`);
+    return date;
+  }
+
+  async create(
+    createSaleDto: CreateSaleDto,
+    userId: number,
+    username: string,
+  ): Promise<SaleResponseDto> {
+    const { items, ...saleData } = createSaleDto;
+    const clientId = saleData.clientId ?? 1;
+
+    const client = await this.prisma.client.client.findUnique({
+      where: { id: clientId },
+    });
+
+    if (!client) {
+      throw new BadRequestException(`Cliente ${clientId} não encontrado`);
+    }
+
+    const productIds = items.map((item) => item.productId);
+    const products = await this.prisma.client.product.findMany({
+      where: { id: { in: productIds } },
+      select: {
+        id: true,
+        name: true,
+        costPrice: true,
+        unit: true,
+      },
+    });
+
+    const foundIds = products.map((p) => p.id);
+    const missingIds = productIds.filter((id) => !foundIds.includes(id));
+
+    if (missingIds.length > 0) {
+      throw new BadRequestException(
+        `Produtos não encontrados: ${missingIds.join(', ')}`,
+      );
+    }
+
+    const discount = new Decimal(saleData.discount || 0);
+    const cfop = saleData.cfop || '5102';
+
+    // Calcular totais
+    let totalProductsWithoutDiscount = new Decimal(0);
+    let profitSale = new Decimal(0);
+
+    const itemsData = items.map((item, index) => {
+      const product = products.find((p) => p.id === item.productId)!;
+      const totalPrice = new Decimal(item.quantity).times(
+        new Decimal(item.unitPrice),
+      );
+      const itemCost = new Decimal(product.costPrice).times(
+        new Decimal(item.quantity),
+      );
+      const itemProfit = totalPrice.minus(itemCost);
+
+      totalProductsWithoutDiscount =
+        totalProductsWithoutDiscount.plus(totalPrice);
+      profitSale = profitSale.plus(itemProfit);
+
+      return {
+        itemNumber: index + 1,
+        productId: item.productId,
+        xProd: product.name,
+        quantity: new Decimal(item.quantity),
+        unitPrice: new Decimal(item.unitPrice),
+        totalPrice,
+        taxUnit: product.unit,
+        taxQuantity: new Decimal(item.quantity),
+        taxUnitPrice: new Decimal(item.unitPrice),
+        composesTotal: 1,
+        cfop,
+        totalTaxValue: null,
+        importTaxValue: new Decimal(0),
+        iofValue: new Decimal(0),
+      };
+    });
+
+    const total = totalProductsWithoutDiscount.minus(discount);
+    const finalProfit = profitSale.minus(discount);
+
+    const sale = await this.prisma.client.sale.create({
+      data: {
+        clientId,
+        userOperator: username,
+        operatorId: userId,
+        date: this.getBrasiliaTime(),
+        paymentMethod: saleData.paymentMethod,
+        totalProductsWithoutDiscount,
+        discount,
+        total,
+        profitSale: finalProfit,
+        isPaid: clientId === 1,
+        cfop,
+        fiscalStatus: FiscalStatus.PENDENTE,
+        items: {
+          create: itemsData,
+        },
+      },
+      include: {
+        items: true,
+        client: true,
+        operator: {
+          select: {
+            id: true,
+            username: true,
+            role: true,
+          },
+        },
+      },
+    });
+
+    return new SaleResponseDto(sale);
+  }
+
+  async findAll(filters: SaleFiltersDto): Promise<PaginatedSalesResponseDto> {
+    const {
+      page = 1,
+      limit = 10,
+      clientId,
+      operatorId,
+      paymentMethod,
+      fiscalStatus,
+      isPaid,
+      clientName,
+      fiscalKey,
+      startDate,
+      endDate,
+    } = filters;
+
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.SaleWhereInput = {
+      ...(clientId && { clientId }),
+      ...(clientName && {
+        client: {
+          name: {
+            contains: clientName,
+          },
+        },
+      }),
+      ...(operatorId && { operatorId }),
+      ...(paymentMethod && { paymentMethod }),
+      ...(fiscalStatus && { fiscalStatus }),
+      ...(isPaid !== undefined && { isPaid }),
+      ...(fiscalKey && { fiscalKey: { contains: fiscalKey } }),
+      ...(startDate || endDate
+        ? {
+            date: {
+              ...(startDate && { gte: this.getStartOfDayBrasilia(startDate) }),
+              ...(endDate && { lte: this.getEndOfDayBrasilia(endDate) }),
+            },
+          }
+        : {}),
+    };
+
+    const [sales, total] = await Promise.all([
+      this.prisma.client.sale.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          items: true,
+          client: true,
+          operator: {
+            select: {
+              id: true,
+              username: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: {
+          date: 'desc',
+        },
+      }),
+      this.prisma.client.sale.count({ where }),
+    ]);
+
+    return new PaginatedSalesResponseDto({
+      data: sales,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    });
+  }
+
+  async findOne(id: number): Promise<SaleResponseDto> {
+    const sale = await this.prisma.client.sale.findUnique({
+      where: { id },
+      include: {
+        items: true,
+        client: true,
+        operator: {
+          select: {
+            id: true,
+            username: true,
+            role: true,
+          },
+        },
+      },
+    });
+
+    if (!sale) {
+      throw new NotFoundException(`Venda ${id} não encontrada`);
+    }
+
+    return new SaleResponseDto(sale);
+  }
+
+  async update(
+    id: number,
+    updateSaleDto: UpdateSaleDto,
+  ): Promise<SaleResponseDto> {
+    const existingSale = await this.prisma.client.sale.findUnique({
+      where: { id },
+      include: {
+        items: true,
+      },
+    });
+
+    if (!existingSale) {
+      throw new NotFoundException(`Venda ${id} não encontrada`);
+    }
+
+    if (existingSale.fiscalStatus === FiscalStatus.EMITIDA) {
+      throw new BadRequestException(
+        'Venda com nota fiscal emitida não pode ser alterada',
+      );
+    }
+
+    if (existingSale.fiscalStatus === FiscalStatus.CANCELADA) {
+      throw new BadRequestException('Venda cancelada não pode ser alterada');
+    }
+
+    let recalculatedTotal = new Decimal(
+      existingSale.totalProductsWithoutDiscount,
+    );
+    let recalculatedProfit = new Decimal(existingSale.profitSale);
+
+    if (updateSaleDto.discount !== undefined) {
+      const newDiscount = new Decimal(updateSaleDto.discount);
+      const oldDiscount = new Decimal(existingSale.discount);
+      const discountDiff = newDiscount.minus(oldDiscount);
+
+      recalculatedTotal = recalculatedTotal.minus(newDiscount);
+      recalculatedProfit = recalculatedProfit.minus(discountDiff);
+    }
+
+    const updatedSale = await this.prisma.client.sale.update({
+      where: { id },
+      data: {
+        ...(updateSaleDto.paymentMethod && {
+          paymentMethod: updateSaleDto.paymentMethod,
+        }),
+        ...(updateSaleDto.discount !== undefined && {
+          discount: new Decimal(updateSaleDto.discount),
+          total: recalculatedTotal,
+          profitSale: recalculatedProfit,
+        }),
+        ...(updateSaleDto.isPaid !== undefined && {
+          isPaid: updateSaleDto.isPaid,
+        }),
+        ...(updateSaleDto.fiscalStatus && {
+          fiscalStatus: updateSaleDto.fiscalStatus,
+        }),
+        ...(updateSaleDto.cfop && { cfop: updateSaleDto.cfop }),
+      },
+      include: {
+        items: true,
+        client: true,
+        operator: {
+          select: {
+            id: true,
+            username: true,
+            role: true,
+          },
+        },
+      },
+    });
+
+    return new SaleResponseDto(updatedSale);
+  }
+
+  async remove(id: number): Promise<{ message: string }> {
+    const sale = await this.prisma.client.sale.findUnique({
+      where: { id },
+    });
+
+    if (!sale) {
+      throw new NotFoundException(`Venda ${id} não encontrada`);
+    }
+
+    if (sale.fiscalStatus === FiscalStatus.EMITIDA) {
+      throw new BadRequestException(
+        'Venda com nota fiscal emitida não pode ser deletada',
+      );
+    }
+
+    await this.prisma.client.sale.delete({
+      where: { id },
+    });
+
+    return { message: 'Venda excluída com sucesso' };
+  }
+
+  async convertOrderToSale(
+    orderId: number,
+    dto: ConvertOrderToSaleDto,
+    userId: number,
+    username: string,
+  ): Promise<SaleResponseDto> {
+    const order = await this.prisma.client.order.findUnique({
+      where: { id: orderId },
+      include: {
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                costPrice: true,
+                ncm: true,
+                unit: true,
+                productType: true,
+                csosn: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Pedido ${orderId} não encontrado`);
+    }
+
+    if (order.status !== OrderStatus.CLOSED) {
+      throw new BadRequestException(
+        'Apenas pedidos fechados podem ser convertidos em venda',
+      );
+    }
+
+    const clientId = dto.clientId ?? 1;
+    const client = await this.prisma.client.client.findUnique({
+      where: { id: clientId },
+    });
+
+    if (!client) {
+      throw new BadRequestException(`Cliente ${clientId} não encontrado`);
+    }
+
+    const discount = new Decimal(dto.discount || 0);
+    const totalProductsWithoutDiscount = new Decimal(order.total);
+    const total = totalProductsWithoutDiscount.minus(discount);
+
+    const profitSale = order.items.reduce((acc, item) => {
+      const itemCost = new Decimal(item.product.costPrice).times(
+        new Decimal(item.quantity),
+      );
+      const itemRevenue = new Decimal(item.total);
+      return acc.plus(itemRevenue.minus(itemCost));
+    }, new Decimal(0));
+
+    const sale = await this.prisma.client.$transaction(async (tx) => {
+      const createdSale = await tx.sale.create({
+        data: {
+          clientId,
+          userOperator: username,
+          operatorId: userId,
+          date: this.getBrasiliaTime(),
+          paymentMethod: dto.paymentMethod,
+          totalProductsWithoutDiscount,
+          discount,
+          total,
+          profitSale: profitSale.minus(discount),
+          isPaid: clientId === 1,
+          cfop: dto.cfop || '5102',
+          fiscalStatus: FiscalStatus.PENDENTE,
+          items: {
+            create: order.items.map((item, index) => ({
+              itemNumber: index + 1,
+              productId: item.productId,
+              xProd: item.product.name,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              totalPrice: item.total,
+              taxUnit: item.product.unit,
+              taxQuantity: item.quantity,
+              taxUnitPrice: item.unitPrice,
+              composesTotal: 1,
+              cfop:
+                item.product.csosn === '500'
+                  ? '5405'
+                  : item.product.productType === 'MANUFACTURED'
+                    ? '5101'
+                    : dto.cfop || '5102',
+              totalTaxValue: null,
+              importTaxValue: new Decimal(0),
+              iofValue: new Decimal(0),
+            })),
+          },
+        },
+        include: {
+          items: true,
+          client: true,
+          operator: {
+            select: {
+              id: true,
+              username: true,
+              role: true,
+            },
+          },
+        },
+      });
+
+      await tx.order.update({
+        where: { id: orderId },
+        data: {
+          status: OrderStatus.PAID,
+        },
+      });
+
+      return createdSale;
+    });
+
+    return new SaleResponseDto(sale);
+  }
+
+  async markAsReceived(salesIds: number[]): Promise<{ message: string }> {
+    if (!salesIds || !Array.isArray(salesIds) || salesIds.length === 0) {
+      throw new BadRequestException(
+        'É necessário enviar uma lista de IDs das vendas a serem recebidas',
+      );
+    }
+
+    const result = await this.prisma.client.sale.updateMany({
+      where: {
+        id: { in: salesIds },
+        isPaid: false,
+      },
+      data: {
+        isPaid: true,
+      },
+    });
+
+    if (result.count === 0) {
+      throw new NotFoundException(
+        'Nenhuma venda pendente encontrada para dar baixa',
+      );
+    }
+
+    return {
+      message: `${result.count} venda(s) marcada(s) como recebida(s) com sucesso`,
+    };
+  }
+}

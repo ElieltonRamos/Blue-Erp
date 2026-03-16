@@ -1,0 +1,330 @@
+import { create } from 'xmlbuilder2';
+import { NFeOptions, NFeProduct } from '../entities/fiscal-module.entity';
+import { createHash } from 'crypto';
+import { baseUrl } from './nfe-endpoints.config';
+
+function calculateCheckDigit(key43: string): string {
+  const multipliers = [2, 3, 4, 5, 6, 7, 8, 9];
+  let sum = 0;
+  let idx = 0;
+
+  for (let i = key43.length - 1; i >= 0; i--) {
+    sum += parseInt(key43[i], 10) * multipliers[idx];
+    idx = (idx + 1) % 8;
+  }
+
+  const remainder = sum % 11;
+  return (remainder < 2 ? 0 : 11 - remainder).toString();
+}
+
+function formatDateTimeBR(isoDate: string): string {
+  const date = new Date(isoDate);
+  const offset = -3 * 60;
+  const local = new Date(date.getTime() + offset * 60 * 1000);
+  const pad = (n: number) => n.toString().padStart(2, '0');
+
+  return `${local.getUTCFullYear()}-${pad(local.getUTCMonth() + 1)}-${pad(local.getUTCDate())}T${pad(local.getUTCHours())}:${pad(local.getUTCMinutes())}:${pad(local.getUTCSeconds())}-03:00`;
+}
+
+function generateAccessKey(ide: NFeOptions['ide'], cnpj: string): string {
+  const cleanCnpj = cnpj.replace(/\D/g, '');
+  const date = new Date(ide.dhEmi);
+  const yy = date.getFullYear().toString().slice(-2);
+  const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+
+  const key43 =
+    ide.cUF.padStart(2, '0') +
+    yy +
+    mm +
+    cleanCnpj.padStart(14, '0') +
+    ide.mod +
+    ide.serie.padStart(3, '0') +
+    ide.nNF.padStart(9, '0') +
+    ide.tpEmis +
+    ide.cNF.padStart(8, '0');
+
+  return key43 + calculateCheckDigit(key43);
+}
+
+function buildIcmsGroup(item: NFeProduct): Record<string, any> {
+  const orig = item.origem.toString();
+  const csosn = item.csosn;
+
+  switch (csosn) {
+    case '500':
+      return { ICMSSN500: { orig, CSOSN: csosn } };
+    case '400':
+      return { ICMSSN400: { orig, CSOSN: csosn } };
+    case '201':
+      return {
+        ICMSSN201: {
+          orig,
+          CSOSN: csosn,
+          modBCST: '3',
+          pMVAST: '0.00',
+          pRedBCST: '0.00',
+          vBCST: '0.00',
+          pICMSST: '0.00',
+          vICMSST: '0.00',
+        },
+      };
+    case '202':
+    case '203':
+      return {
+        ICMSSN202: {
+          orig,
+          CSOSN: csosn,
+          modBCST: '3',
+          pMVAST: '0.00',
+          pRedBCST: '0.00',
+          vBCST: '0.00',
+          pICMSST: '0.00',
+          vICMSST: '0.00',
+        },
+      };
+    case '300':
+      return { ICMSSN300: { orig, CSOSN: csosn } };
+    case '900':
+      return {
+        ICMSSN900: {
+          orig,
+          CSOSN: csosn,
+          modBC: '3',
+          vBC: '0.00',
+          pRedBC: '0.00',
+          pICMS: '0.00',
+          vICMS: '0.00',
+          modBCST: '3',
+          pMVAST: '0.00',
+          pRedBCST: '0.00',
+          vBCST: '0.00',
+          pICMSST: '0.00',
+          vICMSST: '0.00',
+        },
+      };
+    case '102':
+    default:
+      return { ICMSSN102: { orig, CSOSN: csosn } };
+  }
+}
+
+function buildItemTax(item: NFeProduct) {
+  const vProd = item.qCom * item.vUnCom;
+  const totalRate =
+    (item.aliqFederal ?? 0) +
+    (item.aliqEstadual ?? 0) +
+    (item.aliqMunicipal ?? 0);
+
+  if (totalRate === 0) {
+    throw new Error(
+      `Produto "${item.xProd}" (NCM: ${item.ncm}) com totalRate zero. Verifique as alíquotas IBPT.`,
+    );
+  }
+
+  const vTotTrib = vProd * (totalRate / 100);
+
+  if (vTotTrib <= 0) {
+    throw new Error(
+      `Produto "${item.xProd}" (NCM: ${item.ncm}) com vTotTrib inválido: ${vTotTrib}. Verifique qCom, vUnCom e alíquotas.`,
+    );
+  }
+
+  return {
+    vTotTrib: vTotTrib.toFixed(2),
+    ICMS: buildIcmsGroup(item),
+    PIS: {
+      PISOutr: {
+        CST: item.pisCst || '49',
+        vBC: '0.00',
+        pPIS: '0.00',
+        vPIS: '0.00',
+      },
+    },
+    COFINS: {
+      COFINSOutr: {
+        CST: item.cofinsCst || '49',
+        vBC: '0.00',
+        pCOFINS: '0.00',
+        vCOFINS: '0.00',
+      },
+    },
+  };
+}
+
+function buildDest(data: NFeOptions) {
+  const cpf = data.dest.CPF?.replace(/\D/g, '');
+  const hasCpf = cpf && cpf.length === 11 && cpf !== '00000000000';
+
+  if (hasCpf) {
+    return {
+      CPF: cpf,
+      xNome: data.dest.xNome,
+      indIEDest: '9',
+    };
+  }
+
+  return undefined;
+}
+
+export function buildQrCodeUrl(params: {
+  accessKey: string;
+  tpAmb: string;
+  idCSC: string;
+  csc: string;
+  offline?: boolean;
+  dhEmi?: string;
+  vNF?: string;
+  digVal?: string;
+}): string {
+  const { accessKey, tpAmb, idCSC, csc } = params;
+
+  let payload: string;
+
+  if (params.offline && params.dhEmi && params.vNF && params.digVal) {
+    const dhEmiHex = Buffer.from(params.dhEmi, 'utf-8').toString('hex');
+    const digValHex = Buffer.from(params.digVal, 'utf-8').toString('hex');
+    payload = `${accessKey}|2|${tpAmb}|${dhEmiHex}|${params.vNF}|${digValHex}|${idCSC}`;
+  } else {
+    payload = `${accessKey}|2|${tpAmb}|${idCSC}`;
+  }
+
+  const hash = createHash('sha1')
+    .update(payload + csc)
+    .digest('hex')
+    .toUpperCase();
+
+  return `${baseUrl}?p=${payload}|${hash}`;
+}
+
+function buildDetPag(data: NFeOptions) {
+  const detPag: Record<string, any> = {
+    tPag: data.pag.tPag,
+    ...(data.pag.tPag === '99' && data.pag.xPag ? { xPag: data.pag.xPag } : {}),
+    vPag: data.pag.vPag.toFixed(2),
+  };
+
+  if (data.pag.card) {
+    detPag.card = {
+      tpIntegra: data.pag.card.tpIntegra,
+      tBand: data.pag.card.tBand,
+      cAut: data.pag.card.cAut,
+    };
+  }
+
+  return detPag;
+}
+
+export function generateNFeXML(data: NFeOptions): string {
+  const accessKey = generateAccessKey(data.ide, data.emit.CNPJ);
+  data.ide.cDV = accessKey.slice(-1);
+  data.ide.dhEmi = formatDateTimeBR(data.ide.dhEmi);
+  data.ide.nNF = parseInt(data.ide.nNF, 10).toString();
+  const taxPerItem = data.produtos.map((p) => buildItemTax(p));
+
+  const totalProducts = data.produtos.reduce(
+    (sum, p) => sum + p.qCom * p.vUnCom,
+    0,
+  );
+
+  const totalTax = taxPerItem.reduce((sum, t) => sum + Number(t.vTotTrib), 0);
+
+  const dest = buildDest(data);
+
+  const isHomolog = data.ide.tpAmb === '2';
+
+  const root = {
+    NFe: {
+      '@xmlns': 'http://www.portalfiscal.inf.br/nfe',
+      infNFe: {
+        '@Id': `NFe${accessKey}`,
+        '@versao': '4.00',
+        ide: {
+          cUF: data.ide.cUF,
+          cNF: data.ide.cNF,
+          natOp: data.ide.natOp,
+          mod: data.ide.mod,
+          serie: data.ide.serie,
+          nNF: data.ide.nNF,
+          dhEmi: data.ide.dhEmi,
+          tpNF: data.ide.tpNF,
+          idDest: data.ide.idDest,
+          cMunFG: data.ide.cMunFG,
+          tpImp: data.ide.tpImp,
+          tpEmis: data.ide.tpEmis,
+          cDV: data.ide.cDV,
+          tpAmb: data.ide.tpAmb,
+          finNFe: data.ide.finNFe,
+          indFinal: data.ide.indFinal,
+          indPres: data.ide.indPres,
+          indIntermed: data.ide.indIntermed || '0',
+          procEmi: data.ide.procEmi,
+          verProc: data.ide.verProc,
+        },
+        emit: {
+          CNPJ: data.emit.CNPJ,
+          xNome: data.emit.xNome,
+          xFant: data.emit.xFant,
+          enderEmit: data.emit.enderEmit,
+          IE: data.emit.IE,
+          CRT: data.emit.CRT,
+        },
+        ...(dest ? { dest } : {}),
+        det: data.produtos.map((p, index) => ({
+          '@nItem': p.nItem.toString(),
+          prod: {
+            cProd: p.cProd,
+            cEAN: 'SEM GTIN',
+            xProd:
+              isHomolog && index === 0
+                ? 'NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL'
+                : p.xProd,
+            NCM: p.ncm,
+            CFOP: p.cfop,
+            uCom: p.uCom,
+            qCom: p.qCom.toFixed(4),
+            vUnCom: p.vUnCom.toFixed(5),
+            vProd: (p.qCom * p.vUnCom).toFixed(2),
+            cEANTrib: 'SEM GTIN',
+            uTrib: p.uTrib,
+            qTrib: p.qTrib.toFixed(4),
+            vUnTrib: p.vUnTrib.toFixed(5),
+            indTot: p.indTot.toString(),
+          },
+          imposto: taxPerItem[index],
+        })),
+        total: {
+          ICMSTot: {
+            vBC: '0.00',
+            vICMS: '0.00',
+            vICMSDeson: '0.00',
+            vFCP: '0.00',
+            vBCST: '0.00',
+            vST: '0.00',
+            vFCPST: '0.00',
+            vFCPSTRet: '0.00',
+            vProd: totalProducts.toFixed(2),
+            vFrete: '0.00',
+            vSeg: '0.00',
+            vDesc: '0.00',
+            vII: '0.00',
+            vIPI: '0.00',
+            vIPIDevol: '0.00',
+            vPIS: '0.00',
+            vCOFINS: '0.00',
+            vOutro: '0.00',
+            vNF: totalProducts.toFixed(2),
+            vTotTrib: totalTax.toFixed(2),
+          },
+        },
+        transp: { modFrete: '9' },
+        pag: {
+          detPag: buildDetPag(data),
+          vTroco: '0.00',
+        },
+        infAdic: data.infAdic ? { infCpl: data.infAdic } : undefined,
+      },
+    },
+  };
+
+  return create(root).end({ prettyPrint: false, headless: true });
+}

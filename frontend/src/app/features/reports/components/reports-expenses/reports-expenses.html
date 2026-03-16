@@ -1,0 +1,149 @@
+<!-- Container Principal -->
+<div class="w-full max-w-6xl bg-[#182233] rounded-2xl shadow-lg p-6">
+  <div class="mb-4">
+    <h1 class="text-3xl font-bold text-white">Relatório de Despesas</h1>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex flex-wrap gap-4 mb-6">
+    <div class="flex flex-col">
+      <label class="text-white text-sm mb-1">Data Início</label>
+      <input
+        type="date"
+        [(ngModel)]="startDate"
+        class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+      />
+    </div>
+    <div class="flex flex-col">
+      <label class="text-white text-sm mb-1">Data Fim</label>
+      <input
+        type="date"
+        [(ngModel)]="endDate"
+        class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+      />
+    </div>
+    <div class="flex items-end gap-2">
+      <button
+        (click)="setThisMonth()"
+        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+      >
+        Este Mês
+      </button>
+    </div>
+    <div class="flex items-end">
+      <button
+        (click)="generateReport()"
+        class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
+      >
+        Gerar Relatório
+      </button>
+    </div>
+  </div>
+
+  <div class="text-white">
+    <h2 class="text-2xl font-bold mb-2">Relatório de Despesas {{ getFullDate() }}</h2>
+    <p class="text-gray-400 text-sm mb-6">
+      Consolidação das despesas registradas no período, agrupadas por status de pagamento e por
+      fornecedor. Use este relatório para acompanhar compromissos financeiros em aberto e controlar
+      o fluxo de saídas de caixa.
+    </p>
+
+    <!-- Total Geral -->
+    <div class="bg-[#2a3445] p-4 rounded-xl shadow mb-4 max-w-sm">
+      <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">
+        Total de Despesas no Período
+      </h3>
+      <p class="text-3xl font-bold text-red-400">R$ {{ report.totalValue.toFixed(2) }}</p>
+      <p class="text-xs text-gray-500 mt-1">Soma de todas as despesas independente do status</p>
+    </div>
+
+    <!-- Card explicativo -->
+    <div class="bg-[#2a1a1a] border border-red-700 p-4 rounded-xl shadow mb-6 max-w-4xl">
+      <h3 class="text-red-400 font-semibold mb-1">💡 Como interpretar este relatório</h3>
+      <p class="text-gray-300 text-sm">
+        O total geral inclui
+        <span class="text-white font-medium">todas as despesas do período</span>, independente de
+        estarem pagas ou não. Acompanhe o status de cada parcela para evitar inadimplência:
+        <span class="text-green-400 font-medium">Pago</span> = quitado,
+        <span class="text-yellow-400 font-medium">Pendente</span> = aguardando pagamento,
+        <span class="text-red-400 font-medium">Atrasado</span> = marcado manualmente com esse status
+        no cadastro da despesa.
+      </p>
+      <p class="text-gray-400 text-sm mt-2">
+        O detalhamento por fornecedor permite identificar quais parceiros concentram maior volume de
+        gastos, auxiliando em negociações e revisão de contratos.
+      </p>
+    </div>
+
+    <!-- Total por Status -->
+    <div class="mb-6">
+      <h3 class="text-xl font-bold mb-1">📋 Total por Status</h3>
+      <p class="text-gray-400 text-sm mb-4">
+        Distribuição das despesas conforme situação de pagamento. Atenção especial para o valor em
+        <span class="text-red-400">Atrasado</span> — representa obrigações vencidas que exigem ação
+        imediata.
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl">
+        <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+          <h4 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Pago</h4>
+          <p class="text-2xl font-semibold text-green-400">R$ {{ report.totalByStatus.pago }}</p>
+          <p class="text-xs text-gray-500 mt-1">Despesas já quitadas no período</p>
+        </div>
+        <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+          <h4 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Pendente</h4>
+          <p class="text-2xl font-semibold text-yellow-400">
+            R$ {{ report.totalByStatus.pendente }}
+          </p>
+          <p class="text-xs text-gray-500 mt-1">Despesas aguardando pagamento</p>
+        </div>
+        <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+          <h4 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Atrasado</h4>
+          <p class="text-2xl font-semibold text-red-500">R$ {{ report.totalByStatus.atrasado }}</p>
+          <p class="text-xs text-gray-500 mt-1">
+            Despesas marcadas manualmente como atrasadas — verifique o cadastro para confirmar a
+            situação real
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total por Fornecedor -->
+    <div>
+      <h3 class="text-xl font-bold mb-1">🏢 Total por Fornecedor</h3>
+      <p class="text-gray-400 text-sm mb-4">
+        Valor total gasto com cada fornecedor no período. Fornecedores com alto volume de despesas
+        são candidatos a renegociação de prazos ou condições.
+      </p>
+      <div class="overflow-x-auto max-w-full">
+        <table class="w-full text-left border-collapse border border-gray-700">
+          <thead>
+            <tr class="bg-[#2a3445]">
+              <th class="border border-gray-700 px-4 py-2 text-gray-300">Fornecedor</th>
+              <th class="border border-gray-700 px-4 py-2 text-gray-300">Total (R$)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of report.totalBySupplier; track item.supplier) {
+              <tr class="odd:bg-[#1f2a40] even:bg-[#24304a]">
+                <td class="border border-gray-700 px-4 py-2">{{ item.supplier }}</td>
+                <td class="border border-gray-700 px-4 py-2">{{ item.total.toFixed(2) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (isLoading) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+    <div class="text-white text-lg font-semibold animate-pulse text-center px-4">
+      <p>Carregando relatório...</p>
+      <p class="mt-2">Isso pode demorar um pouco.</p>
+      <p class="mt-2 text-sm text-indigo-300">
+        ⚠️ Evite gerar relatórios com mais de <strong>30 dias</strong> de diferença.
+      </p>
+    </div>
+  </div>
+}

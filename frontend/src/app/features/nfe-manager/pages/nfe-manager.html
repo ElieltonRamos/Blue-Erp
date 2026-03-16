@@ -1,0 +1,277 @@
+<div
+  class="min-h-screen flex items-center justify-center bg-linear-to-b from-[#1a103d] to-[#2a204d] px-4"
+>
+  <button
+    (click)="goToMenu()"
+    class="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-indigo-600 text-white px-6 py-2 rounded shadow-md hover:bg-indigo-700 transition cursor-pointer"
+  >
+    Voltar para menu
+  </button>
+
+  <div class="mt-20 w-full max-w-6xl space-y-4">
+    <!-- =========================================================
+      ORIENTAÇÕES AO OPERADOR
+      Resumo das regras operacionais, fiscais e de suporte.
+      O Blue ERP suporta apenas Simples Nacional e emissão de NFC-e.
+      O sistema não substitui um contador para verificar a situação
+      fiscal da empresa.
+    ========================================================== -->
+    <div class="bg-[#182233] rounded-2xl shadow-lg overflow-hidden">
+      <div class="flex items-center gap-3 px-6 py-4 border-b border-white/10 bg-white/3">
+        <div class="p-2 rounded-lg bg-blue-500/15">
+          <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+        <div>
+          <p class="text-white font-semibold text-sm">Blue ERP — Módulo Fiscal</p>
+          <p class="text-gray-400 text-xs">
+            Suporta apenas <span class="text-white">Simples Nacional</span> e emissão de
+            <span class="text-white">NFC-e</span>. O sistema não substitui um contador — consulte
+            sempre um profissional para verificar a situação fiscal da empresa.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10"
+      >
+        <!-- Operacional -->
+        <div class="px-6 py-5 space-y-3">
+          <p class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3">Operacional</p>
+          <div class="flex gap-2">
+            <span class="text-orange-400 mt-0.5 shrink-0">⏱</span>
+            <p class="text-gray-300 text-xs leading-relaxed">
+              <span class="text-white font-medium">Cancele em até 30 min</span> — após esse prazo o
+              sistema não consegue cancelar a nota.
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <span class="text-red-400 mt-0.5 shrink-0">⚠</span>
+            <p class="text-gray-300 text-xs leading-relaxed">
+              <span class="text-white font-medium">Nota com status ERRO não tem valor fiscal</span>
+              — reemita antes do fechamento do dia.
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <span class="text-green-400 mt-0.5 shrink-0">🔒</span>
+            <p class="text-gray-300 text-xs leading-relaxed">
+              <span class="text-white font-medium">O XML tem valor legal</span> — nunca delete do
+              banco; é o documento fiscal oficial.
+            </p>
+          </div>
+        </div>
+
+        <!-- Fiscal -->
+        <div class="px-6 py-5 space-y-3">
+          <p class="text-xs font-bold text-purple-400 uppercase tracking-widest mb-3">Fiscal</p>
+          <div class="flex gap-2">
+            <span class="text-gray-400 mt-0.5 shrink-0">💼</span>
+            <p class="text-gray-300 text-xs leading-relaxed">
+              <span class="text-white font-medium">O sistema não recolhe imposto</span> — o DAS é
+              pago pelo contador via PGDAS-D no Simples Nacional.
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <span class="text-yellow-400 mt-0.5 shrink-0">📅</span>
+            <p class="text-gray-300 text-xs leading-relaxed">
+              <span class="text-white font-medium"
+                >Exporte XMLs e relatórios até o 5º dia útil</span
+              >
+              — são a base do trabalho do contador.
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <span class="text-blue-400 mt-0.5 shrink-0">📋</span>
+            <p class="text-gray-300 text-xs leading-relaxed">
+              <span class="text-white font-medium">Simples Nacional não isenta de emitir NF-e</span>
+              — a emissão é obrigação legal.
+            </p>
+          </div>
+        </div>
+
+        <!-- Suporte -->
+        <div class="px-6 py-5 space-y-3">
+          <p class="text-xs font-bold text-teal-400 uppercase tracking-widest mb-3">Suporte</p>
+          <div class="flex gap-2">
+            <span class="text-gray-400 mt-0.5 shrink-0">🌐</span>
+            <p class="text-gray-300 text-xs leading-relaxed">
+              <span class="text-white font-medium">SEFAZ fora do ar não impede a venda</span> — a
+              nota fica PENDENTE e deve ser reemitida quando o serviço voltar.
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <span class="text-red-400 mt-0.5 shrink-0">🔑</span>
+            <p class="text-gray-300 text-xs leading-relaxed">
+              <span class="text-white font-medium"
+                >Certificado digital vencido bloqueia toda emissão</span
+              >
+              — renove com 30 dias de antecedência.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+      PRÉ-REQUISITOS PARA EMISSÃO FISCAL
+      Itens obrigatórios para que o sistema consiga emitir NFC-e.
+      Inclui onde encontrar cada informação.
+    ========================================================== -->
+    <div class="bg-[#182233] rounded-2xl shadow-lg overflow-hidden">
+      <div class="flex items-center gap-3 px-6 py-4 border-b border-white/10 bg-white/3">
+        <div class="p-2 rounded-lg bg-yellow-500/15">
+          <svg
+            class="w-5 h-5 text-yellow-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+        <div>
+          <p class="text-white font-semibold text-sm">Pré-requisitos para Emissão</p>
+          <p class="text-gray-400 text-xs">
+            Todos os itens abaixo devem estar configurados corretamente antes de emitir NFC-e
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10"
+      >
+        <!-- Certificado e Credenciais SEFAZ -->
+        <div class="px-6 py-5 space-y-4">
+          <p class="text-xs font-bold text-yellow-400 uppercase tracking-widest">
+            Certificado e SEFAZ
+          </p>
+
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0"></span>
+              <p class="text-white text-xs font-medium">Certificado Digital (A1 ou A3) + Senha</p>
+            </div>
+            <p class="text-gray-500 text-xs pl-3.5 leading-relaxed">
+              Emitido por uma Autoridade Certificadora (AC) credenciada — ex: Serasa, Certisign,
+              Valid. Arquivo <span class="text-gray-400">.pfx</span> para A1 ou token físico para
+              A3.
+            </p>
+          </div>
+
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0"></span>
+              <p class="text-white text-xs font-medium">
+                CSC (Código de Segurança do Contribuinte) + ID CSC
+              </p>
+            </div>
+            <p class="text-gray-500 text-xs pl-3.5 leading-relaxed">
+              Gerado no portal da SEFAZ do seu estado. Acesse
+              <span class="text-blue-400">Portal SEFAZ estadual → NFC-e → Credenciais</span>.
+              Necessário para assinar o QR Code da NFC-e.
+            </p>
+          </div>
+        </div>
+
+        <!-- Dados da Empresa -->
+        <div class="px-6 py-5 space-y-4">
+          <p class="text-xs font-bold text-yellow-400 uppercase tracking-widest">
+            Dados da Empresa
+          </p>
+
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0"></span>
+              <p class="text-white text-xs font-medium">CNPJ ativo e regular</p>
+            </div>
+            <p class="text-gray-500 text-xs pl-3.5 leading-relaxed">
+              Situação cadastral deve ser <span class="text-gray-400">Ativa</span> na Receita
+              Federal. Consulte em <span class="text-blue-400">cnpj.receita.fazenda.gov.br</span>.
+            </p>
+          </div>
+
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0"></span>
+              <p class="text-white text-xs font-medium">Inscrição Estadual (IE)</p>
+            </div>
+            <p class="text-gray-500 text-xs pl-3.5 leading-relaxed">
+              Obtida na Secretaria da Fazenda do estado (SEFAZ estadual). Obrigatória para emissão
+              de NF-e. Empresa optante pelo Simples Nacional deve estar inscrita no estado.
+            </p>
+          </div>
+        </div>
+
+        <!-- Produtos e Tabelas -->
+        <div class="px-6 py-5 space-y-4">
+          <p class="text-xs font-bold text-yellow-400 uppercase tracking-widest">
+            Produtos e Tabelas
+          </p>
+
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0"></span>
+              <p class="text-white text-xs font-medium">NCM correto em todos os produtos</p>
+            </div>
+            <p class="text-gray-500 text-xs pl-3.5 leading-relaxed">
+              Nomenclatura Comum do Mercosul — 8 dígitos. Consulte em
+              <span class="text-blue-400">tabelancm.com.br</span> ou na tabela oficial do MDIC. NCM
+              incorreto pode gerar rejeição na SEFAZ.
+            </p>
+          </div>
+
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0"></span>
+              <p class="text-white text-xs font-medium">Tabela IBPT atualizada</p>
+            </div>
+            <p class="text-gray-500 text-xs pl-3.5 leading-relaxed">
+              Usada para exibir a carga tributária aproximada no DANFE. Atualizada semestralmente.
+              Baixe a versão mais recente em <span class="text-blue-400">ibpt.com.br</span>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+      NAVEGAÇÃO + CONTEÚDO
+    ========================================================== -->
+    <div class="bg-[#182233] rounded-2xl shadow-lg p-6">
+      <div class="flex items-center justify-between mb-6 border-b border-gray-500 pb-4">
+        <div class="flex flex-wrap gap-4">
+          <button
+            (click)="changeMenuContext('fiscal-notes')"
+            [attr.class]="menuContext === 'fiscal-notes' ? classBtnSelected : classBtnUnselected"
+          >
+            <i class="fas fa-file-invoice"></i> Gestão de Notas
+          </button>
+          <button
+            (click)="changeMenuContext('report-fiscal')"
+            [attr.class]="menuContext === 'report-fiscal' ? classBtnSelected : classBtnUnselected"
+          >
+            <i class="fas fa-chart-bar"></i> Relatório Fiscal
+          </button>
+        </div>
+      </div>
+
+      @if (menuContext === 'fiscal-notes') {
+        <app-fiscal-notes />
+      }
+      @if (menuContext === 'report-fiscal') {
+        <app-report-nfe />
+      }
+    </div>
+  </div>
+</div>

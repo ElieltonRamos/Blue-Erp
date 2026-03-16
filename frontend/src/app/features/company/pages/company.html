@@ -1,0 +1,821 @@
+<form
+  [formGroup]="companyForm"
+  (ngSubmit)="onSubmit()"
+  class="mx-auto p-6 bg-linear-to-br from-[#1a1f3a] via-[#2d1b4e] to-[#1a1f3a] min-h-screen"
+>
+  <!-- Botão Voltar ao Menu -->
+  <div class="mb-6 flex justify-center">
+    <button
+      type="button"
+      (click)="goToMenu()"
+      class="px-8 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+    >
+      Voltar para menu
+    </button>
+  </div>
+
+  <!-- Seção: Dados da Empresa -->
+  <div class="bg-[#2c3e5c] rounded-xl shadow-2xl overflow-hidden mb-6 border border-gray-700/50">
+    <div class="bg-linear-to-r from-[#3b82f6] to-[#2563eb] px-6 py-4 border-b border-blue-600/50">
+      <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+          />
+        </svg>
+        Dados da Empresa
+      </h2>
+    </div>
+
+    <div class="p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- CNPJ -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            CNPJ <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            formControlName="cnpj"
+            placeholder="00.000.000/0000-00"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('cnpj')?.invalid && companyForm.get('cnpj')?.touched
+            "
+          />
+        </div>
+
+        <!-- Razão Social -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            Razão Social <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            formControlName="corporateName"
+            placeholder="Digite a razão social"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('corporateName')?.invalid && companyForm.get('corporateName')?.touched
+            "
+          />
+        </div>
+
+        <!-- Nome Fantasia -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            Nome Fantasia <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            formControlName="tradeName"
+            placeholder="Digite o nome fantasia"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('tradeName')?.invalid && companyForm.get('tradeName')?.touched
+            "
+          />
+        </div>
+
+        <!-- Inscrição Estadual -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            Inscrição Estadual <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            formControlName="stateRegistration"
+            placeholder="Digite a IE"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('stateRegistration')?.invalid &&
+              companyForm.get('stateRegistration')?.touched
+            "
+          />
+        </div>
+
+        <!-- Regime Tributário -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            Regime Tributário <span class="text-red-400">*</span>
+          </label>
+          <select
+            formControlName="taxRegime"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
+          >
+            <option value="1">Simples Nacional</option>
+            <option value="2">Simples Nacional - Excesso</option>
+            <option value="3">Regime Normal</option>
+          </select>
+        </div>
+
+        <!-- Telefone -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            Telefone <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            formControlName="phone"
+            placeholder="(00) 0000-0000"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('phone')?.invalid && companyForm.get('phone')?.touched
+            "
+          />
+        </div>
+
+        <!-- Email -->
+        <div class="md:col-span-2 lg:col-span-3">
+          <label class="block text-gray-300 font-medium mb-2 text-sm"> E-mail </label>
+          <input
+            type="email"
+            formControlName="email"
+            placeholder="contato@empresa.com"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('email')?.invalid && companyForm.get('email')?.touched
+            "
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seção: Endereço -->
+  <div class="bg-[#2c3e5c] rounded-xl shadow-2xl overflow-hidden mb-6 border border-gray-700/50">
+    <div class="bg-linear-to-r from-[#10b981] to-[#059669] px-6 py-4 border-b border-green-600/50">
+      <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+          />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
+        Endereço
+      </h2>
+    </div>
+
+    <div class="p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- CEP -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            CEP <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            formControlName="zipCode"
+            placeholder="00000-000"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('zipCode')?.invalid && companyForm.get('zipCode')?.touched
+            "
+          />
+        </div>
+
+        <!-- Logradouro -->
+        <div class="md:col-span-2">
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            Logradouro <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            formControlName="street"
+            placeholder="Rua, Avenida, etc."
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('street')?.invalid && companyForm.get('street')?.touched
+            "
+          />
+        </div>
+
+        <!-- Número -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            Número <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            formControlName="number"
+            placeholder="123"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('number')?.invalid && companyForm.get('number')?.touched
+            "
+          />
+        </div>
+
+        <!-- Complemento -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm"> Complemento </label>
+          <input
+            type="text"
+            formControlName="complement"
+            placeholder="Apto, Sala, etc."
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
+          />
+        </div>
+
+        <!-- Bairro -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            Bairro <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            formControlName="neighborhood"
+            placeholder="Nome do bairro"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('neighborhood')?.invalid && companyForm.get('neighborhood')?.touched
+            "
+          />
+        </div>
+
+        <!-- Município -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            Município <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            formControlName="city"
+            placeholder="Nome da cidade"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('city')?.invalid && companyForm.get('city')?.touched
+            "
+          />
+        </div>
+
+        <!-- Código Município -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            Código Município (IBGE) <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            formControlName="cityCode"
+            placeholder="0000000"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('cityCode')?.invalid && companyForm.get('cityCode')?.touched
+            "
+          />
+        </div>
+
+        <!-- UF -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            UF <span class="text-red-400">*</span>
+          </label>
+          <select
+            formControlName="state"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
+          >
+            <option value="">Selecione</option>
+            <option value="AC">Acre</option>
+            <option value="AL">Alagoas</option>
+            <option value="AP">Amapá</option>
+            <option value="AM">Amazonas</option>
+            <option value="BA">Bahia</option>
+            <option value="CE">Ceará</option>
+            <option value="DF">Distrito Federal</option>
+            <option value="ES">Espírito Santo</option>
+            <option value="GO">Goiás</option>
+            <option value="MA">Maranhão</option>
+            <option value="MT">Mato Grosso</option>
+            <option value="MS">Mato Grosso do Sul</option>
+            <option value="MG">Minas Gerais</option>
+            <option value="PA">Pará</option>
+            <option value="PB">Paraíba</option>
+            <option value="PR">Paraná</option>
+            <option value="PE">Pernambuco</option>
+            <option value="PI">Piauí</option>
+            <option value="RJ">Rio de Janeiro</option>
+            <option value="RN">Rio Grande do Norte</option>
+            <option value="RS">Rio Grande do Sul</option>
+            <option value="RO">Rondônia</option>
+            <option value="RR">Roraima</option>
+            <option value="SC">Santa Catarina</option>
+            <option value="SP">São Paulo</option>
+            <option value="SE">Sergipe</option>
+            <option value="TO">Tocantins</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seção: Configurações NFC-e -->
+  <div
+    class="bg-[#2c3e5c] rounded-xl shadow-2xl overflow-hidden mb-6 border border-gray-700/50"
+    [class.opacity-60]="!canAccessFiscalFeatures"
+    [class.pointer-events-none]="!canAccessFiscalFeatures"
+  >
+    @if (!canAccessFiscalFeatures) {
+      <div class="p-3 bg-yellow-50 border border-yellow-300 rounded-lg text-yellow-800 text-sm">
+        ⚠️ Configurações fiscais disponíveis apenas no plano Pro
+      </div>
+    }
+    <div class="bg-linear-to-r from-[#f59e0b] to-[#d97706] px-6 py-4 border-b border-orange-600/50">
+      <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        Configurações NFC-e
+      </h2>
+    </div>
+
+    <div class="p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Série NFC-e -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            Série NFC-e <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            formControlName="nfceSeries"
+            placeholder="1"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('nfceSeries')?.invalid && companyForm.get('nfceSeries')?.touched
+            "
+          />
+        </div>
+
+        <!-- Número Atual NFC-e -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            Número Atual NFC-e <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="number"
+            formControlName="nfceCurrentNumber"
+            placeholder="0"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('nfceCurrentNumber')?.invalid &&
+              companyForm.get('nfceCurrentNumber')?.touched
+            "
+          />
+        </div>
+
+        <!-- Ambiente NFC-e -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            Ambiente <span class="text-red-400">*</span>
+          </label>
+          <select
+            formControlName="nfceEnvironment"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30 transition-all duration-200 outline-none"
+          >
+            <option value="staging">Homologação</option>
+            <option value="production">Produção</option>
+          </select>
+        </div>
+
+        <!-- CSC -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            CSC (Código de Segurança) <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            formControlName="nfceCsc"
+            [placeholder]="nfceCscConfigured ? SENSITIVE_PLACEHOLDER : 'Digite o CSC'"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('nfceCsc')?.invalid && companyForm.get('nfceCsc')?.touched
+            "
+          />
+        </div>
+
+        <!-- ID CSC -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            ID CSC <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            formControlName="nfceCscId"
+            [placeholder]="nfceCscIdConfigured ? SENSITIVE_PLACEHOLDER : 'Digite o ID do CSC'"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('nfceCscId')?.invalid && companyForm.get('nfceCscId')?.touched
+            "
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seção: Certificado Digital -->
+  <div
+    class="bg-[#1d2a3c] rounded-xl shadow-lg overflow-hidden mb-6"
+    [class.opacity-60]="!canAccessFiscalFeatures"
+    [class.pointer-events-none]="!canAccessFiscalFeatures"
+  >
+    @if (!canAccessFiscalFeatures) {
+      <div class="p-3 bg-yellow-50 border border-yellow-300 rounded-lg text-yellow-800 text-sm">
+        ⚠️ Configurações fiscais disponíveis apenas no plano Pro
+      </div>
+    }
+    <div class="bg-linear-to-r from-[#0f1b2e] to-[#1a2942] px-6 py-4 border-b border-gray-700">
+      <h2 class="text-xl font-semibold text-purple-400 flex items-center gap-2">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+          />
+        </svg>
+        Certificado Digital
+      </h2>
+    </div>
+
+    <div class="p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Upload Certificado -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            Arquivo do Certificado (.pfx) <span class="text-red-400">*</span>
+          </label>
+
+          <!-- input de arquivo oculto -->
+          <input
+            type="file"
+            id="certificateFile"
+            accept=".pfx,.p12"
+            (change)="onFileSelected($event)"
+            class="hidden"
+          />
+
+          <!-- botão para abrir o seletor de arquivo -->
+          <button
+            type="button"
+            (click)="triggerFileInput()"
+            class="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border-2 border-gray-600 hover:border-purple-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 outline-none flex items-center justify-center gap-2"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
+            </svg>
+            <span>{{ selectedFileName || 'Selecionar arquivo' }}</span>
+          </button>
+
+          <!-- mostra o arquivo atual salvo no banco quando não há novo selecionado -->
+          @if (certificateConfigured && !selectedFileName) {
+            <p class="text-xs text-emerald-400 mt-2 flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              Certificado configurado
+            </p>
+          }
+        </div>
+
+        <!-- Senha Certificado -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            Senha do Certificado <span class="text-red-400">*</span>
+          </label>
+          <input
+            type="password"
+            formControlName="certificatePassword"
+            placeholder="Digite a senha"
+            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/30 transition-all duration-200 outline-none"
+            [class.border-red-500]="
+              companyForm.get('certificatePassword')?.invalid &&
+              companyForm.get('certificatePassword')?.touched
+            "
+          />
+        </div>
+      </div>
+
+      <!-- Botão Enviar Certificado -->
+      <div class="mt-6">
+        <button
+          type="button"
+          (click)="enviarCertificado()"
+          [disabled]="!selectedFile || !companyForm.get('certificatePassword')?.value || isLoading"
+          [class.opacity-50]="
+            !selectedFile || !companyForm.get('certificatePassword')?.value || isLoading
+          "
+          [class.cursor-not-allowed]="
+            !selectedFile || !companyForm.get('certificatePassword')?.value || isLoading
+          "
+          class="px-6 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-200 shadow-md flex items-center gap-2"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+            />
+          </svg>
+          @if (isLoading) {
+            <span>Enviando...</span>
+          } @else {
+            <span>Enviar Certificado</span>
+          }
+        </button>
+      </div>
+
+      <!-- Aviso Importante -->
+      <div class="mt-4 bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+        <div class="flex gap-3">
+          <svg
+            class="w-5 h-5 text-purple-400 shrink-0 mt-0.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <div>
+            <p class="text-purple-300 font-medium text-sm">
+              Importante sobre o certificado digital
+            </p>
+            <p class="text-gray-400 text-xs mt-1">
+              O certificado digital é necessário para emissão de NFC-e. Certifique-se de que o
+              arquivo está no formato .pfx ou .p12 e que a senha está correta.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seção: Atualização Tabela IBPT -->
+  <div
+    class="bg-[#1d2a3c] rounded-xl shadow-lg overflow-hidden mb-6"
+    [class.opacity-60]="!canAccessFiscalFeatures"
+    [class.pointer-events-none]="!canAccessFiscalFeatures"
+  >
+    @if (!canAccessFiscalFeatures) {
+      <div class="p-3 bg-yellow-50 border border-yellow-300 rounded-lg text-yellow-800 text-sm">
+        ⚠️ Upload de tabela IBPT disponível apenas no plano Pro
+      </div>
+    }
+    <div class="bg-linear-to-r from-[#0f1b2e] to-[#1a2942] px-6 py-4 border-b border-gray-700">
+      <h2 class="text-xl font-semibold text-emerald-400 flex items-center gap-2">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        Tabela IBPT (Impostos)
+      </h2>
+    </div>
+
+    <div class="p-6">
+      <div class="grid grid-cols-1 gap-6">
+        <!-- Upload CSV IBPT -->
+        <div>
+          <label class="block text-gray-300 font-medium mb-2 text-sm">
+            Arquivo CSV da Tabela IBPT <span class="text-red-400">*</span>
+          </label>
+
+          <!-- input de arquivo oculto -->
+          <input
+            type="file"
+            id="ibptFile"
+            accept=".csv"
+            (change)="onIbptFileSelected($event)"
+            class="hidden"
+          />
+
+          <!-- botão para abrir o seletor de arquivo -->
+          <button
+            type="button"
+            (click)="triggerIbptFileInput()"
+            class="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border-2 border-gray-600 hover:border-emerald-500 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200 outline-none flex items-center justify-center gap-2"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
+            </svg>
+            <span>{{ selectedIbptFileName || 'Selecionar arquivo CSV' }}</span>
+          </button>
+
+          @if (selectedIbptFileName) {
+            <p class="text-xs text-emerald-400 mt-2 flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              Arquivo selecionado: {{ selectedIbptFileName }}
+            </p>
+          }
+        </div>
+
+        <!-- Botão Enviar IBPT -->
+        <div>
+          <button
+            type="button"
+            (click)="enviarIbpt()"
+            [disabled]="!selectedIbptFile || isUploadingIbpt"
+            [class.opacity-50]="!selectedIbptFile || isUploadingIbpt"
+            [class.cursor-not-allowed]="!selectedIbptFile || isUploadingIbpt"
+            class="px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition-all duration-200 shadow-md flex items-center gap-2"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+            @if (isUploadingIbpt) {
+              <span>Atualizando tabela...</span>
+            } @else {
+              <span>Atualizar Tabela IBPT</span>
+            }
+          </button>
+        </div>
+
+        <!-- Aviso Importante IBPT -->
+        <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
+          <div class="flex gap-3">
+            <svg
+              class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <div>
+              <p class="text-emerald-300 font-medium text-sm">Sobre a Tabela IBPT</p>
+              <p class="text-gray-400 text-xs mt-1">
+                A tabela IBPT contém as alíquotas de impostos aproximados por NCM. Baixe a tabela
+                atualizada em
+                <a
+                  href="https://deolhonoimposto.ibpt.org.br"
+                  target="_blank"
+                  class="text-emerald-400 hover:text-emerald-300 underline"
+                >
+                  deolhonoimposto.ibpt.org.br
+                </a>
+                e importe o arquivo CSV. Esta operação substitui completamente a tabela anterior.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botões de Ação Final -->
+  <div class="bg-[#1d2a3c] rounded-xl shadow-lg p-6">
+    <!-- Alerta de Validação -->
+    @if (companyForm.invalid && showValidationErrors) {
+      <div class="mb-6 bg-red-500/10 border-2 border-red-500/50 rounded-lg p-4 animate-pulse">
+        <div class="flex gap-3">
+          <svg
+            class="w-6 h-6 text-red-400 shrink-0 mt-0.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <div class="flex-1">
+            <h3 class="text-red-400 font-semibold text-sm mb-2">
+              ⚠️ Campos obrigatórios não preenchidos
+            </h3>
+            <p class="text-gray-300 text-sm mb-3">
+              Os seguintes campos precisam ser preenchidos para salvar:
+            </p>
+            <ul class="space-y-1">
+              @for (field of getInvalidFields(); track field) {
+                <li class="text-red-300 text-sm flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  {{ field }}
+                </li>
+              }
+            </ul>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="flex justify-end gap-4">
+      <button
+        type="button"
+        (click)="goToMenu()"
+        class="px-6 py-3 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-medium transition-all duration-200 flex items-center gap-2"
+      >
+        <span>Cancelar</span>
+      </button>
+
+      <button
+        type="submit"
+        [disabled]="companyForm.invalid || isLoading"
+        [class.opacity-50]="companyForm.invalid || isLoading"
+        [class.cursor-not-allowed]="companyForm.invalid || isLoading"
+        class="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all duration-200 hover:scale-105 shadow-md flex items-center gap-2 relative"
+      >
+        @if (companyForm.invalid && !isLoading) {
+          <span
+            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-bounce"
+            title="Campos obrigatórios faltando"
+          >
+            {{ getInvalidFields().length }}
+          </span>
+        }
+        @if (isLoading) {
+          <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          <span>Salvando...</span>
+        } @else {
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+          <span>Salvar Configurações</span>
+        }
+      </button>
+    </div>
+  </div>
+</form>

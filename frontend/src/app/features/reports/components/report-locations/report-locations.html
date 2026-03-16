@@ -1,0 +1,357 @@
+<!-- Container Principal -->
+<div class="w-full max-w-7xl bg-[#182233] rounded-2xl shadow-lg p-6">
+  <div class="mb-4">
+    <h1 class="text-3xl font-bold text-white">Relatório por Local</h1>
+    <p class="text-sm text-gray-400 mt-1">
+      Consumo por local de venda · identificação do local de produção por produto
+    </p>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex flex-wrap gap-4 mb-6">
+    <div class="flex flex-col">
+      <label class="text-white text-sm mb-1">Data Início</label>
+      <input
+        type="date"
+        [(ngModel)]="startDate"
+        class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+      />
+    </div>
+    <div class="flex flex-col">
+      <label class="text-white text-sm mb-1">Data Fim</label>
+      <input
+        type="date"
+        [(ngModel)]="endDate"
+        class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+      />
+    </div>
+    <div class="flex items-end gap-2">
+      <button
+        (click)="setToday()"
+        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+      >
+        Hoje
+      </button>
+      <button
+        (click)="setThisWeek()"
+        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+      >
+        Esta Semana
+      </button>
+      <button
+        (click)="setThisMonth()"
+        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+      >
+        Este Mês
+      </button>
+    </div>
+    <div class="flex items-end">
+      <button
+        (click)="generateReport()"
+        class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
+      >
+        Gerar Relatório
+      </button>
+    </div>
+  </div>
+
+  @if (report.locations.length > 0) {
+    <div class="text-white mt-4">
+      <h2 class="text-2xl font-bold mb-2">Relatório por Local {{ getFullDate() }}</h2>
+      <p class="text-gray-400 text-sm mb-4">
+        Considera apenas pedidos com status <span class="text-green-400 font-medium">PAGO</span> no
+        período. Pedidos abertos, fechados ou cancelados não entram neste relatório.
+      </p>
+
+      <!-- Card explicativo geral -->
+      <div class="bg-[#1a1f2a] border border-cyan-700 p-4 rounded-xl shadow mb-6">
+        <h3 class="text-cyan-400 font-semibold mb-1">💡 Como ler este relatório</h3>
+        <p class="text-gray-300 text-sm">
+          Cada <span class="text-white font-medium">local de venda</span> representa onde o pedido
+          foi criado (mesa ou delivery). O
+          <span class="text-white font-medium">local de produção</span> é o campo
+          <code class="text-indigo-300">Locais de produção</code> cadastrado no produto — indica
+          onde aquele item é preparado. Produtos sem local de produção cadastrado assumem o próprio
+          local de venda.
+        </p>
+        <p class="text-gray-400 text-sm mt-2">
+          O <span class="text-white font-medium">Tempo de Comanda</span> é calculado entre a criação
+          e o fechamento do pedido (<code class="text-indigo-300">criado → finalizado</code>). O
+          <span class="text-white font-medium">Tempo de Mesa</span> usa
+          <code class="text-indigo-300">criado → tempo de ocupação</code> — apenas pedidos com
+          mesa e esse campo preenchido entram no cálculo.
+        </p>
+      </div>
+
+      <!-- Matriz Consolidada -->
+      @let matrixData = getMatrix();
+      <div class="bg-[#2a3445] p-4 rounded-xl mb-6">
+        <h3 class="text-lg font-bold mb-1">Consumo Consolidado por Local</h3>
+        <p class="text-xs text-gray-400 mb-1">
+          Linhas = local de venda · Colunas = local de produção
+        </p>
+        <p class="text-xs text-gray-500 mb-4">
+          Cada célula mostra o faturamento dos itens vendidos no local da linha e produzidos no
+          local da coluna. A barra indica proporção em relação à célula de maior valor da tabela.
+        </p>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-white/10">
+                <th class="text-left px-3 py-2 text-xs text-gray-400 uppercase tracking-wide">
+                  Local de Venda
+                </th>
+                @for (producedAt of matrixData.productionLocations; track producedAt) {
+                  <th class="text-right px-3 py-2">
+                    <span
+                      class="text-xs font-semibold px-2 py-1 rounded bg-indigo-900/40 text-indigo-300 border border-indigo-500/30 whitespace-nowrap"
+                    >
+                      {{ producedAt }}
+                    </span>
+                  </th>
+                }
+                <th class="text-right px-3 py-2 text-xs text-gray-400 uppercase tracking-wide">
+                  Total
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (loc of report.locations; track loc.id) {
+                <tr class="border-b border-white/5">
+                  <td class="px-3 py-3 font-semibold text-gray-200 whitespace-nowrap">
+                    {{ loc.name }}
+                  </td>
+                  @for (producedAt of matrixData.productionLocations; track producedAt) {
+                    @let val = getMatrixValue(matrixData.matrix, loc.name, producedAt);
+                    @let maxVal =
+                      getMaxMatrixValue(matrixData.matrix, matrixData.productionLocations);
+                    <td class="px-3 py-3 text-right">
+                      @if (val > 0) {
+                        <div class="flex flex-col items-end gap-1">
+                          <span class="text-gray-200 font-medium">{{ formatCurrency(val) }}</span>
+                          <div class="w-16 h-1 bg-white/10 rounded">
+                            <div
+                              class="h-full bg-indigo-400 rounded opacity-70"
+                              [style.width.%]="(val / maxVal) * 100"
+                            ></div>
+                          </div>
+                        </div>
+                      } @else {
+                        <span class="text-gray-600">—</span>
+                      }
+                    </td>
+                  }
+                  <td class="px-3 py-3 text-right font-bold text-cyan-400">
+                    {{
+                      formatCurrency(
+                        getRowTotal(matrixData.matrix, loc.name, matrixData.productionLocations)
+                      )
+                    }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr class="border-t border-white/10">
+                <td class="px-3 py-3 text-xs text-gray-400 uppercase tracking-wide font-semibold">
+                  Total
+                </td>
+                @for (producedAt of matrixData.productionLocations; track producedAt) {
+                  <td class="px-3 py-3 text-right text-gray-300 font-bold">
+                    {{ formatCurrency(getColTotal(matrixData.matrix, producedAt)) }}
+                  </td>
+                }
+                <td class="px-3 py-3 text-right font-bold text-yellow-400">
+                  {{
+                    formatCurrency(getGrandTotal(matrixData.matrix, matrixData.productionLocations))
+                  }}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cards por Local -->
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        @for (loc of report.locations; track loc.id) {
+          <div class="bg-[#2a3445] p-4 rounded-xl">
+            <!-- Header do card -->
+            <div class="flex justify-between items-start mb-1">
+              <h3 class="text-lg font-bold text-white">{{ loc.name }}</h3>
+              <span class="text-xl font-bold text-cyan-400">{{
+                formatCurrency(loc.totalValue)
+              }}</span>
+            </div>
+            <p class="text-xs text-gray-400 mb-1">
+              🏆 Produto com maior faturamento: <span class="text-white">{{ loc.topProduct }}</span>
+            </p>
+
+            <!-- Métricas rápidas -->
+            <div class="grid grid-cols-3 gap-2 mb-4 mt-3">
+              <div class="bg-white/5 rounded-lg px-3 py-2 text-center">
+                <p class="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Comandas</p>
+                <p class="text-sm font-bold text-white">{{ loc.totalOrders }}</p>
+                <p class="text-[10px] text-gray-600 mt-1">pedidos pagos</p>
+              </div>
+              <div class="bg-white/5 rounded-lg px-3 py-2 text-center">
+                <p class="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Tempo médio</p>
+                <p class="text-sm font-bold text-indigo-300">
+                  {{ formatMinutes(loc.averageCommandaMinutes) }}
+                </p>
+                <p class="text-[10px] text-gray-600 mt-1">abertura → fechamento</p>
+              </div>
+              <div class="bg-white/5 rounded-lg px-3 py-2 text-center">
+                <p class="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Ocup. mesa</p>
+                <p class="text-sm font-bold text-indigo-300">
+                  {{ formatMinutes(loc.averageTableOccupationMinutes) }}
+                </p>
+                <p class="text-[10px] text-gray-600 mt-1">criação → lib. mesa</p>
+              </div>
+            </div>
+
+            <!-- Operadores -->
+            @if (loc.operators.length > 0) {
+              <div class="mb-4">
+                <button
+                  (click)="toggleOperators(loc.id)"
+                  class="w-full flex justify-between items-center bg-white/5 border border-white/10 rounded px-3 py-2 cursor-pointer text-left hover:bg-white/10 transition"
+                  [style.border-left]="'3px solid #f59e0b'"
+                >
+                  <span class="text-sm font-semibold text-amber-400">👤 Operadores</span>
+                  <span class="text-xs text-gray-500">{{
+                    isOperatorsOpen(loc.id) ? '▲' : '▼'
+                  }}</span>
+                </button>
+
+                @if (isOperatorsOpen(loc.id)) {
+                  <div class="mt-2">
+                    <p class="text-xs text-gray-500 px-2 mb-2">
+                      <span class="font-medium text-gray-400">Abriu</span> = pedidos que o operador
+                      criou · <span class="font-medium text-gray-400">Fechou</span> = pedidos que o
+                      operador pagou · <span class="font-medium text-amber-300">Total</span> =
+                      faturamento dos pedidos que fechou
+                    </p>
+                    <div class="grid grid-cols-[1fr_56px_56px_96px] px-2 pb-1 gap-2">
+                      @for (
+                        header of ['Operador', 'Abriu', 'Fechou', 'Total'];
+                        track header;
+                        let i = $index
+                      ) {
+                        <span
+                          class="text-[10px] text-gray-500 uppercase tracking-wide"
+                          [class.text-right]="i >= 1"
+                          >{{ header }}</span
+                        >
+                      }
+                    </div>
+                    @for (op of loc.operators; track op.id) {
+                      <div
+                        class="grid grid-cols-[1fr_56px_56px_96px] items-center px-2 py-1.5 gap-2 rounded bg-white/2"
+                      >
+                        <span class="text-sm text-gray-300 truncate">{{ op.username }}</span>
+                        <span class="text-xs text-gray-400 text-right">{{ op.opened }}</span>
+                        <span class="text-xs text-gray-400 text-right">{{ op.closed }}</span>
+                        <span class="text-xs text-amber-300 text-right font-medium">{{
+                          formatCurrency(op.totalValue)
+                        }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            <div class="border-t border-white/10 mb-4"></div>
+
+            <!-- Categorias -->
+            <p class="text-xs text-gray-500 mb-3">
+              Itens ordenados por quantidade vendida (maior → menor)
+            </p>
+            @for (cat of loc.categories; track cat.name) {
+              <div class="mb-3">
+                <button
+                  (click)="toggleCategory(loc.id, cat.name)"
+                  class="w-full flex justify-between items-center bg-white/5 border border-white/10 rounded px-3 py-2 cursor-pointer text-left hover:bg-white/10 transition"
+                  [style.border-left]="'3px solid #6366f1'"
+                >
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-indigo-400">{{ cat.name }}</span>
+                    <span class="text-xs text-gray-500 bg-white/10 px-2 py-0.5 rounded-full"
+                      >{{ cat.totalQty }} un</span
+                    >
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm font-semibold text-gray-200">{{
+                      formatCurrency(cat.totalValue)
+                    }}</span>
+                    <span class="text-xs text-gray-500">{{
+                      isCategoryOpen(loc.id, cat.name) ? '▲' : '▼'
+                    }}</span>
+                  </div>
+                </button>
+
+                @if (isCategoryOpen(loc.id, cat.name)) {
+                  <div class="mt-2">
+                    <div class="grid grid-cols-[1fr_140px_64px_88px] px-2 pb-1 gap-2">
+                      @for (
+                        header of ['Produto', 'Produzido em', 'Qtd', 'Total'];
+                        track header;
+                        let i = $index
+                      ) {
+                        <span
+                          class="text-[10px] text-gray-500 uppercase tracking-wide"
+                          [class.text-right]="i >= 2"
+                          >{{ header }}</span
+                        >
+                      }
+                    </div>
+
+                    @let maxQty = cat.items[0].qty;
+                    @for (item of cat.items; track item.name) {
+                      <div class="mb-1">
+                        <div
+                          class="grid grid-cols-[1fr_140px_64px_88px] items-center px-2 py-1.5 gap-2 rounded bg-white/2"
+                        >
+                          <span class="text-sm text-gray-300 truncate">{{ item.name }}</span>
+                          <span
+                            class="text-xs font-semibold px-2 py-0.5 rounded border whitespace-nowrap bg-blue-900/30 text-blue-300 border-blue-500/30"
+                          >
+                            {{ item.producedAt }}
+                          </span>
+                          <span class="text-xs text-gray-500 text-right">{{ item.qty }} un</span>
+                          <span class="text-xs text-gray-400 text-right">{{
+                            formatCurrency(item.value)
+                          }}</span>
+                        </div>
+                        <div class="h-0.5 bg-white/5 rounded mx-2 mt-0.5">
+                          <div
+                            class="h-full bg-indigo-400 rounded opacity-50"
+                            [style.width.%]="(item.qty / maxQty) * 100"
+                          ></div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>
+
+@if (isLoading) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+    <div class="text-white text-lg font-semibold animate-pulse text-center px-4">
+      <p>Carregando relatório...</p>
+      <p class="mt-2">Isso pode demorar um pouco.</p>
+      <p class="mt-2 text-sm text-indigo-300">
+        ⚠️ Evite gerar relatórios com mais de <strong>30 dias</strong> de diferença.
+      </p>
+    </div>
+  </div>
+}

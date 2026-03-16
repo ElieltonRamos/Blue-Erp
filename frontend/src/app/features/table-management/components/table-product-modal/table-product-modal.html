@@ -1,0 +1,205 @@
+<div
+  class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+  [class.hidden]="!show"
+>
+  <div
+    class="bg-slate-800 rounded-lg shadow-2xl border border-slate-700 max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+  >
+    <!-- Header -->
+    <div class="flex justify-between items-center p-6 border-b border-slate-700">
+      <div>
+        <h3 class="text-xl font-bold text-white">Mesa {{ table.number }} - Produtos</h3>
+        <p class="text-slate-400 text-sm">{{ table.customer }}</p>
+      </div>
+      <button (click)="onClose()" class="p-1 hover:bg-slate-700 rounded transition-colors">
+        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6 overflow-y-auto flex-1">
+      <!-- Buscar Produto -->
+      <div class="mb-6">
+        <label class="block text-slate-300 text-sm font-medium mb-3">Buscar Produto</label>
+        <div class="grid grid-cols-12 gap-3">
+          <div class="col-span-4">
+            <input
+              type="text"
+              [(ngModel)]="searchCode"
+              (keyup.enter)="searchByCode()"
+              [disabled]="isSearching"
+              placeholder="Código de barras"
+              class="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50"
+            />
+          </div>
+          <div class="col-span-6">
+            <input
+              type="text"
+              [(ngModel)]="searchName"
+              (keyup.enter)="searchByName()"
+              [disabled]="isSearching"
+              placeholder="Nome do produto"
+              class="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50"
+            />
+          </div>
+          <div class="col-span-2">
+            <button
+              type="button"
+              (click)="searchCode ? searchByCode() : searchByName()"
+              [disabled]="isSearching || (!searchCode && !searchName)"
+              class="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            >
+              @if (isSearching) {
+                <svg
+                  class="animate-spin w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                </svg>
+              } @else {
+                Buscar
+              }
+            </button>
+          </div>
+        </div>
+
+        <!-- Resultados da busca por nome -->
+        @if (searchResults.length > 0) {
+          <div class="mt-3">
+            <label class="text-slate-300 text-sm mb-2 block">Selecione o produto:</label>
+            <select
+              (change)="selectSearchResult($event)"
+              class="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            >
+              <option value="">-- Escolha um produto --</option>
+              @for (product of searchResults; track product.id; let i = $index) {
+                <option [value]="i">
+                  {{ product.code }} - {{ product.name }} - R$ {{ product.price.toFixed(2) }}
+                </option>
+              }
+            </select>
+          </div>
+        }
+      </div>
+
+      <!-- Products List -->
+      <div class="space-y-3">
+        @if (items.length === 0) {
+          <div class="text-center py-8 text-slate-400">Nenhum produto adicionado ainda</div>
+        }
+        @for (item of items; track item.id) {
+          <div class="bg-slate-700/50 rounded-lg p-3 border border-slate-600/50">
+            <div class="flex justify-between items-start mb-2">
+              <div class="flex-1 min-w-0">
+                <h4 class="text-white font-medium text-sm truncate">{{ item.name }}</h4>
+                <p class="text-slate-400 text-xs">R$ {{ item.unitPrice.toFixed(2) }} / unidade</p>
+              </div>
+              <button
+                (click)="removeItem(item)"
+                class="p-1 hover:bg-rose-600 rounded transition-colors ml-2 shrink-0"
+              >
+                <svg
+                  class="w-4 h-4 text-rose-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div class="mb-2">
+              <input
+                type="text"
+                [value]="item.observation ?? ''"
+                (blur)="item.observation = $any($event.target).value"
+                placeholder="Observação (obrigatório)"
+                class="w-full bg-slate-800 border rounded px-2 py-1.5 text-white text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                [class.border-red-500]="!item.observation || item.observation.trim().length < 2"
+                [class.border-slate-600]="item.observation && item.observation.trim().length >= 2"
+              />
+            </div>
+
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-2">
+                <button
+                  (click)="updateQuantity(item, -1)"
+                  class="p-1 bg-slate-600 hover:bg-slate-500 rounded transition-colors"
+                >
+                  <svg
+                    class="w-4 h-4 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M20 12H4"
+                    />
+                  </svg>
+                </button>
+                <span class="text-white font-medium w-12 text-center">{{ item.quantity }}</span>
+                <button
+                  (click)="updateQuantity(item, 1)"
+                  class="p-1 bg-slate-600 hover:bg-slate-500 rounded transition-colors"
+                >
+                  <svg
+                    class="w-4 h-4 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div class="text-white font-bold text-sm">R$ {{ item.total.toFixed(2) }}</div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Total -->
+      @if (items.length > 0) {
+        <div class="mt-4 bg-slate-700/50 rounded-lg p-4 border border-slate-600/50">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-300 font-medium">Total:</span>
+            <span class="text-white font-bold text-xl">R$ {{ orderTotal.toFixed(2) }}</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="p-6 border-t border-slate-700">
+      <button
+        (click)="onClose()"
+        class="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm font-medium transition-colors"
+      >
+        Salvar e Fechar
+      </button>
+    </div>
+  </div>
+</div>

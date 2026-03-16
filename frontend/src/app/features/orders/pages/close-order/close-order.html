@@ -1,0 +1,374 @@
+<!-- close-order.component.html -->
+<div class="min-h-screen bg-linear-to-br from-purple-900 via-purple-800 to-purple-900 p-4">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-2 max-w-400 mx-auto">
+    <!-- Logo -->
+    <img src="/blue-erp.png" alt="Logo" class="h-12 rounded-lg" />
+
+    <!-- Barra Cliente -->
+    <div class="flex items-center gap-2 flex-wrap">
+      <!-- Menu -->
+      <button
+        (click)="goToMenu()"
+        class="h-9 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium transition"
+      >
+        Menu
+      </button>
+
+      <!-- Busca -->
+      <div
+        class="flex items-center gap-1 h-9 bg-slate-700/60 px-2 rounded-md border border-slate-600"
+      >
+        <input
+          type="text"
+          [(ngModel)]="customerSearchId"
+          placeholder="ID"
+          maxlength="10"
+          class="w-14 bg-transparent text-white text-sm text-center focus:outline-none"
+          (keyup.enter)="searchCustomerById()"
+        />
+
+        <button
+          (click)="searchCustomerById()"
+          [disabled]="!customerSearchId.trim()"
+          class="h-7 px-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs"
+        >
+          ID
+        </button>
+
+        <input
+          type="text"
+          [(ngModel)]="customerSearchName"
+          placeholder="Cliente"
+          class="w-36 bg-transparent text-white text-sm focus:outline-none"
+          (keyup.enter)="searchCustomerByName()"
+        />
+
+        <button
+          (click)="searchCustomerByName()"
+          [disabled]="!customerSearchName.trim() || isSearchingClient"
+          class="h-7 px-2 bg-green-600 hover:bg-green-700 text-white rounded text-xs"
+        >
+          🔍
+        </button>
+      </div>
+
+      <!-- Select -->
+      <select
+        [(ngModel)]="selectedClientId"
+        (ngModelChange)="selectClientFromResults()"
+        class="h-9 bg-slate-800 border border-slate-600 rounded-md px-2 text-white text-sm w-52"
+      >
+        <option value="">Selecionar cliente</option>
+
+        <option *ngFor="let client of searchResults; trackBy: trackByClientId" [value]="client.id!">
+          {{ client.name }}
+        </option>
+      </select>
+
+      <!-- Cliente Atual -->
+      <div
+        class="flex items-center gap-1 h-9 bg-emerald-600/10 px-3 rounded-md border border-emerald-500/40 max-w-45"
+      >
+        <span
+          class="text-emerald-300 text-sm truncate"
+          [title]="selectedClient?.name || 'Sem cliente cadastrado'"
+        >
+          {{ selectedClient?.name || 'Sem cliente' }}
+        </span>
+
+        <button
+          *ngIf="selectedClient"
+          (click)="clearCustomer()"
+          class="text-emerald-400 hover:text-emerald-200 text-xs"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex justify-center items-center h-[80vh] max-w-400 mx-auto">
+    <div class="text-center">
+      <svg
+        class="animate-spin text-indigo-500 mx-auto mb-4"
+        width="48"
+        height="48"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+      </svg>
+      <p class="text-white">Carregando pedido...</p>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div *ngIf="!isLoading && order" class="max-w-400 mx-auto">
+    <div
+      class="bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-2xl p-4 border border-slate-700/50"
+    >
+      <!-- Two Columns Layout -->
+      <div class="grid grid-cols-12 gap-4">
+        <!-- Left Column - Products (Larger) -->
+        <div class="col-span-8 bg-slate-700/30 rounded-lg p-4">
+          <!-- Products Table -->
+          <div>
+            <h3 class="text-white font-bold text-sm mb-3">Produtos do Pedido</h3>
+
+            <div class="overflow-x-auto" style="max-height: 420px; overflow-y: auto">
+              <table class="w-full text-sm">
+                <thead class="sticky top-0 bg-slate-700/50 backdrop-blur-sm">
+                  <tr class="border-b border-slate-600">
+                    <th class="text-left py-2 px-2 text-blue-400 text-xs font-semibold uppercase">
+                      Código
+                    </th>
+                    <th class="text-left py-2 px-2 text-blue-400 text-xs font-semibold uppercase">
+                      Produto
+                    </th>
+                    <th
+                      class="text-center py-2 px-2 text-yellow-400 text-xs font-semibold uppercase"
+                    >
+                      VLR. UN.
+                    </th>
+                    <th class="text-center py-2 px-2 text-cyan-400 text-xs font-semibold uppercase">
+                      QTD
+                    </th>
+                    <th
+                      class="text-center py-2 px-2 text-green-400 text-xs font-semibold uppercase"
+                    >
+                      Total
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    *ngFor="let item of order.items"
+                    class="border-b border-slate-700/50 hover:bg-slate-700/20"
+                  >
+                    <td class="py-2 px-2 text-slate-300 text-xs">{{ item.code }}</td>
+                    <td class="py-2 px-2 text-white text-xs">{{ item.name }}</td>
+                    <td class="py-2 px-2 text-center text-slate-300 text-xs">
+                      R$ {{ item.unitPrice.toFixed(2) }}
+                    </td>
+                    <td class="py-2 px-2 text-center text-cyan-400 font-bold text-xs">
+                      {{ item.quantity }}
+                    </td>
+                    <td class="py-2 px-2 text-center text-green-400 font-bold text-xs">
+                      R$ {{ item.total.toFixed(2) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <!-- Informações do Pedido -->
+              <div class="mt-4 bg-slate-800/40 border border-slate-600 rounded-lg p-3">
+                <h3 class="text-white font-semibold text-sm mb-2">Informações do Pedido</h3>
+
+                <div class="grid grid-cols-3 gap-3 text-xs">
+                  <!-- Cliente do Pedido -->
+                  <div>
+                    <p class="text-slate-400">Cliente (Pedido)</p>
+                    <p class="text-white font-medium truncate">
+                      {{ order.customerName || 'Não informado' }}
+                    </p>
+                  </div>
+
+                  <!-- Mesa -->
+                  <div>
+                    <p class="text-slate-400">Mesa</p>
+                    <p class="text-white font-medium">
+                      {{ order.table || '-' }}
+                    </p>
+                  </div>
+
+                  <!-- Endereço -->
+                  <div class="col-span-3">
+                    <p class="text-slate-400">Endereço de Entrega</p>
+                    <p class="text-white font-medium truncate">
+                      {{ order.address || 'Retirada no balcão' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty State -->
+              <div *ngIf="order.items.length === 0" class="text-center py-8">
+                <p class="text-slate-400 text-sm">Nenhum produto adicionado</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column - Payment Summary -->
+        <div class="col-span-4 bg-slate-700/30 rounded-lg p-3 space-y-2">
+          <h3 class="text-white font-bold text-xs mb-2">Resumo da Venda</h3>
+
+          <div class="bg-slate-800/50 rounded-lg p-2 border border-slate-600/30">
+            <p class="text-slate-400 text-[10px]">Valor Total:</p>
+            <p class="text-green-400 font-bold text-xl">R$ {{ subtotal.toFixed(2) }}</p>
+          </div>
+
+          <div>
+            <label class="text-white text-[10px] block mb-1">Desconto</label>
+            <input
+              type="number"
+              [(ngModel)]="discount"
+              (ngModelChange)="updateDiscount()"
+              step="0.01"
+              min="0"
+              class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-center font-bold text-lg focus:outline-none focus:border-cyan-500"
+            />
+          </div>
+
+          <div class="bg-slate-800/50 rounded-lg p-2 border border-green-600/50">
+            <p class="text-slate-400 text-[10px]">Total Final:</p>
+            <p class="text-green-400 font-bold text-2xl">R$ {{ total.toFixed(2) }}</p>
+          </div>
+
+          <div class="grid grid-cols-5 gap-1.5">
+            <button
+              (click)="selectPaymentMethod('DINHEIRO')"
+              [class.bg-cyan-600]="selectedPaymentMethod === 'DINHEIRO'"
+              [class.bg-slate-700]="selectedPaymentMethod !== 'DINHEIRO'"
+              class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
+              title="Dinheiro"
+            >
+              <span class="text-lg">💵</span>
+            </button>
+            <button
+              (click)="selectPaymentMethod('CARTAO_CREDITO')"
+              [class.bg-cyan-600]="selectedPaymentMethod === 'CARTAO_CREDITO'"
+              [class.bg-slate-700]="selectedPaymentMethod !== 'CARTAO_CREDITO'"
+              class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
+              title="Crédito"
+            >
+              <span class="text-lg">💳</span>
+            </button>
+            <button
+              (click)="selectPaymentMethod('CARTAO_DEBITO')"
+              [class.bg-cyan-600]="selectedPaymentMethod === 'CARTAO_DEBITO'"
+              [class.bg-slate-700]="selectedPaymentMethod !== 'CARTAO_DEBITO'"
+              class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
+              title="Débito"
+            >
+              <span class="text-lg">💳</span>
+            </button>
+            <button
+              (click)="selectPaymentMethod('PIX')"
+              [class.bg-cyan-600]="selectedPaymentMethod === 'PIX'"
+              [class.bg-slate-700]="selectedPaymentMethod !== 'PIX'"
+              class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
+              title="PIX"
+            >
+              <span class="text-lg">📱</span>
+            </button>
+            <button
+              (click)="selectPaymentMethod('CREDITO_LOJA')"
+              [disabled]="!selectedClient"
+              [class.opacity-40]="!selectedClient"
+              [class.bg-cyan-600]="selectedPaymentMethod === 'CREDITO_LOJA'"
+              [class.bg-slate-700]="selectedPaymentMethod !== 'CREDITO_LOJA'"
+              class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
+              title="A Prazo"
+            >
+              <span class="text-lg">📅</span>
+            </button>
+          </div>
+
+          <div *ngIf="selectedPaymentMethod === 'DINHEIRO'" class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-white text-[10px] block mb-1">Valor Recebido:</label>
+              <input
+                type="number"
+                [(ngModel)]="amountReceived"
+                step="0.01"
+                min="0"
+                class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-center font-bold text-base focus:outline-none focus:border-cyan-500"
+              />
+            </div>
+            <div class="bg-slate-800/50 rounded-lg p-2 border border-slate-600/30">
+              <p class="text-slate-400 text-[10px] mb-0.5">Troco:</p>
+              <p
+                [class.text-green-400]="change >= 0"
+                [class.text-red-400]="change < 0"
+                class="font-bold text-base"
+              >
+                R$ {{ change >= 0 ? change.toFixed(2) : '0.00' }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="flex justify-between items-center mt-4 pt-4 border-t border-slate-700">
+        <div class="flex items-center gap-4">
+          <p class="text-white text-sm">
+            Vendedor: <span class="font-bold">{{ sellerName }}</span>
+          </p>
+
+          <!-- CFOP and CSOSN - Hidden in corner -->
+          <div class="flex gap-2 opacity-30 hover:opacity-100 transition-opacity">
+            <div class="flex items-center gap-1">
+              <label class="text-slate-400 text-[10px]">CFOP</label>
+              <select
+                [(ngModel)]="cfop"
+                class="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white text-[10px] w-16"
+              >
+                <option value="5102">5102</option>
+                <option value="5405">5405</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-1">
+              <label class="text-slate-400 text-[10px]">CSOSN</label>
+              <select
+                [(ngModel)]="csosn"
+                class="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white text-[10px] w-16"
+              >
+                <option value="102">102</option>
+                <option value="103">103</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <button
+            (click)="cancelOrder()"
+            [disabled]="isFinishing"
+            class="bg-red-600 hover:bg-red-700 text-white px-8 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancelar Venda
+          </button>
+          <button
+            (click)="finishOrder()"
+            [disabled]="!isValidPayment || isFinishing"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <svg
+              *ngIf="isFinishing"
+              class="animate-spin"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+            </svg>
+            {{ isFinishing ? 'Finalizando...' : 'Finalizar Venda' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Venda -->
+  @if (showSaleModal && saleData) {
+    <app-modal-sales-note [saleData]="saleData" (closeModal)="closeSaleModal()" />
+  }
+</div>

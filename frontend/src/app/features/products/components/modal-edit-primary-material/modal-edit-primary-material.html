@@ -1,0 +1,351 @@
+<div
+  class="fixed inset-0 flex items-center justify-center z-50 p-4"
+  style="background-color: rgba(0, 0, 0, 0.85)"
+>
+  <div
+    class="bg-linear-to-br from-[#1d2a3c] to-[#2a3f5f] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+  >
+    <!-- Header -->
+    <div
+      class="bg-linear-to-r from-[#0f1b2e] to-[#1a2942] text-white p-6 rounded-t-2xl sticky top-0 z-10"
+    >
+      <h2 class="text-2xl font-bold">Editar Matéria-Prima</h2>
+      <p class="text-gray-300 text-sm mt-1">
+        Atualize as informações do material {{ material.code }}
+      </p>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6 space-y-6">
+      <!-- Seção: Informações Básicas -->
+      <div class="space-y-4">
+        <h3 class="text-lg font-semibold text-blue-400 flex items-center gap-2">
+          <span class="w-1 h-5 bg-blue-400 rounded"></span>
+          Informações Básicas
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Nome -->
+          <div class="md:col-span-2">
+            <label class="block text-gray-300 font-medium mb-2 text-sm">
+              Nome do Material <span class="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="material.name"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Nome do material"
+              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
+            />
+          </div>
+
+          <!-- Código -->
+          <div>
+            <label class="block text-gray-300 font-medium mb-2 text-sm">
+              Código <span class="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="material.code"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Código"
+              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
+            />
+          </div>
+
+          <!-- Unidade -->
+          <div>
+            <label class="block text-gray-300 font-medium mb-2 text-sm">
+              Unidade <span class="text-red-400">*</span>
+            </label>
+            <select
+              [(ngModel)]="material.unit"
+              [ngModelOptions]="{ standalone: true }"
+              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
+              style="
+                background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
+                background-repeat: no-repeat;
+                background-position: right 0.7rem center;
+                background-size: 1.2em;
+              "
+            >
+              <option *ngFor="let unitOption of unitOptions" [value]="unitOption">
+                {{ unitOption }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Custo Unitário -->
+          <div>
+            <label class="block text-gray-300 font-medium mb-2 text-sm">
+              Custo Unitário <span class="text-red-400">*</span>
+            </label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold"
+                >R$</span
+              >
+              <input
+                type="number"
+                [(ngModel)]="material.unitCost"
+                [ngModelOptions]="{ standalone: true }"
+                step="0.01"
+                min="0"
+                placeholder="0,00"
+                class="w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
+              />
+            </div>
+          </div>
+
+          <!-- Status Ativo -->
+          <div>
+            <label class="block text-gray-300 font-medium mb-2 text-sm">
+              Status <span class="text-red-400">*</span>
+            </label>
+            <div class="flex gap-2">
+              <label class="flex-1 relative cursor-pointer">
+                <input
+                  type="radio"
+                  name="active"
+                  [value]="true"
+                  [(ngModel)]="material.active"
+                  [ngModelOptions]="{ standalone: true }"
+                  class="peer sr-only"
+                />
+                <div
+                  class="p-3 rounded-lg border-2 border-gray-600 bg-white/5 peer-checked:border-green-500 peer-checked:bg-green-500/10 transition-all duration-200 text-center"
+                >
+                  <span class="text-white text-sm font-semibold">Ativo</span>
+                </div>
+              </label>
+              <label class="flex-1 relative cursor-pointer">
+                <input
+                  type="radio"
+                  name="active"
+                  [value]="false"
+                  [(ngModel)]="material.active"
+                  [ngModelOptions]="{ standalone: true }"
+                  class="peer sr-only"
+                />
+                <div
+                  class="p-3 rounded-lg border-2 border-gray-600 bg-white/5 peer-checked:border-gray-500 peer-checked:bg-gray-500/10 transition-all duration-200 text-center"
+                >
+                  <span class="text-white text-sm font-semibold">Inativo</span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção: Estoque -->
+      <div class="space-y-4">
+        <h3 class="text-lg font-semibold text-green-400 flex items-center gap-2">
+          <span class="w-1 h-5 bg-green-400 rounded"></span>
+          Controle de Estoque
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Estoque Atual -->
+          <div>
+            <label class="block text-gray-300 font-medium mb-2 text-sm">
+              Estoque Atual <span class="text-red-400">*</span>
+            </label>
+            <input
+              type="number"
+              [(ngModel)]="material.currentStock"
+              [ngModelOptions]="{ standalone: true }"
+              step="0.01"
+              min="0"
+              placeholder="0"
+              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
+            />
+          </div>
+
+          <!-- Estoque Mínimo -->
+          <div>
+            <label class="block text-gray-300 font-medium mb-2 text-sm">
+              Estoque Mínimo <span class="text-gray-400 text-xs">(opcional)</span>
+            </label>
+            <input
+              type="number"
+              [(ngModel)]="material.minStock"
+              [ngModelOptions]="{ standalone: true }"
+              step="0.01"
+              min="0"
+              placeholder="0"
+              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
+            />
+          </div>
+
+          <!-- Valor Total em Estoque (Calculado) -->
+          <div class="bg-white/5 p-3 rounded-lg border border-green-400/30">
+            <label class="block text-gray-300 font-medium mb-2 text-sm">Valor em Estoque</label>
+            <div class="text-2xl font-bold text-green-400">
+              R$ {{ calculateStockValue().toFixed(2) }}
+            </div>
+            <p class="text-xs text-gray-400 mt-1">Calculado automaticamente</p>
+          </div>
+        </div>
+
+        <!-- Alerta de Estoque Baixo -->
+        @if (isStockLow()) {
+          <div
+            class="flex items-center gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg"
+          >
+            <svg
+              class="w-6 h-6 text-yellow-400 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <div>
+              <p class="text-yellow-400 font-semibold">Estoque Baixo</p>
+              <p class="text-yellow-300 text-sm">
+                O estoque atual está abaixo do mínimo configurado
+              </p>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Seção: Validade -->
+      <div class="space-y-4">
+        <h3 class="text-lg font-semibold text-purple-400 flex items-center gap-2">
+          <span class="w-1 h-5 bg-purple-400 rounded"></span>
+          Validade
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Data de Validade -->
+          <div>
+            <label class="block text-gray-300 font-medium mb-2 text-sm">
+              Data de Validade <span class="text-gray-400 text-xs">(opcional)</span>
+            </label>
+            <input
+              type="date"
+              [(ngModel)]="material.expiryDate"
+              [ngModelOptions]="{ standalone: true }"
+              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 outline-none"
+            />
+          </div>
+
+          <!-- Alerta de Validade -->
+          <div class="flex items-center">
+            @if (isExpired()) {
+              <div
+                class="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex-1"
+              >
+                <svg
+                  class="w-6 h-6 text-red-400 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <div>
+                  <p class="text-red-400 font-semibold">Material Vencido</p>
+                  <p class="text-red-300 text-sm">Este material está fora da validade</p>
+                </div>
+              </div>
+            } @else if (isExpiringSoon()) {
+              <div
+                class="flex items-center gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex-1"
+              >
+                <svg
+                  class="w-6 h-6 text-yellow-400 shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <div>
+                  <p class="text-yellow-400 font-semibold">Vencimento Próximo</p>
+                  <p class="text-yellow-300 text-sm">Material vence em menos de 30 dias</p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção: Informações Fiscais -->
+      <div class="space-y-4 bg-white/5 p-5 rounded-xl border border-white/10">
+        <h3 class="text-lg font-semibold text-yellow-400 flex items-center gap-2">
+          <span class="w-1 h-5 bg-yellow-400 rounded"></span>
+          Informações Fiscais
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- NCM -->
+          <div>
+            <label class="block text-gray-300 font-medium mb-2 text-sm">
+              NCM <span class="text-gray-400 text-xs">(opcional)</span>
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="material.ncm"
+              [ngModelOptions]="{ standalone: true }"
+              maxlength="8"
+              placeholder="12345678"
+              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-mono font-medium placeholder-gray-400 border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none"
+            />
+            <p class="text-gray-400 text-xs mt-1">8 dígitos numéricos</p>
+          </div>
+
+          <!-- CFOP -->
+          <div>
+            <label class="block text-gray-300 font-medium mb-2 text-sm">
+              CFOP <span class="text-gray-400 text-xs">(opcional)</span>
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="material.cfop"
+              [ngModelOptions]="{ standalone: true }"
+              maxlength="4"
+              placeholder="5102"
+              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-mono font-medium placeholder-gray-400 border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none"
+            />
+            <p class="text-gray-400 text-xs mt-1">4 dígitos numéricos</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div
+      class="flex justify-end gap-3 p-6 border-t border-white/10 bg-black/20 rounded-b-2xl sticky bottom-0"
+    >
+      <button
+        (click)="onCancel()"
+        class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors duration-200"
+      >
+        Cancelar
+      </button>
+      <button
+        (click)="onSave()"
+        class="px-8 py-3 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold shadow-lg hover:shadow-blue-500/50 transition-all duration-200 transform hover:scale-105"
+      >
+        Salvar Alterações
+      </button>
+    </div>
+  </div>
+</div>

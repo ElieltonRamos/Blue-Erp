@@ -1,0 +1,90 @@
+<div class="min-h-screen bg-linear-to-br from-purple-900 via-purple-800 to-indigo-900 p-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6 max-w-7xl mx-auto">
+    <div class="flex items-center gap-3">
+      <div
+        class="w-10 h-10 bg-linear-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg"
+      >
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+          />
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-white">Gerenciamento de Pedidos</h1>
+    </div>
+    <button
+      (click)="goToMenu()"
+      class="bg-slate-700/50 hover:bg-slate-600/50 backdrop-blur-sm text-white px-6 py-2.5 rounded-xl font-medium transition-all duration-200 border border-slate-600/30 hover:border-slate-500/50 shadow-lg"
+    >
+      ← Voltar para menu
+    </button>
+  </div>
+
+  <!-- Main Container -->
+  <div class="max-w-7xl mx-auto">
+    <!-- Tabs Card -->
+    <div
+      class="bg-slate-800/40 backdrop-blur-md rounded-2xl shadow-2xl p-6 border border-slate-700/30 mb-6"
+    >
+      <div class="flex gap-3">
+        <button
+          (click)="changeMenuContext('list-orders')"
+          [class]="
+            menuContext === 'list-orders'
+              ? 'bg-linear-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/30'
+              : 'bg-slate-700/30 text-slate-300 hover:bg-slate-600/40 hover:text-white'
+          "
+          class="px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 border border-transparent hover:border-slate-500/50"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+            />
+          </svg>
+          Pedidos Ativos
+        </button>
+        <button
+          (click)="changeMenuContext('create-order')"
+          [class]="
+            menuContext === 'create-order'
+              ? 'bg-linear-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/30'
+              : 'bg-slate-700/30 text-slate-300 hover:bg-slate-600/40 hover:text-white'
+          "
+          class="px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2 border border-transparent hover:border-slate-500/50"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          Novo Pedido
+        </button>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div
+      class="bg-slate-800/30 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700/30 overflow-hidden transition-all duration-300"
+    >
+      @if (menuContext === 'list-orders') {
+        <div>
+          <app-list-orders />
+        </div>
+      } @else if (menuContext === 'create-order') {
+        <div>
+          <app-create-order />
+        </div>
+      }
+    </div>
+  </div>
+</div>

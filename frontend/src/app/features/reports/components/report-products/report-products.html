@@ -1,0 +1,401 @@
+<!-- Container Principal -->
+<div class="w-full max-w-6xl bg-[#182233] rounded-2xl shadow-lg p-6">
+  <div class="mb-4">
+    <h1 class="text-3xl font-bold text-white">Relatório de Produtos</h1>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex flex-wrap gap-4 mb-6">
+    <div class="flex flex-col">
+      <label class="text-white text-sm mb-1">Data Início</label>
+      <input
+        type="date"
+        [(ngModel)]="startDate"
+        class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+      />
+    </div>
+    <div class="flex flex-col">
+      <label class="text-white text-sm mb-1">Data Fim</label>
+      <input
+        type="date"
+        [(ngModel)]="endDate"
+        class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+      />
+    </div>
+    <div class="flex items-end gap-2">
+      <button
+        (click)="setToday()"
+        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+      >
+        Hoje
+      </button>
+      <button
+        (click)="setThisMonth()"
+        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+      >
+        Este Mês
+      </button>
+    </div>
+    <div class="flex items-end">
+      <button
+        (click)="generateReport()"
+        class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
+      >
+        Gerar Relatório
+      </button>
+    </div>
+  </div>
+
+  <div class="w-full max-w-6xl mx-auto bg-[#182233] rounded-2xl shadow-lg p-6 mt-6 text-white">
+    <h2 class="text-2xl font-bold mb-2">Relatório de Produtos {{ getFullDate() }}</h2>
+    <p class="text-gray-400 text-sm mb-6">
+      Consolidação de vendas, consumo de matéria-prima e situação de estoque no período selecionado.
+      Os custos de consumo são calculados com base nas fichas técnicas dos produtos.
+    </p>
+
+    <!-- Resumo Geral -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Unidades Vendidas</h3>
+        <p class="text-2xl font-semibold">{{ report.totalProductsSold }}</p>
+        <p class="text-xs text-gray-500 mt-1">Total de itens vendidos no período</p>
+      </div>
+      <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Faturamento Bruto</h3>
+        <p class="text-2xl font-semibold text-green-400">R$ {{ report.totalRevenue.toFixed(2) }}</p>
+        <p class="text-xs text-gray-500 mt-1">Receita total gerada pelas vendas</p>
+      </div>
+      <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">CMV de Matéria-Prima</h3>
+        <p class="text-2xl font-semibold text-yellow-400">
+          R$ {{ report.grandTotalConsumedCost.toFixed(2) }}
+        </p>
+        <p class="text-xs text-gray-500 mt-1">
+          Custo teórico de MP consumida (ficha técnica × vendas)
+        </p>
+      </div>
+      <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Custo de Reposição</h3>
+        <p class="text-2xl font-semibold text-red-400">
+          R$ {{ report.totalReplenishmentCost.toFixed(2) }}
+        </p>
+        <p class="text-xs text-gray-500 mt-1">
+          Estimativa para repor itens abaixo do estoque mínimo
+        </p>
+      </div>
+      <div class="bg-[#2a3445] p-4 rounded-xl shadow">
+        <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Valor em Estoque</h3>
+        <p class="text-2xl font-semibold text-blue-400">
+          R$ {{ report.totalStockValue.toFixed(2) }}
+        </p>
+        <p class="text-xs text-gray-500 mt-1">
+          Valor total do estoque atual (produtos + matérias-primas)
+        </p>
+      </div>
+      <!-- Card explicativo CMV -->
+      <div
+        class="bg-[#1a2a1a] border border-yellow-700 p-4 rounded-xl shadow col-span-1 sm:col-span-2 lg:col-span-4"
+      >
+        <h3 class="text-yellow-400 font-semibold mb-1">
+          💡 O que é CMV (Custo da Mercadoria Vendida)?
+        </h3>
+        <p class="text-gray-300 text-sm">
+          O CMV representa o custo total dos insumos consumidos para produzir tudo que foi vendido
+          no período. Ele é calculado cruzando as quantidades vendidas com as fichas técnicas dos
+          produtos:
+          <span class="text-white font-medium"
+            >quantidade vendida × quantidade do insumo na ficha técnica × custo unitário do
+            insumo</span
+          >.
+        </p>
+        <p class="text-gray-400 text-sm mt-2">
+          <span class="text-green-400 font-medium">Faturamento − CMV = Lucro Bruto estimado.</span>
+          Quanto menor o CMV em relação ao faturamento, maior sua margem. Atenção: este valor é
+          <span class="text-yellow-300">teórico</span> — não considera perdas, desperdício ou
+          variações de preço por lote de compra.
+        </p>
+      </div>
+    </div>
+
+    <!-- Produtos Mais Vendidos -->
+    <div class="bg-[#2a3445] p-4 rounded-xl mb-6">
+      <h4 class="text-xl font-bold text-white mb-1">📊 Produtos Mais Vendidos</h4>
+      <p class="text-gray-400 text-sm mb-4">
+        Top 10 produtos com maior volume de unidades vendidas no período. O preço médio é calculado
+        dividindo o faturamento pelo total de unidades vendidas.
+      </p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="border-b border-gray-600">
+            <tr>
+              <th class="py-2 px-3 text-gray-300">#</th>
+              <th class="py-2 px-3 text-gray-300">Produto</th>
+              <th class="py-2 px-3 text-gray-300">Qtd. Vendida</th>
+              <th class="py-2 px-3 text-gray-300">Faturamento</th>
+              <th class="py-2 px-3 text-gray-300">Preço Médio</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (product of report.topSellingProducts; track $index) {
+              <tr class="border-b border-gray-700 hover:bg-[#1f2a40]">
+                <td class="py-2 px-3 text-gray-500">{{ $index + 1 }}</td>
+                <td class="py-2 px-3">{{ product.productName }}</td>
+                <td class="py-2 px-3">{{ product.totalSold }}</td>
+                <td class="py-2 px-3">R$ {{ product.revenue.toFixed(2) }}</td>
+                <td class="py-2 px-3">R$ {{ product.averagePrice.toFixed(2) }}</td>
+              </tr>
+            }
+            @if (report.topSellingProducts.length === 0) {
+              <tr>
+                <td colspan="5" class="py-4 text-center text-gray-400">
+                  Nenhum produto vendido no período
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Matérias-Primas Mais Utilizadas -->
+    <div class="bg-[#2a3445] p-4 rounded-xl mb-6">
+      <h4 class="text-xl font-bold text-white mb-1">🥫 Matérias-Primas Mais Utilizadas</h4>
+      <p class="text-gray-400 text-sm mb-4">
+        Consumo teórico calculado com base nas fichas técnicas dos produtos vendidos. Produtos
+        semi-prontos são desdobrados em seus componentes. O custo total representa o CMV individual
+        de cada material no período.
+      </p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="border-b border-gray-600">
+            <tr>
+              <th class="py-2 px-3 text-gray-300">Material</th>
+              <th class="py-2 px-3 text-gray-300">Qtd. Usada</th>
+              <th class="py-2 px-3 text-gray-300">Unidade</th>
+              <th class="py-2 px-3 text-gray-300">Custo Unitário</th>
+              <th class="py-2 px-3 text-gray-300">Custo Total</th>
+              <th class="py-2 px-3 text-gray-300">Frequência</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (material of report.mostUsedRawMaterials; track $index) {
+              <tr class="border-b border-gray-700 hover:bg-[#1f2a40]">
+                <td class="py-2 px-3">{{ material.materialName }}</td>
+                <td class="py-2 px-3">{{ material.totalUsed }}</td>
+                <td class="py-2 px-3">{{ material.unit }}</td>
+                <td class="py-2 px-3">R$ {{ material.unitCost.toFixed(2) }}</td>
+                <td class="py-2 px-3 font-semibold text-yellow-400">
+                  R$ {{ material.totalCost.toFixed(2) }}
+                </td>
+                <td class="py-2 px-3 text-gray-400">{{ material.usageFrequency }}x</td>
+              </tr>
+            }
+            @if (report.mostUsedRawMaterials.length === 0) {
+              <tr>
+                <td colspan="6" class="py-4 text-center text-gray-400">
+                  Nenhuma matéria-prima utilizada no período
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Matérias-Primas Próximas do Vencimento -->
+    <div class="bg-[#2a3445] p-4 rounded-xl mb-6">
+      <h4 class="text-xl font-bold text-white mb-1">⚠️ Matérias-Primas Próximas do Vencimento</h4>
+      <p class="text-gray-400 text-sm mb-4">
+        Materiais com data de validade nos próximos 30 dias. Vermelho: vence em até 7 dias. Amarelo:
+        vence entre 8 e 15 dias.
+      </p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="border-b border-gray-600">
+            <tr>
+              <th class="py-2 px-3 text-gray-300">Material</th>
+              <th class="py-2 px-3 text-gray-300">Data de Vencimento</th>
+              <th class="py-2 px-3 text-gray-300">Dias Restantes</th>
+              <th class="py-2 px-3 text-gray-300">Estoque Atual</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (material of report.expiringRawMaterials; track $index) {
+              <tr
+                class="border-b border-gray-700 hover:bg-[#1f2a40]"
+                [class.bg-red-900]="material.daysUntilExpiry <= 7"
+                [class.bg-yellow-900]="
+                  material.daysUntilExpiry > 7 && material.daysUntilExpiry <= 15
+                "
+              >
+                <td class="py-2 px-3">{{ material.materialName }}</td>
+                <td class="py-2 px-3">{{ formatDate(material.expiryDate) }}</td>
+                <td class="py-2 px-3">
+                  <span
+                    [class.text-red-300]="material.daysUntilExpiry <= 7"
+                    [class.text-yellow-300]="
+                      material.daysUntilExpiry > 7 && material.daysUntilExpiry <= 15
+                    "
+                  >
+                    {{ material.daysUntilExpiry }} dias
+                  </span>
+                </td>
+                <td class="py-2 px-3">{{ material.currentStock }} {{ material.unit }}</td>
+              </tr>
+            }
+            @if (report.expiringRawMaterials.length === 0) {
+              <tr>
+                <td colspan="4" class="py-4 text-center text-gray-400">
+                  Nenhuma matéria-prima próxima do vencimento
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Estoques -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div class="bg-[#2a3445] p-4 rounded-xl">
+        <h4 class="text-xl font-bold text-white mb-1">📉 Estoques Mais Baixos</h4>
+        <p class="text-gray-400 text-sm mb-4">
+          Itens com menor quantidade disponível. Atenção especial para valores próximos de zero.
+        </p>
+        <div class="space-y-3">
+          @for (item of report.lowestStocks; track $index) {
+            <div class="bg-[#1f2a40] p-3 rounded-lg">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="font-semibold">{{ item.itemName }}</p>
+                  <p class="text-sm text-gray-400">
+                    {{ item.type === 'product' ? 'Produto' : 'Matéria-Prima' }}
+                  </p>
+                </div>
+                <div class="text-right">
+                  <p
+                    class="text-lg font-bold"
+                    [class.text-red-400]="item.currentStock === 0"
+                    [class.text-orange-400]="item.currentStock > 0"
+                  >
+                    {{ item.currentStock }} {{ item.unit }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          }
+          @if (report.lowestStocks.length === 0) {
+            <p class="text-center text-gray-400 py-4">Nenhum item com estoque baixo</p>
+          }
+        </div>
+      </div>
+
+      <div class="bg-[#2a3445] p-4 rounded-xl">
+        <h4 class="text-xl font-bold text-white mb-1">📈 Estoques Mais Altos</h4>
+        <p class="text-gray-400 text-sm mb-4">
+          Itens com maior quantidade em estoque. Volumes muito altos podem indicar excesso de
+          compra.
+        </p>
+        <div class="space-y-3">
+          @for (item of report.highestStocks; track $index) {
+            <div class="bg-[#1f2a40] p-3 rounded-lg">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="font-semibold">{{ item.itemName }}</p>
+                  <p class="text-sm text-gray-400">
+                    {{ item.type === 'product' ? 'Produto' : 'Matéria-Prima' }}
+                  </p>
+                </div>
+                <div class="text-right">
+                  <p class="text-lg font-bold text-green-400">
+                    {{ item.currentStock }} {{ item.unit }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          }
+          @if (report.highestStocks.length === 0) {
+            <p class="text-center text-gray-400 py-4">Nenhum item com estoque alto</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Sugestões de Compra -->
+    <div class="bg-[#2a3445] p-4 rounded-xl">
+      <h4 class="text-xl font-bold text-white mb-1">🛒 Sugestões de Compra</h4>
+      <p class="text-gray-400 text-sm mb-4">
+        Itens com estoque abaixo do mínimo cadastrado. A quantidade sugerida é o déficit acrescido
+        de 50% de margem de segurança. O custo estimado usa o preço de custo cadastrado para
+        produtos e o custo unitário para matérias-primas.
+      </p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="border-b border-gray-600">
+            <tr>
+              <th class="py-2 px-3 text-gray-300">Item</th>
+              <th class="py-2 px-3 text-gray-300">Qtd. Sugerida</th>
+              <th class="py-2 px-3 text-gray-300">Custo Unit.</th>
+              <th class="py-2 px-3 text-gray-300">Custo Estimado</th>
+              <th class="py-2 px-3 text-gray-300">Motivo</th>
+              <th class="py-2 px-3 text-gray-300">Prioridade</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (suggestion of report.purchaseSuggestions; track $index) {
+              <tr class="border-b border-gray-700 hover:bg-[#1f2a40]">
+                <td class="py-2 px-3">{{ suggestion.itemName }}</td>
+                <td class="py-2 px-3">{{ suggestion.suggestedQuantity }} {{ suggestion.unit }}</td>
+                <td class="py-2 px-3">R$ {{ suggestion.unitCost.toFixed(2) }}</td>
+                <td class="py-2 px-3 font-semibold text-red-400">
+                  R$ {{ suggestion.replenishmentCost.toFixed(2) }}
+                </td>
+                <td class="py-2 px-3 text-sm text-gray-400">{{ suggestion.reason }}</td>
+                <td class="py-2 px-3">
+                  <span
+                    class="px-2 py-1 rounded text-xs font-semibold"
+                    [class.bg-red-600]="suggestion.priority === 'high'"
+                    [class.bg-yellow-600]="suggestion.priority === 'medium'"
+                    [class.bg-blue-600]="suggestion.priority === 'low'"
+                  >
+                    {{ getPriorityLabel(suggestion.priority) }}
+                  </span>
+                </td>
+              </tr>
+            }
+            @if (report.purchaseSuggestions.length === 0) {
+              <tr>
+                <td colspan="6" class="py-4 text-center text-gray-400">
+                  Nenhuma sugestão de compra no momento
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (report.purchaseSuggestions.length > 0) {
+        <div class="mt-4 flex justify-end">
+          <div class="bg-[#1f2a40] px-4 py-2 rounded-lg text-sm">
+            <span class="text-gray-400">Total estimado para reposição: </span>
+            <span class="text-red-400 font-bold text-lg"
+              >R$ {{ report.totalReplenishmentCost.toFixed(2) }}</span
+            >
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+@if (isLoading) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+    <div class="text-white text-lg font-semibold animate-pulse text-center px-4">
+      <p>Carregando relatório...</p>
+      <p class="mt-2">Isso pode demorar um pouco.</p>
+      <p class="mt-2 text-sm text-indigo-300">
+        ⚠️ Evite gerar relatórios com mais de <strong>30 dias</strong> de diferença.
+      </p>
+    </div>
+  </div>
+}

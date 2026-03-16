@@ -1,0 +1,186 @@
+# 🗄️ Setup Completo MySQL no Windows – Blue ERP
+
+Este guia resolve os dois problemas mais comuns ao rodar o projeto no Windows:
+
+1. ❌ `mysqldump não é reconhecido`
+2. ❌ `RSA public key is not available client side`
+
+---
+
+# 🔧 PARTE 1 – Corrigir erro do mysqldump no Windows
+
+## ❌ Erro
+
+```
+'mysqldump' não é reconhecido como um comando interno
+ou externo, um programa operável ou um arquivo em lotes.
+```
+
+## 🎯 Causa
+
+A pasta `bin` do MySQL não está na variável de ambiente `PATH` do Windows.
+
+---
+
+## ✅ Solução definitiva
+
+### 1️⃣ Abrir configurações do sistema
+
+Pressione:
+
+```
+Win + R
+```
+
+Digite:
+
+```
+sysdm.cpl
+```
+
+Pressione Enter.
+
+---
+
+### 2️⃣ Acessar variáveis de ambiente
+
+Vá em:
+
+```
+Aba Avançado
+→ Variáveis de Ambiente
+```
+
+---
+
+### 3️⃣ Editar o PATH do Sistema
+
+⚠️ Edite o **Path da seção “Variáveis do sistema”** (parte inferior da janela).
+
+1. Selecione `Path`
+2. Clique em **Editar**
+3. Clique em **Novo**
+4. Adicione:
+
+```
+C:\Program Files\MySQL\MySQL Server 8.0\bin
+```
+
+Sem aspas.
+
+Clique em OK até fechar tudo.
+
+---
+
+### 4️⃣ Reiniciar o terminal
+
+Feche todos os CMD abertos.
+Abra um novo Prompt de Comando.
+
+Teste:
+
+```
+mysqldump --version
+```
+
+Se aparecer algo como:
+
+```
+mysqldump  Ver 8.0.xx for Win64
+```
+
+✅ Problema resolvido.
+
+---
+
+# 🔐 PARTE 2 – Corrigir erro de chave pública RSA
+
+## ❌ Erro
+
+```
+RSA public key is not available client side
+SQLState: 08S01
+```
+
+## 🎯 Causa
+
+O MySQL 8 usa por padrão o plugin de autenticação:
+
+```
+caching_sha2_password
+```
+
+Alguns drivers Node.js não conseguem autenticar sem SSL ou chave pública RSA.
+
+---
+
+# ✅ SOLUÇÃO RÁPIDA (Desenvolvimento)
+
+### 1️⃣ Acesse o MySQL
+
+```
+mysql -u root -p
+```
+
+---
+
+### 2️⃣ Execute:
+
+```sql
+ALTER USER 'root'@'localhost'
+IDENTIFIED WITH mysql_native_password BY 'password';
+
+FLUSH PRIVILEGES;
+```
+
+---
+
+### 3️⃣ Reinicie o MySQL
+
+Teste novamente sua aplicação.
+
+✔ O erro de RSA será resolvido.
+
+---
+
+# 🚀 SOLUÇÃO RECOMENDADA
+
+Criar usuário específico para aplicação:
+
+```sql
+CREATE USER 'blueerp'@'%' IDENTIFIED WITH mysql_native_password BY '123456';
+GRANT ALL PRIVILEGES ON db_blue_erp.* TO 'blueerp'@'%';
+FLUSH PRIVILEGES;
+```
+
+Atualizar `.env`:
+
+```
+DATABASE_URL="mysql://blueerp:123456@127.0.0.1:3306/db_blue_erp"
+```
+
+⚠️ Evite usar `root` em aplicações.
+
+---
+
+# 🔎 Como verificar o plugin do usuário
+
+```sql
+SELECT user, host, plugin FROM mysql.user;
+```
+
+Se aparecer `caching_sha2_password`, esse é o motivo do erro.
+
+---
+
+# 🎯 Resultado Final
+
+Após seguir este guia:
+
+* ✔ Backup via `mysqldump` funciona no Windows
+* ✔ Conexão com MySQL não gera erro de RSA
+* ✔ Ambiente de desenvolvimento configurado corretamente
+
+---
+
+📌 Guia válido para MySQL 8+ no Windows 10/11.

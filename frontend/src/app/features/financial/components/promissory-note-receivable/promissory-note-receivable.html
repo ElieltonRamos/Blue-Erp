@@ -1,0 +1,177 @@
+<!-- CONTAINER PRINCIPAL -->
+<div class="w-full max-w-6xl bg-[#182233] rounded-2xl shadow-lg p-6">
+  <!-- 🔹 FILTROS -->
+  <section class="bg-[#1d2a3c] rounded-xl p-4 mb-6">
+    <h3 class="text-lg text-sky-400 font-semibold mb-4">Filtros</h3>
+
+    <!-- Linha 1 -->
+    <div class="flex flex-wrap gap-4 items-end mb-4">
+      <div class="flex flex-col w-32">
+        <label class="text-sm text-white mb-1">ID</label>
+        <input
+          type="text"
+          class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+          [(ngModel)]="filterId"
+        />
+      </div>
+
+      <div class="flex flex-col w-full sm:w-48">
+        <label class="text-sm text-white mb-1">Data Inicial</label>
+        <input
+          type="date"
+          class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+          [(ngModel)]="startDate"
+        />
+      </div>
+
+      <div class="flex flex-col w-full sm:w-48">
+        <label class="text-sm text-white mb-1">Data Final</label>
+        <input
+          type="date"
+          class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+          [(ngModel)]="endDate"
+        />
+      </div>
+    </div>
+
+    <!-- Linha 2 -->
+    <div class="flex flex-wrap gap-4 items-end mb-4">
+      <div class="flex flex-col w-full sm:w-64">
+        <label class="text-sm text-white mb-1">Cliente</label>
+        <input
+          type="text"
+          class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+          [(ngModel)]="filterClient"
+        />
+      </div>
+
+      <!-- SITUAÇÃO -->
+      <div class="flex flex-col w-full sm:w-48">
+        <label class="text-sm text-white mb-1">Situação</label>
+        <select
+          class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+          [(ngModel)]="filterStatusSelect"
+          (change)="onStatusFilterChange($event)"
+        >
+          <option class="bg-[#2a3445]" value="pending">Pendentes</option>
+          <option class="bg-[#2a3445]" value="all">Todas</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Botões -->
+    <div class="flex gap-2">
+      <button
+        (click)="applyDateFilter()"
+        class="bg-sky-600 text-white px-4 py-2 rounded hover:bg-sky-700 transition"
+      >
+        Filtrar
+      </button>
+
+      <button
+        (click)="clearDateFilter()"
+        class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
+      >
+        Limpar Filtro
+      </button>
+    </div>
+  </section>
+
+  <!-- 🔹 RESUMO SELEÇÃO -->
+  <section
+    class="mt-4 p-4 bg-[#1d2a3c] rounded-xl text-white flex flex-col sm:flex-row items-center justify-between gap-4"
+  >
+    <div class="text-lg font-semibold">
+      Total selecionado: R$ {{ formatNumber(totalSelectedAmount) }}
+    </div>
+    <button
+      (click)="markSelectedAsReceived()"
+      class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded transition"
+    >
+      Marcar como Recebido
+    </button>
+  </section>
+
+  <!-- 🔹 TABELA DE VENDAS -->
+  <section class="overflow-x-auto mt-6">
+    <table class="min-w-full text-white text-left">
+      <thead class="bg-[#1d2a3c] text-sky-400 uppercase text-sm">
+        <tr>
+          <th class="py-3 px-4">
+            <input
+              type="checkbox"
+              [checked]="allSelected"
+              (change)="toggleSelectAllEvent($event)"
+            />
+          </th>
+          <th class="py-3 px-4">ID</th>
+          <th class="py-3 px-4">Status</th>
+          <th class="py-3 px-4">Data</th>
+          <th class="py-3 px-4">Cliente</th>
+          <th class="py-3 px-4">Método de Pagamento</th>
+          <th class="py-3 px-4">Operador</th>
+          <th class="py-3 px-4">Total</th>
+          <th class="py-3 px-4">Ações</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-700">
+        @for (sale of listSales; track sale.id) {
+        <tr class="hover:bg-[#243447] transition">
+          <td class="py-3 px-4">
+            <input
+              type="checkbox"
+              [checked]="isSelected(sale.id!)"
+              (change)="onCheckboxChange($event, sale.id!)"
+            />
+          </td>
+          <td class="py-3 px-4">{{ sale.id }}</td>
+          <td>
+            <span
+              class="text-sm"
+              [ngClass]="{
+                'text-green-500': sale.isPaid,
+                'text-red-500': !sale.isPaid
+              }"
+            >
+              {{ sale.isPaid ? "PAGO" : "PENDENTE" }}
+            </span>
+          </td>
+
+          <td class="py-3 px-4">{{ sale.date }}</td>
+          <td class="py-3 px-4">{{ sale.client.name }}</td>
+          <td class="py-3 px-4">{{ sale.paymentMethod }}</td>
+          <td class="py-3 px-4">{{ sale.operator?.username }}</td>
+          <td class="py-3 px-4">{{ sale.total }}</td>
+          <td class="py-3 px-4 space-x-2">
+            <button
+              (click)="openSaleModal(sale)"
+              class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors cursor-pointer"
+            >
+              Ver Detalhes
+            </button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 🔹 PAGINAÇÃO -->
+  <div class="flex justify-end mt-4">
+    <app-paginator
+      [totalItems]="totalItems"
+      [itemsPerPage]="limit"
+      [totalPages]="totalPages"
+      [page]="page"
+      (pageChanged)="getSales($event, limit)"
+    ></app-paginator>
+  </div>
+</div>
+
+<!-- 🔹 MODAL -->
+@if (showSaleModal) {
+<app-modal-sales-note
+  [saleData]="saleSelected!"
+  (closeModal)="closeSaleModal()"
+/>
+}

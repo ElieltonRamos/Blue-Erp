@@ -1,0 +1,118 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Decimal } from '@prisma/client/runtime/client';
+import { Unit } from 'generated/prisma/client';
+
+export class PrimaryMaterialResponseDto {
+  @ApiProperty({
+    description: 'ID da matéria-prima',
+    example: 1,
+  })
+  id: number;
+
+  @ApiProperty({
+    description: 'Nome da matéria-prima',
+    example: 'Farinha de Trigo',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: 'Código único da matéria-prima',
+    example: 'MP-001',
+  })
+  code: string;
+
+  @ApiProperty({
+    description: 'Unidade de medida',
+    enum: Unit,
+    example: 'KG',
+  })
+  unit: Unit;
+
+  @ApiProperty({
+    description: 'Custo unitário',
+    example: 5.5,
+  })
+  unitCost: number;
+
+  @ApiProperty({
+    description: 'Estoque atual',
+    example: 100,
+  })
+  currentStock: number;
+
+  @ApiPropertyOptional({
+    description: 'Estoque mínimo',
+    example: 20,
+    nullable: true,
+  })
+  minStock?: number | null;
+
+  @ApiPropertyOptional({
+    description: 'Data de validade',
+    example: '2025-12-31T00:00:00.000Z',
+    nullable: true,
+  })
+  expiryDate?: Date | null;
+
+  @ApiProperty({
+    description: 'Status ativo/inativo',
+    example: true,
+  })
+  active: boolean;
+
+  @ApiPropertyOptional({
+    description: 'NCM (Nomenclatura Comum do Mercosul)',
+    example: '11010010',
+    nullable: true,
+  })
+  ncm?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'CFOP (Código Fiscal de Operações e Prestações)',
+    example: '5102',
+    nullable: true,
+  })
+  cfop?: string | null;
+
+  @ApiProperty({
+    description: 'Data de criação',
+    example: '2024-01-15T10:30:00.000Z',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    description: 'Data da última atualização',
+    example: '2024-01-20T14:45:00.000Z',
+  })
+  updatedAt: Date;
+
+  constructor(material: {
+    id: number;
+    name: string;
+    code: string;
+    unit: Unit;
+    unitCost: Decimal;
+    currentStock: Decimal;
+    minStock: Decimal | null;
+    expiryDate: Date | null;
+    active: boolean;
+    ncm: string | null;
+    cfop: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }) {
+    this.id = material.id;
+    this.name = material.name;
+    this.code = material.code;
+    this.unit = material.unit;
+    this.unitCost = material.unitCost.toNumber();
+    this.currentStock = material.currentStock.toNumber();
+    this.minStock = material.minStock?.toNumber() ?? null;
+    this.expiryDate = material.expiryDate;
+    this.active = material.active;
+    this.ncm = material.ncm;
+    this.cfop = material.cfop;
+    this.createdAt = material.createdAt;
+    this.updatedAt = material.updatedAt;
+  }
+}
