@@ -118,6 +118,49 @@ export class OrdersService {
         });
       }
 
+      if (orderData.table) {
+        const tableNumber = parseInt(
+          orderData.table.replace('Mesa ', '').trim(),
+          10,
+        );
+
+        if (!isNaN(tableNumber)) {
+          const location =
+            await this.prisma.client.productionLocation.findFirst({
+              where: { code: orderData.locationId },
+            });
+
+          if (location) {
+            const tableRecord = await this.prisma.client.table.findUnique({
+              where: {
+                number_locationId: {
+                  number: tableNumber,
+                  locationId: location.id,
+                },
+              },
+            });
+
+            if (tableRecord) {
+              if (tableRecord.status === 'OCCUPIED') {
+                throw new BadRequestException(
+                  `Mesa ${tableNumber} já está ocupada`,
+                );
+              }
+
+              await this.prisma.client.table.update({
+                where: { id: tableRecord.id },
+                data: {
+                  status: 'OCCUPIED',
+                  orderId: order.id,
+                  customer: orderData.customerName ?? null,
+                  time: null, // <- faltava
+                },
+              });
+            }
+          }
+        }
+      }
+
       return this.mapToEntity(order);
     } catch (error) {
       if (error.code === 'P2003') {
