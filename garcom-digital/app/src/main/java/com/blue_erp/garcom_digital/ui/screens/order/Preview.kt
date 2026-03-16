@@ -25,7 +25,7 @@ private fun OrderScreenPreview() {
     GarcomDigitalTheme {
         OrderScreenContent(
             uiState = OrderUiState(order = previewOrder, editedItems = previewItems),
-            onBack = {}, onSave = {},
+            onBack = {}, onSave = {}, onObservationChange = {} as (Int, String) -> Unit,
             onIncrement = {}, onDecrement = {}, onRemove = {},
             onOpenProductSearch = {}, onCloseProductSearch = {},
             onProductQueryChange = {}, onAddProduct = {}, onCategorySelect = {},
@@ -40,7 +40,7 @@ private fun OrderScreenEmptyPreview() {
     GarcomDigitalTheme {
         OrderScreenContent(
             uiState = OrderUiState(order = previewOrder, editedItems = emptyList()),
-            onBack = {}, onSave = {},
+            onBack = {}, onSave = {}, onObservationChange = {} as (Int, String) -> Unit,
             onIncrement = {}, onDecrement = {}, onRemove = {},
             onOpenProductSearch = {}, onCloseProductSearch = {},
             onProductQueryChange = {}, onAddProduct = {}, onOpenCloseTabDialog = {},
@@ -55,7 +55,7 @@ private fun OrderScreenLoadingPreview() {
     GarcomDigitalTheme {
         OrderScreenContent(
             uiState = OrderUiState(isLoading = true),
-            onBack = {}, onSave = {},
+            onBack = {}, onSave = {}, onObservationChange = {} as (Int, String) -> Unit,
             onIncrement = {}, onDecrement = {}, onRemove = {},
             onOpenProductSearch = {}, onCloseProductSearch = {},
             onProductQueryChange = {}, onAddProduct = {}, onCloseTab = {}, onCloseCloseTabDialog = {},

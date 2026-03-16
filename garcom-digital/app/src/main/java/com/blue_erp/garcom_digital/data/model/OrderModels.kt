@@ -9,7 +9,8 @@ data class UpdateOrderItemRequest(
     val name: String,
     val quantity: Double,
     @SerializedName("unitPrice") val unitPrice: Double,
-    val total: Double
+    val total: Double,
+    val observation: String? = null,
 )
 
 data class UpdateOrderRequest(

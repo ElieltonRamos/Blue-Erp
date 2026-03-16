@@ -176,6 +176,15 @@ class OrderViewModel @Inject constructor(
         }
     }
 
+    fun updateObservation(itemId: Int, observation: String) {
+        _uiState.update { state ->
+            val updated = state.editedItems.map { item ->
+                if (item.id == itemId) item.copy(observation = observation) else item
+            }
+            state.copy(editedItems = updated, hasUnsavedChanges = true)
+        }
+    }
+
     // ── Adicionar produto ──────────────────────────────────────────────────────
 
     fun addProduct(product: ProductResponse) {
@@ -191,7 +200,8 @@ class OrderViewModel @Inject constructor(
                 unitPrice = product.price,
                 total = product.price,
                 productId = product.id,
-                productionLocation = ""
+                productionLocation = "",
+                observation = "",
             )
             _uiState.update {
                 it.copy(
@@ -207,6 +217,13 @@ class OrderViewModel @Inject constructor(
 
     fun saveChanges() {
         val orderId = _uiState.value.order?.id ?: return
+        val hasInvalid = _uiState.value.editedItems.any {
+            it.observation.isNullOrBlank() || it.observation.trim().length < 2
+        }
+        if (hasInvalid) {
+            _uiState.update { it.copy(error = "Preencha a observação de todos os itens (digite Ok se nao tiver)") }
+            return
+        }
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, error = null) }
 
@@ -218,12 +235,11 @@ class OrderViewModel @Inject constructor(
                     name = item.name,
                     quantity = item.quantity,
                     unitPrice = item.unitPrice,
-                    total = item.total
+                    total = item.total,
+                    observation = item.observation,
                 )
             }
             val request = UpdateOrderRequest(items = items, total = items.sumOf { it.total })
-            android.util.Log.d("OrderViewModel", "saveChanges → request items: ${items}")
-            android.util.Log.d("OrderViewModel", "saveChanges → request: $request")
 
             when (val result = orderRepository.updateOrder(orderId, request)) {
                 is Resource.Success -> {

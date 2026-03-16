@@ -33,7 +33,7 @@ fun OrderScreen(
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
             snackbarHostState.showSnackbar(it)
-            viewModel.loadTable() // recarrega após fechar o snackbar
+            viewModel.clearError() // recarrega após fechar o snackbar
         }
     }
 
@@ -62,6 +62,7 @@ fun OrderScreen(
         onCloseCloseTabDialog = viewModel::closeCloseTabDialog,
         onCategorySelect = viewModel::selectCategory,
         onCloseTabSummaryDialog = viewModel::closeTabSummaryDialog,
+        onObservationChange = viewModel::updateObservation
     )
 }
 
@@ -84,6 +85,7 @@ fun OrderScreenContent(
     onCloseCloseTabDialog: () -> Unit,
     onCategorySelect: (Int?) -> Unit,
     onCloseTabSummaryDialog: () -> Unit,
+    onObservationChange: (Int, String) -> Unit
 ) {
     val table = uiState.table
     val order = uiState.order
@@ -193,7 +195,8 @@ fun OrderScreenContent(
                             item = item,
                             onIncrement = { onIncrement(item.id) },
                             onDecrement = { onDecrement(item.id) },
-                            onRemove = { onRemove(item.id) }
+                            onRemove = { onRemove(item.id) },
+                            onObservationChange = { onObservationChange(item.id, it) }
                         )
                     }
                 }

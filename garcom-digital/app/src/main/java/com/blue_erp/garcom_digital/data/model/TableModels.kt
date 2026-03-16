@@ -56,7 +56,7 @@ data class TableOrderItem(
     val total: Double,
     @SerializedName("productId")
     val productId: Int,
-    val observations: String? = null,
+    val observation: String? = null,
     @SerializedName("productionLocation")
     val productionLocation: String? = null,
     @SerializedName("sentToKitchenAt")
