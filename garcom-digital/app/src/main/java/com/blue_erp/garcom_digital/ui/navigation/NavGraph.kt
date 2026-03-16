@@ -1,6 +1,7 @@
 package com.blue_erp.garcom_digital.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -9,6 +10,7 @@ import androidx.navigation.navArgument
 import com.blue_erp.garcom_digital.ui.screens.login.LoginScreen
 import com.blue_erp.garcom_digital.ui.screens.order.OrderScreen
 import com.blue_erp.garcom_digital.ui.screens.tables.TablesScreen
+import com.blue_erp.garcom_digital.util.AuthEventBus
 
 sealed class Screen(val route: String) {
     data object Login  : Screen("login")
@@ -23,6 +25,15 @@ fun NavGraph(
     navController: NavHostController,
     startDestination: String = Screen.Login.route
 ) {
+
+    LaunchedEffect(Unit) {
+        AuthEventBus.unauthorized.collect {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = startDestination

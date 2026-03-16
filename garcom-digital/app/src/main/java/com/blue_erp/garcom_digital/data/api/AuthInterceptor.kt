@@ -1,5 +1,6 @@
 package com.blue_erp.garcom_digital.data.api
 
+import com.blue_erp.garcom_digital.util.AuthEventBus
 import com.blue_erp.garcom_digital.util.TokenManager
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
@@ -12,8 +13,7 @@ class AuthInterceptor @Inject constructor(
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
-        
-        // Não adiciona token em rotas de login
+
         if (originalRequest.url.encodedPath.contains("users/login")) {
             return chain.proceed(originalRequest)
         }
@@ -28,6 +28,13 @@ class AuthInterceptor @Inject constructor(
             originalRequest
         }
 
-        return chain.proceed(newRequest)
+        val response = chain.proceed(newRequest)
+
+        if (response.code == 401) {
+            runBlocking { tokenManager.clearToken() }
+            AuthEventBus.unauthorized.tryEmit(Unit)
+        }
+
+        return response
     }
 }
