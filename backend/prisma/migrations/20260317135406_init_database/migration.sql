@@ -208,6 +208,7 @@ CREATE TABLE `order_items` (
     `kitchen_ready_at` DATETIME(3) NULL,
     `order_id` INTEGER NOT NULL,
     `product_id` INTEGER NOT NULL,
+    `observation` VARCHAR(191) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
@@ -228,6 +229,7 @@ CREATE TABLE `order_productions` (
     `started_at` DATETIME(3) NULL,
     `completed_at` DATETIME(3) NULL,
     `delivered_at` DATETIME(3) NULL,
+    `observation` VARCHAR(191) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
