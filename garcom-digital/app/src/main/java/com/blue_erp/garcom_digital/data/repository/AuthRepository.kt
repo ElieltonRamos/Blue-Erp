@@ -5,6 +5,7 @@ import com.blue_erp.garcom_digital.data.model.LoginRequest
 import com.blue_erp.garcom_digital.data.model.LoginResponse
 import com.blue_erp.garcom_digital.util.Resource
 import com.blue_erp.garcom_digital.util.TokenManager
+import com.blue_erp.garcom_digital.util.parseNetworkError
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,12 +27,15 @@ class AuthRepository @Inject constructor(
             } else {
                 val errorMessage = when (response.code()) {
                     400 -> "Usuário ou senha inválidos"
+                    401 -> "Usuário ou senha inválidos"
+                    403 -> "Acesso não permitido"
+                    500, 502, 503 -> "Servidor indisponível. Tente mais tarde."
                     else -> "Erro ao fazer login"
                 }
                 Resource.Error(errorMessage)
             }
         } catch (e: Exception) {
-            Resource.Error("Erro de conexão: ${e.message}")
+            Resource.Error(parseNetworkError(e))
         }
     }
 

@@ -67,7 +67,9 @@ data class TableOrderItem(
     val deliveredAt: String? = null,
     @SerializedName("canceledAt")
     val canceledAt: String? = null,
-    val productions: List<OrderProduction> = emptyList()
+    val productions: List<OrderProduction> = emptyList(),
+    @SerializedName("createdAt")
+    val createdAt: String? = null,
 ) {
     val isReady: Boolean
         get() = productions.any { production ->
@@ -227,12 +229,14 @@ data class TableResponse(
         get() {
             if (order == null || order.items.isEmpty()) return 0
 
-            // Pega o sentToKitchenAt mais recente de todos os itens
-            val lastOrderTime = order.items
-                .mapNotNull { it.sentToKitchenAt }
+            val activeItems = order.items.filter { it.canceledAt == null }
+            if (activeItems.isEmpty()) return 0
+
+            val lastActivityTime = activeItems
+                .mapNotNull { it.sentToKitchenAt ?: it.createdAt }
                 .maxOrNull() ?: order.createdAt
 
-            return calculateMinutesSince(lastOrderTime)
+            return calculateMinutesSince(lastActivityTime)
         }
 
     /**

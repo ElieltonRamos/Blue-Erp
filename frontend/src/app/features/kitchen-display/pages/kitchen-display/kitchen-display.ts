@@ -209,7 +209,10 @@ export class KitchenDisplay implements OnInit, OnDestroy {
     this.isLoading = true;
     this.kitchenService.getKitchenOrders(this.defaultKitchen || undefined).subscribe({
       next: (orders) => {
-        if (this.orders.length > 0 && orders.length > this.orders.length) {
+        const currentIds = new Set(this.orders.map((o) => o.productionId));
+        const hasNewOrders = orders.some((o) => !currentIds.has(o.productionId));
+
+        if (hasNewOrders) {
           this.playNotificationSound();
         }
         this.orders = orders;
