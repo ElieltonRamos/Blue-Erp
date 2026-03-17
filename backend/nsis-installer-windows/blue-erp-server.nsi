@@ -2,19 +2,18 @@
 ; Compilar com: makensis blue-erp-server.nsi
 
 !include "MUI2.nsh"
+!include "x64.nsh"
 
 ; ==================== DEFINIÇÕES ====================
 !define APP_NAME "Blue ERP Server"
 !define APP_VERSION "1.0.0"
 !define APP_PUBLISHER "BlueERP"
-!define APP_EXE "blue-erp-server.exe"
 !define SERVICE_NAME "BlueERPServer"
-!define INSTALL_DIR "$PROGRAMFILES\${APP_NAME}"
 
 ; ==================== CONFIGURAÇÕES GERAIS ====================
 Name "${APP_NAME} ${APP_VERSION}"
 OutFile "BlueERPServer-Setup-${APP_VERSION}.exe"
-InstallDir "${INSTALL_DIR}"
+InstallDir "$PROGRAMFILES64\${APP_NAME}"
 InstallDirRegKey HKLM "Software\${APP_NAME}" "InstallDir"
 RequestExecutionLevel admin
 Unicode True
@@ -24,40 +23,43 @@ Unicode True
 !define MUI_ICON "blue-erp-server-icon.ico"
 !define MUI_UNICON "blue-erp-server-icon.ico"
 
-; ==================== PÁGINAS DE INSTALAÇÃO ====================
+; ==================== PÁGINAS ====================
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
 
-; ==================== PÁGINAS DE DESINSTALAÇÃO ====================
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
 
-; ==================== IDIOMA ====================
 !insertmacro MUI_LANGUAGE "PortugueseBR"
 
-; ==================== SEÇÃO PRINCIPAL ====================
-Section "Instalação Principal" SecMain
+; ==================== INIT ====================
+Function .onInit
+    ${If} ${RunningX64}
+        SetRegView 64
+        StrCpy $INSTDIR "$PROGRAMFILES64\${APP_NAME}"
+    ${Else}
+        MessageBox MB_OK|MB_ICONSTOP "Este instalador requer Windows 64-bit."
+        Abort
+    ${EndIf}
+FunctionEnd
+
+; ==================== INSTALAÇÃO ====================
+Section
     SetOutPath "$INSTDIR"
-    
-    ; Copiar arquivos
-    File "blue-erp-server.exe"
+
+    File "node.exe"
+    File "server.js"
     File "nssm.exe"
-    File "install-service.bat"
-    File "uninstall-service.bat"
     File "blue-erp-server-icon.ico"
     File ".env"
-    
-    ; Criar pasta de logs
+
     CreateDirectory "$INSTDIR\logs"
-    
-    ; Criar registro
+
     WriteRegStr HKLM "Software\${APP_NAME}" "InstallDir" "$INSTDIR"
     WriteRegStr HKLM "Software\${APP_NAME}" "Version" "${APP_VERSION}"
-    
-    ; Criar entrada no Adicionar/Remover Programas
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "DisplayName" "${APP_NAME}"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "DisplayVersion" "${APP_VERSION}"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "Publisher" "${APP_PUBLISHER}"
@@ -65,23 +67,16 @@ Section "Instalação Principal" SecMain
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "DisplayIcon" "$INSTDIR\blue-erp-server-icon.ico"
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "NoModify" 1
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}" "NoRepair" 1
-    
-    ; Criar desinstalador
+
     WriteUninstaller "$INSTDIR\uninstall.exe"
-    
-    ; Instalar serviço
+
     DetailPrint "Instalando serviço ${SERVICE_NAME}..."
-    nsExec::ExecToLog '"$INSTDIR\nssm.exe" install ${SERVICE_NAME} "$INSTDIR\${APP_EXE}"'
-    
-    ; Configurar diretório de trabalho (para o .env ser encontrado)
+    nsExec::ExecToLog '"$INSTDIR\nssm.exe" install ${SERVICE_NAME} "$INSTDIR\node.exe" "server.js"'
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppDirectory "$INSTDIR"'
-    
-    ; Configurar inicialização automática
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} Start SERVICE_AUTO_START'
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppRestartDelay 5000'
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} Description "Servidor Blue ERP - Sistema de PDV"'
-    
-    ; Configurar logs
+
     DetailPrint "Configurando logs..."
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppStdout "$INSTDIR\logs\service.log"'
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppStderr "$INSTDIR\logs\error.log"'
@@ -90,54 +85,31 @@ Section "Instalação Principal" SecMain
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppRotateFiles 1'
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppRotateOnline 1'
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppRotateBytes 5242880'
-    
+
     DetailPrint "Iniciando serviço..."
     nsExec::ExecToLog 'net start ${SERVICE_NAME}'
 SectionEnd
 
-; ==================== ATALHOS ====================
-Section "Atalhos" SecShortcuts
-    CreateDirectory "$SMPROGRAMS\${APP_NAME}"
-    CreateShortCut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\blue-erp-server-icon.ico"
-    CreateShortCut "$SMPROGRAMS\${APP_NAME}\Desinstalar.lnk" "$INSTDIR\uninstall.exe"
-    CreateShortCut "$SMPROGRAMS\${APP_NAME}\Abrir Logs.lnk" "$INSTDIR\logs"
-    CreateShortCut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\blue-erp-server-icon.ico"
-SectionEnd
-
 ; ==================== DESINSTALAÇÃO ====================
 Section "Uninstall"
-    ; Parar e remover serviço
     DetailPrint "Parando serviço ${SERVICE_NAME}..."
     nsExec::ExecToLog 'net stop ${SERVICE_NAME}'
     Sleep 3000
-    
+
     DetailPrint "Removendo serviço..."
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" remove ${SERVICE_NAME} confirm'
-    
-    ; Remover arquivos
-    Delete "$INSTDIR\blue-erp-server.exe"
+
+    Delete "$INSTDIR\node.exe"
+    Delete "$INSTDIR\server.js"
     Delete "$INSTDIR\nssm.exe"
-    Delete "$INSTDIR\install-service.bat"
-    Delete "$INSTDIR\uninstall-service.bat"
     Delete "$INSTDIR\blue-erp-server-icon.ico"
     Delete "$INSTDIR\.env"
     Delete "$INSTDIR\uninstall.exe"
-    
-    ; Remover logs
     Delete "$INSTDIR\logs\*.log"
     RMDir "$INSTDIR\logs"
-    
-    ; Remover atalhos
-    Delete "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk"
-    Delete "$SMPROGRAMS\${APP_NAME}\Desinstalar.lnk"
-    Delete "$SMPROGRAMS\${APP_NAME}\Abrir Logs.lnk"
-    RMDir "$SMPROGRAMS\${APP_NAME}"
-    Delete "$DESKTOP\${APP_NAME}.lnk"
-    
-    ; Remover diretório
     RMDir "$INSTDIR"
-    
-    ; Remover registro
+
+    SetRegView 64
     DeleteRegKey HKLM "Software\${APP_NAME}"
     DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
 SectionEnd
