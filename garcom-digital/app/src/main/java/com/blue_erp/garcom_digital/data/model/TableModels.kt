@@ -70,6 +70,8 @@ data class TableOrderItem(
     val productions: List<OrderProduction> = emptyList(),
     @SerializedName("createdAt")
     val createdAt: String? = null,
+    @SerializedName("updatedAt")
+    val updatedAt: String? = null,
 ) {
     val isReady: Boolean
         get() = productions.any { production ->
@@ -233,7 +235,7 @@ data class TableResponse(
             if (activeItems.isEmpty()) return 0
 
             val lastActivityTime = activeItems
-                .mapNotNull { it.sentToKitchenAt ?: it.createdAt }
+                .mapNotNull { it.updatedAt ?: it.sentToKitchenAt ?: it.createdAt }
                 .maxOrNull() ?: order.createdAt
 
             return calculateMinutesSince(lastActivityTime)

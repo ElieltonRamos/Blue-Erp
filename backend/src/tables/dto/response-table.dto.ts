@@ -107,6 +107,9 @@ export class TableOrderItemDto {
   @ApiProperty({ example: '2026-02-24T18:09:28.000Z' })
   createdAt: Date;
 
+  @ApiProperty({ example: '2026-02-24T18:09:28.000Z' })
+  updatedAt: Date;
+
   @ApiProperty({
     type: [OrderProductionDto],
     description: 'Produções associadas a este item',
@@ -128,6 +131,7 @@ export class TableOrderItemDto {
     this.deliveredAt = data.deliveredAt;
     this.canceledAt = data.canceledAt;
     this.createdAt = data.createdAt;
+    this.updatedAt = data.updatedAt;
 
     // ✅ MAPEAR PRODUÇÕES
     this.productions = (data.productions || []).map(
