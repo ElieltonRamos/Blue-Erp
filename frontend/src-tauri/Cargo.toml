@@ -1,6 +1,6 @@
 [package]
 name = "blue-erp"
-version = "0.8.0"
+version = "0.8.4"
 description = "Sistema de Gerenciamento de produçao"
 authors = ["Elielton"]
 license = ""

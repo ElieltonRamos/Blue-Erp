@@ -6,14 +6,20 @@ import {
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderEntity } from './entities/order.entity';
-import { OrderStatus, Prisma } from 'generated/prisma/client';
+import { OrderStatus, ProductType, Prisma } from 'generated/prisma/client';
 import { OrderFiltersDto } from './dto/order-filters.dto';
-import { SendToKitchenDto } from './dto/send-to-kitchen.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Injectable()
 export class OrdersService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private isProduced(type: ProductType): boolean {
+    return (
+      type === ProductType.MANUFACTURED ||
+      type === ProductType.SEMI_MANUFACTURED
+    );
+  }
 
   async create(createOrderDto: CreateOrderDto): Promise<OrderEntity> {
     const { items, operatorId, ...orderData } = createOrderDto;
@@ -81,7 +87,7 @@ export class OrdersService {
       });
 
       const resaleItems = order.items.filter(
-        (item) => item.product.productType === 'RESALE',
+        (item) => item.product.productType === ProductType.RESALE,
       );
 
       if (resaleItems.length > 0) {
@@ -95,13 +101,13 @@ export class OrdersService {
         });
       }
 
-      const manufacturedItems = order.items.filter(
-        (item) => item.product.productType === 'MANUFACTURED',
+      const producedItems = order.items.filter((item) =>
+        this.isProduced(item.product.productType),
       );
 
-      if (manufacturedItems.length > 0) {
+      if (producedItems.length > 0) {
         await this.prisma.client.$transaction(async (tx) => {
-          for (const item of manufacturedItems) {
+          for (const item of producedItems) {
             await tx.orderProduction.create({
               data: {
                 orderItemId: item.id,
@@ -153,7 +159,7 @@ export class OrdersService {
                   status: 'OCCUPIED',
                   orderId: order.id,
                   customer: orderData.customerName ?? null,
-                  time: null, // <- faltava
+                  time: null,
                 },
               });
             }
@@ -302,7 +308,7 @@ export class OrdersService {
     }
 
     const isInProduction = existingOrder.items.some((item) =>
-      item.productions.some((p) => p.status !== 'CANCELED'),
+      item.productions.some((p) => p.status === 'IN_PROGRESS'),
     );
 
     const { items, ...orderData } = updateOrderDto;
@@ -336,7 +342,7 @@ export class OrdersService {
       for (const item of existingItems) {
         if (incomingIds.includes(item.id)) continue;
 
-        if (item.product.productType === 'MANUFACTURED') {
+        if (this.isProduced(item.product.productType)) {
           const hasInProgressProduction = item.productions.some(
             (p) => p.status === 'IN_PROGRESS',
           );
@@ -365,7 +371,7 @@ export class OrdersService {
 
         await tx.orderItem.delete({ where: { id: item.id } });
 
-        if (item.product.productType === 'RESALE') {
+        if (item.product.productType === ProductType.RESALE) {
           await tx.product.update({
             where: { id: item.productId },
             data: { quantity: { increment: item.quantity } },
@@ -392,7 +398,7 @@ export class OrdersService {
         if (novaQuantidade > quantidadeAtual) {
           const diferenca = novaQuantidade - quantidadeAtual;
 
-          if (existing.product.productType === 'MANUFACTURED') {
+          if (this.isProduced(existing.product.productType)) {
             await tx.orderProduction.create({
               data: {
                 orderItemId: existing.id,
@@ -409,7 +415,7 @@ export class OrdersService {
         }
 
         if (novaQuantidade < quantidadeAtual) {
-          if (existing.product.productType === 'MANUFACTURED') {
+          if (this.isProduced(existing.product.productType)) {
             const pendingProductions = existing.productions.filter(
               (p) => p.status === 'PENDING',
             );
@@ -444,19 +450,20 @@ export class OrdersService {
           }
         }
 
-        const totalItem = novaQuantidade * precoAtual;
+        const precoFinal = novoPreco !== precoAtual ? novoPreco : precoAtual;
+        const totalItem = novaQuantidade * precoFinal;
         totalPedido += totalItem;
 
         await tx.orderItem.update({
           where: { id: existing.id },
           data: {
             quantity: novaQuantidade,
+            unitPrice: precoFinal,
             total: totalItem,
             observation: incoming.observation ?? existing.observation ?? null,
           },
         });
 
-        // Sincroniza observation nas produções pendentes
         if (
           incoming.observation !== undefined &&
           incoming.observation !== existing.observation
@@ -467,7 +474,7 @@ export class OrdersService {
           });
         }
 
-        if (existing.product.productType === 'RESALE') {
+        if (existing.product.productType === ProductType.RESALE) {
           const diferenca = novaQuantidade - quantidadeAtual;
           if (diferenca > 0) {
             await tx.product.update({
@@ -528,14 +535,14 @@ export class OrdersService {
             },
           });
 
-          if (product.productType === 'RESALE') {
+          if (product.productType === ProductType.RESALE) {
             await tx.product.update({
               where: { id: newItem.productId },
               data: { quantity: { decrement: newItem.quantity } },
             });
           }
 
-          if (product.productType === 'MANUFACTURED') {
+          if (this.isProduced(product.productType)) {
             await tx.orderProduction.create({
               data: {
                 orderItemId: createdItem.id,
@@ -571,69 +578,6 @@ export class OrdersService {
   async remove(id: number): Promise<void> {
     await this.findOne(id);
     await this.prisma.client.order.delete({ where: { id } });
-  }
-
-  async sendToKitchen(id: number, _sendToKitchenDto: SendToKitchenDto) {
-    const order = await this.findOne(id);
-
-    if (order.status !== OrderStatus.OPEN) {
-      throw new BadRequestException(
-        'Apenas pedidos abertos podem ser enviados para cozinha',
-      );
-    }
-
-    const orderWithProducts = await this.prisma.client.order.findUnique({
-      where: { id },
-      include: {
-        items: {
-          include: {
-            productions: true,
-            product: {
-              select: { id: true, productionLocation: true, productType: true },
-            },
-          },
-        },
-      },
-    });
-
-    if (!orderWithProducts) {
-      throw new BadRequestException('Pedido não encontrado');
-    }
-
-    const alreadyInProduction = orderWithProducts.items.some((item) =>
-      item.productions.some((p) => p.status !== 'CANCELED'),
-    );
-
-    if (alreadyInProduction) {
-      throw new BadRequestException('Pedido já possui itens em produção');
-    }
-
-    await this.prisma.client.$transaction(async (tx) => {
-      if (orderWithProducts === null) {
-        throw new BadRequestException('Lista de pedidos vazia');
-      }
-
-      for (const item of orderWithProducts.items) {
-        if (item.product.productType === 'MANUFACTURED') {
-          await tx.orderProduction.create({
-            data: {
-              orderItemId: item.id,
-              productionLocation: item.product.productionLocation || 'LOCAL_01',
-              status: 'PENDING',
-              quantityRequested: item.quantity,
-              quantityProduced: 0,
-              pendingAt: new Date(),
-              observation: item.observation ?? null,
-            },
-          });
-        }
-      }
-    });
-
-    return {
-      orderId: id,
-      message: 'Pedido enviado para cozinha com sucesso',
-    };
   }
 
   async cancel(id: number): Promise<OrderEntity> {

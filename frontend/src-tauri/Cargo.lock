@@ -175,7 +175,7 @@ dependencies = [
 
 [[package]]
 name = "blue-erp"
-version = "0.8.0"
+version = "0.8.4"
 dependencies = [
  "log",
  "serde",

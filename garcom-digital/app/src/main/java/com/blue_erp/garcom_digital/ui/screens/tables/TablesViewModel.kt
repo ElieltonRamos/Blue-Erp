@@ -10,11 +10,14 @@ import com.blue_erp.garcom_digital.data.repository.TableRepository
 import com.blue_erp.garcom_digital.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+data class TablesNotification(val tableNumber: Int, val message: String)
 
 data class TablesUiState(
     val tables: List<TableResponse> = emptyList(),
@@ -30,6 +33,7 @@ data class TablesUiState(
     val actionLoading: Boolean = false,
     val actionSuccess: String? = null,
     val isLoggedOut: Boolean = false,
+    val pendingNotification: TablesNotification? = null,
     val navigateToTable: Int? = null  // tableId para navegar
 )
 
@@ -41,9 +45,46 @@ class TablesViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(TablesUiState())
     val uiState: StateFlow<TablesUiState> = _uiState.asStateFlow()
+    private val _alertedTableIds = mutableSetOf<Int>()
 
     init {
         loadInitial()
+        startPolling()
+    }
+
+    private fun startPolling() {
+        viewModelScope.launch {
+            while (true) {
+                delay(60_000)
+                val result = tableRepository.getTables(_uiState.value.selectedLocationId)
+                if (result is Resource.Success) {
+                    val tables = result.data
+                    _uiState.value = _uiState.value.copy(tables = tables)
+                    checkAlerts(tables)
+                }
+            }
+        }
+    }
+
+    private fun checkAlerts(tables: List<TableResponse>) {
+        tables.filter { it.hasAlert && it.id !in _alertedTableIds }
+            .forEach { table ->
+                _alertedTableIds.add(table.id)
+                _uiState.value = _uiState.value.copy(
+                    pendingNotification = TablesNotification(
+                        tableNumber = table.number,
+                        message = table.alertMessage
+                    )
+                )
+            }
+
+        // limpa mesas que saíram do estado de alerta
+        val alertIds = tables.filter { it.hasAlert }.map { it.id }.toSet()
+        _alertedTableIds.removeAll { it !in alertIds }
+    }
+
+    fun clearNotification() {
+        _uiState.value = _uiState.value.copy(pendingNotification = null)
     }
 
     private fun loadInitial() {
