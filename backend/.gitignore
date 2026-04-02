@@ -8,9 +8,11 @@ backups
 sea-prep.blob
 *.exe
 !nsis-installer-windows/nssm.exe
+!nsis-installer-windows/node.exe
 output
 sefaz-temp
 diff.txt
+/nsis-installer-windows/server.js
 
 # Logs
 logs

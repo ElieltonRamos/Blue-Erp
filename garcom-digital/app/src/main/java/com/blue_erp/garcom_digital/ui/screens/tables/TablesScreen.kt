@@ -1,8 +1,14 @@
 package com.blue_erp.garcom_digital.ui.screens.tables
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
@@ -10,16 +16,16 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
-import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -29,6 +35,32 @@ import com.blue_erp.garcom_digital.data.model.TableResponse
 import com.blue_erp.garcom_digital.data.model.TableStatus
 import com.blue_erp.garcom_digital.ui.components.TableCard
 import com.blue_erp.garcom_digital.ui.theme.GarcomDigitalTheme
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+
+private fun showTableNotification(context: Context, tableNumber: Int, message: String) {
+    val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val channel = NotificationChannel(
+            "table_alerts",
+            "Alertas de Mesa",
+            NotificationManager.IMPORTANCE_HIGH
+        )
+        manager.createNotificationChannel(channel)
+    }
+
+    val notification = NotificationCompat.Builder(context, "table_alerts")
+        .setSmallIcon(android.R.drawable.ic_dialog_alert)
+        .setContentTitle("Mesa $tableNumber")
+        .setContentText(message)
+        .setPriority(NotificationCompat.PRIORITY_HIGH)
+        .setAutoCancel(true)
+        .build()
+
+    manager.notify(tableNumber, notification)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,10 +71,33 @@ fun TablesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* sem ação — notificações futuras checarão o estado atual */ }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val granted = ContextCompat.checkSelfPermission(
+                context, android.Manifest.permission.POST_NOTIFICATIONS
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            if (!granted) notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        if (!uiState.isLoading) {
-            viewModel.loadTables()
+        if (!uiState.isLoading) viewModel.loadTables()
+    }
+
+    LaunchedEffect(uiState.pendingNotification) {
+        uiState.pendingNotification?.let { notif ->
+            val canNotify = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                    ContextCompat.checkSelfPermission(
+                        context, android.Manifest.permission.POST_NOTIFICATIONS
+                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            if (canNotify) showTableNotification(context, notif.tableNumber, notif.message)
+            viewModel.clearNotification()
         }
     }
 
@@ -358,13 +413,9 @@ private val previewLocations = listOf(
 
 private val previewTables = listOf(
     TableResponse(id = 1, number = 1, capacity = 4, status = TableStatus.AVAILABLE, customer = null,    time = null,    locationId = 1, orderId = null, location = TableLocation(1, "code", "a"), order = null, createdAt = "asd", updatedAt = "kkk"),
-    TableResponse(id = 2, number = 2, capacity = 2, status = TableStatus.OCCUPIED,  customer = "João",  time = null,    locationId = 1, orderId = 10, location = TableLocation(1, "code", "a"), order = null, createdAt = "asd", updatedAt = "kkk"),
+    TableResponse(id = 2, number = 2, capacity = 2, status = TableStatus.OCCUPIED,  customer = "João",  time = null,    locationId = 1, orderId = 10,   location = TableLocation(1, "code", "a"), order = null, createdAt = "asd", updatedAt = "kkk"),
     TableResponse(id = 3, number = 3, capacity = 6, status = TableStatus.RESERVED,  customer = "Maria", time = "20:00", locationId = 1, orderId = null, location = TableLocation(1, "code", "a"), order = null, createdAt = "asd", updatedAt = "kkk"),
-    TableResponse(id = 4, number = 4, capacity = 4, status = TableStatus.AVAILABLE, customer = null,    time = null,    locationId = 1, orderId = null, location = TableLocation(
-        1,
-        "code",
-        "a"
-    ), order = null, createdAt = "asd", updatedAt = "kkk"),
+    TableResponse(id = 4, number = 4, capacity = 4, status = TableStatus.AVAILABLE, customer = null,    time = null,    locationId = 1, orderId = null, location = TableLocation(1, "code", "a"), order = null, createdAt = "asd", updatedAt = "kkk"),
 )
 
 @Preview(showBackground = true, showSystemUi = true, name = "Mesas – com locais")

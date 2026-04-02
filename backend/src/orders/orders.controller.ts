@@ -23,7 +23,6 @@ import { OrdersService } from './orders.service';
 import { OrderEntity } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { SendToKitchenDto } from './dto/send-to-kitchen.dto';
 import {
   OrderFiltersDto,
   OrderPaginatedResponseDto,
@@ -133,32 +132,6 @@ export class OrdersController {
   })
   remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.ordersService.remove(id);
-  }
-
-  @Post(':id/send-to-kitchen')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Enviar pedido para cozinha' })
-  @ApiParam({ name: 'id', type: Number, description: 'ID do pedido' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Pedido enviado para cozinha',
-    schema: {
-      properties: {
-        orderId: { type: 'number' },
-        kitchenSentAt: { type: 'string', format: 'date-time' },
-        message: { type: 'string' },
-      },
-    },
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Pedido não pode ser enviado (já enviado ou não está aberto)',
-  })
-  sendToKitchen(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() sendToKitchenDto: SendToKitchenDto,
-  ) {
-    return this.ordersService.sendToKitchen(id, sendToKitchenDto);
   }
 
   @Patch(':id/cancel')
