@@ -66,6 +66,11 @@ fun NavGraph(
                 },
                 onTableClick = { tableId, _ ->
                     navController.navigate(Screen.Order.createRoute(tableId))
+                },
+                onNavigateToKitchen = {
+                    navController.navigate(Screen.Kitchen.route) {
+                        popUpTo(Screen.Tables.route) { inclusive = false }
+                    }
                 }
             )
         }
@@ -75,6 +80,11 @@ fun NavGraph(
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
+                    }
+                },
+                onNavigateToTables = {
+                    navController.navigate(Screen.Tables.route) {
+                        popUpTo(Screen.Kitchen.route) { inclusive = false }
                     }
                 }
             )

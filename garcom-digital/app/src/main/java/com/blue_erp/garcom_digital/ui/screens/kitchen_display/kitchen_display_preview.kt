@@ -71,6 +71,7 @@ private fun KitchenDisplayPreviewMobile() {
             onSaveKitchenConfig = {},
             onRefresh = {},
             onLogout = {},
+            onNavigateToTables = {},
             getElapsedMinutes = { item ->
                 // Mock de cálculo de minutos para o preview
                 val diff = System.currentTimeMillis() - item.pendingAt.time
@@ -107,6 +108,7 @@ private fun KitchenDisplayPreviewTV1080() {
             onSaveKitchenConfig = {},
             onRefresh = {},
             onLogout = {},
+            onNavigateToTables = {},
             getElapsedMinutes = { item ->
                 ((System.currentTimeMillis() - item.pendingAt.time) / 60_000).toInt()
             },
