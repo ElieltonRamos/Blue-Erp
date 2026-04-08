@@ -2,7 +2,6 @@ package com.blue_erp.garcom_digital.util
 
 import android.content.Context
 import android.media.MediaPlayer
-import com.blue_erp.garcom_digital.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,10 +16,15 @@ class MediaPlayerHelper @Inject constructor(
     fun playNotification() {
         try {
             mediaPlayer?.release()
-            mediaPlayer = MediaPlayer.create(context, R.raw.kitchen_notification).apply {
-                setOnCompletionListener { release() }
-                start()
-            }
+            mediaPlayer = null
+
+            val resId = context.resources.getIdentifier("kitchen_notification", "raw", context.packageName)
+            if (resId == 0) return
+
+            val player = MediaPlayer.create(context, resId) ?: return
+            player.setOnCompletionListener { mp: MediaPlayer -> mp.release() }
+            player.start()
+            mediaPlayer = player
         } catch (e: Exception) {
             e.printStackTrace()
         }

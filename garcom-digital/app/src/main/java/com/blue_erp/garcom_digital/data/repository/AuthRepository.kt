@@ -18,7 +18,6 @@ class AuthRepository @Inject constructor(
     suspend fun login(username: String, password: String): Resource<LoginResponse> {
         return try {
             val response = apiService.login(LoginRequest(username, password))
-            
             if (response.isSuccessful) {
                 response.body()?.let { loginResponse ->
                     tokenManager.saveToken(loginResponse.token, username)
@@ -26,8 +25,7 @@ class AuthRepository @Inject constructor(
                 } ?: Resource.Error("Resposta vazia do servidor")
             } else {
                 val errorMessage = when (response.code()) {
-                    400 -> "Usuário ou senha inválidos"
-                    401 -> "Usuário ou senha inválidos"
+                    400, 401 -> "Usuário ou senha inválidos"
                     403 -> "Acesso não permitido"
                     500, 502, 503 -> "Servidor indisponível. Tente mais tarde."
                     else -> "Erro ao fazer login"
@@ -43,7 +41,7 @@ class AuthRepository @Inject constructor(
         tokenManager.clearToken()
     }
 
-    suspend fun isLoggedIn(): Boolean {
-        return tokenManager.isLoggedIn()
-    }
+    suspend fun isLoggedIn(): Boolean = tokenManager.isLoggedIn()
+
+    suspend fun getToken(): String? = tokenManager.getToken()
 }

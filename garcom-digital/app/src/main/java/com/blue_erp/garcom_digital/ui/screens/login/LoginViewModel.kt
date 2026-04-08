@@ -17,6 +17,7 @@ data class LoginUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val isLoggedIn: Boolean = false,
+    val token: String? = null,
     val licenseWarning: String? = null
 )
 
@@ -34,8 +35,10 @@ class LoginViewModel @Inject constructor(
 
     private fun checkLoginStatus() {
         viewModelScope.launch {
-            val isLoggedIn = authRepository.isLoggedIn()
-            _uiState.value = _uiState.value.copy(isLoggedIn = isLoggedIn)
+            val token = authRepository.getToken()
+            if (token != null) {
+                _uiState.value = _uiState.value.copy(isLoggedIn = true, token = token)
+            }
         }
     }
 
@@ -69,6 +72,7 @@ class LoginViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isLoggedIn = true,
+                        token = result.data.token,
                         licenseWarning = result.data.licenseWarning
                     )
                 }

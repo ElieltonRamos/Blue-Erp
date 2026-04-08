@@ -7,15 +7,18 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.blue_erp.garcom_digital.ui.screens.kitchen_display.KitchenDisplayScreen
 import com.blue_erp.garcom_digital.ui.screens.login.LoginScreen
 import com.blue_erp.garcom_digital.ui.screens.order.OrderScreen
 import com.blue_erp.garcom_digital.ui.screens.tables.TablesScreen
 import com.blue_erp.garcom_digital.util.AuthEventBus
+import com.blue_erp.garcom_digital.util.JwtDecoder
 
 sealed class Screen(val route: String) {
-    data object Login  : Screen("login")
-    data object Tables : Screen("tables")
-    data object Order  : Screen("order/{tableId}") {
+    data object Login   : Screen("login")
+    data object Tables  : Screen("tables")
+    data object Kitchen : Screen("kitchen")
+    data object Order   : Screen("order/{tableId}") {
         fun createRoute(tableId: Int) = "order/$tableId"
     }
 }
@@ -40,8 +43,10 @@ fun NavGraph(
     ) {
         composable(Screen.Login.route) {
             LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate(Screen.Tables.route) {
+                onLoginSuccess = { token ->
+                    val role = JwtDecoder.getRole(token)
+                    val destination = if (role == "cozinheiro") Screen.Kitchen.route else Screen.Tables.route
+                    navController.navigate(destination) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 }
@@ -57,6 +62,16 @@ fun NavGraph(
                 },
                 onTableClick = { tableId, _ ->
                     navController.navigate(Screen.Order.createRoute(tableId))
+                }
+            )
+        }
+
+        composable(Screen.Kitchen.route) {
+            KitchenDisplayScreen(
+                onBack = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }

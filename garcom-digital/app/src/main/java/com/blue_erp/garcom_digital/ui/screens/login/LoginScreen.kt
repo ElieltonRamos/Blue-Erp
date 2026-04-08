@@ -17,8 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -34,14 +34,14 @@ import com.blue_erp.garcom_digital.ui.theme.GarcomDigitalTheme
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit,
+    onLoginSuccess: (token: String) -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.isLoggedIn) {
-        if (uiState.isLoggedIn) {
-            onLoginSuccess()
+    LaunchedEffect(uiState.isLoggedIn, uiState.token) {
+        if (uiState.isLoggedIn && uiState.token != null) {
+            onLoginSuccess(uiState.token!!)
         }
     }
 
@@ -100,7 +100,6 @@ private fun LoginScreenContent(
 
             Spacer(modifier = Modifier.height(if (imeVisible) 24.dp else 48.dp))
 
-            // Campo Usuário
             OutlinedTextField(
                 value = uiState.username,
                 onValueChange = onUsernameChange,
@@ -131,7 +130,6 @@ private fun LoginScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo Senha
             OutlinedTextField(
                 value = uiState.password,
                 onValueChange = onPasswordChange,
@@ -150,11 +148,7 @@ private fun LoginScreenContent(
                     unfocusedTextColor = colors.onSurface,
                     focusedTextColor = colors.onSurface
                 ),
-                visualTransformation = if (passwordVisible) {
-                    VisualTransformation.None
-                } else {
-                    PasswordVisualTransformation()
-                },
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
@@ -169,30 +163,21 @@ private fun LoginScreenContent(
                     imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(
-                    onDone = {
-                        focusManager.clearFocus()
-                        onLogin()
-                    }
+                    onDone = { focusManager.clearFocus(); onLogin() }
                 ),
                 enabled = !uiState.isLoading
             )
 
             uiState.error?.let { error ->
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = error,
-                    color = colors.error,
-                    fontSize = 14.sp
-                )
+                Text(text = error, color = colors.error, fontSize = 14.sp)
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = onLogin,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = colors.primary,
@@ -207,11 +192,7 @@ private fun LoginScreenContent(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text(
-                        text = "Entrar",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Text(text = "Entrar", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
 

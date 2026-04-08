@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.blue_erp.garcom_digital.data.model.KitchenOrderItem
 import com.blue_erp.garcom_digital.data.model.TimeBadgeColor
+import com.blue_erp.garcom_digital.data.repository.KitchenRepository
+import com.blue_erp.garcom_digital.util.MediaPlayerHelper
 import com.blue_erp.garcom_digital.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -18,8 +20,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class KitchenDisplayViewModel @Inject constructor(
-    private val kitchenService: KitchenService,
-    private val locationsService: ProductionLocationsService,
+    private val repository: KitchenRepository,
     private val mediaPlayer: MediaPlayerHelper,
     private val prefs: SharedPreferences
 ) : ViewModel() {
@@ -47,8 +48,8 @@ class KitchenDisplayViewModel @Inject constructor(
 
     private fun loadKitchenOptions() {
         viewModelScope.launch {
-            when (val result = locationsService.getAll()) {
-                is Resource.Success<*> -> {
+            when (val result = repository.getLocations()) {
+                is Resource.Success -> {
                     _uiState.update {
                         it.copy(
                             kitchenOptions = listOf("Todas as cozinhas") + result.data.map { loc -> loc.name }
@@ -86,8 +87,8 @@ class KitchenDisplayViewModel @Inject constructor(
     fun loadOrders() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            when (val result = kitchenService.getKitchenOrders(_uiState.value.defaultKitchen)) {
-                is Resource.Success<*> -> {
+            when (val result = repository.getKitchenOrders(_uiState.value.defaultKitchen)) {
+                is Resource.Success -> {
                     val currentIds = _uiState.value.orders.map { it.productionId }.toSet()
                     val hasNew = result.data.any { it.productionId !in currentIds }
                     if (hasNew) mediaPlayer.playNotification()
@@ -126,8 +127,8 @@ class KitchenDisplayViewModel @Inject constructor(
 
     fun startPreparing(item: KitchenOrderItem) {
         viewModelScope.launch {
-            when (val result = kitchenService.startPreparingItem(item.productionId)) {
-                is Resource.Success<*> -> {
+            when (val result = repository.startPreparingItem(item.productionId)) {
+                is Resource.Success -> {
                     _uiState.update { it.copy(success = "Preparo iniciado!") }
                     loadOrders()
                 }
@@ -139,8 +140,8 @@ class KitchenDisplayViewModel @Inject constructor(
 
     fun markAsReady(item: KitchenOrderItem) {
         viewModelScope.launch {
-            when (val result = kitchenService.completeItem(item.productionId)) {
-                is Resource.Success<*> -> {
+            when (val result = repository.completeItem(item.productionId)) {
+                is Resource.Success -> {
                     _uiState.update { it.copy(success = "Item marcado como pronto!") }
                     loadOrders()
                 }
@@ -152,8 +153,8 @@ class KitchenDisplayViewModel @Inject constructor(
 
     fun completeOrder(item: KitchenOrderItem) {
         viewModelScope.launch {
-            when (val result = kitchenService.deliverItem(item.productionId)) {
-                is Resource.Success<*> -> {
+            when (val result = repository.deliverItem(item.productionId)) {
+                is Resource.Success -> {
                     _uiState.update { it.copy(success = "Item entregue!") }
                     loadOrders()
                 }
@@ -165,8 +166,8 @@ class KitchenDisplayViewModel @Inject constructor(
 
     fun cancelOrder(item: KitchenOrderItem) {
         viewModelScope.launch {
-            when (val result = kitchenService.cancelProduction(item.productionId)) {
-                is Resource.Success<*> -> {
+            when (val result = repository.cancelProduction(item.productionId)) {
+                is Resource.Success -> {
                     _uiState.update { it.copy(success = "Item cancelado!", cancelConfirmItem = null) }
                     loadOrders()
                 }
