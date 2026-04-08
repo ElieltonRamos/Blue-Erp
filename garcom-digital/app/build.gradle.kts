@@ -17,8 +17,8 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-//        buildConfigField("String", "BASE_URL", "\"https://pl-servidor-02.tail240759.ts.net/\"")
-        buildConfigField("String", "BASE_URL", "\"http://192.168.254.162:3000/\"")
+        buildConfigField("String", "BASE_URL", "\"https://pl-servidor-02.tail240759.ts.net/\"")
+//        buildConfigField("String", "BASE_URL", "\"http://192.168.254.162:3000/\"")
     }
 
     buildTypes {

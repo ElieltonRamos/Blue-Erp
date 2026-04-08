@@ -45,7 +45,11 @@ fun NavGraph(
             LoginScreen(
                 onLoginSuccess = { token ->
                     val role = JwtDecoder.getRole(token)
-                    val destination = if (role == "cozinheiro") Screen.Kitchen.route else Screen.Tables.route
+                    val destination = when (role) {
+                        "cozinheiro" -> Screen.Kitchen.route
+                        "admin"      -> Screen.Kitchen.route
+                        else         -> Screen.Tables.route
+                    }
                     navController.navigate(destination) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
@@ -68,14 +72,13 @@ fun NavGraph(
 
         composable(Screen.Kitchen.route) {
             KitchenDisplayScreen(
-                onBack = {
+                onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
                 }
             )
         }
-
         composable(
             route = Screen.Order.route,
             arguments = listOf(navArgument("tableId") { type = NavType.IntType })

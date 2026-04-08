@@ -6,8 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.blue_erp.garcom_digital.data.model.KitchenOrderItem
 import com.blue_erp.garcom_digital.data.model.TimeBadgeColor
 import com.blue_erp.garcom_digital.data.repository.KitchenRepository
+import com.blue_erp.garcom_digital.util.JwtDecoder
 import com.blue_erp.garcom_digital.util.MediaPlayerHelper
 import com.blue_erp.garcom_digital.util.Resource
+import com.blue_erp.garcom_digital.util.TokenManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,12 +19,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.blue_erp.garcom_digital.data.repository.AuthRepository
 
 @HiltViewModel
 class KitchenDisplayViewModel @Inject constructor(
     private val repository: KitchenRepository,
     private val mediaPlayer: MediaPlayerHelper,
-    private val prefs: SharedPreferences
+    private val tokenManager: TokenManager,
+    private val prefs: SharedPreferences,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     companion object {
@@ -35,10 +40,19 @@ class KitchenDisplayViewModel @Inject constructor(
     val uiState: StateFlow<KitchenDisplayUiState> = _uiState.asStateFlow()
 
     init {
+        loadRole()
         loadKitchenConfig()
         loadKitchenOptions()
         setupAutoRefresh()
         setupTimeUpdates()
+    }
+
+    private fun loadRole() {
+        viewModelScope.launch {
+            val token = tokenManager.getToken()
+            val role = token?.let { JwtDecoder.getRole(it) }
+            _uiState.update { it.copy(canConfigureKitchen = role == "admin") }
+        }
     }
 
     private fun loadKitchenConfig() {
@@ -164,25 +178,8 @@ class KitchenDisplayViewModel @Inject constructor(
         }
     }
 
-    fun cancelOrder(item: KitchenOrderItem) {
-        viewModelScope.launch {
-            when (val result = repository.cancelProduction(item.productionId)) {
-                is Resource.Success -> {
-                    _uiState.update { it.copy(success = "Item cancelado!", cancelConfirmItem = null) }
-                    loadOrders()
-                }
-                is Resource.Error -> _uiState.update {
-                    it.copy(error = result.message, cancelConfirmItem = null)
-                }
-                is Resource.Loading -> {}
-            }
-        }
-    }
-
     fun openKitchenConfigDialog() = _uiState.update { it.copy(showKitchenConfigDialog = true) }
     fun closeKitchenConfigDialog() = _uiState.update { it.copy(showKitchenConfigDialog = false) }
-    fun openCancelConfirm(item: KitchenOrderItem) = _uiState.update { it.copy(cancelConfirmItem = item) }
-    fun closeCancelConfirm() = _uiState.update { it.copy(cancelConfirmItem = null) }
 
     fun getElapsedMinutes(item: KitchenOrderItem): Int {
         val diff = System.currentTimeMillis() - item.pendingAt.time
@@ -197,4 +194,11 @@ class KitchenDisplayViewModel @Inject constructor(
 
     fun clearError() = _uiState.update { it.copy(error = null) }
     fun clearSuccess() = _uiState.update { it.copy(success = null) }
+
+    fun logout() {
+        viewModelScope.launch {
+            authRepository.logout()
+            _uiState.update { it.copy(isLoggedOut = true) }
+        }
+    }
 }

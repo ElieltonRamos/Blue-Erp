@@ -11,8 +11,9 @@ data class KitchenDisplayUiState(
     val error: String? = null,
     val success: String? = null,
     val showKitchenConfigDialog: Boolean = false,
-    val cancelConfirmItem: KitchenOrderItem? = null,
-    val timeTick: Long = 0L
+    val timeTick: Long = 0L,
+    val canConfigureKitchen: Boolean = false,
+    val isLoggedOut: Boolean = false
 ) {
     val pendingOrders get() = orders
         .filter { it.productionStatus == ProductionStatus.PENDING }
