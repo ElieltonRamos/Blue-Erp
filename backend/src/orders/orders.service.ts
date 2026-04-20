@@ -9,10 +9,15 @@ import { OrderEntity } from './entities/order.entity';
 import { OrderStatus, ProductType, Prisma } from 'generated/prisma/client';
 import { OrderFiltersDto } from './dto/order-filters.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { PrinterService } from 'src/printer/printer.service';
+import { PrintJob, PrintItem } from 'src/printer/dto/print-job.dto';
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly printerService: PrinterService,
+  ) {}
 
   private isProduced(type: ProductType): boolean {
     return (
@@ -124,6 +129,30 @@ export class OrdersService {
         });
       }
 
+      const printJobsMap = new Map<string, PrintJob>();
+
+      for (const item of producedItems) {
+        const loc = item.product.productionLocation ?? 'LOCAL_01';
+        if (!printJobsMap.has(loc)) {
+          printJobsMap.set(loc, {
+            orderId: order.id,
+            table: order.table,
+            customerName: order.customerName,
+            location: loc,
+            items: [],
+          });
+        }
+        printJobsMap.get(loc)!.items.push({
+          name: item.name,
+          quantity: Number(item.quantity),
+          observation: item.observation,
+        });
+      }
+
+      if (printJobsMap.size > 0) {
+        await this.printerService.printOrder([...printJobsMap.values()]);
+      }
+
       if (orderData.table) {
         const tableNumber = parseInt(
           orderData.table.replace('Mesa ', '').trim(),
@@ -168,8 +197,8 @@ export class OrdersService {
       }
 
       return this.mapToEntity(order);
-    } catch (error) {
-      if (error.code === 'P2003') {
+    } catch (error: unknown) {
+      if ((error as any).code === 'P2003') {
         throw new BadRequestException(
           'Erro de chave estrangeira: Verifique se os dados relacionados existem',
         );
@@ -252,7 +281,6 @@ export class OrdersService {
 
     return this.mapToEntity(order);
   }
-
   async update(
     id: number,
     updateOrderDto: UpdateOrderDto,
@@ -312,6 +340,21 @@ export class OrdersService {
     );
 
     const { items, ...orderData } = updateOrderDto;
+
+    const printJobsMap = new Map<string, PrintJob>();
+
+    const addToPrintJob = (location: string, item: PrintItem) => {
+      if (!printJobsMap.has(location)) {
+        printJobsMap.set(location, {
+          orderId: id,
+          table: existingOrder.table,
+          customerName: existingOrder.customerName,
+          location,
+          items: [],
+        });
+      }
+      printJobsMap.get(location)!.items.push(item);
+    };
 
     await this.prisma.client.$transaction(async (tx) => {
       let totalPedido = 0;
@@ -410,6 +453,12 @@ export class OrdersService {
                 pendingAt: new Date(),
                 observation: existing.observation ?? null,
               },
+            });
+
+            addToPrintJob(existing.product.productionLocation || 'LOCAL_01', {
+              name: existing.name,
+              quantity: diferenca,
+              observation: existing.observation,
             });
           }
         }
@@ -554,6 +603,12 @@ export class OrdersService {
                 observation: newItem.observation ?? null,
               },
             });
+
+            addToPrintJob(product.productionLocation || 'LOCAL_01', {
+              name: newItem.name!,
+              quantity: newItem.quantity,
+              observation: newItem.observation,
+            });
           }
         }
       }
@@ -563,6 +618,10 @@ export class OrdersService {
         data: { ...orderData, total: totalPedido },
       });
     });
+
+    if (printJobsMap.size > 0) {
+      await this.printerService.printOrder([...printJobsMap.values()]);
+    }
 
     const updated = await this.prisma.client.order.findUnique({
       where: { id },
