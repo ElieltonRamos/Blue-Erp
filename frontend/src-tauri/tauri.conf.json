@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Blue Erp",
   "mainBinaryName": "blue-erp",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "identifier": "com.bluetech.blue-erp",
   "build": {
     "frontendDist": "../dist/frontend/browser",
