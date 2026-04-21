@@ -3,7 +3,7 @@ import * as bcrypt from 'bcryptjs';
 
 export async function seedUsers(prisma: PrismaClient) {
   const hashAdmin = await bcrypt.hash('impostoeroubo', 10);
-  const hashCashier = await bcrypt.hash('caixa123', 10);
+  const hashCashier = await bcrypt.hash('123456', 10);
 
   const admin = await prisma.user.upsert({
     where: { username: 'root' },
@@ -18,13 +18,13 @@ export async function seedUsers(prisma: PrismaClient) {
   });
 
   const cashier = await prisma.user.upsert({
-    where: { username: 'caixa01' },
+    where: { username: 'Renan' },
     update: {},
     create: {
-      username: 'caixa01',
+      username: 'Renan',
       password: hashCashier,
-      role: 'caixa',
-      workplace: 'JAPONESA',
+      role: 'admin',
+      workplace: '',
       active: true,
     },
   });
