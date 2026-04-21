@@ -25,6 +25,21 @@ function formatTicket(): Buffer {
   text += BOLD_ON + `2x X-Burguer` + BOLD_OFF + LF;
   text += `   Obs: Sem cebola` + LF;
   text += BOLD_ON + `1x Fritas` + BOLD_OFF + LF;
+  text += BOLD_ON + `2x X-Burguer` + BOLD_OFF + LF;
+  text += `   Obs: Sem cebola` + LF;
+  text += BOLD_ON + `1x Fritas` + BOLD_OFF + LF;
+  text += BOLD_ON + `2x X-Burguer` + BOLD_OFF + LF;
+  text += `   Obs: Sem cebola` + LF;
+  text += BOLD_ON + `1x Fritas` + BOLD_OFF + LF;
+  text += BOLD_ON + `2x X-Burguer` + BOLD_OFF + LF;
+  text += `   Obs: Sem cebola` + LF;
+  text += BOLD_ON + `1x Fritas` + BOLD_OFF + LF;
+  text += BOLD_ON + `2x X-Burguer` + BOLD_OFF + LF;
+  text += `   Obs: Sem cebola` + LF;
+  text += BOLD_ON + `1x Fritas` + BOLD_OFF + LF;
+  text += BOLD_ON + `2x X-Burguer` + BOLD_OFF + LF;
+  text += `   Obs: Sem cebola` + LF;
+  text += BOLD_ON + `1x Fritas` + BOLD_OFF + LF;
   text += line + LF;
   text += CUT;
 

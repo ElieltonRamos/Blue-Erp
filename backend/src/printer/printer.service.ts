@@ -6,7 +6,7 @@ import { PrintJob } from './dto/print-job.dto';
 export class PrinterService {
   private readonly logger = new Logger(PrinterService.name);
   private readonly PRINTER_PORT = 9100;
-  private readonly TIMEOUT_MS = 5000;
+  private readonly TIMEOUT_MS = 20000;
 
   async printOrder(jobs: PrintJob[]): Promise<void> {
     await Promise.allSettled(jobs.map((job) => this.sendJob(job)));
@@ -25,24 +25,31 @@ export class PrinterService {
     const LEFT = `${ESC}a\x00`;
     const CUT = `${GS}V\x41\x03`;
     const LF = '\n';
+    const FONT_BIG = `${ESC}!\x30`;
+    const FONT_NORMAL = `${ESC}!\x00`;
 
-    const line = '-'.repeat(32);
+    const line = '-'.repeat(45);
     const now = new Date().toLocaleString('pt-BR', {
       timeZone: 'America/Sao_Paulo',
     });
 
     let text = '';
-    text += CENTER + BOLD_ON + `PEDIDO #${job.orderId}` + BOLD_OFF + LF;
-    text += CENTER + now + LF;
-
+    text +=
+      CENTER + FONT_BIG + BOLD_ON + `PEDIDO #${job.orderId}` + BOLD_OFF + LF;
+    text += FONT_BIG + CENTER + now + LF;
     if (job.table) text += CENTER + `Mesa: ${job.table}` + LF;
     if (job.customerName) text += CENTER + `Cliente: ${job.customerName}` + LF;
-
-    text += LEFT + line + LF;
+    text += FONT_NORMAL + LEFT + line + LF;
 
     for (const item of job.items) {
-      text += BOLD_ON + `${item.quantity}x ${item.name}` + BOLD_OFF + LF;
-      if (item.observation) text += `   Obs: ${item.observation}` + LF;
+      text +=
+        FONT_NORMAL +
+        CENTER +
+        BOLD_ON +
+        `${item.quantity}x ${item.name}` +
+        BOLD_OFF +
+        LF;
+      if (item.observation) text += CENTER + `   Obs: ${item.observation}` + LF;
     }
 
     text += line + LF;
@@ -95,7 +102,7 @@ export class PrinterService {
         done(false, `timeout após ${this.TIMEOUT_MS}ms`);
       });
 
-      client.on('finish', () => {
+      client.on('close', () => {
         done(true);
       });
 
