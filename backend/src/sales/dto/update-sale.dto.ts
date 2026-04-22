@@ -1,45 +1,42 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsString,
   IsNumber,
   IsBoolean,
   IsEnum,
   IsOptional,
+  IsArray,
+  ValidateNested,
   Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { FiscalStatus } from 'generated/prisma/client';
+import { CreateSalePaymentDto } from './create-sale.dto';
 
 export class UpdateSaleDto {
-  @ApiPropertyOptional({
-    description: 'Método de pagamento',
-    example: 'CARTAO',
-  })
-  @IsString()
+  @ApiPropertyOptional({ type: [CreateSalePaymentDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateSalePaymentDto)
   @IsOptional()
-  paymentMethod?: string;
+  payments?: CreateSalePaymentDto[];
 
-  @ApiPropertyOptional({ description: 'Desconto aplicado', example: 15.0 })
+  @ApiPropertyOptional({ example: 15.0 })
   @IsNumber()
   @IsOptional()
   @Min(0)
   discount?: number;
 
-  @ApiPropertyOptional({ description: 'Venda foi paga', example: true })
+  @ApiPropertyOptional({ example: true })
   @IsBoolean()
   @IsOptional()
   isPaid?: boolean;
 
-  @ApiPropertyOptional({
-    description: 'Status fiscal da venda',
-    enum: FiscalStatus,
-    example: FiscalStatus.EMITIDA,
-  })
+  @ApiPropertyOptional({ enum: FiscalStatus, example: FiscalStatus.EMITIDA })
   @IsEnum(FiscalStatus)
   @IsOptional()
   fiscalStatus?: FiscalStatus;
 
-  @ApiPropertyOptional({ description: 'CFOP da operação', example: '5102' })
-  @IsString()
+  @ApiPropertyOptional({ example: '5102' })
   @IsOptional()
   cfop?: string;
 }

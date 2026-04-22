@@ -5,6 +5,15 @@ export enum FiscalStatus {
   ERRO = 'ERRO',
 }
 
+export interface SalePayment {
+  id: number;
+  saleId: number;
+  method: string;
+  amount: number;
+  change: number;
+  createdAt: Date;
+}
+
 export interface SaleItem {
   id: number;
   itemNumber: number;
@@ -49,7 +58,7 @@ export interface Sale {
   operatorId: number | null;
   operator: SaleOperator | null;
   date: Date;
-  paymentMethod: string;
+  payments: SalePayment[];
   totalProductsWithoutDiscount: number;
   discount: number;
   total: number;
@@ -66,6 +75,12 @@ export interface Sale {
   items?: SaleItem[];
 }
 
+export interface SalePaymentDto {
+  method: string;
+  amount: number;
+  change?: number;
+}
+
 export interface CreateSaleItemDto {
   productId: number;
   quantity: number;
@@ -73,15 +88,15 @@ export interface CreateSaleItemDto {
 }
 
 export interface CreateSaleDto {
-  clientId?: number; // Opcional - padrão: 1 (Cliente À Vista)
-  paymentMethod: string;
+  clientId?: number;
+  payments: SalePaymentDto[];
   items: CreateSaleItemDto[];
   discount?: number;
   cfop?: string;
 }
 
 export interface UpdateSaleDto {
-  paymentMethod?: string;
+  payments?: SalePaymentDto[];
   discount?: number;
   isPaid?: boolean;
   fiscalStatus?: FiscalStatus;
@@ -108,13 +123,6 @@ export interface SalePaginatedResponse {
   page: number;
   limit: number;
   totalPages: number;
-}
-
-export interface ConvertOrderToSaleDto {
-  clientId?: number;
-  paymentMethod: string;
-  discount?: number;
-  cfop?: string;
 }
 
 export interface MarkAsReceivedDto {

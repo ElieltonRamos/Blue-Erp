@@ -12,7 +12,6 @@ import {
   BadRequestException,
   UseGuards,
 } from '@nestjs/common';
-import { Express } from 'express';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CompanyService } from './company.service.js';

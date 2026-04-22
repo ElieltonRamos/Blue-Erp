@@ -2,31 +2,17 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { FiscalStatus } from 'generated/prisma/client';
 
 export class SaleClientDto {
-  @ApiProperty({ description: 'ID do cliente', example: 1 })
+  @ApiProperty({ example: 1 })
   id: number;
-
-  @ApiProperty({ description: 'Nome do cliente', example: 'João Silva' })
+  @ApiProperty({ example: 'João Silva' })
   name: string;
-
-  @ApiPropertyOptional({
-    description: 'Telefone do cliente',
-    example: '11987654321',
-  })
+  @ApiPropertyOptional()
   phone: string | null;
-
-  @ApiPropertyOptional({
-    description: 'Endereço do cliente',
-    example: 'Rua A, 123',
-  })
+  @ApiPropertyOptional()
   address: string | null;
-
-  @ApiPropertyOptional({
-    description: 'CPF do cliente',
-    example: '12345678900',
-  })
+  @ApiPropertyOptional()
   cpf: string | null;
-
-  @ApiProperty({ description: 'Cliente ativo', example: true })
+  @ApiProperty()
   active: boolean;
 
   constructor(data: any) {
@@ -40,13 +26,11 @@ export class SaleClientDto {
 }
 
 export class SaleOperatorDto {
-  @ApiProperty({ description: 'ID do operador', example: 2 })
+  @ApiProperty({ example: 2 })
   id: number;
-
-  @ApiProperty({ description: 'Nome do operador', example: 'Maria Santos' })
+  @ApiProperty({ example: 'Maria Santos' })
   username: string;
-
-  @ApiProperty({ description: 'Função do operador', example: 'USER' })
+  @ApiProperty({ example: 'USER' })
   role: string;
 
   constructor(data: any) {
@@ -56,71 +40,63 @@ export class SaleOperatorDto {
   }
 }
 
-export class SaleItemResponseDto {
-  @ApiProperty({ description: 'ID do item', example: 1 })
+export class SalePaymentResponseDto {
+  @ApiProperty({ example: 1 })
   id: number;
-
-  @ApiProperty({ description: 'Número do item na venda', example: 1 })
-  itemNumber: number;
-
-  @ApiProperty({ description: 'ID da venda', example: 1 })
-  saleId: number;
-
-  @ApiProperty({ description: 'ID do produto', example: 5 })
-  productId: number;
-
-  @ApiPropertyOptional({
-    description: 'Nome do produto',
-    example: 'Pizza Margherita',
-  })
-  xProd: string | null;
-
-  @ApiProperty({ description: 'Quantidade', example: 2.5 })
-  quantity: number;
-
-  @ApiProperty({ description: 'Preço unitário', example: 45.0 })
-  unitPrice: number;
-
-  @ApiProperty({ description: 'Preço total', example: 112.5 })
-  totalPrice: number;
-
-  @ApiPropertyOptional({ description: 'Unidade tributária', example: 'UN' })
-  taxUnit: string | null;
-
-  @ApiPropertyOptional({ description: 'Quantidade tributária', example: 2.5 })
-  taxQuantity: number | null;
-
-  @ApiPropertyOptional({
-    description: 'Preço unitário tributário',
-    example: 45.0,
-  })
-  taxUnitPrice: number | null;
-
-  @ApiProperty({ description: 'Compõe total', example: 1 })
-  composesTotal: number;
-
-  @ApiPropertyOptional({ description: 'CFOP do item', example: '5102' })
-  cfop: string | null;
-
-  @ApiPropertyOptional({
-    description: 'Valor total dos impostos',
-    example: 15.5,
-  })
-  totalTaxValue: number | null;
-
-  @ApiPropertyOptional({
-    description: 'Valor do imposto de importação',
-    example: 0,
-  })
-  importTaxValue: number | null;
-
-  @ApiPropertyOptional({ description: 'Valor do IOF', example: 0 })
-  iofValue: number | null;
-
-  @ApiProperty({ description: 'Data de criação' })
+  @ApiProperty({ example: 'PIX' })
+  method: string;
+  @ApiProperty({ example: 60.0 })
+  amount: number;
+  @ApiProperty({ example: 0 })
+  change: number;
+  @ApiProperty()
   createdAt: Date;
 
-  @ApiProperty({ description: 'Data de atualização' })
+  constructor(data: any) {
+    this.id = data.id;
+    this.method = data.method;
+    this.amount = Number(data.amount);
+    this.change = Number(data.change);
+    this.createdAt = data.createdAt;
+  }
+}
+
+export class SaleItemResponseDto {
+  @ApiProperty({ example: 1 })
+  id: number;
+  @ApiProperty({ example: 1 })
+  itemNumber: number;
+  @ApiProperty({ example: 1 })
+  saleId: number;
+  @ApiProperty({ example: 5 })
+  productId: number;
+  @ApiPropertyOptional({ example: 'Pizza Margherita' })
+  xProd: string | null;
+  @ApiProperty({ example: 2.5 })
+  quantity: number;
+  @ApiProperty({ example: 45.0 })
+  unitPrice: number;
+  @ApiProperty({ example: 112.5 })
+  totalPrice: number;
+  @ApiPropertyOptional({ example: 'UN' })
+  taxUnit: string | null;
+  @ApiPropertyOptional({ example: 2.5 })
+  taxQuantity: number | null;
+  @ApiPropertyOptional({ example: 45.0 })
+  taxUnitPrice: number | null;
+  @ApiProperty({ example: 1 })
+  composesTotal: number;
+  @ApiPropertyOptional({ example: '5102' })
+  cfop: string | null;
+  @ApiPropertyOptional({ example: 15.5 })
+  totalTaxValue: number | null;
+  @ApiPropertyOptional({ example: 0 })
+  importTaxValue: number | null;
+  @ApiPropertyOptional({ example: 0 })
+  iofValue: number | null;
+  @ApiProperty()
+  createdAt: Date;
+  @ApiProperty()
   updatedAt: Date;
 
   constructor(data: any) {
@@ -148,89 +124,49 @@ export class SaleItemResponseDto {
 }
 
 export class SaleResponseDto {
-  @ApiProperty({ description: 'ID da venda', example: 1 })
+  @ApiProperty({ example: 1 })
   id: number;
-
-  @ApiProperty({ description: 'ID do cliente', example: 1 })
+  @ApiProperty({ example: 1 })
   clientId: number;
-
-  @ApiProperty({ description: 'Informações do cliente', type: SaleClientDto })
+  @ApiProperty({ type: SaleClientDto })
   client: SaleClientDto;
-
-  @ApiProperty({ description: 'Nome do operador', example: 'João Silva' })
+  @ApiProperty({ example: 'João Silva' })
   userOperator: string;
-
-  @ApiPropertyOptional({ description: 'ID do operador', example: 2 })
+  @ApiPropertyOptional({ example: 2 })
   operatorId: number | null;
-
-  @ApiPropertyOptional({
-    description: 'Informações do operador',
-    type: SaleOperatorDto,
-  })
+  @ApiPropertyOptional({ type: SaleOperatorDto })
   operator: SaleOperatorDto | null;
-
-  @ApiProperty({ description: 'Data da venda' })
+  @ApiProperty()
   date: Date;
-
-  @ApiProperty({ description: 'Método de pagamento', example: 'DINHEIRO' })
-  paymentMethod: string;
-
-  @ApiProperty({
-    description: 'Total dos produtos sem desconto',
-    example: 150.0,
-  })
+  @ApiProperty({ type: [SalePaymentResponseDto] })
+  payments: SalePaymentResponseDto[];
+  @ApiProperty({ example: 150.0 })
   totalProductsWithoutDiscount: number;
-
-  @ApiProperty({ description: 'Desconto aplicado', example: 10.0 })
+  @ApiProperty({ example: 10.0 })
   discount: number;
-
-  @ApiProperty({ description: 'Total da venda', example: 140.0 })
+  @ApiProperty({ example: 140.0 })
   total: number;
-
-  @ApiProperty({ description: 'Lucro da venda', example: 80.0 })
+  @ApiProperty({ example: 80.0 })
   profitSale: number;
-
-  @ApiProperty({ description: 'Venda foi paga', example: true })
+  @ApiProperty({ example: true })
   isPaid: boolean;
-
-  @ApiProperty({ description: 'CFOP da operação', example: '5102' })
+  @ApiProperty({ example: '5102' })
   cfop: string;
-
-  @ApiProperty({
-    description: 'Status fiscal',
-    enum: FiscalStatus,
-    example: FiscalStatus.PENDENTE,
-  })
+  @ApiProperty({ enum: FiscalStatus, example: FiscalStatus.PENDENTE })
   fiscalStatus: FiscalStatus;
-
-  @ApiPropertyOptional({
-    description: 'Chave da nota fiscal',
-    example: '35210512345678901234567890123456789012345678',
-  })
+  @ApiPropertyOptional()
   fiscalKey: string | null;
-
-  @ApiPropertyOptional({
-    description: 'Protocolo de autorização',
-    example: '135210000000001',
-  })
+  @ApiPropertyOptional()
   fiscalProtocol: string | null;
-
-  @ApiPropertyOptional({ description: 'Data de emissão da nota' })
+  @ApiPropertyOptional()
   fiscalEmitDate: Date | null;
-
-  @ApiPropertyOptional({ description: 'XML da nota fiscal' })
+  @ApiPropertyOptional()
   fiscalXml: string | null;
-
-  @ApiProperty({ description: 'Data de criação' })
+  @ApiProperty()
   createdAt: Date;
-
-  @ApiProperty({ description: 'Data de atualização' })
+  @ApiProperty()
   updatedAt: Date;
-
-  @ApiPropertyOptional({
-    description: 'Itens da venda',
-    type: [SaleItemResponseDto],
-  })
+  @ApiPropertyOptional({ type: [SaleItemResponseDto] })
   items?: SaleItemResponseDto[];
 
   constructor(data: any) {
@@ -241,7 +177,8 @@ export class SaleResponseDto {
     this.operatorId = data.operatorId;
     this.operator = data.operator ? new SaleOperatorDto(data.operator) : null;
     this.date = data.date;
-    this.paymentMethod = data.paymentMethod;
+    this.payments =
+      data.payments?.map((p: any) => new SalePaymentResponseDto(p)) ?? [];
     this.totalProductsWithoutDiscount = Number(
       data.totalProductsWithoutDiscount,
     );
@@ -262,19 +199,15 @@ export class SaleResponseDto {
 }
 
 export class PaginatedSalesResponseDto {
-  @ApiProperty({ description: 'Lista de vendas', type: [SaleResponseDto] })
+  @ApiProperty({ type: [SaleResponseDto] })
   data: SaleResponseDto[];
-
-  @ApiProperty({ description: 'Total de registros', example: 100 })
+  @ApiProperty({ example: 100 })
   total: number;
-
-  @ApiProperty({ description: 'Página atual', example: 1 })
+  @ApiProperty({ example: 1 })
   page: number;
-
-  @ApiProperty({ description: 'Itens por página', example: 10 })
+  @ApiProperty({ example: 10 })
   limit: number;
-
-  @ApiProperty({ description: 'Total de páginas', example: 10 })
+  @ApiProperty({ example: 10 })
   totalPages: number;
 
   constructor(data: any) {

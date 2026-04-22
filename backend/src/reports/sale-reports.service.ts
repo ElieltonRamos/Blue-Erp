@@ -13,20 +13,11 @@ import { SalesReportFilterDto } from './dto/create-report-sale.dto';
 
 type SaleWithIncludes = Prisma.SaleGetPayload<{
   include: {
-    operator: {
-      select: {
-        username: true;
-      };
-    };
+    operator: { select: { username: true } };
+    payments: true;
     items: {
       include: {
-        product: {
-          select: {
-            id: true;
-            name: true;
-            price: true;
-          };
-        };
+        product: { select: { id: true; name: true; price: true } };
       };
     };
   };
@@ -58,26 +49,15 @@ export class SalesReportService {
         },
       },
       include: {
-        operator: {
-          select: {
-            username: true,
-          },
-        },
+        operator: { select: { username: true } },
+        payments: true,
         items: {
           include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                price: true,
-              },
-            },
+            product: { select: { id: true, name: true, price: true } },
           },
         },
       },
-      orderBy: {
-        date: 'desc',
-      },
+      orderBy: { date: 'desc' },
     });
   }
 
@@ -118,7 +98,6 @@ export class SalesReportService {
   ) {
     const { salesByPaymentMethod, salesByOperator } = aggregators;
     const operatorName = sale.operator?.username || 'Desconhecido';
-    const method = normalizePaymentMethod(sale.paymentMethod);
     const total = Number(sale.total);
     const discount = Number(sale.discount ?? 0);
     const profitSale = Number(sale.profitSale ?? 0);
@@ -133,12 +112,17 @@ export class SalesReportService {
       total,
       salesByOperator,
     );
-    processPaymentAggregation(
-      method,
-      total,
-      salesByPaymentMethod,
-      opData.paymentBreakdown,
-    );
+
+    for (const payment of sale.payments) {
+      const method = normalizePaymentMethod(payment.method);
+      const netAmount = Number(payment.amount) - Number(payment.change);
+      processPaymentAggregation(
+        method,
+        netAmount,
+        salesByPaymentMethod,
+        opData.paymentBreakdown,
+      );
+    }
   }
 
   private buildResponse(

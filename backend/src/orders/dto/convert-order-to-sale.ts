@@ -1,50 +1,39 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
-  IsNotEmpty,
   IsOptional,
   IsInt,
   IsNumber,
+  IsArray,
   Min,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { CreateSalePaymentDto } from '../../sales/dto/create-sale.dto';
 
 export class ConvertOrderToSaleDto {
-  @ApiProperty({
-    description: 'Método de pagamento',
-    example: 'DINHEIRO',
-  })
-  @IsString({ message: 'Método de pagamento deve ser uma string' })
-  @IsNotEmpty({ message: 'Método de pagamento é obrigatório' })
-  paymentMethod: string;
+  @ApiProperty({ type: [CreateSalePaymentDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateSalePaymentDto)
+  payments!: CreateSalePaymentDto[];
 
-  @ApiProperty({
-    description: 'ID do cliente (padrão: 1 - Cliente à vista)',
-    example: 1,
-    required: false,
-  })
+  @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @Type(() => Number)
-  @IsInt({ message: 'ID do cliente deve ser um número inteiro' })
-  @Min(1, { message: 'ID do cliente deve ser maior que 0' })
+  @IsInt()
+  @Min(1)
   clientId?: number;
 
-  @ApiProperty({
-    description: 'Desconto aplicado na venda',
-    example: 0,
-    required: false,
-  })
+  @ApiPropertyOptional({ example: 0 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber({}, { message: 'Desconto deve ser um número' })
-  @Min(0, { message: 'Desconto não pode ser negativo' })
+  @IsNumber()
+  @Min(0)
   discount?: number;
 
-  @ApiProperty({
-    description: 'CFOP da operação',
-    example: '5102',
-  })
-  @IsString({ message: 'CFOP deve ser uma string' })
-  @IsNotEmpty({ message: 'CFOP é obrigatório' })
-  cfop: string;
+  @ApiPropertyOptional({ example: '5102' })
+  @IsString()
+  @IsOptional()
+  cfop?: string;
 }

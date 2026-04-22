@@ -12,60 +12,68 @@ import {
 import { Type } from 'class-transformer';
 
 export class CreateSaleItemDto {
-  @ApiProperty({ description: 'ID do produto', example: 1 })
+  @ApiProperty({ example: 1 })
   @IsInt()
   @IsNotEmpty()
-  productId: number;
+  productId!: number;
 
-  @ApiProperty({ description: 'Quantidade', example: 2.5 })
+  @ApiProperty({ example: 2.5 })
   @IsNumber()
   @IsNotEmpty()
   @Min(0.001)
-  quantity: number;
+  quantity!: number;
 
-  @ApiProperty({ description: 'Preço unitário', example: 45.0 })
+  @ApiProperty({ example: 45.0 })
   @IsNumber()
   @IsNotEmpty()
   @Min(0)
-  unitPrice: number;
+  unitPrice!: number;
+}
+
+export class CreateSalePaymentDto {
+  @ApiProperty({ example: 'PIX' })
+  @IsString()
+  @IsNotEmpty()
+  method!: string;
+
+  @ApiProperty({ example: 60.0 })
+  @IsNumber()
+  @IsNotEmpty()
+  @Min(0.01)
+  amount!: number;
+
+  @ApiPropertyOptional({ example: 10.0, default: 0 })
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  change?: number;
 }
 
 export class CreateSaleDto {
-  @ApiPropertyOptional({
-    description: 'ID do cliente (padrão: 1 - Cliente À Vista)',
-    example: 1,
-    default: 1,
-  })
+  @ApiPropertyOptional({ example: 1, default: 1 })
   @IsNumber()
   @IsOptional()
   clientId?: number;
 
-  @ApiProperty({ description: 'Método de pagamento', example: 'DINHEIRO' })
-  @IsString()
-  @IsNotEmpty()
-  paymentMethod: string;
+  @ApiProperty({ type: [CreateSalePaymentDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateSalePaymentDto)
+  payments!: CreateSalePaymentDto[];
 
-  @ApiProperty({ description: 'Itens da venda', type: [CreateSaleItemDto] })
+  @ApiProperty({ type: [CreateSaleItemDto] })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateSaleItemDto)
-  items: CreateSaleItemDto[];
+  items!: CreateSaleItemDto[];
 
-  @ApiPropertyOptional({
-    description: 'Desconto aplicado',
-    example: 10.5,
-    default: 0,
-  })
+  @ApiPropertyOptional({ example: 10.5, default: 0 })
   @IsNumber()
   @IsOptional()
   @Min(0)
   discount?: number;
 
-  @ApiPropertyOptional({
-    description: 'CFOP da operação',
-    example: '5102',
-    default: '5102',
-  })
+  @ApiPropertyOptional({ example: '5102', default: '5102' })
   @IsString()
   @IsOptional()
   cfop?: string;

@@ -38,7 +38,7 @@
         <strong>Vendedor:</strong>
         {{ saleData.operator?.username }}
       </p>
-      @if (saleData.paymentMethod === 'CREDITO_LOJA') {
+      @if (hasCreditoLoja) {
         <p>
           <strong>Status do Pagamento:</strong>
           {{ saleData.isPaid ? 'Recebido' : 'Pendente' }}
@@ -81,7 +81,17 @@
         }
       </p>
       <p><strong>Total: R$</strong> {{ formatNumber(saleData.total) }}</p>
-      <p><strong>Forma de Pagamento:</strong> {{ saleData.paymentMethod }}</p>
+      <div class="mt-2">
+        <strong>Pagamento:</strong>
+        @for (p of saleData.payments; track p.id) {
+          <p>
+            {{ p.method }}: R$ {{ formatNumber(p.amount) }}
+            @if (p.change > 0) {
+              <span> | Troco: R$ {{ formatNumber(p.change) }}</span>
+            }
+          </p>
+        }
+      </div>
 
       <div
         class="mt-8 pt-2 border-t border-gray-200 text-center text-gray-400"

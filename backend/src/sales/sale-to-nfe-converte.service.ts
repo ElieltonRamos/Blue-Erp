@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Injectable, Logger } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/client';
@@ -40,6 +41,11 @@ export class SaleToNfeConverterService {
     const discount = this.toNumber(sale.discount, 2);
 
     const infoText = `${taxText} | Venda ID: ${saleId} | Operador: ${operatorName} | Desc: R$ ${discount.toFixed(2)}`;
+
+    const primaryPayment = sale.payments.reduce((prev, curr) =>
+      Number(curr.amount) > Number(prev.amount) ? curr : prev,
+    );
+    const paymentMethod = primaryPayment?.method ?? 'DINHEIRO';
 
     return {
       ide: {
@@ -103,11 +109,10 @@ export class SaleToNfeConverterService {
       produtos: items,
       pag: {
         indPag: sale.isPaid ? '0' : '1',
-        tPag: PAYMENT_MAP[sale.paymentMethod] || '99',
-        xPag:
-          sale.paymentMethod === 'CREDITO_LOJA' ? 'Crédito Loja' : undefined,
+        tPag: PAYMENT_MAP[paymentMethod] || '99',
+        xPag: paymentMethod === 'CREDITO_LOJA' ? 'Crédito Loja' : undefined,
         vPag: this.toNumber(sale.total, 2),
-        ...(CARD_PAYMENT_METHODS.includes(sale.paymentMethod) && {
+        ...(CARD_PAYMENT_METHODS.includes(paymentMethod) && {
           card: {
             tpIntegra: '2',
             tBand: '99',
@@ -131,16 +136,13 @@ export class SaleToNfeConverterService {
         },
         operator: { select: { id: true, username: true } },
         client: true,
+        payments: true,
       },
     });
 
-    if (!sale) {
-      throw new FiscalException('Sale not found', 404);
-    }
-
-    if (!sale.items || sale.items.length === 0) {
+    if (!sale) throw new FiscalException('Sale not found', 404);
+    if (!sale.items?.length)
       throw new FiscalException('Sale has no items', 400);
-    }
 
     return sale;
   }

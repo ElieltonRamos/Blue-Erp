@@ -228,78 +228,82 @@
             <p class="text-green-400 font-bold text-2xl">R$ {{ total.toFixed(2) }}</p>
           </div>
 
+          <!-- Pagamentos adicionados -->
+          <div *ngIf="payments.length > 0" class="space-y-1">
+            <div
+              *ngFor="let p of payments; let i = index"
+              class="flex items-center justify-between bg-slate-800/60 rounded px-2 py-1 text-xs"
+            >
+              <span class="text-white"
+                >{{ getMethodIcon(p.method) }} {{ getMethodLabel(p.method) }}</span
+              >
+              <span class="text-green-400">R$ {{ p.amount.toFixed(2) }}</span>
+              <span *ngIf="p.change > 0" class="text-yellow-400"
+                >Troco: R$ {{ p.change.toFixed(2) }}</span
+              >
+              <button (click)="removePayment(i)" class="text-red-400 hover:text-red-300 ml-1">
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <!-- Restante -->
+          <div class="bg-slate-800/50 rounded-lg p-2 border border-slate-600/30">
+            <p class="text-slate-400 text-[10px]">Restante:</p>
+            <p
+              [class.text-red-400]="remaining > 0"
+              [class.text-green-400]="remaining === 0"
+              class="font-bold text-base"
+            >
+              R$ {{ remaining.toFixed(2) }}
+            </p>
+          </div>
+
+          <!-- Seleção de método -->
           <div class="grid grid-cols-5 gap-1.5">
             <button
-              (click)="selectPaymentMethod('DINHEIRO')"
-              [class.bg-cyan-600]="selectedPaymentMethod === 'DINHEIRO'"
-              [class.bg-slate-700]="selectedPaymentMethod !== 'DINHEIRO'"
+              *ngFor="let m of paymentMethods"
+              (click)="selectNewMethod(m.id)"
+              [class.bg-cyan-600]="newPaymentMethod === m.id"
+              [class.bg-slate-700]="newPaymentMethod !== m.id"
+              [disabled]="m.id === 'CREDITO_LOJA' && !selectedClient"
+              [class.opacity-40]="m.id === 'CREDITO_LOJA' && !selectedClient"
               class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
-              title="Dinheiro"
+              [title]="m.name"
             >
-              <span class="text-lg">💵</span>
-            </button>
-            <button
-              (click)="selectPaymentMethod('CARTAO_CREDITO')"
-              [class.bg-cyan-600]="selectedPaymentMethod === 'CARTAO_CREDITO'"
-              [class.bg-slate-700]="selectedPaymentMethod !== 'CARTAO_CREDITO'"
-              class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
-              title="Crédito"
-            >
-              <span class="text-lg">💳</span>
-            </button>
-            <button
-              (click)="selectPaymentMethod('CARTAO_DEBITO')"
-              [class.bg-cyan-600]="selectedPaymentMethod === 'CARTAO_DEBITO'"
-              [class.bg-slate-700]="selectedPaymentMethod !== 'CARTAO_DEBITO'"
-              class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
-              title="Débito"
-            >
-              <span class="text-lg">💳</span>
-            </button>
-            <button
-              (click)="selectPaymentMethod('PIX')"
-              [class.bg-cyan-600]="selectedPaymentMethod === 'PIX'"
-              [class.bg-slate-700]="selectedPaymentMethod !== 'PIX'"
-              class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
-              title="PIX"
-            >
-              <span class="text-lg">📱</span>
-            </button>
-            <button
-              (click)="selectPaymentMethod('CREDITO_LOJA')"
-              [disabled]="!selectedClient"
-              [class.opacity-40]="!selectedClient"
-              [class.bg-cyan-600]="selectedPaymentMethod === 'CREDITO_LOJA'"
-              [class.bg-slate-700]="selectedPaymentMethod !== 'CREDITO_LOJA'"
-              class="flex flex-col items-center justify-center p-1.5 rounded border border-slate-600 hover:bg-slate-600 transition-colors"
-              title="A Prazo"
-            >
-              <span class="text-lg">📅</span>
+              <span class="text-lg">{{ m.icon }}</span>
             </button>
           </div>
 
-          <div *ngIf="selectedPaymentMethod === 'DINHEIRO'" class="grid grid-cols-2 gap-2">
+          <!-- Input valor + troco -->
+          <div *ngIf="newPaymentMethod" class="grid grid-cols-2 gap-2">
             <div>
-              <label class="text-white text-[10px] block mb-1">Valor Recebido:</label>
+              <label class="text-white text-[10px] block mb-1">Valor:</label>
               <input
                 type="number"
-                [(ngModel)]="amountReceived"
+                [(ngModel)]="newPaymentAmount"
                 step="0.01"
                 min="0"
                 class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1.5 text-white text-center font-bold text-base focus:outline-none focus:border-cyan-500"
               />
             </div>
-            <div class="bg-slate-800/50 rounded-lg p-2 border border-slate-600/30">
+            <div
+              *ngIf="newPaymentMethod === 'DINHEIRO'"
+              class="bg-slate-800/50 rounded-lg p-2 border border-slate-600/30"
+            >
               <p class="text-slate-400 text-[10px] mb-0.5">Troco:</p>
-              <p
-                [class.text-green-400]="change >= 0"
-                [class.text-red-400]="change < 0"
-                class="font-bold text-base"
-              >
-                R$ {{ change >= 0 ? change.toFixed(2) : '0.00' }}
-              </p>
+              <p class="text-yellow-400 font-bold text-base">R$ {{ previewChange.toFixed(2) }}</p>
             </div>
           </div>
+
+          <button
+            *ngIf="newPaymentMethod"
+            (click)="addPayment()"
+            [disabled]="newPaymentAmount <= 0"
+            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg py-1.5 text-xs font-medium disabled:opacity-50"
+          >
+            Adicionar Pagamento
+          </button>
         </div>
       </div>
 
