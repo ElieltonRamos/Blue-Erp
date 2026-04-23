@@ -26,6 +26,8 @@ export class OrderEntity {
   finishedAt: Date | null;
   tableOccupiedUntil: Date | null;
   operatorId: number | null;
+  operator: string | null;
   closedByOperatorId: number | null;
   items: OrderItemEntity[];
+  serviceCharge: number;
 }

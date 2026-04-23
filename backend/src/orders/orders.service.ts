@@ -26,8 +26,11 @@ export class OrdersService {
     );
   }
 
-  async create(createOrderDto: CreateOrderDto): Promise<OrderEntity> {
-    const { items, operatorId, ...orderData } = createOrderDto;
+  async create(
+    createOrderDto: CreateOrderDto,
+    operatorId: number,
+  ): Promise<OrderEntity> {
+    const { items, ...orderData } = createOrderDto;
 
     if (operatorId) {
       const operator = await this.prisma.client.user.findUnique({
@@ -383,24 +386,31 @@ export class OrdersService {
       if (loc) addToPrintJob(loc, item);
     };
 
+    const closingData = isClosing
+      ? {
+          finishedAt: new Date(),
+          ...(!existingOrder.closedByOperatorId && {
+            closedByOperatorId: operatorId,
+          }),
+        }
+      : {};
+
+    const serviceChargeData =
+      serviceCharge !== undefined ? { serviceCharge } : {};
+
     await this.prisma.client.$transaction(async (tx) => {
       let totalPedido = 0;
-
-      const closingData = isClosing
-        ? {
-            finishedAt: new Date(),
-            serviceCharge: serviceCharge ?? 0,
-            ...(!existingOrder.closedByOperatorId && {
-              closedByOperatorId: operatorId,
-            }),
-          }
-        : {};
 
       if (!items) {
         totalPedido = Number(existingOrder.total);
         await tx.order.update({
           where: { id },
-          data: { ...orderData, total: totalPedido, ...closingData },
+          data: {
+            ...orderData,
+            total: totalPedido,
+            ...closingData,
+            ...serviceChargeData,
+          },
         });
         return;
       }
@@ -663,7 +673,12 @@ export class OrdersService {
 
       await tx.order.update({
         where: { id },
-        data: { ...orderData, total: totalPedido, ...closingData },
+        data: {
+          ...orderData,
+          total: totalPedido,
+          ...closingData,
+          ...serviceChargeData,
+        },
       });
     });
 
@@ -758,7 +773,9 @@ export class OrdersService {
       finishedAt: order.finishedAt,
       tableOccupiedUntil: order.tableOccupiedUntil,
       operatorId: order.operatorId,
+      operator: order.operator ?? null,
       closedByOperatorId: order.closedByOperatorId,
+      serviceCharge: Number(order.serviceCharge ?? 0),
       items:
         order.items?.map((item: any) => ({
           id: item.id,

@@ -70,6 +70,7 @@ export class ListOrders implements OnInit {
       })
       .subscribe({
         next: (response) => {
+          console.log(response.data, 'dados da comanda')
           this.orders = response.data;
           this.totalOrders = response.total;
           this.totalPages = response.totalPages;

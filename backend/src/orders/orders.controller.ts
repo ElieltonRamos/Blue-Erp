@@ -49,8 +49,11 @@ export class OrdersController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Dados inválidos',
   })
-  create(@Body() createOrderDto: CreateOrderDto): Promise<OrderEntity> {
-    return this.ordersService.create(createOrderDto);
+  create(
+    @Body() createOrderDto: CreateOrderDto,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<OrderEntity> {
+    return this.ordersService.create(createOrderDto, user.userId);
   }
 
   @Get()

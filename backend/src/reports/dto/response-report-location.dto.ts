@@ -46,6 +46,12 @@ export class LocationReportOperatorDto {
     description: 'Valor total das comandas abertas',
   })
   totalValue: number;
+
+  @ApiProperty({
+    example: 184.05,
+    description: 'Total de gorjeta (service charge)',
+  })
+  totalServiceCharge: number;
 }
 
 export class LocationReportLocationDto {

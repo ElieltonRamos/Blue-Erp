@@ -44,6 +44,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
   searchName = '';
   isSearchingProduct = false;
   searchResults: Product[] = [];
+  serviceChargeEnabled = false;
 
   private readonly overlayConfig = new OverlayConfig({
     hasBackdrop: true,
@@ -69,6 +70,10 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['order'] && this.order) {
+      this.serviceChargeEnabled = (this.order.serviceCharge ?? 0) > 0;
+    }
+
     if (changes['isOpen']) {
       if (this.isOpen && this.portal) {
         this.openModal();
@@ -82,7 +87,14 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
     this.closeModalInternal();
   }
 
+  toggleServiceCharge(): void {
+    this.serviceChargeEnabled = !this.serviceChargeEnabled;
+    this.calculateOrderTotal();
+    this.cdr.detectChanges();
+  }
+
   private openModal(): void {
+    this.serviceChargeEnabled = (this.order?.serviceCharge ?? 0) > 0;
     if (!this.overlayRef) {
       this.overlayRef = this.overlay.create(this.overlayConfig);
 
@@ -240,6 +252,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
   calculateOrderTotal(): void {
     if (!this.order) return;
     this.order.total = this.order.items.reduce((sum, item) => sum + item.total, 0);
+    this.order.serviceCharge = this.serviceChargeEnabled ? this.order.total * 0.1 : 0;
   }
 
   saveOrder(): void {
@@ -286,6 +299,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
         observation: item.observation,
       })),
       total: this.order.total,
+      serviceCharge: this.serviceChargeEnabled ? this.order.total * 0.1 : 0,
     };
 
     this.orderService.updateOrder(this.order.id, updateDto).subscribe({

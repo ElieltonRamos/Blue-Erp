@@ -32,6 +32,7 @@ export class CreateOrder implements OnInit {
   orderItems: OrderItem[] = [];
   productionLocations: { id: number; code: string; name: string }[] = [];
   availableTables: Table[] = [];
+  includeServiceCharge: boolean = true;
 
   formCreateOrder = new FormGroup({
     type: new FormControl<'DINE_IN' | 'DELIVERY'>('DINE_IN', [Validators.required]),
@@ -43,6 +44,19 @@ export class CreateOrder implements OnInit {
 
   get calculatedTotal(): number {
     return this.orderItems.reduce((sum, item) => sum + item.total, 0);
+  }
+
+  get serviceChargeValue(): number {
+    return this.includeServiceCharge ? this.calculatedTotal * 0.1 : 0;
+  }
+
+  get subtotal(): number {
+    return this.orderItems.reduce((sum, item) => sum + item.total, 0);
+  }
+
+  toggleServiceCharge(value: boolean) {
+    this.includeServiceCharge = value;
+    this.cdr.detectChanges(); // Garante a atualização na tela
   }
 
   get hasInvalidObservations(): boolean {
@@ -306,6 +320,8 @@ export class CreateOrder implements OnInit {
     }
 
     const formValue = this.formCreateOrder.value;
+    const subtotal = this.orderItems.reduce((sum, item) => sum + item.total, 0);
+    const serviceCharge = this.includeServiceCharge ? subtotal * 0.1 : 0;
 
     const newOrder: CreateOrderDto = {
       type: formValue.type!,
@@ -321,6 +337,7 @@ export class CreateOrder implements OnInit {
         observation: item.observation,
       })),
       total: this.calculatedTotal,
+      serviceCharge: serviceCharge,
     };
 
     if (formValue.type === 'DINE_IN') {

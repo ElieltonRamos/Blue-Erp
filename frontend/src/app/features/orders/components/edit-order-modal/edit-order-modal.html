@@ -289,6 +289,35 @@
             <span class="text-green-400 text-2xl font-bold">R$ {{ order.total.toFixed(2) }}</span>
           </div>
         </div>
+
+        <!-- Service Charge -->
+        <div *ngIf="order" class="bg-slate-700/30 border border-yellow-500/30 rounded-lg p-4 mt-3">
+          <div class="flex justify-between items-center">
+            <div>
+              <span class="text-slate-300 text-sm font-medium">Gorjeta (10%):</span>
+              <span class="text-yellow-400 font-bold ml-2">
+                R$ {{ (order.total * 0.1).toFixed(2) }}
+              </span>
+            </div>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <span class="text-slate-300 text-sm">{{
+                serviceChargeEnabled ? 'Ativa' : 'Inativa'
+              }}</span>
+              <div
+                (click)="toggleServiceCharge()"
+                class="w-10 h-6 rounded-full transition-colors cursor-pointer"
+                [class.bg-yellow-500]="serviceChargeEnabled"
+                [class.bg-slate-600]="!serviceChargeEnabled"
+              >
+                <div
+                  class="w-4 h-4 bg-white rounded-full mt-1 transition-transform"
+                  [class.translate-x-5]="serviceChargeEnabled"
+                  [class.translate-x-1]="!serviceChargeEnabled"
+                ></div>
+              </div>
+            </label>
+          </div>
+        </div>
       </form>
     </div>
 
