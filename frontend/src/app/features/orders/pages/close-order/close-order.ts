@@ -125,12 +125,14 @@ export class CloseOrder implements OnInit {
   }
 
   get remaining(): number {
-    return Math.max(0, this.total - (this.totalPaid - this.totalChange));
+    const service = this.order?.serviceCharge ?? 0;
+    return Math.max(0, this.total + service - (this.totalPaid - this.totalChange));
   }
 
   get isValidPayment(): boolean {
     if (this.payments.length === 0) return false;
-    return this.totalPaid - this.totalChange >= this.total;
+    const service = this.order?.serviceCharge ?? 0;
+    return this.totalPaid - this.totalChange >= this.total + service;
   }
 
   selectNewMethod(method: PaymentMethod): void {

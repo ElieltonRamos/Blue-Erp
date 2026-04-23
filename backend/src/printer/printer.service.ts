@@ -39,6 +39,7 @@ export class PrinterService {
     text += FONT_BIG + CENTER + now + LF;
     if (job.table) text += CENTER + `Mesa: ${job.table}` + LF;
     if (job.customerName) text += CENTER + `Cliente: ${job.customerName}` + LF;
+    if (job.operatorName) text += CENTER + `Garcom: ${job.operatorName}` + LF;
     text += FONT_NORMAL + LEFT + line + LF;
 
     for (const item of job.items) {

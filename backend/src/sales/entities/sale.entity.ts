@@ -47,6 +47,7 @@ export class SaleEntity {
   fiscalEmitDate!: Date | null;
   fiscalXml!: string | null;
   createdAt!: Date;
+  serviceCharge!: number;
   updatedAt!: Date;
   items!: SaleItemEntity[];
 }

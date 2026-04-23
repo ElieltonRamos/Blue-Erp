@@ -10,4 +10,5 @@ export interface PrintJob {
   customerName?: string | null;
   location: string; // ProductionLocation.code
   items: PrintItem[];
+  operatorName?: string;
 }

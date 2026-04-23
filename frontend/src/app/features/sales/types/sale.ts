@@ -72,6 +72,7 @@ export interface Sale {
   fiscalXml: string | null;
   createdAt: Date;
   updatedAt: Date;
+  serviceCharge: number;
   items?: SaleItem[];
 }
 

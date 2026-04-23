@@ -78,8 +78,8 @@
           O <span class="text-white font-medium">Tempo de Comanda</span> é calculado entre a criação
           e o fechamento do pedido (<code class="text-indigo-300">criado → finalizado</code>). O
           <span class="text-white font-medium">Tempo de Mesa</span> usa
-          <code class="text-indigo-300">criado → tempo de ocupação</code> — apenas pedidos com
-          mesa e esse campo preenchido entram no cálculo.
+          <code class="text-indigo-300">criado → tempo de ocupação</code> — apenas pedidos com mesa
+          e esse campo preenchido entram no cálculo.
         </p>
       </div>
 
@@ -227,35 +227,56 @@
 
                 @if (isOperatorsOpen(loc.id)) {
                   <div class="mt-2">
-                    <p class="text-xs text-gray-500 px-2 mb-2">
-                      <span class="font-medium text-gray-400">Abriu</span> = pedidos que o operador
-                      criou · <span class="font-medium text-gray-400">Fechou</span> = pedidos que o
-                      operador pagou · <span class="font-medium text-amber-300">Total</span> =
-                      faturamento dos pedidos que fechou
-                    </p>
-                    <div class="grid grid-cols-[1fr_56px_56px_96px] px-2 pb-1 gap-2">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px] px-2 mb-2">
+                      <div class="bg-white/5 rounded px-2 py-1">
+                        <span class="font-medium text-gray-400">Abriu</span>
+                        <p class="text-gray-500 leading-tight">Pedidos criados pelo operador</p>
+                      </div>
+
+                      <div class="bg-white/5 rounded px-2 py-1">
+                        <span class="font-medium text-gray-400">Fechou</span>
+                        <p class="text-gray-500 leading-tight">Pedidos pagos pelo operador</p>
+                      </div>
+
+                      <div class="bg-amber-500/10 border border-amber-500/20 rounded px-2 py-1">
+                        <span class="font-medium text-amber-300">Total</span>
+                        <p class="text-gray-500 leading-tight">Faturamento dos pedidos fechados</p>
+                      </div>
+
+                      <div class="bg-green-500/10 border border-green-500/20 rounded px-2 py-1">
+                        <span class="font-medium text-green-400">Gorjeta</span>
+                        <p class="text-gray-500 leading-tight">
+                          Soma das gorjetas dos pedidos fechados
+                        </p>
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-[1fr_56px_56px_96px_96px] px-2 pb-1 gap-2">
                       @for (
-                        header of ['Operador', 'Abriu', 'Fechou', 'Total'];
+                        header of ['Operador', 'Abriu', 'Fechou', 'Total', 'Gorjeta'];
                         track header;
                         let i = $index
                       ) {
                         <span
                           class="text-[10px] text-gray-500 uppercase tracking-wide"
                           [class.text-right]="i >= 1"
-                          >{{ header }}</span
                         >
+                          {{ header }}
+                        </span>
                       }
                     </div>
                     @for (op of loc.operators; track op.id) {
                       <div
-                        class="grid grid-cols-[1fr_56px_56px_96px] items-center px-2 py-1.5 gap-2 rounded bg-white/2"
+                        class="grid grid-cols-[1fr_56px_56px_96px_96px] items-center px-2 py-1.5 gap-2 rounded bg-white/2"
                       >
                         <span class="text-sm text-gray-300 truncate">{{ op.username }}</span>
                         <span class="text-xs text-gray-400 text-right">{{ op.opened }}</span>
                         <span class="text-xs text-gray-400 text-right">{{ op.closed }}</span>
-                        <span class="text-xs text-amber-300 text-right font-medium">{{
-                          formatCurrency(op.totalValue)
-                        }}</span>
+                        <span class="text-xs text-amber-300 text-right font-medium">
+                          {{ formatCurrency(op.totalValue) }}
+                        </span>
+                        <span class="text-xs text-green-400 text-right font-medium">
+                          {{ formatCurrency(op.totalServiceCharge) }}
+                        </span>
                       </div>
                     }
                   </div>

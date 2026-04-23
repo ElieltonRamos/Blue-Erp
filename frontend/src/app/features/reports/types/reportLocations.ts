@@ -18,6 +18,7 @@ export interface LocationReportOperator {
   opened: number;
   closed: number;
   totalValue: number;
+  totalServiceCharge: number;
 }
 
 export interface LocationReportLocation {

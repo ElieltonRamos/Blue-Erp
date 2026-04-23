@@ -47,7 +47,7 @@ export class TableService {
     return this.client.patch<Table>(`${this.apiUrl}/${id}/reserve`, { customer, time });
   }
 
-  closeTab(id: number): Observable<CloseTabResponse> {
-    return this.client.post<CloseTabResponse>(`${this.apiUrl}/${id}/close-tab`, {});
+  closeTab(id: number, serviceCharge?: number): Observable<CloseTabResponse> {
+    return this.client.post<CloseTabResponse>(`${this.apiUrl}/${id}/close-tab`, { serviceCharge });
   }
 }

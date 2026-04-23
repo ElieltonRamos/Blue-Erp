@@ -97,25 +97,31 @@ export class SalesReportService {
     aggregators: ReturnType<typeof this.initializeAggregators>,
   ) {
     const { salesByPaymentMethod, salesByOperator } = aggregators;
+
     const operatorName = sale.operator?.username || 'Desconhecido';
+
     const total = Number(sale.total);
+    const service = Number(sale.serviceCharge ?? 0);
+    const totalWithService = total + service;
+
     const discount = Number(sale.discount ?? 0);
     const profitSale = Number(sale.profitSale ?? 0);
 
     aggregators.totalSales++;
-    aggregators.grossRevenue += total;
+    aggregators.grossRevenue += totalWithService; // <-- ALTERADO
     aggregators.totalDiscounts += discount;
     aggregators.grossProfit += profitSale;
 
     const opData = processOperatorAggregation(
       operatorName,
-      total,
+      totalWithService, // <-- ALTERADO
       salesByOperator,
     );
 
     for (const payment of sale.payments) {
       const method = normalizePaymentMethod(payment.method);
       const netAmount = Number(payment.amount) - Number(payment.change);
+
       processPaymentAggregation(
         method,
         netAmount,
@@ -124,7 +130,6 @@ export class SalesReportService {
       );
     }
   }
-
   private buildResponse(
     aggregators: ReturnType<typeof this.initializeAggregators>,
   ) {

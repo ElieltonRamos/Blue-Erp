@@ -25,6 +25,7 @@ export interface TableOrder {
   status: string;
   total: number;
   items: OrderItem[];
+  serviceCharge: number;
   createdAt: string;
 }
 

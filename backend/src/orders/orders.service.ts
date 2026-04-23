@@ -141,6 +141,7 @@ export class OrdersService {
             table: order.table,
             customerName: order.customerName,
             location,
+            operatorName: order.operator?.username,
             items: [],
           });
         }
@@ -371,6 +372,7 @@ export class OrdersService {
           orderId: id,
           table: existingOrder.table,
           customerName: existingOrder.customerName,
+          operatorName: existingOrder.operator?.username,
           location,
           items: [],
         });

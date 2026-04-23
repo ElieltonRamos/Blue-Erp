@@ -162,6 +162,9 @@ export class TableOrderDto {
   @ApiProperty({ type: [TableOrderItemDto] })
   items: TableOrderItemDto[];
 
+  @ApiProperty({ example: 15.0 })
+  serviceCharge: number;
+
   @ApiProperty({ example: '2026-02-12T10:00:00.000Z' })
   createdAt: Date;
 
@@ -174,6 +177,7 @@ export class TableOrderDto {
     this.total = Number(data.total);
     this.items = (data.items || []).map((i: any) => new TableOrderItemDto(i));
     this.createdAt = data.createdAt;
+    this.serviceCharge = Number(data.serviceCharge ?? 0);
   }
 }
 
