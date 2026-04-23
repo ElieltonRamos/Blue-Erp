@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Injectable, Logger } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/client';
@@ -39,8 +38,10 @@ export class SaleToNfeConverterService {
     const operatorName =
       sale.operator?.username || sale.userOperator || 'Sistema';
     const discount = this.toNumber(sale.discount, 2);
+    const serviceCharge = this.toNumber(sale.serviceCharge ?? 0, 2);
+    const totalWithServiceCharge = this.toNumber(sale.total, 2) + serviceCharge;
 
-    const infoText = `${taxText} | Venda ID: ${saleId} | Operador: ${operatorName} | Desc: R$ ${discount.toFixed(2)}`;
+    const infoText = `${taxText} | Venda ID: ${saleId} | Operador: ${operatorName} | Desc: R$ ${discount.toFixed(2)} | Gorjeta: R$ ${serviceCharge.toFixed(2)}`;
 
     const primaryPayment = sale.payments.reduce((prev, curr) =>
       Number(curr.amount) > Number(prev.amount) ? curr : prev,
@@ -111,7 +112,7 @@ export class SaleToNfeConverterService {
         indPag: sale.isPaid ? '0' : '1',
         tPag: PAYMENT_MAP[paymentMethod] || '99',
         xPag: paymentMethod === 'CREDITO_LOJA' ? 'Crédito Loja' : undefined,
-        vPag: this.toNumber(sale.total, 2),
+        vPag: totalWithServiceCharge,
         ...(CARD_PAYMENT_METHODS.includes(paymentMethod) && {
           card: {
             tpIntegra: '2',
@@ -125,7 +126,6 @@ export class SaleToNfeConverterService {
       csc: { csc: cscConfig.nfceCsc, idCSC: cscConfig.nfceCscId },
     };
   }
-
   private async findSaleWithRelations(saleId: number) {
     const sale = await this.prisma.client.sale.findUnique({
       where: { id: saleId },

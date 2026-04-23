@@ -420,6 +420,7 @@ export class SalesService {
           isPaid: clientId === 1,
           cfop: dto.cfop || '5102',
           fiscalStatus: FiscalStatus.PENDENTE,
+          serviceCharge: order.serviceCharge ?? new Decimal(0),
           items: {
             create: order.items.map((item, index) => ({
               itemNumber: index + 1,

@@ -29,6 +29,7 @@ import { ReserveTableDto } from './dto/reserve-table.dto.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
+import { CloseTabDto } from './dto/close-tab.dto.js';
 
 @ApiTags('Tables')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -177,7 +178,8 @@ export class TablesController {
   closeTab(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser('userId') operatorId: number,
+    @Body() dto: CloseTabDto,
   ) {
-    return this.tablesService.closeTab(id, operatorId);
+    return this.tablesService.closeTab(id, operatorId, dto);
   }
 }

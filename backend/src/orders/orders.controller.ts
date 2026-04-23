@@ -115,7 +115,12 @@ export class OrdersController {
     @Body() updateOrderDto: UpdateOrderDto,
     @CurrentUser() user: JwtPayload,
   ): Promise<OrderEntity> {
-    return this.ordersService.update(id, updateOrderDto, user.role);
+    return this.ordersService.update(
+      id,
+      updateOrderDto,
+      user.role,
+      user.userId,
+    );
   }
 
   @Delete(':id')

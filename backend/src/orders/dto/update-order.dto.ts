@@ -20,7 +20,7 @@ export class UpdateOrderItemDto {
   @ApiPropertyOptional({ description: 'ID do produto', example: 1 })
   @IsNumber()
   @Min(1)
-  productId: number;
+  productId!: number;
 
   @ApiPropertyOptional({
     description: 'Observação do item',
@@ -112,4 +112,10 @@ export class UpdateOrderDto {
   @Min(0)
   @IsOptional()
   total?: number;
+
+  @ApiPropertyOptional({ example: 15.05 })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  serviceCharge?: number;
 }

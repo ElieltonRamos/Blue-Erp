@@ -301,6 +301,7 @@ export class OrdersService {
     id: number,
     updateOrderDto: UpdateOrderDto,
     userRole: string,
+    operatorId: number,
   ): Promise<OrderEntity> {
     const existingOrder = await this.prisma.client.order.findUnique({
       where: { id },
@@ -355,7 +356,9 @@ export class OrdersService {
       item.productions.some((p) => p.status === 'IN_PROGRESS'),
     );
 
-    const { items, ...orderData } = updateOrderDto;
+    const { items, serviceCharge, ...orderData } = updateOrderDto;
+
+    const isClosing = orderData.status === OrderStatus.CLOSED;
 
     const printJobsMap = new Map<string, PrintJob>();
 
@@ -383,11 +386,21 @@ export class OrdersService {
     await this.prisma.client.$transaction(async (tx) => {
       let totalPedido = 0;
 
+      const closingData = isClosing
+        ? {
+            finishedAt: new Date(),
+            serviceCharge: serviceCharge ?? 0,
+            ...(!existingOrder.closedByOperatorId && {
+              closedByOperatorId: operatorId,
+            }),
+          }
+        : {};
+
       if (!items) {
         totalPedido = Number(existingOrder.total);
         await tx.order.update({
           where: { id },
-          data: { ...orderData, total: totalPedido },
+          data: { ...orderData, total: totalPedido, ...closingData },
         });
         return;
       }
@@ -405,7 +418,6 @@ export class OrdersService {
         );
       }
 
-      // Remoção de itens
       for (const item of existingItems) {
         if (incomingIds.includes(item.id)) continue;
 
@@ -446,7 +458,6 @@ export class OrdersService {
         }
       }
 
-      // Atualização de itens existentes
       for (const incoming of items.filter((i) => i.id)) {
         const existing = existingItems.find((i) => i.id === incoming.id);
         if (!existing) continue;
@@ -571,7 +582,6 @@ export class OrdersService {
         }
       }
 
-      // Novos itens
       const newItems = items.filter((i) => !i.id);
 
       if (newItems.length > 0) {
@@ -653,7 +663,7 @@ export class OrdersService {
 
       await tx.order.update({
         where: { id },
-        data: { ...orderData, total: totalPedido },
+        data: { ...orderData, total: totalPedido, ...closingData },
       });
     });
 

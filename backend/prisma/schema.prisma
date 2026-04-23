@@ -246,6 +246,7 @@ model Order {
   operator           User?       @relation("OrderOperator", fields: [operatorId], references: [id])
   closedByOperatorId Int?        @map("closed_by_operator_id") // novo campo
   closedByOperator   User?       @relation("OrderClosedBy", fields: [closedByOperatorId], references: [id])
+  serviceCharge      Decimal     @default(0) @map("service_charge") @db.Decimal(10, 2)
   items              OrderItem[]
   tableRef           Table?
 
@@ -339,6 +340,7 @@ model Sale {
   fiscalProtocol               String?       @map("fiscal_protocol")
   fiscalEmitDate               DateTime?     @map("fiscal_emit_date")
   fiscalXml                    String?       @map("fiscal_xml") @db.LongText
+  serviceCharge                Decimal       @default(0) @map("service_charge") @db.Decimal(10, 2)
   items                        SaleItem[]
   createdAt                    DateTime      @default(now()) @map("created_at")
   updatedAt                    DateTime      @updatedAt @map("updated_at")

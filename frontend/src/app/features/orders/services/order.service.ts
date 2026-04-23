@@ -67,10 +67,6 @@ export class OrderService {
     return this.client.patch<Order>(`${this.apiUrl}/${id}/cancel`, {});
   }
 
-  finishOrder(id: number): Observable<any> {
-    return this.client.post<any>(`${this.apiUrl}/${id}/finish`, {});
-  }
-
   getByCode(code: string): Observable<Product> {
     return this.client.get<Product>(`${this.productsApiUrl}/code/${code}`);
   }

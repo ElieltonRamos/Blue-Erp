@@ -166,11 +166,14 @@ export class SaleResponseDto {
   createdAt: Date;
   @ApiProperty()
   updatedAt: Date;
+  @ApiProperty({ example: 15.05 })
+  serviceCharge: number;
   @ApiPropertyOptional({ type: [SaleItemResponseDto] })
   items?: SaleItemResponseDto[];
 
   constructor(data: any) {
     this.id = data.id;
+    this.serviceCharge = Number(data.serviceCharge ?? 0);
     this.clientId = data.clientId;
     this.client = data.client ? new SaleClientDto(data.client) : data.client;
     this.userOperator = data.userOperator;
