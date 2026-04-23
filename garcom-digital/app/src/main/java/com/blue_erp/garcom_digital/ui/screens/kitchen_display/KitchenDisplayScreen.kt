@@ -405,7 +405,7 @@ private fun KdsColumn(
             }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(orders, key = { it.id }) { item ->
+                items(orders, key = { it.productionId }) { item ->
                     val min = getElapsedMinutes(item)
                     KdsItemCard(
                         item = item,

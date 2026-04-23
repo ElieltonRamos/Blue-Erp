@@ -131,22 +131,37 @@ export class OrdersService {
 
       const printJobsMap = new Map<string, PrintJob>();
 
-      for (const item of producedItems) {
-        const loc = item.product.productionLocation ?? 'LOCAL_01';
-        if (!printJobsMap.has(loc)) {
-          printJobsMap.set(loc, {
+      const addToPrintJob = (location: string, item: PrintItem) => {
+        if (!printJobsMap.has(location)) {
+          printJobsMap.set(location, {
             orderId: order.id,
             table: order.table,
             customerName: order.customerName,
-            location: loc,
+            location,
             items: [],
           });
         }
-        printJobsMap.get(loc)!.items.push({
+        printJobsMap.get(location)!.items.push(item);
+      };
+
+      for (const item of producedItems) {
+        const loc = item.product.productionLocation ?? 'LOCAL_01';
+        addToPrintJob(loc, {
           name: item.name,
           quantity: Number(item.quantity),
           observation: item.observation,
         });
+      }
+
+      for (const item of resaleItems) {
+        const loc = item.product.productionLocation?.trim();
+        if (loc) {
+          addToPrintJob(loc, {
+            name: item.name,
+            quantity: Number(item.quantity),
+            observation: item.observation,
+          });
+        }
       }
 
       if (printJobsMap.size > 0) {
@@ -281,6 +296,7 @@ export class OrdersService {
 
     return this.mapToEntity(order);
   }
+
   async update(
     id: number,
     updateOrderDto: UpdateOrderDto,
@@ -354,6 +370,14 @@ export class OrdersService {
         });
       }
       printJobsMap.get(location)!.items.push(item);
+    };
+
+    const addToPrintIfHasLocation = (
+      productionLocation: string | null | undefined,
+      item: PrintItem,
+    ) => {
+      const loc = productionLocation?.trim();
+      if (loc) addToPrintJob(loc, item);
     };
 
     await this.prisma.client.$transaction(async (tx) => {
@@ -456,6 +480,14 @@ export class OrdersService {
             });
 
             addToPrintJob(existing.product.productionLocation || 'LOCAL_01', {
+              name: existing.name,
+              quantity: diferenca,
+              observation: existing.observation,
+            });
+          }
+
+          if (existing.product.productType === ProductType.RESALE) {
+            addToPrintIfHasLocation(existing.product.productionLocation, {
               name: existing.name,
               quantity: diferenca,
               observation: existing.observation,
@@ -588,6 +620,12 @@ export class OrdersService {
             await tx.product.update({
               where: { id: newItem.productId },
               data: { quantity: { decrement: newItem.quantity } },
+            });
+
+            addToPrintIfHasLocation(product.productionLocation, {
+              name: newItem.name!,
+              quantity: newItem.quantity,
+              observation: newItem.observation,
             });
           }
 

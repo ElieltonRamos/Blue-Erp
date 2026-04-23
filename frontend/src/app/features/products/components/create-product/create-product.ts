@@ -136,7 +136,7 @@ export class CreateProduct implements OnInit {
       control?.enable();
       control?.setValidators([Validators.required]);
     } else {
-      control?.disable();
+      control?.enable();
       control?.clearValidators();
       control?.setValue('');
     }
@@ -219,7 +219,7 @@ export class CreateProduct implements OnInit {
       name: formValue.name ?? '',
       code: formValue.code ?? '',
       productType: this.mapProductType(formValue.productType ?? 'resale'),
-      productionLocation: this.hasComposition ? (formValue.productionLocation ?? '') : undefined,
+      productionLocation: formValue.productionLocation || undefined,
       price: formValue.price ? parseFloat(formValue.price.toString()) : 0,
       costPrice: formValue.costPrice ? parseFloat(formValue.costPrice.toString()) : 0,
       extraCosts: formValue.extraCosts ? parseFloat(formValue.extraCosts.toString()) : 0,
