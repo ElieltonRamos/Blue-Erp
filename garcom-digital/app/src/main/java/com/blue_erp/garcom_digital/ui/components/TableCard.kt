@@ -209,17 +209,25 @@ fun TableCard(
 
                 // Total da comanda (se ocupada)
                 if (table.status == TableStatus.OCCUPIED && table.order != null) {
+                    val serviceCharge = table.order.serviceCharge
+                    val grandTotal = if (serviceCharge > 0.0) table.order.total + (table.order.total * 0.10) else table.order.total
+
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = formatCurrency(table.order.total),
+                            text = formatCurrency(grandTotal),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
+                        if (serviceCharge > 0.0) {
+                            Text(
+                                text = "+ 10% gorjeta",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         Text(
-                            text = "${table.order.items.size} ${
-                                if (table.order.items.size == 1) "item" else "itens"
-                            }",
+                            text = "${table.order.items.size} ${if (table.order.items.size == 1) "item" else "itens"}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

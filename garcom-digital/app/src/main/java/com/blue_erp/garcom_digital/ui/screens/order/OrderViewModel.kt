@@ -104,10 +104,10 @@ class OrderViewModel @Inject constructor(
         }
     }
 
-    fun closeTab() {
+    fun closeTab(serviceCharge: Double) {
         viewModelScope.launch {
             _uiState.update { it.copy(isClosingTab = true, showTabSummaryDialog = false, error = null) }
-            when (val result = tableRepository.closeTab(tableId)) {
+            when (val result = tableRepository.closeTab(tableId, serviceCharge)) {
                 is Resource.Success -> _uiState.update {
                     it.copy(isClosingTab = false, shouldNavigateBack = true)
                 }
@@ -239,7 +239,21 @@ class OrderViewModel @Inject constructor(
                     observation = item.observation,
                 )
             }
-            val request = UpdateOrderRequest(items = items, total = items.sumOf { it.total })
+
+            val total = items.sumOf { it.total }
+            val currentServiceCharge = _uiState.value.order?.serviceCharge ?: 0.0
+            val isFirstSave = _uiState.value.order?.items.isNullOrEmpty()
+            val serviceCharge = when {
+                isFirstSave -> total * 0.10
+                currentServiceCharge == 0.0 -> 0.0
+                else -> total * 0.10
+            }
+
+            val request = UpdateOrderRequest(
+                items = items,
+                total = total,
+                serviceCharge = serviceCharge
+            )
 
             when (val result = orderRepository.updateOrder(orderId, request)) {
                 is Resource.Success -> {
@@ -277,6 +291,10 @@ class OrderViewModel @Inject constructor(
     fun onProductQueryChange(query: String) {
         _uiState.update { it.copy(productQuery = query) }
         _productQuery.value = query
+    }
+
+    private fun calculateServiceCharge(items: List<TableOrderItem>): Double {
+        return items.sumOf { it.total } * 0.10
     }
 
     private fun searchProducts(query: String, categoryId: Int? = _uiState.value.selectedCategoryId) {

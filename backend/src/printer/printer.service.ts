@@ -26,7 +26,7 @@ export class PrinterService {
     const CUT = `${GS}V\x41\x03`;
     const LF = '\n';
     const FONT_BIG = `${ESC}!\x30`;
-    const FONT_NORMAL = `${ESC}!\x00`;
+    const FONT_NORMAL = `${ESC}!\x10`;
 
     const line = '-'.repeat(45);
     const now = new Date().toLocaleString('pt-BR', {

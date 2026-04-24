@@ -169,7 +169,9 @@ export class OrdersService {
       }
 
       if (printJobsMap.size > 0) {
-        await this.printerService.printOrder([...printJobsMap.values()]);
+        this.printerService
+          .printOrder([...printJobsMap.values()])
+          .catch((err) => console.error('Erro ao imprimir:', err));
       }
 
       if (orderData.table) {
@@ -270,6 +272,9 @@ export class OrdersService {
         include: {
           items: true,
           operator: { select: { id: true, username: true, role: true } },
+          closedByOperator: {
+            select: { id: true, username: true, role: true },
+          },
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -291,6 +296,7 @@ export class OrdersService {
       include: {
         items: true,
         operator: { select: { id: true, username: true, role: true } },
+        closedByOperator: { select: { id: true, username: true, role: true } },
       },
     });
 
@@ -323,6 +329,7 @@ export class OrdersService {
           },
         },
         operator: { select: { id: true, username: true, role: true } },
+        closedByOperator: { select: { id: true, username: true, role: true } },
       },
     });
 
@@ -350,6 +357,9 @@ export class OrdersService {
         include: {
           items: true,
           operator: { select: { id: true, username: true, role: true } },
+          closedByOperator: {
+            select: { id: true, username: true, role: true },
+          },
         },
       });
 
@@ -685,7 +695,9 @@ export class OrdersService {
     });
 
     if (printJobsMap.size > 0) {
-      await this.printerService.printOrder([...printJobsMap.values()]);
+      this.printerService
+        .printOrder([...printJobsMap.values()])
+        .catch((err) => console.error('Erro ao imprimir:', err));
     }
 
     const updated = await this.prisma.client.order.findUnique({
@@ -693,6 +705,7 @@ export class OrdersService {
       include: {
         items: true,
         operator: { select: { id: true, username: true, role: true } },
+        closedByOperator: { select: { id: true, username: true, role: true } },
       },
     });
 
@@ -710,6 +723,7 @@ export class OrdersService {
       include: {
         items: { include: { productions: true, product: true } },
         operator: { select: { id: true, username: true, role: true } },
+        closedByOperator: { select: { id: true, username: true, role: true } },
       },
     });
 
@@ -754,6 +768,7 @@ export class OrdersService {
       include: {
         items: true,
         operator: { select: { id: true, username: true, role: true } },
+        closedByOperator: { select: { id: true, username: true, role: true } },
       },
     });
 
@@ -775,9 +790,10 @@ export class OrdersService {
       finishedAt: order.finishedAt,
       tableOccupiedUntil: order.tableOccupiedUntil,
       operatorId: order.operatorId,
-      operator: order.operator ?? null,
       closedByOperatorId: order.closedByOperatorId,
       serviceCharge: Number(order.serviceCharge ?? 0),
+      operator: order.closedByOperator ?? order.operator ?? null,
+      closedByOperator: order.closedByOperator,
       items:
         order.items?.map((item: any) => ({
           id: item.id,

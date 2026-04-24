@@ -85,9 +85,9 @@ class TableRepository @Inject constructor(
         }
     }
 
-    suspend fun closeTab(id: Int): Resource<CloseTabResponse> {
+    suspend fun closeTab(id: Int, serviceCharge: Double = 0.0): Resource<CloseTabResponse> {
         return try {
-            val response = apiService.closeTab(id)
+            val response = apiService.closeTab(id, CloseTabRequest(serviceCharge))
             if (response.isSuccessful) {
                 response.body()?.let { Resource.Success(it) } ?: Resource.Error("Erro ao fechar comanda.")
             } else Resource.Error(parseError(response.code(), "Mesa sem comanda ativa."))

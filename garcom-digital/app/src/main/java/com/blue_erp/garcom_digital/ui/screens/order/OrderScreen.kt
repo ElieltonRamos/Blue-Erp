@@ -33,7 +33,7 @@ fun OrderScreen(
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
             snackbarHostState.showSnackbar(it)
-            viewModel.clearError() // recarrega após fechar o snackbar
+            viewModel.clearError()
         }
     }
 
@@ -80,7 +80,7 @@ fun OrderScreenContent(
     onCloseProductSearch: () -> Unit,
     onProductQueryChange: (String) -> Unit,
     onAddProduct: (ProductResponse) -> Unit,
-    onCloseTab: () -> Unit,
+    onCloseTab: (serviceCharge: Double) -> Unit,
     onOpenCloseTabDialog: () -> Unit,
     onCloseCloseTabDialog: () -> Unit,
     onCategorySelect: (Int?) -> Unit,
@@ -90,6 +90,8 @@ fun OrderScreenContent(
     val table = uiState.table
     val order = uiState.order
     val total = uiState.editedItems.sumOf { it.total }
+    val serviceCharge = uiState.order?.serviceCharge ?: 0.0
+    val grandTotal = if (serviceCharge > 0.0) total + (total * 0.10) else total
 
     Scaffold(
         topBar = {
@@ -149,7 +151,7 @@ fun OrderScreenContent(
         },
         bottomBar = {
             OrderBottomBar(
-                total = total,
+                total = grandTotal,
                 isClosingTab = uiState.isClosingTab,
                 onCloseTab = onOpenCloseTabDialog
             )
@@ -210,7 +212,7 @@ fun OrderScreenContent(
             title = { Text("Fechar comanda") },
             text = { Text("Deseja fechar comanda e liberar mesa?") },
             confirmButton = {
-                TextButton(onClick = onCloseTab) { Text("Confirmar") }
+                TextButton(onClick = { onCloseTab(0.0) }) { Text("Confirmar") }
             },
             dismissButton = {
                 TextButton(onClick = onCloseCloseTabDialog) { Text("Cancelar") }
@@ -233,9 +235,9 @@ fun OrderScreenContent(
     }
 
     if (uiState.showTabSummaryDialog) {
-        uiState.tabSummaryOrder?.let { order ->
+        uiState.tabSummaryOrder?.let { tabOrder ->
             TabSummaryDialog(
-                order = order,
+                order = tabOrder,
                 isClosingTab = uiState.isClosingTab,
                 onConfirm = onCloseTab,
                 onDismiss = onCloseTabSummaryDialog

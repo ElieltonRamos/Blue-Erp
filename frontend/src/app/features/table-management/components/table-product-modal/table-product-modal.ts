@@ -157,7 +157,12 @@ export class TableProductModal {
 
     const orderId = this.table.order.id;
 
-    const serviceCharge = this.table.order.serviceCharge === 0 ? 0 : this.orderTotal * 0.1;
+    const isFirstSave = !this.table.order.items.some((item) => item.id > 0);
+    const serviceCharge = isFirstSave
+      ? this.orderTotal * 0.1
+      : this.table.order.serviceCharge === 0
+        ? 0
+        : this.orderTotal * 0.1;
 
     const updateDto = {
       items: this.table.order.items.map((item) => ({

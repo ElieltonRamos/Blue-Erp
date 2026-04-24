@@ -15,6 +15,7 @@ data class UpdateOrderItemRequest(
 
 data class UpdateOrderRequest(
     val items: List<UpdateOrderItemRequest>,
+    val serviceCharge: Double? = null,
     val total: Double
 )
 

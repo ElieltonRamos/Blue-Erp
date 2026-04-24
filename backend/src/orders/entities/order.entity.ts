@@ -30,4 +30,5 @@ export class OrderEntity {
   closedByOperatorId: number | null;
   items: OrderItemEntity[];
   serviceCharge: number;
+  closedByOperator: { id: number; username: string; role: string } | null;
 }

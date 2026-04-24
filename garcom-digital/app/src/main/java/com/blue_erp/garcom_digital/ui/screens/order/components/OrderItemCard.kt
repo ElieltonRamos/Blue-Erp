@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -16,6 +18,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +41,21 @@ fun OrderItemCard(
     onRemove: () -> Unit,
     onObservationChange: (String) -> Unit,
 ) {
+    val suggestions = listOf(
+        "Ok",
+        "Bem passada",
+        "Ao ponto",
+        "Mal passada",
+        "1 copo c/ gelo",
+        "2 copos c/ gelo",
+        "3 copos c/ gelo",
+        "4 copos c/ gelo",
+        "1 copo s/ gelo",
+        "2 copos s/ gelo",
+        "3 copos s/ gelo",
+        "4 copos s/ gelo",
+    )
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -95,19 +113,46 @@ fun OrderItemCard(
                 }
             }
 
+            val isError = item.observation.isNullOrBlank() || item.observation.trim().length < 2
+
             OutlinedTextField(
                 value = item.observation ?: "",
                 onValueChange = onObservationChange,
                 placeholder = {
                     Text("Observação (obrigatório)", style = MaterialTheme.typography.bodySmall)
                 },
-                isError = item.observation.isNullOrBlank() || item.observation.trim().length < 2,
+                isError = isError,
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
                 textStyle = MaterialTheme.typography.bodySmall,
             )
+
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                items(suggestions) { suggestion ->
+                    val isSelected = item.observation.orEmpty().contains(suggestion)
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = {
+                            val current = item.observation.orEmpty().trim()
+                            val newValue = if (current.isEmpty()) suggestion else "$current, $suggestion"
+                            onObservationChange(newValue)
+                        },
+                        label = {
+                            Text(
+                                text = suggestion,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    )
+                }
+            }
         }
     }
 }

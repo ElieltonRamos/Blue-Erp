@@ -50,7 +50,7 @@ interface ApiService {
     suspend fun reserveTable(@Path("id") id: Int, @Body request: ReserveTableRequest): Response<TableResponse>
 
     @POST("tables/{id}/close-tab")
-    suspend fun closeTab(@Path("id") id: Int): Response<CloseTabResponse>
+    suspend fun closeTab(@Path("id") id: Int, @Body request: CloseTabRequest): Response<CloseTabResponse>
 
     // Orders
     @PATCH("orders/{id}")
