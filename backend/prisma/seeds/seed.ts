@@ -9,6 +9,7 @@ import { seedProductionLocations } from './production-location-seed';
 import { seedClients } from './client-seed';
 // import { seedExpenses } from './expense-seed';
 import { seedProducts } from './product-seed';
+import { seedTables } from './seed-tables';
 
 const adapter = new PrismaMariaDb({
   host: process.env.DATABASE_HOST || '127.0.0.1',
@@ -30,6 +31,7 @@ async function main() {
   const locations = await seedProductionLocations(prisma);
   // const materials = await seedPrimaryMaterials(prisma);
   await seedProducts(prisma, categories, locations);
+  await seedTables(prisma, locations);
   await seedClients(prisma);
   // await seedExpenses(prisma);
 

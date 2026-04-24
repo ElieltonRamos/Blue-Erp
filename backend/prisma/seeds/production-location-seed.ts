@@ -1,7 +1,7 @@
 import { PrismaClient } from 'generated/prisma/client';
 
 export async function seedProductionLocations(prisma: PrismaClient) {
-  const japonesa = await prisma.productionLocation.upsert({
+  const bar = await prisma.productionLocation.upsert({
     where: { code: 'BAR' },
     update: {},
     create: {
@@ -13,7 +13,7 @@ export async function seedProductionLocations(prisma: PrismaClient) {
     },
   });
 
-  const churrascaria = await prisma.productionLocation.upsert({
+  const domJuan = await prisma.productionLocation.upsert({
     where: { code: 'COZINHA_DOM_JUAN' },
     update: {},
     create: {
@@ -26,5 +26,5 @@ export async function seedProductionLocations(prisma: PrismaClient) {
   });
 
   console.log('✓ Production Locations seed');
-  return { japonesa, churrascaria };
+  return { bar, domJuan };
 }

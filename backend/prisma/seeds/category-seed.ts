@@ -37,6 +37,41 @@ export async function seedCategories(prisma: PrismaClient) {
     create: { name: 'Sandwiches & Fries', active: true },
   });
 
+  const drinksGin = await prisma.category.upsert({
+    where: { id: 7 },
+    update: {},
+    create: { name: 'Drinks com Gin', active: true },
+  });
+
+  const drinksSemAlcool = await prisma.category.upsert({
+    where: { id: 8 },
+    update: {},
+    create: { name: 'Drinks sem Álcool', active: true },
+  });
+
+  const sucos = await prisma.category.upsert({
+    where: { id: 9 },
+    update: {},
+    create: { name: 'Sucos da Fruta', active: true },
+  });
+
+  const bebidas = await prisma.category.upsert({
+    where: { id: 10 },
+    update: {},
+    create: { name: 'Bebidas', active: true },
+  });
+
   console.log('✓ Categories seed');
-  return { entradas, cortes, especiais, pasta, guarnicoes, sandwiches };
+  return {
+    entradas,
+    cortes,
+    especiais,
+    pasta,
+    guarnicoes,
+    sandwiches,
+    drinksGin,
+    drinksSemAlcool,
+    sucos,
+    bebidas,
+  };
 }

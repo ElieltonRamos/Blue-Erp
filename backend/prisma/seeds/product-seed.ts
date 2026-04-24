@@ -16,8 +16,14 @@ export async function seedProducts(
     unit: 'UN' as Unit,
     quantity: 0,
     active: true,
-    productionLocation: locations.churrascaria.code,
+    productionLocation: locations.domJuan.code,
     productType: 'MANUFACTURED' as ProductType,
+  };
+
+  const defaultsBar = {
+    ...defaults,
+    productionLocation: locations.bar.code,
+    productType: 'RESALE' as ProductType,
   };
 
   // ENTRADAS
@@ -92,7 +98,7 @@ export async function seedProducts(
     update: {},
     create: {
       ...defaults,
-      name: 'Fritas',
+      name: 'Fritas (Vegetariano)',
       code: 'ENT007',
       price: 35.0,
       categoryId: categories.entradas.id,
@@ -127,7 +133,7 @@ export async function seedProducts(
       ...defaults,
       name: 'Pão de Alho da Parrilla',
       code: 'ENT010',
-      price: 20.0,
+      price: 21.0,
       categoryId: categories.entradas.id,
     },
   });
@@ -138,7 +144,7 @@ export async function seedProducts(
       ...defaults,
       name: 'Linguiça Provoleta',
       code: 'ENT011',
-      price: 60.0,
+      price: 58.0,
       categoryId: categories.entradas.id,
     },
   });
@@ -272,7 +278,7 @@ export async function seedProducts(
       ...defaults,
       name: 'Maminha com Fonduta de Queijos',
       code: 'COR005',
-      price: 109.0,
+      price: 110.0,
       categoryId: categories.cortes.id,
     },
   });
@@ -283,7 +289,7 @@ export async function seedProducts(
       ...defaults,
       name: 'Baby Beef',
       code: 'COR006',
-      price: 109.0,
+      price: 105.0,
       categoryId: categories.cortes.id,
     },
   });
@@ -557,6 +563,406 @@ export async function seedProducts(
       code: 'SAN005',
       price: 34.0,
       categoryId: categories.sandwiches.id,
+    },
+  });
+
+  // DRINKS COM GIN
+  await prisma.product.upsert({
+    where: { code: 'DRG001' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Pink Gin',
+      code: 'DRG001',
+      price: 32.0,
+      categoryId: categories.drinksGin.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'DRG002' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Gin Melancia',
+      code: 'DRG002',
+      price: 32.0,
+      categoryId: categories.drinksGin.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'DRG003' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Gin Tropical',
+      code: 'DRG003',
+      price: 32.0,
+      categoryId: categories.drinksGin.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'DRG004' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Martini',
+      code: 'DRG004',
+      price: 32.0,
+      categoryId: categories.drinksGin.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'DRG005' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Mojito',
+      code: 'DRG005',
+      price: 35.0,
+      categoryId: categories.drinksGin.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'DRG006' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Daiquiri',
+      code: 'DRG006',
+      price: 35.0,
+      categoryId: categories.drinksGin.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'DRG007' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Piña Colada',
+      code: 'DRG007',
+      price: 36.0,
+      categoryId: categories.drinksGin.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'DRG008' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Negroni',
+      code: 'DRG008',
+      price: 38.0,
+      categoryId: categories.drinksGin.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'DRG009' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Moscow Mule',
+      code: 'DRG009',
+      price: 36.0,
+      categoryId: categories.drinksGin.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'DRG010' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Caipiroska',
+      code: 'DRG010',
+      price: 25.0,
+      categoryId: categories.drinksGin.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'DRG011' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Caipirinha',
+      code: 'DRG011',
+      price: 18.0,
+      categoryId: categories.drinksGin.id,
+    },
+  });
+
+  // DRINKS SEM ÁLCOOL
+  await prisma.product.upsert({
+    where: { code: 'DSA001' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Soda Italiana – Maçã Verde',
+      code: 'DSA001',
+      price: 17.0,
+      categoryId: categories.drinksSemAlcool.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'DSA002' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Soda Italiana – Tropical',
+      code: 'DSA002',
+      price: 38.0,
+      categoryId: categories.drinksSemAlcool.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'DSA003' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Soda Italiana – Amora',
+      code: 'DSA003',
+      price: 0.0,
+      categoryId: categories.drinksSemAlcool.id,
+    },
+  });
+
+  // SUCOS DA FRUTA
+  await prisma.product.upsert({
+    where: { code: 'SUC001' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Suco de Abacaxi',
+      code: 'SUC001',
+      price: 12.0,
+      categoryId: categories.sucos.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'SUC002' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Suco de Laranja',
+      code: 'SUC002',
+      price: 12.0,
+      categoryId: categories.sucos.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'SUC003' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Suco de Morango',
+      code: 'SUC003',
+      price: 14.0,
+      categoryId: categories.sucos.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'SUC004' },
+    update: {},
+    create: {
+      ...defaults,
+      productionLocation: locations.bar.code,
+      name: 'Suco de Graviola',
+      code: 'SUC004',
+      price: 14.0,
+      categoryId: categories.sucos.id,
+    },
+  });
+
+  // BEBIDAS
+  await prisma.product.upsert({
+    where: { code: 'BEB001' },
+    update: {},
+    create: {
+      ...defaultsBar,
+      name: 'Coca-Cola Zero',
+      code: 'BEB001',
+      price: 6.0,
+      categoryId: categories.bebidas.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'BEB002' },
+    update: {},
+    create: {
+      ...defaultsBar,
+      name: 'Coca-Cola',
+      code: 'BEB002',
+      price: 6.0,
+      categoryId: categories.bebidas.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'BEB003' },
+    update: {},
+    create: {
+      ...defaultsBar,
+      name: 'Guaraná Zero',
+      code: 'BEB003',
+      price: 6.0,
+      categoryId: categories.bebidas.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'BEB004' },
+    update: {},
+    create: {
+      ...defaultsBar,
+      name: 'Fanta Laranja',
+      code: 'BEB004',
+      price: 6.0,
+      categoryId: categories.bebidas.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'BEB005' },
+    update: {},
+    create: {
+      ...defaultsBar,
+      name: 'Red Bull Tradicional',
+      code: 'BEB005',
+      price: 15.0,
+      categoryId: categories.bebidas.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'BEB006' },
+    update: {},
+    create: {
+      ...defaultsBar,
+      name: 'Red Bull Sem Açúcar',
+      code: 'BEB006',
+      price: 15.0,
+      categoryId: categories.bebidas.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'BEB007' },
+    update: {},
+    create: {
+      ...defaultsBar,
+      name: 'Red Bull Tropical',
+      code: 'BEB007',
+      price: 15.0,
+      categoryId: categories.bebidas.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'BEB008' },
+    update: {},
+    create: {
+      ...defaultsBar,
+      name: 'Red Bull Melancia',
+      code: 'BEB008',
+      price: 15.0,
+      categoryId: categories.bebidas.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'BEB009' },
+    update: {},
+    create: {
+      ...defaultsBar,
+      name: 'Água Tônica',
+      code: 'BEB009',
+      price: 7.0,
+      categoryId: categories.bebidas.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'BEB010' },
+    update: {},
+    create: {
+      ...defaultsBar,
+      name: 'Água Mineral',
+      code: 'BEB010',
+      price: 6.0,
+      categoryId: categories.bebidas.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'BEB011' },
+    update: {},
+    create: {
+      ...defaultsBar,
+      name: 'Água com Gás',
+      code: 'BEB011',
+      price: 7.0,
+      categoryId: categories.bebidas.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'BEB012' },
+    update: {},
+    create: {
+      ...defaultsBar,
+      name: 'Heineken Longneck',
+      code: 'BEB012',
+      price: 12.0,
+      categoryId: categories.bebidas.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'BEB013' },
+    update: {},
+    create: {
+      ...defaultsBar,
+      name: 'Heineken 600ml',
+      code: 'BEB013',
+      price: 20.0,
+      categoryId: categories.bebidas.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'BEB014' },
+    update: {},
+    create: {
+      ...defaultsBar,
+      name: 'Heineken Zero',
+      code: 'BEB014',
+      price: 14.0,
+      categoryId: categories.bebidas.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'BEB015' },
+    update: {},
+    create: {
+      ...defaultsBar,
+      name: 'Praya',
+      code: 'BEB015',
+      price: 14.0,
+      categoryId: categories.bebidas.id,
+    },
+  });
+  await prisma.product.upsert({
+    where: { code: 'BEB016' },
+    update: {},
+    create: {
+      ...defaultsBar,
+      name: 'Amstel 600ml',
+      code: 'BEB016',
+      price: 14.0,
+      categoryId: categories.bebidas.id,
     },
   });
 
