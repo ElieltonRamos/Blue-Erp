@@ -15,6 +15,7 @@ import {
   CloseTabResponseDto,
   TableResponseDto,
 } from './dto/response-table.dto.js';
+import { CloseTabDto } from './dto/close-tab.dto.js';
 
 @Injectable()
 export class TablesService {
@@ -321,57 +322,55 @@ export class TablesService {
     return new TableResponseDto(updated);
   }
 
-  async closeTab(id: number, operatorId: number): Promise<CloseTabResponseDto> {
+  async closeTab(
+    id: number,
+    operatorId: number,
+    dto: CloseTabDto,
+  ): Promise<CloseTabResponseDto> {
     const table = await this.prisma.client.table.findUnique({
       where: { id },
       include: { order: { include: { items: true } } },
     });
 
-    if (!table) {
-      throw new NotFoundException('Mesa não encontrada');
-    }
-
-    if (!table.order || table.status !== 'OCCUPIED') {
+    if (!table) throw new NotFoundException('Mesa não encontrada');
+    if (!table.order || table.status !== 'OCCUPIED')
       throw new BadRequestException('Mesa não possui comanda ativa');
-    }
-
-    if (!table.order.items || table.order.items.length === 0) {
+    if (!table.order.items || table.order.items.length === 0)
       throw new BadRequestException('Não há produtos na comanda');
-    }
 
     const now = new Date();
 
-    const result = await this.prisma.client.$transaction(
-      async (
-        tx,
-      ): Promise<{ orderId: number; total: number; message: string }> => {
-        const closedOrder = await tx.order.update({
-          where: { id: table.orderId! },
-          data: {
-            status: 'CLOSED',
-            finishedAt: now,
-            tableOccupiedUntil: now,
+    const result = await this.prisma.client.$transaction(async (tx) => {
+      const closedOrder = await tx.order.update({
+        where: { id: table.orderId! },
+        data: {
+          status: 'CLOSED',
+          finishedAt: now,
+          tableOccupiedUntil: now,
+          serviceCharge: dto.serviceCharge ?? 0,
+          ...(!table.order!.closedByOperatorId && {
             closedByOperatorId: operatorId,
-          },
-        });
+          }),
+        },
+      });
 
-        await tx.table.update({
-          where: { id },
-          data: {
-            status: 'AVAILABLE',
-            customer: null,
-            time: null,
-            orderId: null,
-          },
-        });
+      await tx.table.update({
+        where: { id },
+        data: {
+          status: 'AVAILABLE',
+          customer: null,
+          time: null,
+          orderId: null,
+        },
+      });
 
-        return {
-          orderId: closedOrder.id,
-          total: Number(closedOrder.total),
-          message: `Comanda fechada para a mesa ${table.number}`,
-        };
-      },
-    );
+      return {
+        orderId: closedOrder.id,
+        total: Number(closedOrder.total),
+        serviceCharge: Number(closedOrder.serviceCharge),
+        message: `Comanda fechada para a mesa ${table.number}`,
+      };
+    });
 
     return new CloseTabResponseDto(result);
   }

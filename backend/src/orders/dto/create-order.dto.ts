@@ -131,4 +131,13 @@ export class CreateOrderDto {
   @IsNumber()
   @IsOptional()
   operatorId?: number;
+
+  @ApiProperty({
+    description: 'Valor da taxa de serviço (10%)',
+    example: 9.0,
+    minimum: 0,
+  })
+  @IsNumber()
+  @Min(0)
+  serviceCharge: number;
 }

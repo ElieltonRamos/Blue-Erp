@@ -40,10 +40,16 @@ export class PromissoryNoteReceivable {
   private cdr = inject(ChangeDetectorRef);
 
   get totalSelectedAmount(): number {
-    const selected = this.listSales.filter((sale) => this.selectedSalesIds.includes(sale.id!));
-    return selected.reduce((acc, sale) => acc + Number(sale.total), 0);
+    return this.listSales
+      .filter((sale) => this.selectedSalesIds.includes(sale.id!))
+      .reduce((acc, sale) => {
+        const creditoLoja =
+          sale.payments
+            ?.filter((p) => p.method === 'CREDITO_LOJA')
+            .reduce((sum, p) => sum + Number(p.amount) - Number(p.change), 0) ?? 0;
+        return acc + creditoLoja;
+      }, 0);
   }
-
   onStatusFilterChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
 
@@ -94,8 +100,8 @@ export class PromissoryNoteReceivable {
   }
 
   markSelectedAsReceived(): void {
-    const saleIds: MarkAsReceivedDto = { salesIds: this.selectedSalesIds }
-    console.log(saleIds)
+    const saleIds: MarkAsReceivedDto = { salesIds: this.selectedSalesIds };
+    console.log(saleIds);
     this.saleService.markAsReceived(saleIds).subscribe({
       next: () => {
         this.notification.success('Baixa de notinhas realizada com sucesso!');
@@ -157,7 +163,7 @@ export class PromissoryNoteReceivable {
         this.page = response.page;
         this.limit = response.limit;
         this.totalPages = response.totalPages;
-        this.cdr.detectChanges(); 
+        this.cdr.detectChanges();
       },
       error: (e) => {
         this.notification.error(`Erro ao buscar vendas: ${e.error?.message || 'Erro inesperado.'}`);

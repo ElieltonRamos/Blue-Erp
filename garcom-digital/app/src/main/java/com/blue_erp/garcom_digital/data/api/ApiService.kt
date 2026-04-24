@@ -14,6 +14,25 @@ interface ApiService {
     @GET("production-locations")
     suspend fun getLocations(): Response<List<ProductionLocationResponse>>
 
+    // Kitchen
+    @GET("production")
+    suspend fun getKitchenOrders(): Response<List<ProductionResponse>>
+
+    @GET("production/location/{location}")
+    suspend fun getKitchenOrdersByLocation(@Path("location") location: String): Response<List<ProductionResponse>>
+
+    @POST("production/{id}/start")
+    suspend fun startProduction(@Path("id") id: Int): Response<Unit>
+
+    @POST("production/{id}/complete")
+    suspend fun completeProduction(@Path("id") id: Int): Response<Unit>
+
+    @POST("production/{id}/deliver")
+    suspend fun deliverProduction(@Path("id") id: Int): Response<Unit>
+
+    @PATCH("production/{id}/cancel")
+    suspend fun cancelProduction(@Path("id") id: Int): Response<Unit>
+
     // Tables
     @GET("tables")
     suspend fun getTables(@Query("locationId") locationId: Int? = null): Response<List<TableResponse>>
@@ -31,14 +50,17 @@ interface ApiService {
     suspend fun reserveTable(@Path("id") id: Int, @Body request: ReserveTableRequest): Response<TableResponse>
 
     @POST("tables/{id}/close-tab")
-    suspend fun closeTab(@Path("id") id: Int): Response<CloseTabResponse>
+    suspend fun closeTab(@Path("id") id: Int, @Body request: CloseTabRequest): Response<CloseTabResponse>
 
-    // Orders (leitura via GET tables/{id}, apenas mutações aqui)
+    // Orders
     @PATCH("orders/{id}")
     suspend fun updateOrder(@Path("id") id: Int, @Body request: UpdateOrderRequest): Response<TableOrder>
 
     @POST("orders/{id}/send-to-kitchen")
     suspend fun sendToKitchen(@Path("id") id: Int): Response<Unit>
+
+    @GET("orders/{id}")
+    suspend fun getOrder(@Path("id") id: Int): Response<TableOrder>
 
     @GET("categories")
     suspend fun getCategories(
@@ -55,7 +77,4 @@ interface ApiService {
         @Query("active") active: Boolean = true,
         @Query("categoryId") categoryId: Int? = null
     ): Response<PaginatedProductResponse>
-
-    @GET("orders/{id}")
-    suspend fun getOrder(@Path("id") id: Int): Response<TableOrder>
 }

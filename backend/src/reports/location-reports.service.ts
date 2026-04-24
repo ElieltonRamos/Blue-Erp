@@ -47,6 +47,7 @@ type OperatorStats = {
   opened: number;
   closed: number;
   totalValue: number;
+  totalServiceCharge: number;
 };
 
 type LocationAggregator = {
@@ -177,6 +178,7 @@ export class LocationReportService {
         opened: 0,
         closed: 0,
         totalValue: 0,
+        totalServiceCharge: 0,
       };
     }
     return location.operators[id];
@@ -230,6 +232,7 @@ export class LocationReportService {
       );
       op.closed += 1;
       op.totalValue += orderValue;
+      op.totalServiceCharge += Number(order.serviceCharge ?? 0);
     }
 
     // Itens por categoria
@@ -294,6 +297,7 @@ export class LocationReportService {
           opened: op.opened,
           closed: op.closed,
           totalValue: fmt(op.totalValue),
+          totalServiceCharge: fmt(op.totalServiceCharge),
         })),
       categories: Object.values(loc.categories).map((cat) => ({
         name: cat.name,

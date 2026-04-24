@@ -3,13 +3,13 @@ import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import { PrismaClient } from '../../generated/prisma/client';
 import { seedCompany } from './company-seed';
 import { seedUsers } from './user-seed';
-import { seedIbpt } from './ibpt-seed';
+// import { seedIbpt } from './ibpt-seed';
 import { seedCategories } from './category-seed';
 import { seedProductionLocations } from './production-location-seed';
-import { seedPrimaryMaterials } from './primary-material-seed';
 import { seedClients } from './client-seed';
-import { seedExpenses } from './expense-seed';
+// import { seedExpenses } from './expense-seed';
 import { seedProducts } from './product-seed';
+import { seedTables } from './seed-tables';
 
 const adapter = new PrismaMariaDb({
   host: process.env.DATABASE_HOST || '127.0.0.1',
@@ -26,13 +26,14 @@ async function main() {
 
   await seedCompany(prisma);
   await seedUsers(prisma);
-  await seedIbpt(prisma);
+  // await seedIbpt(prisma);
   const categories = await seedCategories(prisma);
   const locations = await seedProductionLocations(prisma);
-  const materials = await seedPrimaryMaterials(prisma);
-  await seedProducts(prisma, categories, materials, locations);
+  // const materials = await seedPrimaryMaterials(prisma);
+  await seedProducts(prisma, categories, locations);
+  await seedTables(prisma, locations);
   await seedClients(prisma);
-  await seedExpenses(prisma);
+  // await seedExpenses(prisma);
 
   console.log('✅ Seed concluído');
 }

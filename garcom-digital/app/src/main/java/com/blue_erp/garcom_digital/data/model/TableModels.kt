@@ -106,6 +106,7 @@ data class TableOrder(
     val customerName: String?,
     val status: String,
     val total: Double,
+    val serviceCharge: Double = 0.0,  // adicionar
     val items: List<TableOrderItem>,
     @SerializedName("createdAt")
     val createdAt: String
@@ -271,5 +272,10 @@ data class CloseTabResponse(
     @SerializedName("orderId")
     val orderId: Int,
     val total: Double,
+    val serviceCharge: Double,
     val message: String
+)
+
+data class CloseTabRequest(
+    val serviceCharge: Double
 )

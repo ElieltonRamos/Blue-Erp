@@ -9,10 +9,15 @@ import { OrderEntity } from './entities/order.entity';
 import { OrderStatus, ProductType, Prisma } from 'generated/prisma/client';
 import { OrderFiltersDto } from './dto/order-filters.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { PrinterService } from 'src/printer/printer.service';
+import { PrintJob, PrintItem } from 'src/printer/dto/print-job.dto';
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly printerService: PrinterService,
+  ) {}
 
   private isProduced(type: ProductType): boolean {
     return (
@@ -21,8 +26,11 @@ export class OrdersService {
     );
   }
 
-  async create(createOrderDto: CreateOrderDto): Promise<OrderEntity> {
-    const { items, operatorId, ...orderData } = createOrderDto;
+  async create(
+    createOrderDto: CreateOrderDto,
+    operatorId: number,
+  ): Promise<OrderEntity> {
+    const { items, ...orderData } = createOrderDto;
 
     if (operatorId) {
       const operator = await this.prisma.client.user.findUnique({
@@ -124,6 +132,48 @@ export class OrdersService {
         });
       }
 
+      const printJobsMap = new Map<string, PrintJob>();
+
+      const addToPrintJob = (location: string, item: PrintItem) => {
+        if (!printJobsMap.has(location)) {
+          printJobsMap.set(location, {
+            orderId: order.id,
+            table: order.table,
+            customerName: order.customerName,
+            location,
+            operatorName: order.operator?.username,
+            items: [],
+          });
+        }
+        printJobsMap.get(location)!.items.push(item);
+      };
+
+      for (const item of producedItems) {
+        const loc = item.product.productionLocation ?? 'LOCAL_01';
+        addToPrintJob(loc, {
+          name: item.name,
+          quantity: Number(item.quantity),
+          observation: item.observation,
+        });
+      }
+
+      for (const item of resaleItems) {
+        const loc = item.product.productionLocation?.trim();
+        if (loc) {
+          addToPrintJob(loc, {
+            name: item.name,
+            quantity: Number(item.quantity),
+            observation: item.observation,
+          });
+        }
+      }
+
+      if (printJobsMap.size > 0) {
+        this.printerService
+          .printOrder([...printJobsMap.values()])
+          .catch((err) => console.error('Erro ao imprimir:', err));
+      }
+
       if (orderData.table) {
         const tableNumber = parseInt(
           orderData.table.replace('Mesa ', '').trim(),
@@ -168,8 +218,8 @@ export class OrdersService {
       }
 
       return this.mapToEntity(order);
-    } catch (error) {
-      if (error.code === 'P2003') {
+    } catch (error: unknown) {
+      if ((error as any).code === 'P2003') {
         throw new BadRequestException(
           'Erro de chave estrangeira: Verifique se os dados relacionados existem',
         );
@@ -222,6 +272,9 @@ export class OrdersService {
         include: {
           items: true,
           operator: { select: { id: true, username: true, role: true } },
+          closedByOperator: {
+            select: { id: true, username: true, role: true },
+          },
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -243,6 +296,7 @@ export class OrdersService {
       include: {
         items: true,
         operator: { select: { id: true, username: true, role: true } },
+        closedByOperator: { select: { id: true, username: true, role: true } },
       },
     });
 
@@ -257,6 +311,7 @@ export class OrdersService {
     id: number,
     updateOrderDto: UpdateOrderDto,
     userRole: string,
+    operatorId: number,
   ): Promise<OrderEntity> {
     const existingOrder = await this.prisma.client.order.findUnique({
       where: { id },
@@ -274,6 +329,7 @@ export class OrdersService {
           },
         },
         operator: { select: { id: true, username: true, role: true } },
+        closedByOperator: { select: { id: true, username: true, role: true } },
       },
     });
 
@@ -301,6 +357,9 @@ export class OrdersService {
         include: {
           items: true,
           operator: { select: { id: true, username: true, role: true } },
+          closedByOperator: {
+            select: { id: true, username: true, role: true },
+          },
         },
       });
 
@@ -311,7 +370,45 @@ export class OrdersService {
       item.productions.some((p) => p.status === 'IN_PROGRESS'),
     );
 
-    const { items, ...orderData } = updateOrderDto;
+    const { items, serviceCharge, ...orderData } = updateOrderDto;
+
+    const isClosing = orderData.status === OrderStatus.CLOSED;
+
+    const printJobsMap = new Map<string, PrintJob>();
+
+    const addToPrintJob = (location: string, item: PrintItem) => {
+      if (!printJobsMap.has(location)) {
+        printJobsMap.set(location, {
+          orderId: id,
+          table: existingOrder.table,
+          customerName: existingOrder.customerName,
+          operatorName: existingOrder.operator?.username,
+          location,
+          items: [],
+        });
+      }
+      printJobsMap.get(location)!.items.push(item);
+    };
+
+    const addToPrintIfHasLocation = (
+      productionLocation: string | null | undefined,
+      item: PrintItem,
+    ) => {
+      const loc = productionLocation?.trim();
+      if (loc) addToPrintJob(loc, item);
+    };
+
+    const closingData = isClosing
+      ? {
+          finishedAt: new Date(),
+          ...(!existingOrder.closedByOperatorId && {
+            closedByOperatorId: operatorId,
+          }),
+        }
+      : {};
+
+    const serviceChargeData =
+      serviceCharge !== undefined ? { serviceCharge } : {};
 
     await this.prisma.client.$transaction(async (tx) => {
       let totalPedido = 0;
@@ -320,7 +417,12 @@ export class OrdersService {
         totalPedido = Number(existingOrder.total);
         await tx.order.update({
           where: { id },
-          data: { ...orderData, total: totalPedido },
+          data: {
+            ...orderData,
+            total: totalPedido,
+            ...closingData,
+            ...serviceChargeData,
+          },
         });
         return;
       }
@@ -338,7 +440,6 @@ export class OrdersService {
         );
       }
 
-      // Remoção de itens
       for (const item of existingItems) {
         if (incomingIds.includes(item.id)) continue;
 
@@ -379,7 +480,6 @@ export class OrdersService {
         }
       }
 
-      // Atualização de itens existentes
       for (const incoming of items.filter((i) => i.id)) {
         const existing = existingItems.find((i) => i.id === incoming.id);
         if (!existing) continue;
@@ -410,6 +510,20 @@ export class OrdersService {
                 pendingAt: new Date(),
                 observation: existing.observation ?? null,
               },
+            });
+
+            addToPrintJob(existing.product.productionLocation || 'LOCAL_01', {
+              name: existing.name,
+              quantity: diferenca,
+              observation: existing.observation,
+            });
+          }
+
+          if (existing.product.productType === ProductType.RESALE) {
+            addToPrintIfHasLocation(existing.product.productionLocation, {
+              name: existing.name,
+              quantity: diferenca,
+              observation: existing.observation,
             });
           }
         }
@@ -490,7 +604,6 @@ export class OrdersService {
         }
       }
 
-      // Novos itens
       const newItems = items.filter((i) => !i.id);
 
       if (newItems.length > 0) {
@@ -540,6 +653,12 @@ export class OrdersService {
               where: { id: newItem.productId },
               data: { quantity: { decrement: newItem.quantity } },
             });
+
+            addToPrintIfHasLocation(product.productionLocation, {
+              name: newItem.name!,
+              quantity: newItem.quantity,
+              observation: newItem.observation,
+            });
           }
 
           if (this.isProduced(product.productType)) {
@@ -554,21 +673,39 @@ export class OrdersService {
                 observation: newItem.observation ?? null,
               },
             });
+
+            addToPrintJob(product.productionLocation || 'LOCAL_01', {
+              name: newItem.name!,
+              quantity: newItem.quantity,
+              observation: newItem.observation,
+            });
           }
         }
       }
 
       await tx.order.update({
         where: { id },
-        data: { ...orderData, total: totalPedido },
+        data: {
+          ...orderData,
+          total: totalPedido,
+          ...closingData,
+          ...serviceChargeData,
+        },
       });
     });
+
+    if (printJobsMap.size > 0) {
+      this.printerService
+        .printOrder([...printJobsMap.values()])
+        .catch((err) => console.error('Erro ao imprimir:', err));
+    }
 
     const updated = await this.prisma.client.order.findUnique({
       where: { id },
       include: {
         items: true,
         operator: { select: { id: true, username: true, role: true } },
+        closedByOperator: { select: { id: true, username: true, role: true } },
       },
     });
 
@@ -586,6 +723,7 @@ export class OrdersService {
       include: {
         items: { include: { productions: true, product: true } },
         operator: { select: { id: true, username: true, role: true } },
+        closedByOperator: { select: { id: true, username: true, role: true } },
       },
     });
 
@@ -630,6 +768,7 @@ export class OrdersService {
       include: {
         items: true,
         operator: { select: { id: true, username: true, role: true } },
+        closedByOperator: { select: { id: true, username: true, role: true } },
       },
     });
 
@@ -652,6 +791,9 @@ export class OrdersService {
       tableOccupiedUntil: order.tableOccupiedUntil,
       operatorId: order.operatorId,
       closedByOperatorId: order.closedByOperatorId,
+      serviceCharge: Number(order.serviceCharge ?? 0),
+      operator: order.closedByOperator ?? order.operator ?? null,
+      closedByOperator: order.closedByOperator,
       items:
         order.items?.map((item: any) => ({
           id: item.id,

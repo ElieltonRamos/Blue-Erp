@@ -166,7 +166,7 @@
               <td class="py-3 px-4">{{ sale.id }}</td>
               <td class="py-3 px-4">{{ sale.date | date: 'dd/MM/yyyy HH:mm' }}</td>
               <td class="py-3 px-4">{{ sale.client.name }}</td>
-              <td class="py-3 px-4">{{ sale.paymentMethod }}</td>
+              <td class="py-3 px-4">{{ sale.payments[0].method }}</td>
               <td class="py-3 px-4">{{ sale.userOperator }}</td>
               <td class="py-3 px-4">
                 <span

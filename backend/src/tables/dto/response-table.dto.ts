@@ -162,6 +162,9 @@ export class TableOrderDto {
   @ApiProperty({ type: [TableOrderItemDto] })
   items: TableOrderItemDto[];
 
+  @ApiProperty({ example: 15.0 })
+  serviceCharge: number;
+
   @ApiProperty({ example: '2026-02-12T10:00:00.000Z' })
   createdAt: Date;
 
@@ -174,6 +177,7 @@ export class TableOrderDto {
     this.total = Number(data.total);
     this.items = (data.items || []).map((i: any) => new TableOrderItemDto(i));
     this.createdAt = data.createdAt;
+    this.serviceCharge = Number(data.serviceCharge ?? 0);
   }
 }
 
@@ -236,18 +240,27 @@ export class TableResponseDto {
 }
 
 export class CloseTabResponseDto {
-  @ApiProperty({ example: 1, description: 'ID da order fechada' })
+  @ApiProperty({ example: 1 })
   orderId: number;
 
-  @ApiProperty({ example: 150.5, description: 'Total da comanda' })
+  @ApiProperty({ example: 150.5 })
   total: number;
+
+  @ApiProperty({ example: 15.05 })
+  serviceCharge: number;
 
   @ApiProperty({ example: 'Comanda fechada para a mesa 5' })
   message: string;
 
-  constructor(data: { orderId: number; total: any; message: string }) {
+  constructor(data: {
+    orderId: number;
+    total: any;
+    serviceCharge: any;
+    message: string;
+  }) {
     this.orderId = data.orderId;
     this.total = Number(data.total);
+    this.serviceCharge = Number(data.serviceCharge ?? 0);
     this.message = data.message;
   }
 }

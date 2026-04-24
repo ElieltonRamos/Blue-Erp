@@ -37,6 +37,7 @@ import com.blue_erp.garcom_digital.ui.components.TableCard
 import com.blue_erp.garcom_digital.ui.theme.GarcomDigitalTheme
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.filled.Kitchen
 import androidx.core.content.ContextCompat
 
 private fun showTableNotification(context: Context, tableNumber: Int, message: String) {
@@ -67,6 +68,7 @@ private fun showTableNotification(context: Context, tableNumber: Int, message: S
 fun TablesScreen(
     onLogout: () -> Unit,
     onTableClick: (tableId: Int, orderId: Int?) -> Unit,
+    onNavigateToKitchen: () -> Unit,
     viewModel: TablesViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -137,6 +139,7 @@ fun TablesScreen(
         onOccupyConfirm = viewModel::occupyTable,
         onReserveConfirm = viewModel::reserveTable,
         onReleaseConfirm = viewModel::releaseTable,
+        onNavigateToKitchen = onNavigateToKitchen,
         onDismissDialogs = viewModel::dismissDialogs
     )
 }
@@ -154,6 +157,7 @@ private fun TablesScreenContent(
     onOccupyConfirm: (customer: String) -> Unit,
     onReserveConfirm: (customer: String, time: String) -> Unit,
     onReleaseConfirm: () -> Unit,
+    onNavigateToKitchen: () -> Unit,
     onDismissDialogs: () -> Unit
 ) {
     Scaffold(
@@ -161,6 +165,11 @@ private fun TablesScreenContent(
             TopAppBar(
                 title = { Text("Mesas") },
                 actions = {
+                    if (uiState.isAdmin) {
+                        IconButton(onClick = onNavigateToKitchen) {
+                            Icon(Icons.Default.Kitchen, contentDescription = "Cozinha")
+                        }
+                    }
                     IconButton(onClick = onRefresh) {
                         Icon(Icons.Default.Refresh, contentDescription = "Atualizar")
                     }
@@ -436,6 +445,7 @@ private fun TablesScreenPreview() {
             onOccupyConfirm = {},
             onReserveConfirm = { _, _ -> },
             onReleaseConfirm = {},
+            onNavigateToKitchen = {},
             onDismissDialogs = {}
         )
     }
@@ -455,6 +465,7 @@ private fun TablesScreenLoadingPreview() {
             onOccupyConfirm = {},
             onReserveConfirm = { _, _ -> },
             onReleaseConfirm = {},
+            onNavigateToKitchen = {},
             onDismissDialogs = {}
         )
     }
@@ -478,6 +489,7 @@ private fun TablesScreenEmptyPreview() {
             onOccupyConfirm = {},
             onReserveConfirm = { _, _ -> },
             onReleaseConfirm = {},
+            onNavigateToKitchen = {},
             onDismissDialogs = {}
         )
     }

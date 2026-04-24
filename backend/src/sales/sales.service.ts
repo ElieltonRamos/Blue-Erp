@@ -1,12 +1,17 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   Injectable,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service.js';
-import { Prisma, FiscalStatus, OrderStatus } from 'generated/prisma/client';
+import {
+  Prisma,
+  FiscalStatus,
+  OrderStatus,
+} from '../../generated/prisma/client.js';
 import { Decimal } from '@prisma/client/runtime/client';
-import { CreateSaleDto } from './dto/create-sale.dto.js';
+import { CreateSaleDto, CreateSalePaymentDto } from './dto/create-sale.dto.js';
 import { UpdateSaleDto } from './dto/update-sale.dto.js';
 import {
   PaginatedSalesResponseDto,
@@ -21,18 +26,69 @@ export class SalesService {
 
   private getBrasiliaTime(): Date {
     const now = new Date();
-    const brasiliaOffset = -3; // UTC-3
-    return new Date(now.getTime() + brasiliaOffset * 60 * 60 * 1000);
+    return new Date(now.getTime() + -3 * 60 * 60 * 1000);
   }
 
   private getStartOfDayBrasilia(dateString: string): Date {
-    const date = new Date(`${dateString}T00:00:00-03:00`);
-    return date;
+    return new Date(`${dateString}T00:00:00-03:00`);
   }
 
   private getEndOfDayBrasilia(dateString: string): Date {
-    const date = new Date(`${dateString}T23:59:59-03:00`);
-    return date;
+    return new Date(`${dateString}T23:59:59-03:00`);
+  }
+
+  private validatePayments(
+    payments: CreateSalePaymentDto[],
+    total: Decimal,
+  ): void {
+    if (!payments || payments.length === 0) {
+      throw new BadRequestException('Informe ao menos um método de pagamento');
+    }
+
+    const totalPaid = payments.reduce(
+      (acc, p) => acc.plus(new Decimal(p.amount)),
+      new Decimal(0),
+    );
+
+    const totalChange = payments.reduce(
+      (acc, p) => acc.plus(new Decimal(p.change ?? 0)),
+      new Decimal(0),
+    );
+
+    const netPaid = totalPaid.minus(totalChange);
+
+    if (netPaid.lessThan(total)) {
+      throw new BadRequestException(
+        `Valor pago (${netPaid.toString()}) é menor que o total da venda (${total.toString()})`,
+      );
+    }
+
+    for (const p of payments) {
+      if (p.method !== 'DINHEIRO' && (p.change ?? 0) > 0) {
+        throw new BadRequestException(
+          `Troco só é permitido para pagamento em DINHEIRO`,
+        );
+      }
+    }
+  }
+
+  private buildPaymentsData(payments: CreateSalePaymentDto[]) {
+    return payments.map((p) => ({
+      method: p.method,
+      amount: new Decimal(p.amount),
+      change: new Decimal(p.change ?? 0),
+    }));
+  }
+
+  private saleInclude() {
+    return {
+      items: true,
+      payments: true,
+      client: true,
+      operator: {
+        select: { id: true, username: true, role: true },
+      },
+    };
   }
 
   async create(
@@ -40,7 +96,7 @@ export class SalesService {
     userId: number,
     username: string,
   ): Promise<SaleResponseDto> {
-    const { items, ...saleData } = createSaleDto;
+    const { items, payments, ...saleData } = createSaleDto;
     const clientId = saleData.clientId ?? 1;
 
     const client = await this.prisma.client.client.findUnique({
@@ -54,12 +110,7 @@ export class SalesService {
     const productIds = items.map((item) => item.productId);
     const products = await this.prisma.client.product.findMany({
       where: { id: { in: productIds } },
-      select: {
-        id: true,
-        name: true,
-        costPrice: true,
-        unit: true,
-      },
+      select: { id: true, name: true, costPrice: true, unit: true },
     });
 
     const foundIds = products.map((p) => p.id);
@@ -74,7 +125,6 @@ export class SalesService {
     const discount = new Decimal(saleData.discount || 0);
     const cfop = saleData.cfop || '5102';
 
-    // Calcular totais
     let totalProductsWithoutDiscount = new Decimal(0);
     let profitSale = new Decimal(0);
 
@@ -86,11 +136,10 @@ export class SalesService {
       const itemCost = new Decimal(product.costPrice).times(
         new Decimal(item.quantity),
       );
-      const itemProfit = totalPrice.minus(itemCost);
 
       totalProductsWithoutDiscount =
         totalProductsWithoutDiscount.plus(totalPrice);
-      profitSale = profitSale.plus(itemProfit);
+      profitSale = profitSale.plus(totalPrice.minus(itemCost));
 
       return {
         itemNumber: index + 1,
@@ -111,7 +160,8 @@ export class SalesService {
     });
 
     const total = totalProductsWithoutDiscount.minus(discount);
-    const finalProfit = profitSale.minus(discount);
+
+    this.validatePayments(payments, total);
 
     const sale = await this.prisma.client.sale.create({
       data: {
@@ -119,29 +169,17 @@ export class SalesService {
         userOperator: username,
         operatorId: userId,
         date: this.getBrasiliaTime(),
-        paymentMethod: saleData.paymentMethod,
         totalProductsWithoutDiscount,
         discount,
         total,
-        profitSale: finalProfit,
+        profitSale: profitSale.minus(discount),
         isPaid: clientId === 1,
         cfop,
         fiscalStatus: FiscalStatus.PENDENTE,
-        items: {
-          create: itemsData,
-        },
+        items: { create: itemsData },
+        payments: { create: this.buildPaymentsData(payments) },
       },
-      include: {
-        items: true,
-        client: true,
-        operator: {
-          select: {
-            id: true,
-            username: true,
-            role: true,
-          },
-        },
-      },
+      include: this.saleInclude(),
     });
 
     return new SaleResponseDto(sale);
@@ -153,12 +191,12 @@ export class SalesService {
       limit = 10,
       clientId,
       operatorId,
-      paymentMethod,
       fiscalStatus,
       isPaid,
       clientName,
       fiscalKey,
       startDate,
+      paymentMethod,
       endDate,
     } = filters;
 
@@ -166,18 +204,14 @@ export class SalesService {
 
     const where: Prisma.SaleWhereInput = {
       ...(clientId && { clientId }),
-      ...(clientName && {
-        client: {
-          name: {
-            contains: clientName,
-          },
-        },
-      }),
+      ...(clientName && { client: { name: { contains: clientName } } }),
       ...(operatorId && { operatorId }),
-      ...(paymentMethod && { paymentMethod }),
       ...(fiscalStatus && { fiscalStatus }),
       ...(isPaid !== undefined && { isPaid }),
       ...(fiscalKey && { fiscalKey: { contains: fiscalKey } }),
+      ...(paymentMethod && {
+        payments: { some: { method: paymentMethod } },
+      }),
       ...(startDate || endDate
         ? {
             date: {
@@ -193,20 +227,8 @@ export class SalesService {
         where,
         skip,
         take: limit,
-        include: {
-          items: true,
-          client: true,
-          operator: {
-            select: {
-              id: true,
-              username: true,
-              role: true,
-            },
-          },
-        },
-        orderBy: {
-          date: 'desc',
-        },
+        include: this.saleInclude(),
+        orderBy: { date: 'desc' },
       }),
       this.prisma.client.sale.count({ where }),
     ]);
@@ -223,17 +245,7 @@ export class SalesService {
   async findOne(id: number): Promise<SaleResponseDto> {
     const sale = await this.prisma.client.sale.findUnique({
       where: { id },
-      include: {
-        items: true,
-        client: true,
-        operator: {
-          select: {
-            id: true,
-            username: true,
-            role: true,
-          },
-        },
-      },
+      include: this.saleInclude(),
     });
 
     if (!sale) {
@@ -249,9 +261,7 @@ export class SalesService {
   ): Promise<SaleResponseDto> {
     const existingSale = await this.prisma.client.sale.findUnique({
       where: { id },
-      include: {
-        items: true,
-      },
+      include: { items: true, payments: true },
     });
 
     if (!existingSale) {
@@ -275,52 +285,52 @@ export class SalesService {
 
     if (updateSaleDto.discount !== undefined) {
       const newDiscount = new Decimal(updateSaleDto.discount);
-      const oldDiscount = new Decimal(existingSale.discount);
-      const discountDiff = newDiscount.minus(oldDiscount);
-
       recalculatedTotal = recalculatedTotal.minus(newDiscount);
-      recalculatedProfit = recalculatedProfit.minus(discountDiff);
+      recalculatedProfit = recalculatedProfit.minus(
+        newDiscount.minus(new Decimal(existingSale.discount)),
+      );
     }
 
-    const updatedSale = await this.prisma.client.sale.update({
-      where: { id },
-      data: {
-        ...(updateSaleDto.paymentMethod && {
-          paymentMethod: updateSaleDto.paymentMethod,
-        }),
-        ...(updateSaleDto.discount !== undefined && {
-          discount: new Decimal(updateSaleDto.discount),
-          total: recalculatedTotal,
-          profitSale: recalculatedProfit,
-        }),
-        ...(updateSaleDto.isPaid !== undefined && {
-          isPaid: updateSaleDto.isPaid,
-        }),
-        ...(updateSaleDto.fiscalStatus && {
-          fiscalStatus: updateSaleDto.fiscalStatus,
-        }),
-        ...(updateSaleDto.cfop && { cfop: updateSaleDto.cfop }),
-      },
-      include: {
-        items: true,
-        client: true,
-        operator: {
-          select: {
-            id: true,
-            username: true,
-            role: true,
-          },
+    if (updateSaleDto.payments) {
+      this.validatePayments(updateSaleDto.payments, recalculatedTotal);
+    }
+
+    const updatedSale = await this.prisma.client.$transaction(async (tx) => {
+      if (updateSaleDto.payments) {
+        await tx.salePayment.deleteMany({ where: { saleId: id } });
+        await tx.salePayment.createMany({
+          data: this.buildPaymentsData(updateSaleDto.payments).map((p) => ({
+            ...p,
+            saleId: id,
+          })),
+        });
+      }
+
+      return tx.sale.update({
+        where: { id },
+        data: {
+          ...(updateSaleDto.discount !== undefined && {
+            discount: new Decimal(updateSaleDto.discount),
+            total: recalculatedTotal,
+            profitSale: recalculatedProfit,
+          }),
+          ...(updateSaleDto.isPaid !== undefined && {
+            isPaid: updateSaleDto.isPaid,
+          }),
+          ...(updateSaleDto.fiscalStatus && {
+            fiscalStatus: updateSaleDto.fiscalStatus,
+          }),
+          ...(updateSaleDto.cfop && { cfop: updateSaleDto.cfop }),
         },
-      },
+        include: this.saleInclude(),
+      });
     });
 
     return new SaleResponseDto(updatedSale);
   }
 
   async remove(id: number): Promise<{ message: string }> {
-    const sale = await this.prisma.client.sale.findUnique({
-      where: { id },
-    });
+    const sale = await this.prisma.client.sale.findUnique({ where: { id } });
 
     if (!sale) {
       throw new NotFoundException(`Venda ${id} não encontrada`);
@@ -332,9 +342,7 @@ export class SalesService {
       );
     }
 
-    await this.prisma.client.sale.delete({
-      where: { id },
-    });
+    await this.prisma.client.sale.delete({ where: { id } });
 
     return { message: 'Venda excluída com sucesso' };
   }
@@ -389,12 +397,13 @@ export class SalesService {
     const totalProductsWithoutDiscount = new Decimal(order.total);
     const total = totalProductsWithoutDiscount.minus(discount);
 
+    this.validatePayments(dto.payments, total);
+
     const profitSale = order.items.reduce((acc, item) => {
       const itemCost = new Decimal(item.product.costPrice).times(
         new Decimal(item.quantity),
       );
-      const itemRevenue = new Decimal(item.total);
-      return acc.plus(itemRevenue.minus(itemCost));
+      return acc.plus(new Decimal(item.total).minus(itemCost));
     }, new Decimal(0));
 
     const sale = await this.prisma.client.$transaction(async (tx) => {
@@ -404,7 +413,6 @@ export class SalesService {
           userOperator: username,
           operatorId: userId,
           date: this.getBrasiliaTime(),
-          paymentMethod: dto.paymentMethod,
           totalProductsWithoutDiscount,
           discount,
           total,
@@ -412,6 +420,7 @@ export class SalesService {
           isPaid: clientId === 1,
           cfop: dto.cfop || '5102',
           fiscalStatus: FiscalStatus.PENDENTE,
+          serviceCharge: order.serviceCharge ?? new Decimal(0),
           items: {
             create: order.items.map((item, index) => ({
               itemNumber: index + 1,
@@ -435,25 +444,14 @@ export class SalesService {
               iofValue: new Decimal(0),
             })),
           },
+          payments: { create: this.buildPaymentsData(dto.payments) },
         },
-        include: {
-          items: true,
-          client: true,
-          operator: {
-            select: {
-              id: true,
-              username: true,
-              role: true,
-            },
-          },
-        },
+        include: this.saleInclude(),
       });
 
       await tx.order.update({
         where: { id: orderId },
-        data: {
-          status: OrderStatus.PAID,
-        },
+        data: { status: OrderStatus.PAID },
       });
 
       return createdSale;
@@ -470,13 +468,8 @@ export class SalesService {
     }
 
     const result = await this.prisma.client.sale.updateMany({
-      where: {
-        id: { in: salesIds },
-        isPaid: false,
-      },
-      data: {
-        isPaid: true,
-      },
+      where: { id: { in: salesIds }, isPaid: false },
+      data: { isPaid: true },
     });
 
     if (result.count === 0) {

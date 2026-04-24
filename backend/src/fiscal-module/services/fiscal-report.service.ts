@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CompanyService } from '../../company/company.service';
@@ -62,7 +63,7 @@ export class FiscalReportsService {
           fiscalEmitDate: true,
           total: true,
           date: true,
-          paymentMethod: true,
+          payments: { select: { method: true, amount: true } },
           client: { select: { name: true } },
         },
       }),

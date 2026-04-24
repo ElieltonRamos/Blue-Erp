@@ -246,6 +246,7 @@ model Order {
   operator           User?       @relation("OrderOperator", fields: [operatorId], references: [id])
   closedByOperatorId Int?        @map("closed_by_operator_id") // novo campo
   closedByOperator   User?       @relation("OrderClosedBy", fields: [closedByOperatorId], references: [id])
+  serviceCharge      Decimal     @default(0) @map("service_charge") @db.Decimal(10, 2)
   items              OrderItem[]
   tableRef           Table?
 
@@ -305,29 +306,44 @@ model OrderProduction {
   @@map("order_productions")
 }
 
+model SalePayment {
+  id        Int      @id @default(autoincrement())
+  saleId    Int      @map("sale_id")
+  sale      Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  method    String
+  amount    Decimal  @db.Decimal(10, 2)
+  change    Decimal  @default(0) @db.Decimal(10, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([saleId])
+  @@index([method])
+  @@map("sale_payments")
+}
+
 model Sale {
-  id                           Int          @id @default(autoincrement())
-  clientId                     Int          @map("client_id")
-  client                       Client       @relation(fields: [clientId], references: [id])
-  userOperator                 String       @map("user_operator")
-  operatorId                   Int?         @map("operator_id")
-  operator                     User?        @relation(fields: [operatorId], references: [id])
-  date                         DateTime     @default(now())
-  paymentMethod                String       @map("payment_method")
-  totalProductsWithoutDiscount Decimal      @map("total_products_without_discount") @db.Decimal(10, 2)
-  discount                     Decimal      @default(0) @db.Decimal(10, 2)
-  total                        Decimal      @db.Decimal(10, 2)
-  profitSale                   Decimal      @map("profit_sale") @db.Decimal(10, 2)
-  isPaid                       Boolean      @default(false) @map("is_paid")
-  cfop                         String       @default("5102")
-  fiscalStatus                 FiscalStatus @default(PENDENTE) @map("fiscal_status")
-  fiscalKey                    String?      @map("fiscal_key")
-  fiscalProtocol               String?      @map("fiscal_protocol")
-  fiscalEmitDate               DateTime?    @map("fiscal_emit_date")
-  fiscalXml                    String?      @map("fiscal_xml") @db.LongText
+  id                           Int           @id @default(autoincrement())
+  clientId                     Int           @map("client_id")
+  client                       Client        @relation(fields: [clientId], references: [id])
+  userOperator                 String        @map("user_operator")
+  operatorId                   Int?          @map("operator_id")
+  operator                     User?         @relation(fields: [operatorId], references: [id])
+  date                         DateTime      @default(now())
+  payments                     SalePayment[]
+  totalProductsWithoutDiscount Decimal       @map("total_products_without_discount") @db.Decimal(10, 2)
+  discount                     Decimal       @default(0) @db.Decimal(10, 2)
+  total                        Decimal       @db.Decimal(10, 2)
+  profitSale                   Decimal       @map("profit_sale") @db.Decimal(10, 2)
+  isPaid                       Boolean       @default(false) @map("is_paid")
+  cfop                         String        @default("5102")
+  fiscalStatus                 FiscalStatus  @default(PENDENTE) @map("fiscal_status")
+  fiscalKey                    String?       @map("fiscal_key")
+  fiscalProtocol               String?       @map("fiscal_protocol")
+  fiscalEmitDate               DateTime?     @map("fiscal_emit_date")
+  fiscalXml                    String?       @map("fiscal_xml") @db.LongText
+  serviceCharge                Decimal       @default(0) @map("service_charge") @db.Decimal(10, 2)
   items                        SaleItem[]
-  createdAt                    DateTime     @default(now()) @map("created_at")
-  updatedAt                    DateTime     @updatedAt @map("updated_at")
+  createdAt                    DateTime      @default(now()) @map("created_at")
+  updatedAt                    DateTime      @updatedAt @map("updated_at")
 
   @@index([clientId])
   @@index([operatorId])

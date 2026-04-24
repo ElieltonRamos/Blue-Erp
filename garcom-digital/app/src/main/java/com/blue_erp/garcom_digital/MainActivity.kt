@@ -31,26 +31,32 @@ class MainActivity : ComponentActivity() {
             GarcomDigitalTheme {
                 val navController = rememberNavController()
 
-                // null = ainda verificando, true/false = resultado
-                var isLoggedIn by remember { mutableStateOf<Boolean?>(null) }
+                // Estado para armazenar a rota inicial calculada
+                var startDestination by remember { mutableStateOf<String?>(null) }
 
                 LaunchedEffect(Unit) {
-                    isLoggedIn = tokenManager.isLoggedIn()
-                }
+                    val token = tokenManager.getToken() // Supondo que você tenha esse método
 
-                if (isLoggedIn != null) {
-                    val startDestination = if (isLoggedIn == true) {
-                        Screen.Tables.route
+                    startDestination = if (!token.isNullOrBlank()) {
+                        val role = com.blue_erp.garcom_digital.util.JwtDecoder.getRole(token)
+
+                        // Lógica de proteção de rotas por cargo
+                        when (role) {
+                            "cozinheiro", "admin" -> Screen.Kitchen.route
+                            else -> Screen.Tables.route
+                        }
                     } else {
                         Screen.Login.route
                     }
+                }
 
+                // Só carrega o NavGraph quando a rota inicial for decidida
+                startDestination?.let { destination ->
                     NavGraph(
                         navController = navController,
-                        startDestination = startDestination
+                        startDestination = destination
                     )
                 }
-                // isLoggedIn == null: não renderiza nada (ou coloque um SplashScreen aqui)
             }
         }
     }

@@ -33,6 +33,7 @@ export interface Order {
   tableOccupiedUtil?: Date;
   closedByOperatorId?: number;
   operatorId?: number;
+  serviceCharge?: number
   operator?: {
     id: number;
     username: string;
@@ -48,6 +49,7 @@ export interface CreateOrderDto {
   table?: string;
   address?: string;
   operatorId?: number;
+  serviceCharge?: number;
 }
 
 export interface UpdateOrderDto {
@@ -56,6 +58,7 @@ export interface UpdateOrderDto {
   address?: string;
   status?: OrderStatus;
   items?: OrderItem[];
+  serviceCharge?: number
   total?: number;
 }
 

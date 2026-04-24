@@ -7,9 +7,10 @@ import com.blue_erp.garcom_digital.data.model.TableResponse
 import com.blue_erp.garcom_digital.data.model.TableStatus
 import com.blue_erp.garcom_digital.data.repository.AuthRepository
 import com.blue_erp.garcom_digital.data.repository.TableRepository
+import com.blue_erp.garcom_digital.util.JwtDecoder
 import com.blue_erp.garcom_digital.util.Resource
+import com.blue_erp.garcom_digital.util.TokenManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,13 +35,15 @@ data class TablesUiState(
     val actionSuccess: String? = null,
     val isLoggedOut: Boolean = false,
     val pendingNotification: TablesNotification? = null,
-    val navigateToTable: Int? = null  // tableId para navegar
+    val isAdmin: Boolean = false,
+    val navigateToTable: Int? = null
 )
 
 @HiltViewModel
 class TablesViewModel @Inject constructor(
     private val tableRepository: TableRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val tokenManager: TokenManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TablesUiState())
@@ -48,10 +51,18 @@ class TablesViewModel @Inject constructor(
     private val _alertedTableIds = mutableSetOf<Int>()
 
     init {
+        loadRole()
         loadInitial()
         startPolling()
     }
 
+    private fun loadRole() {
+        viewModelScope.launch {
+            val token = tokenManager.getToken()
+            val role = token?.let { JwtDecoder.getRole(it) }
+            _uiState.value = _uiState.value.copy(isAdmin = role == "admin")
+        }
+    }
     private fun startPolling() {
         viewModelScope.launch {
             while (true) {

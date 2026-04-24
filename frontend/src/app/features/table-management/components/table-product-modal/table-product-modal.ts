@@ -154,7 +154,15 @@ export class TableProductModal {
     }
 
     this.isSaving = true;
+
     const orderId = this.table.order.id;
+
+    const isFirstSave = !this.table.order.items.some((item) => item.id > 0);
+    const serviceCharge = isFirstSave
+      ? this.orderTotal * 0.1
+      : this.table.order.serviceCharge === 0
+        ? 0
+        : this.orderTotal * 0.1;
 
     const updateDto = {
       items: this.table.order.items.map((item) => ({
@@ -168,6 +176,7 @@ export class TableProductModal {
         observation: item.observation,
       })),
       total: this.orderTotal,
+      serviceCharge,
     };
 
     this.orderService.updateOrder(orderId, updateDto).subscribe({
@@ -184,15 +193,19 @@ export class TableProductModal {
             observation: i.observation ?? '',
           }));
           this.table.order.total = Number(updatedOrder.total);
+          this.table.order.serviceCharge = Number(updatedOrder.serviceCharge ?? 0);
         }
+
         this.isSaving = false;
         this.searchCode = '';
         this.searchName = '';
         this.searchResults = [];
+
         this.updated.emit();
         this.close.emit();
         this.cdr.markForCheck();
-        this.notification.success("Atualizado!")
+
+        this.notification.success('Atualizado!');
       },
       error: (error) => {
         this.notification.error(`Erro ao salvar: ${error.error?.message || error.message}`);

@@ -1,30 +1,30 @@
 import { PrismaClient } from 'generated/prisma/client';
 
 export async function seedProductionLocations(prisma: PrismaClient) {
-  const japonesa = await prisma.productionLocation.upsert({
-    where: { code: 'JAPONESA' },
+  const bar = await prisma.productionLocation.upsert({
+    where: { code: 'BAR' },
     update: {},
     create: {
-      code: 'JAPONESA',
-      name: 'Cozinha Japonesa',
-      description: 'Preparo de sushis, sashimis e pratos orientais',
-      active: true,
-      order: 1,
-    },
-  });
-
-  const churrascaria = await prisma.productionLocation.upsert({
-    where: { code: 'CHURRASCARIA' },
-    update: {},
-    create: {
-      code: 'CHURRASCARIA',
-      name: 'Churrascaria',
-      description: 'Preparo de carnes grelhadas e churrasco',
+      code: 'BAR',
+      name: 'BAR',
+      description: 'Preparo de Bebidas e drinks',
       active: true,
       order: 2,
     },
   });
 
+  const domJuan = await prisma.productionLocation.upsert({
+    where: { code: 'COZINHA_DOM_JUAN' },
+    update: {},
+    create: {
+      code: 'COZINHA_DOM_JUAN',
+      name: 'DOM JUAN',
+      description: 'Preparo de Pratos especiais',
+      active: true,
+      order: 1,
+    },
+  });
+
   console.log('✓ Production Locations seed');
-  return { japonesa, churrascaria };
+  return { bar, domJuan };
 }

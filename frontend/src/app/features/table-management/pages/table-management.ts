@@ -16,7 +16,10 @@ import { TableCard } from '../components/table-card/table-card';
 import { TableModalComponent } from '../components/table-modal/table.modal';
 import { TabModal } from '../components/tab-modal/tab-modal';
 import { TableProductModal } from '../components/table-product-modal/table-product-modal';
-import { ProductionLocation, ProductionLocationsService } from '../../users/services/location.service';
+import {
+  ProductionLocation,
+  ProductionLocationsService,
+} from '../../users/services/location.service';
 
 @Component({
   selector: 'app-table-management',
@@ -41,6 +44,7 @@ export class TableManagement implements OnInit {
   selectedTable: Table | null = null;
   selectedTableForProducts: Table | null = null;
   selectedLocation: number | null = null;
+  serviceChargeValue: number = 0;
 
   statusColors: Record<TableStatus, string> = {
     AVAILABLE: 'bg-emerald-600 hover:bg-emerald-700',
@@ -178,6 +182,7 @@ export class TableManagement implements OnInit {
     this.tableService.getTableById(table.id).subscribe({
       next: (response) => {
         this.selectedTableForProducts = response;
+        this.serviceChargeValue = response.order?.serviceCharge ?? 0;
         this.showTabModal = true;
         this.cdr.markForCheck();
       },
@@ -249,8 +254,7 @@ export class TableManagement implements OnInit {
     });
   }
 
-  // Fechar Comanda
-  closeTab(): void {
+  closeTab(serviceCharge: number): void {
     if (!this.selectedTableForProducts?.id) {
       this.notification.error('Mesa não selecionada');
       return;
@@ -263,7 +267,7 @@ export class TableManagement implements OnInit {
 
     alertConfirm('Confirma o fechamento da comanda e liberação da mesa?').then((result) => {
       if (result && this.selectedTableForProducts?.id) {
-        this.tableService.closeTab(this.selectedTableForProducts.id).subscribe({
+        this.tableService.closeTab(this.selectedTableForProducts.id, serviceCharge).subscribe({
           next: (response) => {
             this.notification.success('Comanda fechada e mesa liberada com sucesso!');
             this.closeTabModal();

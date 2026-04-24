@@ -11,7 +11,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { createReadStream } from 'fs';
 import { FiscalService } from './services/fiscal.service';
 import { EmitNfceDto } from './dto/emit-nfce.dto';

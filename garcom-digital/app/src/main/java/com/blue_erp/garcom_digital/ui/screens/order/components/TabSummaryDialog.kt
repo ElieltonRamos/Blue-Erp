@@ -5,6 +5,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -19,10 +24,13 @@ import java.util.Locale
 fun TabSummaryDialog(
     order: TableOrder,
     isClosingTab: Boolean,
-    onConfirm: () -> Unit,
+    onConfirm: (serviceCharge: Double) -> Unit,
     onDismiss: () -> Unit
 ) {
     val currencyFormat = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
+    var applyServiceCharge by remember { mutableStateOf(order.serviceCharge > 0.0) }
+    val serviceCharge = if (applyServiceCharge) order.total * 0.10 else 0.0
+    val grandTotal = order.total + serviceCharge
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -59,8 +67,41 @@ fun TabSummaryDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+                            Text("Subtotal", fontWeight = FontWeight.Medium)
+                            Text(currencyFormat.format(order.total), fontWeight = FontWeight.Medium)
+                        }
+                    }
+                    item {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text("Gorjeta (10%)", fontWeight = FontWeight.Medium)
+                                if (applyServiceCharge) {
+                                    Text(
+                                        text = currencyFormat.format(serviceCharge),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            Switch(
+                                checked = applyServiceCharge,
+                                onCheckedChange = { applyServiceCharge = it }
+                            )
+                        }
+                    }
+                    item {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
                             Text("Total", fontWeight = FontWeight.Bold)
-                            Text(currencyFormat.format(order.total), fontWeight = FontWeight.Bold)
+                            Text(currencyFormat.format(grandTotal), fontWeight = FontWeight.Bold)
                         }
                     }
                     item {
@@ -98,7 +139,7 @@ fun TabSummaryDialog(
         },
         confirmButton = {
             Button(
-                onClick = onConfirm,
+                onClick = { onConfirm(serviceCharge) },
                 enabled = !isClosingTab,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
             ) {

@@ -20,6 +20,7 @@ import { LicenseSystemModule } from './license-system/license-system.module';
 import { LicenseSystemService } from './license-system/license-system.service';
 import { FiscalModule } from './fiscal-module/fiscal.module';
 import { CategoryProductModule } from './category-product/category-product.module';
+import { PrinterModule } from './printer/printer.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { CategoryProductModule } from './category-product/category-product.modul
     LicenseSystemModule,
     FiscalModule,
     CategoryProductModule,
+    PrinterModule,
   ],
   controllers: [AppController],
   providers: [AppService, LicenseSystemService],

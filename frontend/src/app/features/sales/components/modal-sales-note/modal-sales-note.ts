@@ -99,6 +99,10 @@ export class ModalSalesNote implements OnInit {
     return this.saleData.fiscalStatus === FiscalStatus.EMITIDA && !!this.saleData.fiscalKey;
   }
 
+  get hasCreditoLoja(): boolean {
+    return this.saleData.payments?.some((p) => p.method === 'CREDITO_LOJA') ?? false;
+  }
+
   requestNfce() {
     if (!this.canEmitNfce) {
       this.notification.error(
