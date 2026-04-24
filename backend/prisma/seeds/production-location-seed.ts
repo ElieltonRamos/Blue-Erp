@@ -9,7 +9,7 @@ export async function seedProductionLocations(prisma: PrismaClient) {
       name: 'BAR',
       description: 'Preparo de Bebidas e drinks',
       active: true,
-      order: 1,
+      order: 2,
     },
   });
 
@@ -21,7 +21,7 @@ export async function seedProductionLocations(prisma: PrismaClient) {
       name: 'DOM JUAN',
       description: 'Preparo de Pratos especiais',
       active: true,
-      order: 2,
+      order: 1,
     },
   });
 

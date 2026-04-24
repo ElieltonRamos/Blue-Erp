@@ -3,6 +3,7 @@ import * as bcrypt from 'bcryptjs';
 
 export async function seedUsers(prisma: PrismaClient) {
   const users = [
+    { username: 'Root', password: 'impostoeroubo', role: 'admin' },
     { username: 'Andrei', password: '12345678', role: 'garcom' },
     { username: 'Aleff', password: '@Factor123', role: 'garcom' },
     { username: 'Cauaale', password: '123456', role: 'garcom' },
@@ -11,7 +12,6 @@ export async function seedUsers(prisma: PrismaClient) {
     { username: 'Renan', password: 'renan123', role: 'admin' },
     { username: 'Luciana', password: 'luciana123', role: 'admin' },
     { username: 'domjuan', password: 'cozinha123', role: 'cozinheiro' },
-    { username: 'Root', password: 'impostoeroubo', role: 'admin' },
   ];
 
   for (const user of users) {
