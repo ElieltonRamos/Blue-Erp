@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE `orders` ADD COLUMN `service_charge` DECIMAL(10, 2) NOT NULL DEFAULT 0;

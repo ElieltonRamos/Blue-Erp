@@ -187,6 +187,7 @@ CREATE TABLE `orders` (
     `table_occupied_until` DATETIME(3) NULL,
     `operator_id` INTEGER NULL,
     `closed_by_operator_id` INTEGER NULL,
+    `service_charge` DECIMAL(10, 2) NOT NULL DEFAULT 0,
 
     INDEX `orders_status_idx`(`status`),
     INDEX `orders_location_id_idx`(`location_id`),
@@ -243,13 +244,26 @@ CREATE TABLE `order_productions` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `sale_payments` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `sale_id` INTEGER NOT NULL,
+    `method` VARCHAR(191) NOT NULL,
+    `amount` DECIMAL(10, 2) NOT NULL,
+    `change` DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `sale_payments_sale_id_idx`(`sale_id`),
+    INDEX `sale_payments_method_idx`(`method`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `sales` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `client_id` INTEGER NOT NULL,
     `user_operator` VARCHAR(191) NOT NULL,
     `operator_id` INTEGER NULL,
     `date` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `payment_method` VARCHAR(191) NOT NULL,
     `total_products_without_discount` DECIMAL(10, 2) NOT NULL,
     `discount` DECIMAL(10, 2) NOT NULL DEFAULT 0,
     `total` DECIMAL(10, 2) NOT NULL,
@@ -261,6 +275,7 @@ CREATE TABLE `sales` (
     `fiscal_protocol` VARCHAR(191) NULL,
     `fiscal_emit_date` DATETIME(3) NULL,
     `fiscal_xml` LONGTEXT NULL,
+    `service_charge` DECIMAL(10, 2) NOT NULL DEFAULT 0,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
@@ -390,6 +405,9 @@ ALTER TABLE `order_items` ADD CONSTRAINT `order_items_product_id_fkey` FOREIGN K
 
 -- AddForeignKey
 ALTER TABLE `order_productions` ADD CONSTRAINT `order_productions_order_item_id_fkey` FOREIGN KEY (`order_item_id`) REFERENCES `order_items`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `sale_payments` ADD CONSTRAINT `sale_payments_sale_id_fkey` FOREIGN KEY (`sale_id`) REFERENCES `sales`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `sales` ADD CONSTRAINT `sales_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
