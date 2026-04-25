@@ -22,6 +22,7 @@
 <div *ngIf="!isLoading">
   <!-- Search Filters -->
   <div class="bg-slate-700/30 rounded-xl p-6 mb-6">
+    <!-- Row 1 -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <!-- Search by Name -->
       <div>
@@ -49,19 +50,16 @@
         </div>
       </div>
 
-      <!-- Search by ID -->
+      <!-- Search by Table -->
       <div>
-        <label class="text-slate-300 text-sm mb-2 block">Buscar por Código</label>
-        <div class="relative">
-          <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">#</span>
-          <input
-            type="text"
-            [(ngModel)]="searchId"
-            (keyup.enter)="applyFilters()"
-            placeholder="Ex: 001"
-            class="w-full bg-slate-800 border border-slate-600 rounded-lg pl-8 pr-4 py-2.5 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
-          />
-        </div>
+        <label class="text-slate-300 text-sm mb-2 block">Número da Mesa</label>
+        <input
+          type="text"
+          [(ngModel)]="searchTable"
+          (keyup.enter)="applyFilters()"
+          placeholder="Ex: 01"
+          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
+        />
       </div>
 
       <!-- Status Filter -->
@@ -79,22 +77,61 @@
       </div>
     </div>
 
-    <!-- Location Filter Row -->
+    <!-- Row 2 -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+      <!-- Search by Waiter Open -->
       <div>
-        <label class="text-slate-300 text-sm mb-2 block">Local de Origem</label>
-        <select
-          [(ngModel)]="locationFilter"
-          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:border-cyan-500 transition-colors appearance-none cursor-pointer"
-        >
-          <option value="all">Todos os Locais</option>
-          <option value="LOCAL_01">Local 01</option>
-          <option value="LOCAL_02">Local 02</option>
-          <option value="LOCAL_03">Local 03</option>
-          <option value="DELIVERY">Entregas</option>
-        </select>
+        <label class="text-slate-300 text-sm mb-2 block">Garçom que Abriu</label>
+        <div class="relative">
+          <svg
+            class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <input
+            type="text"
+            [(ngModel)]="searchWaiterOpen"
+            (keyup.enter)="applyFilters()"
+            placeholder="Nome do garçom..."
+            class="w-full bg-slate-800 border border-slate-600 rounded-lg pl-10 pr-4 py-2.5 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
+          />
+        </div>
       </div>
 
+      <!-- Search by Waiter Close -->
+      <div>
+        <label class="text-slate-300 text-sm mb-2 block">Garçom que Fechou</label>
+        <div class="relative">
+          <svg
+            class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <input
+            type="text"
+            [(ngModel)]="searchWaiterClose"
+            (keyup.enter)="applyFilters()"
+            placeholder="Nome do garçom..."
+            class="w-full bg-slate-800 border border-slate-600 rounded-lg pl-10 pr-4 py-2.5 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
+          />
+        </div>
+      </div>
+
+      <!-- Date Start -->
       <div>
         <label class="text-slate-300 text-sm mb-2 block">Data Início</label>
         <input
@@ -103,7 +140,10 @@
           class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:border-cyan-500 transition-colors"
         />
       </div>
+    </div>
 
+    <!-- Row 3 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
       <div>
         <label class="text-slate-300 text-sm mb-2 block">Data Fim</label>
         <input
@@ -201,11 +241,6 @@
             Tipo
           </th>
           <th
-            class="text-left py-4 px-4 text-pink-400 text-sm font-semibold uppercase tracking-wider"
-          >
-            Local
-          </th>
-          <th
             class="text-left py-4 px-4 text-cyan-400 text-sm font-semibold uppercase tracking-wider"
           >
             Itens
@@ -254,15 +289,10 @@
           </td>
           <td class="py-4 px-4">
             <span *ngIf="order.type === 'DINE_IN'" class="text-blue-400 text-sm font-medium">
-              🪑 {{ order.table }}
+              🪑 {{ order.tableNumber ?? order.table }}
             </span>
             <span *ngIf="order.type === 'DELIVERY'" class="text-orange-400 text-sm font-medium">
               🚚 Delivery
-            </span>
-          </td>
-          <td class="py-4 px-4">
-            <span class="text-pink-400 text-sm font-medium">
-              {{ getLocationLabel(order.locationId) }}
             </span>
           </td>
           <td class="py-4 px-4">

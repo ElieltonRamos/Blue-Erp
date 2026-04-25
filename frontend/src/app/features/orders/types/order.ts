@@ -23,6 +23,7 @@ export interface Order {
   status: OrderStatus;
   total: number;
   table?: string;
+  tableNumber?: string;
   address?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -33,8 +34,16 @@ export interface Order {
   tableOccupiedUtil?: Date;
   closedByOperatorId?: number;
   operatorId?: number;
-  serviceCharge?: number
+  serviceCharge?: number;
   operator?: {
+    id: number;
+    username: string;
+  };
+  waiterOpen?: {
+    id: number;
+    username: string;
+  };
+  waiterClose?: {
     id: number;
     username: string;
   };
@@ -58,17 +67,17 @@ export interface UpdateOrderDto {
   address?: string;
   status?: OrderStatus;
   items?: OrderItem[];
-  serviceCharge?: number
+  serviceCharge?: number;
   total?: number;
 }
 
 export interface OrderFilters {
   searchName?: string;
-  searchId?: number;
   status?: OrderStatus;
-  location?: OrderLocation;
   type?: OrderType;
-  table?: string;
+  searchTable?: string;
+  searchWaiterOpen?: string;
+  searchWaiterClose?: string;
   startDate?: string;
   endDate?: string;
   page?: number;

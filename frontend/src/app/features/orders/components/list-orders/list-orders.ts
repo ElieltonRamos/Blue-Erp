@@ -21,9 +21,10 @@ export class ListOrders implements OnInit {
   private router = inject(Router);
 
   searchName: string = '';
-  searchId: string = '';
+  searchTable: string = '';
+  searchWaiterOpen: string = '';
+  searchWaiterClose: string = '';
   statusFilter: string = 'all';
-  locationFilter: string = 'all';
   startDate: string = '';
   endDate: string = '';
   currentPage: number = 1;
@@ -60,9 +61,10 @@ export class ListOrders implements OnInit {
     this.orderService
       .getOrders({
         searchName: this.searchName || undefined,
-        searchId: this.searchId ? parseInt(this.searchId) : undefined,
+        searchTable: this.searchTable || undefined,
+        searchWaiterOpen: this.searchWaiterOpen || undefined,
+        searchWaiterClose: this.searchWaiterClose || undefined,
         status: this.statusFilter !== 'all' ? (this.statusFilter as OrderStatus) : undefined,
-        location: this.locationFilter !== 'all' ? (this.locationFilter as any) : undefined,
         startDate: this.startDate || undefined,
         endDate: this.endDate || undefined,
         page: this.currentPage,
@@ -93,9 +95,10 @@ export class ListOrders implements OnInit {
 
   clearFilters(): void {
     this.searchName = '';
-    this.searchId = '';
+    this.searchTable = '';
+    this.searchWaiterOpen = '';
+    this.searchWaiterClose = '';
     this.statusFilter = 'all';
-    this.locationFilter = 'all';
     this.setDefaultDates();
     this.currentPage = 1;
     this.loadOrders();
@@ -119,16 +122,6 @@ export class ListOrders implements OnInit {
       CANCELED: 'bg-red-500/20 text-red-400 border border-red-500/30',
     };
     return styles[status];
-  }
-
-  getLocationLabel(locationId: string): string {
-    const labels: Record<string, string> = {
-      LOCAL_01: 'Local 01',
-      LOCAL_02: 'Local 02',
-      LOCAL_03: 'Local 03',
-      DELIVERY: 'Delivery',
-    };
-    return labels[locationId] || locationId;
   }
 
   getTypeLabel(type: string): string {

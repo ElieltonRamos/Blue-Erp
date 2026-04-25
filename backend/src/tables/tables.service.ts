@@ -161,7 +161,7 @@ export class TablesService {
         include: { location: true },
       });
 
-      if (table.orderId && (dto.locationId || dto.customer)) {
+      if (table.orderId && (dto.locationId || dto.customer || dto.number)) {
         const orderUpdate: any = {};
 
         if (dto.locationId) {
@@ -173,6 +173,10 @@ export class TablesService {
 
         if (dto.customer) {
           orderUpdate.customerName = dto.customer;
+        }
+
+        if (dto.number) {
+          orderUpdate.table = `Mesa ${dto.number}`;
         }
 
         if (Object.keys(orderUpdate).length > 0) {

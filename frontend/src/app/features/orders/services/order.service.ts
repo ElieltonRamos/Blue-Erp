@@ -30,11 +30,13 @@ export class OrderService {
 
     if (filters) {
       if (filters.searchName) params = params.set('searchName', filters.searchName);
-      if (filters.searchId) params = params.set('searchId', filters.searchId.toString());
+      if (filters.searchTable) params = params.set('searchTable', filters.searchTable);
+      if (filters.searchWaiterOpen)
+        params = params.set('searchWaiterOpen', filters.searchWaiterOpen);
+      if (filters.searchWaiterClose)
+        params = params.set('searchWaiterClose', filters.searchWaiterClose);
       if (filters.status) params = params.set('status', filters.status);
-      if (filters.location) params = params.set('location', filters.location);
       if (filters.type) params = params.set('type', filters.type);
-      if (filters.table) params = params.set('table', filters.table);
       if (filters.startDate) params = params.set('startDate', filters.startDate);
       if (filters.endDate) params = params.set('endDate', filters.endDate);
       if (filters.page) params = params.set('page', filters.page.toString());

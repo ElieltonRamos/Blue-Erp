@@ -91,6 +91,9 @@ export class OrdersService {
           operator: {
             select: { id: true, username: true, role: true },
           },
+          closedByOperator: {
+            select: { id: true, username: true, role: true },
+          },
         },
       });
 
@@ -233,11 +236,11 @@ export class OrdersService {
       page = 1,
       limit = 10,
       status,
-      location,
       type,
-      table,
+      searchTable,
       searchName,
-      searchId,
+      searchWaiterOpen,
+      searchWaiterClose,
       startDate,
       endDate,
     } = filters;
@@ -245,11 +248,15 @@ export class OrdersService {
 
     const where: Prisma.OrderWhereInput = {
       ...(status && { status }),
-      ...(location && { locationId: location }),
       ...(type && { type }),
-      ...(table && { table: { contains: table } }),
+      ...(searchTable && { table: { contains: searchTable } }),
       ...(searchName && { customerName: { contains: searchName } }),
-      ...(searchId && { id: searchId }),
+      ...(searchWaiterOpen && {
+        operator: { username: { contains: searchWaiterOpen } },
+      }),
+      ...(searchWaiterClose && {
+        closedByOperator: { username: { contains: searchWaiterClose } },
+      }),
       ...(startDate || endDate
         ? {
             createdAt: {
@@ -444,28 +451,11 @@ export class OrdersService {
         if (incomingIds.includes(item.id)) continue;
 
         if (this.isProduced(item.product.productType)) {
-          const hasInProgressProduction = item.productions.some(
-            (p) => p.status === 'IN_PROGRESS',
-          );
-
-          if (hasInProgressProduction) {
-            throw new BadRequestException(
-              `Item "${item.name}" está em produção e não pode ser removido`,
-            );
-          }
-
-          const hasStartedProduction = item.productions.some(
-            (p) => p.status !== 'CANCELED' && Number(p.quantityProduced) > 0,
-          );
-
-          if (hasStartedProduction) {
-            throw new BadRequestException(
-              `Item "${item.name}" já iniciou produção e não pode ser removido`,
-            );
-          }
-
           await tx.orderProduction.updateMany({
-            where: { orderItemId: item.id, status: 'PENDING' },
+            where: {
+              orderItemId: item.id,
+              status: { in: ['PENDING', 'IN_PROGRESS'] },
+            },
             data: { status: 'CANCELED' },
           });
         }
@@ -792,8 +782,10 @@ export class OrdersService {
       operatorId: order.operatorId,
       closedByOperatorId: order.closedByOperatorId,
       serviceCharge: Number(order.serviceCharge ?? 0),
-      operator: order.closedByOperator ?? order.operator ?? null,
-      closedByOperator: order.closedByOperator,
+      waiterOpen: order.operator ?? null,
+      waiterClose: order.closedByOperator ?? null,
+      operator: order.operator ?? null,
+      closedByOperator: order.closedByOperator ?? null,
       items:
         order.items?.map((item: any) => ({
           id: item.id,
