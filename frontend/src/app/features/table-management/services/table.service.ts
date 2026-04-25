@@ -50,4 +50,15 @@ export class TableService {
   closeTab(id: number, serviceCharge?: number): Observable<CloseTabResponse> {
     return this.client.post<CloseTabResponse>(`${this.apiUrl}/${id}/close-tab`, { serviceCharge });
   }
+
+  transferTable(
+    originOrderId: number,
+    targetTableNumber: number,
+    targetLocationCode: string,
+  ): Observable<{ message: string }> {
+    return this.client.patch<{ message: string }>(`${this.apiUrl}/${originOrderId}/transfer`, {
+      targetTableNumber,
+      targetLocationCode,
+    });
+  }
 }

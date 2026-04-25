@@ -20,11 +20,22 @@ import {
   ProductionLocation,
   ProductionLocationsService,
 } from '../../users/services/location.service';
+import { FormField, ModalEditEntity } from '../../../shared/modal-edit-entity/modal-edit-entity';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-table-management',
   standalone: true,
-  imports: [CommonModule, TableStats, TableCard, TableModalComponent, TabModal, TableProductModal],
+  imports: [
+    CommonModule,
+    TableStats,
+    TableCard,
+    TableModalComponent,
+    TabModal,
+    TableProductModal,
+    ModalEditEntity,
+    FormsModule,
+  ],
   templateUrl: './table-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -45,6 +56,11 @@ export class TableManagement implements OnInit {
   selectedTableForProducts: Table | null = null;
   selectedLocation: number | null = null;
   serviceChargeValue: number = 0;
+  showTransferModal = false;
+  transferEntity: any = {};
+  transferFields: FormField[] = [];
+  selectedTableForTransfer: Table | null = null;
+  tableNumberFilter: string = '';
 
   statusColors: Record<TableStatus, string> = {
     AVAILABLE: 'bg-emerald-600 hover:bg-emerald-700',
@@ -98,7 +114,11 @@ export class TableManagement implements OnInit {
   }
 
   get sortedTables(): Table[] {
-    return [...this.filteredTables].sort((a, b) => a.number - b.number);
+    return [...this.filteredTables]
+      .sort((a, b) => a.number - b.number)
+      .filter((t) =>
+        this.tableNumberFilter ? t.number.toString().includes(this.tableNumberFilter) : true,
+      );
   }
 
   get tabTotal(): number {
@@ -109,6 +129,7 @@ export class TableManagement implements OnInit {
 
   selectLocation(locationId: number): void {
     this.selectedLocation = locationId;
+    this.tableNumberFilter = '';
     this.getTables();
   }
 
@@ -302,5 +323,61 @@ export class TableManagement implements OnInit {
 
   goToMenu(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  openTransferModal(table: Table): void {
+    this.selectedTableForTransfer = table;
+    this.transferEntity = { targetLocationCode: '', targetTableNumber: null };
+    this.transferFields = [
+      {
+        name: 'targetLocationCode',
+        label: 'Localização destino',
+        type: 'select',
+        options: this.locations.map((l) => l.code),
+      },
+      {
+        name: 'targetTableNumber',
+        label: 'Número da mesa destino',
+        type: 'number',
+        placeholder: 'Ex: 5',
+      },
+    ];
+    this.showTransferModal = true;
+    this.cdr.markForCheck();
+  }
+
+  closeTransferModal(): void {
+    this.showTransferModal = false;
+    this.selectedTableForTransfer = null;
+    this.transferEntity = {};
+  }
+
+  handleTransfer(entity: any): void {
+    const orderId = this.selectedTableForTransfer?.order?.id;
+    if (!orderId) {
+      this.notification.error('Mesa sem comanda aberta');
+      return;
+    }
+
+    alertConfirm(
+      'Deseja transferir a comanda dessa mesa? Ao fazer isso a mesa é liberada e os itens serão adicionados à mesa de destino.',
+    ).then((confirmed) => {
+      if (!confirmed) return;
+
+      this.tableService
+        .transferTable(orderId, Number(entity.targetTableNumber), entity.targetLocationCode)
+        .subscribe({
+          next: (response) => {
+            this.notification.success(response.message);
+            this.closeTransferModal();
+            this.getTables();
+          },
+          error: (error) => {
+            this.notification.error(
+              `Erro ao transferir mesa: ${error.error?.message || error.message}`,
+            );
+          },
+        });
+    });
   }
 }

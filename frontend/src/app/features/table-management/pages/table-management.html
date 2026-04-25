@@ -61,11 +61,22 @@
         [occupied]="occupiedTables"
       />
 
+      <!-- Filter -->
+      <div class="mb-4">
+        <input
+          type="number"
+          [(ngModel)]="tableNumberFilter"
+          placeholder="Filtrar por número da mesa"
+          class="w-48 px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-md text-sm placeholder-slate-400 focus:outline-none focus:border-cyan-500"
+        />
+      </div>
+
       <!-- Tables Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         @for (table of sortedTables; track table.id) {
           <app-table-card
             [table]="table"
+            (transfer)="openTransferModal($event)"
             [statusColors]="statusColors"
             [statusLabels]="statusLabels"
             (edit)="openModalEdit($event)"
@@ -111,5 +122,15 @@
     [total]="tabTotal"
     (close)="closeTabModal()"
     (finish)="closeTab($event)"
+  />
+
+  <app-modal-edit-entity
+    *ngIf="showTransferModal"
+    [show]="showTransferModal"
+    [title]="'Transferir Mesa'"
+    [entity]="transferEntity"
+    [fields]="transferFields"
+    (close)="closeTransferModal()"
+    (save)="handleTransfer($event)"
   />
 </div>
