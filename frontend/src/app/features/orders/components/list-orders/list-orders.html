@@ -307,7 +307,7 @@
               R$ {{ (order.total + (order.serviceCharge ?? 0)).toFixed(2) }}
             </span>
             <span *ngIf="order.serviceCharge" class="text-yellow-400 text-xs block">
-              Gorjeta: R$ {{ order.serviceCharge!.toFixed(2) }}
+              Taxa de Serviço: R$ {{ order.serviceCharge!.toFixed(2) }}
             </span>
           </td>
           <td class="py-4 px-4">
