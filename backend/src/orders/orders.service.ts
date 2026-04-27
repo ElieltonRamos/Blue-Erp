@@ -342,6 +342,10 @@ export class OrdersService {
       },
     });
 
+    const table = await this.prisma.client.table.findUnique({
+      where: { orderId: id },
+    });
+
     if (!existingOrder) {
       throw new NotFoundException(`Pedido ${id} não encontrado`);
     }
@@ -684,6 +688,18 @@ export class OrdersService {
           ...serviceChargeData,
         },
       });
+
+      if (isClosing && table) {
+        await tx.table.update({
+          where: { id: table.id },
+          data: {
+            status: 'AVAILABLE',
+            customer: null,
+            time: null,
+            orderId: null,
+          },
+        });
+      }
     });
 
     if (printJobsMap.size > 0) {
