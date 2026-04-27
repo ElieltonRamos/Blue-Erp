@@ -18,6 +18,7 @@ import {
 } from './dto/response-table.dto.js';
 import { CloseTabDto } from './dto/close-tab.dto.js';
 import { TableStatus, OrderStatus } from 'generated/prisma/client';
+import { resolveLogicalDateTime } from '../common/date-utils.js';
 
 @Injectable()
 export class TablesService {
@@ -240,6 +241,7 @@ export class TablesService {
             status: 'OPEN',
             total: 0,
             operatorId,
+            createdAt: resolveLogicalDateTime(),
             items: { create: [] },
           },
         });
@@ -344,7 +346,7 @@ export class TablesService {
     if (!table.order.items || table.order.items.length === 0)
       throw new BadRequestException('Não há produtos na comanda');
 
-    const now = new Date();
+    const now = resolveLogicalDateTime();
 
     const result = await this.prisma.client.$transaction(async (tx) => {
       const closedOrder = await tx.order.update({

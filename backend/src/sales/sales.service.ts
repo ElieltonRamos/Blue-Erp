@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   Injectable,
   NotFoundException,
@@ -19,6 +18,7 @@ import {
 } from './dto/response-sale.dto.js';
 import { SaleFiltersDto } from './dto/filters-sale.dto.js';
 import { ConvertOrderToSaleDto } from '../orders/dto/convert-order-to-sale.js';
+import { resolveLogicalDateTime } from '../common/date-utils.js';
 
 @Injectable()
 export class SalesService {
@@ -26,7 +26,14 @@ export class SalesService {
 
   private getBrasiliaTime(): Date {
     const now = new Date();
-    return new Date(now.getTime() + -3 * 60 * 60 * 1000);
+    const brtHour = (now.getUTCHours() - 3 + 24) % 24;
+    const result = new Date(now);
+
+    if (brtHour < 6) {
+      result.setUTCDate(result.getUTCDate() - 1);
+    }
+
+    return result;
   }
 
   private getStartOfDayBrasilia(dateString: string): Date {
@@ -176,6 +183,7 @@ export class SalesService {
         isPaid: clientId === 1,
         cfop,
         fiscalStatus: FiscalStatus.PENDENTE,
+        createdAt: resolveLogicalDateTime(),
         items: { create: itemsData },
         payments: { create: this.buildPaymentsData(payments) },
       },
@@ -421,6 +429,7 @@ export class SalesService {
           cfop: dto.cfop || '5102',
           fiscalStatus: FiscalStatus.PENDENTE,
           serviceCharge: order.serviceCharge ?? new Decimal(0),
+          createdAt: resolveLogicalDateTime(),
           items: {
             create: order.items.map((item, index) => ({
               itemNumber: index + 1,

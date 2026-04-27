@@ -46,15 +46,17 @@ export class ListOrders implements OnInit {
   }
 
   private setDefaultDates(): void {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
+    const now = new Date();
+    const referenceDate =
+      now.getHours() < 6 ? new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1) : now;
+
+    const year = referenceDate.getFullYear();
+    const month = String(referenceDate.getMonth() + 1).padStart(2, '0');
+    const day = String(referenceDate.getDate()).padStart(2, '0');
 
     this.startDate = `${year}-${month}-${day}`;
     this.endDate = `${year}-${month}-${day}`;
   }
-
   loadOrders(): void {
     this.isLoading = true;
 

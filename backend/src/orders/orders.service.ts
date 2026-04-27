@@ -11,6 +11,7 @@ import { OrderFiltersDto } from './dto/order-filters.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrinterService } from 'src/printer/printer.service';
 import { PrintJob, PrintItem } from 'src/printer/dto/print-job.dto';
+import { resolveLogicalDateTime } from '../common/date-utils';
 
 @Injectable()
 export class OrdersService {
@@ -62,6 +63,7 @@ export class OrdersService {
       const order = await this.prisma.client.order.create({
         data: {
           ...orderData,
+          createdAt: resolveLogicalDateTime(),
           ...(operatorId && { operatorId }),
           status: OrderStatus.OPEN,
           items: {
@@ -407,7 +409,7 @@ export class OrdersService {
 
     const closingData = isClosing
       ? {
-          finishedAt: new Date(),
+          finishedAt: resolveLogicalDateTime(),
           ...(!existingOrder.closedByOperatorId && {
             closedByOperatorId: operatorId,
           }),

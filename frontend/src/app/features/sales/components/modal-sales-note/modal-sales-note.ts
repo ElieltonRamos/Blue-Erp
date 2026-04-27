@@ -62,10 +62,8 @@ export class ModalSalesNote implements OnInit {
   }
 
   getDateSale() {
-    const date = new Date(this.saleData.date);
-    date.setHours(date.getHours() + 3);
-
-    return date.toLocaleString('pt-BR', {
+    return new Date(this.saleData.date).toLocaleString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',

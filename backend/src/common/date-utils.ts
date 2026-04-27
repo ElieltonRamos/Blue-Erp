@@ -14,3 +14,16 @@ export function nowBrasilia(): Date {
 export function toSefazDateTime(date: Date): string {
   return date.toISOString().replace(/\.\d{3}Z$/, '-03:00');
 }
+
+export function resolveLogicalDateTime(): Date {
+  const now = new Date();
+  const brtHour = (now.getUTCHours() - 3 + 24) % 24;
+
+  if (brtHour < 6) {
+    const result = new Date(now);
+    result.setUTCDate(result.getUTCDate() - 1);
+    return result;
+  }
+
+  return now;
+}
