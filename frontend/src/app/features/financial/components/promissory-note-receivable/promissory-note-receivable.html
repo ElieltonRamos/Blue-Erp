@@ -116,41 +116,48 @@
       </thead>
       <tbody class="divide-y divide-gray-700">
         @for (sale of listSales; track sale.id) {
-        <tr class="hover:bg-[#243447] transition">
-          <td class="py-3 px-4">
-            <input
-              type="checkbox"
-              [checked]="isSelected(sale.id!)"
-              (change)="onCheckboxChange($event, sale.id!)"
-            />
-          </td>
-          <td class="py-3 px-4">{{ sale.id }}</td>
-          <td>
-            <span
-              class="text-sm"
-              [ngClass]="{
-                'text-green-500': sale.isPaid,
-                'text-red-500': !sale.isPaid
-              }"
-            >
-              {{ sale.isPaid ? "PAGO" : "PENDENTE" }}
-            </span>
-          </td>
+          <tr class="hover:bg-[#243447] transition">
+            <td class="py-3 px-4">
+              <input
+                type="checkbox"
+                [checked]="isSelected(sale.id!)"
+                (change)="onCheckboxChange($event, sale.id!)"
+              />
+            </td>
+            <td class="py-3 px-4">{{ sale.id }}</td>
+            <td>
+              <span
+                class="text-sm"
+                [ngClass]="{
+                  'text-green-500': sale.isPaid,
+                  'text-red-500': !sale.isPaid,
+                }"
+              >
+                {{ sale.isPaid ? 'PAGO' : 'PENDENTE' }}
+              </span>
+            </td>
 
-          <td class="py-3 px-4">{{ sale.date }}</td>
-          <td class="py-3 px-4">{{ sale.client.name }}</td>
-          <td class="py-3 px-4">A Prazo</td>
-          <td class="py-3 px-4">{{ sale.operator?.username }}</td>
-          <td class="py-3 px-4">{{ sale.total }}</td>
-          <td class="py-3 px-4 space-x-2">
-            <button
-              (click)="openSaleModal(sale)"
-              class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors cursor-pointer"
-            >
-              Ver Detalhes
-            </button>
-          </td>
-        </tr>
+            <td class="py-3 px-4">{{ sale.date }}</td>
+            <td class="py-3 px-4">{{ sale.client.name }}</td>
+            <td class="py-3 px-4">A Prazo</td>
+            <td class="py-3 px-4">{{ sale.operator?.username }}</td>
+            <td class="py-3 px-4">
+              R$ {{ sale.total.toFixed(2) }}
+              @if (sale.serviceCharge) {
+                <span class="text-yellow-400 text-xs block">
+                  Taxa de Serviço: R$ {{ sale.serviceCharge.toFixed(2) }}
+                </span>
+              }
+            </td>
+            <td class="py-3 px-4 space-x-2">
+              <button
+                (click)="openSaleModal(sale)"
+                class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors cursor-pointer"
+              >
+                Ver Detalhes
+              </button>
+            </td>
+          </tr>
         }
       </tbody>
     </table>
@@ -170,8 +177,5 @@
 
 <!-- 🔹 MODAL -->
 @if (showSaleModal) {
-<app-modal-sales-note
-  [saleData]="saleSelected!"
-  (closeModal)="closeSaleModal()"
-/>
+  <app-modal-sales-note [saleData]="saleSelected!" (closeModal)="closeSaleModal()" />
 }

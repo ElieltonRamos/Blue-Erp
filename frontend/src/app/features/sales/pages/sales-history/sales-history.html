@@ -179,7 +179,14 @@
                   {{ sale.isPaid ? 'PAGO' : 'PENDENTE' }}
                 </span>
               </td>
-              <td class="py-3 px-4">R$ {{ sale.total.toFixed(2) }}</td>
+              <td class="py-3 px-4">
+                R$ {{ sale.total.toFixed(2) }}
+                @if (sale.serviceCharge) {
+                  <span class="text-yellow-400 text-xs block">
+                    Taxa de Serviço: R$ {{ sale.serviceCharge.toFixed(2) }}
+                  </span>
+                }
+              </td>
               <td class="py-3 px-4 space-x-2">
                 <button
                   (click)="openSaleModal(sale)"

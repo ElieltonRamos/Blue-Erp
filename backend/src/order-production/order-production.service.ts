@@ -93,9 +93,12 @@ export class ProductionService {
     status?: ProductionStatus;
     productionLocation?: string;
   }) {
-    const where: any = {};
+    const where: any = {
+      status: { not: ProductionStatus.CANCELED },
+      deliveredAt: null,
+    };
 
-    if (filters?.status) {
+    if (filters?.status && filters.status !== ProductionStatus.CANCELED) {
       where.status = filters.status;
     }
 
