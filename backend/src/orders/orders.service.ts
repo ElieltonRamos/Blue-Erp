@@ -342,10 +342,6 @@ export class OrdersService {
       },
     });
 
-    const table = await this.prisma.client.table.findUnique({
-      where: { orderId: id },
-    });
-
     if (!existingOrder) {
       throw new NotFoundException(`Pedido ${id} não encontrado`);
     }
@@ -379,13 +375,23 @@ export class OrdersService {
       return this.mapToEntity(updatedOrder);
     }
 
+    const { items, serviceCharge, ...orderData } = updateOrderDto;
+    const isClosing = orderData.status === OrderStatus.CLOSED;
     const isInProduction = existingOrder.items.some((item) =>
       item.productions.some((p) => p.status === 'IN_PROGRESS'),
     );
 
-    const { items, serviceCharge, ...orderData } = updateOrderDto;
+    const closingData = isClosing
+      ? {
+          finishedAt: resolveLogicalDateTime(),
+          ...(!existingOrder.closedByOperatorId && {
+            closedByOperatorId: operatorId,
+          }),
+        }
+      : {};
 
-    const isClosing = orderData.status === OrderStatus.CLOSED;
+    const serviceChargeData =
+      serviceCharge !== undefined ? { serviceCharge } : {};
 
     const printJobsMap = new Map<string, PrintJob>();
 
@@ -411,23 +417,254 @@ export class OrdersService {
       if (loc) addToPrintJob(loc, item);
     };
 
-    const closingData = isClosing
-      ? {
-          finishedAt: resolveLogicalDateTime(),
-          ...(!existingOrder.closedByOperatorId && {
-            closedByOperatorId: operatorId,
-          }),
-        }
-      : {};
-
-    const serviceChargeData =
-      serviceCharge !== undefined ? { serviceCharge } : {};
-
     await this.prisma.client.$transaction(async (tx) => {
-      let totalPedido = 0;
+      const table = await tx.table.findUnique({ where: { orderId: id } });
 
       if (!items) {
-        totalPedido = Number(existingOrder.total);
+        await tx.order.update({
+          where: { id },
+          data: {
+            ...orderData,
+            total: Number(existingOrder.total),
+            ...closingData,
+            ...serviceChargeData,
+          },
+        });
+      } else {
+        let totalPedido = 0;
+
+        // --- Remoção de itens ---
+        const existingItems = existingOrder.items;
+        const incomingIds = items.filter((i) => i.id).map((i) => i.id!);
+        const removedItems = existingItems.filter(
+          (item) => !incomingIds.includes(item.id),
+        );
+
+        if (removedItems.length > 0 && !['admin', 'caixa'].includes(userRole)) {
+          throw new BadRequestException(
+            'Apenas admin e caixa podem remover itens do pedido',
+          );
+        }
+
+        for (const item of removedItems) {
+          if (this.isProduced(item.product.productType)) {
+            await tx.orderProduction.updateMany({
+              where: {
+                orderItemId: item.id,
+                status: { in: ['PENDING', 'IN_PROGRESS'] },
+              },
+              data: { status: 'CANCELED' },
+            });
+          }
+
+          await tx.orderItem.delete({ where: { id: item.id } });
+
+          if (item.product.productType === ProductType.RESALE) {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { quantity: { increment: item.quantity } },
+            });
+          }
+        }
+
+        // --- Atualização de itens existentes ---
+        for (const incoming of items.filter((i) => i.id)) {
+          const existing = existingItems.find((i) => i.id === incoming.id);
+          if (!existing) continue;
+
+          const novaQuantidade = Number(incoming.quantity);
+          const quantidadeAtual = Number(existing.quantity);
+          const novoPreco = Number(incoming.unitPrice);
+          const precoAtual = Number(existing.unitPrice);
+
+          if (isInProduction && novoPreco !== precoAtual) {
+            throw new BadRequestException(
+              `Não é permitido alterar o preço do item "${existing.name}" após envio à cozinha`,
+            );
+          }
+
+          const diferenca = novaQuantidade - quantidadeAtual;
+
+          if (diferenca > 0) {
+            if (this.isProduced(existing.product.productType)) {
+              await tx.orderProduction.create({
+                data: {
+                  orderItemId: existing.id,
+                  productionLocation:
+                    existing.product.productionLocation || 'LOCAL_01',
+                  status: 'PENDING',
+                  quantityRequested: diferenca,
+                  quantityProduced: 0,
+                  pendingAt: new Date(),
+                  observation: existing.observation ?? null,
+                },
+              });
+
+              addToPrintJob(existing.product.productionLocation || 'LOCAL_01', {
+                name: existing.name,
+                quantity: diferenca,
+                observation: existing.observation,
+              });
+            }
+
+            if (existing.product.productType === ProductType.RESALE) {
+              await tx.product.update({
+                where: { id: existing.productId },
+                data: { quantity: { decrement: diferenca } },
+              });
+
+              addToPrintIfHasLocation(existing.product.productionLocation, {
+                name: existing.name,
+                quantity: diferenca,
+                observation: existing.observation,
+              });
+            }
+          }
+
+          if (diferenca < 0) {
+            if (this.isProduced(existing.product.productType)) {
+              let restanteParaCancelar = Math.abs(diferenca);
+
+              for (const prod of existing.productions.filter(
+                (p) => p.status === 'PENDING',
+              )) {
+                if (restanteParaCancelar <= 0) break;
+
+                const qty = Number(prod.quantityRequested);
+
+                if (qty <= restanteParaCancelar) {
+                  await tx.orderProduction.update({
+                    where: { id: prod.id },
+                    data: { status: 'CANCELED' },
+                  });
+                  restanteParaCancelar -= qty;
+                } else {
+                  await tx.orderProduction.update({
+                    where: { id: prod.id },
+                    data: { quantityRequested: qty - restanteParaCancelar },
+                  });
+                  restanteParaCancelar = 0;
+                }
+              }
+
+              if (restanteParaCancelar > 0) {
+                throw new BadRequestException(
+                  `Não é possível reduzir "${existing.name}" pois parte já está em produção`,
+                );
+              }
+            }
+
+            if (existing.product.productType === ProductType.RESALE) {
+              await tx.product.update({
+                where: { id: existing.productId },
+                data: { quantity: { increment: Math.abs(diferenca) } },
+              });
+            }
+          }
+
+          if (
+            incoming.observation !== undefined &&
+            incoming.observation !== existing.observation
+          ) {
+            await tx.orderProduction.updateMany({
+              where: { orderItemId: existing.id, status: 'PENDING' },
+              data: { observation: incoming.observation ?? null },
+            });
+          }
+
+          const precoFinal = novoPreco !== precoAtual ? novoPreco : precoAtual;
+          const totalItem = novaQuantidade * precoFinal;
+          totalPedido += totalItem;
+
+          await tx.orderItem.update({
+            where: { id: existing.id },
+            data: {
+              quantity: novaQuantidade,
+              unitPrice: precoFinal,
+              total: totalItem,
+              observation: incoming.observation ?? existing.observation ?? null,
+            },
+          });
+        }
+
+        // --- Novos itens ---
+        const newItems = items.filter((i) => !i.id);
+
+        if (newItems.length > 0) {
+          const products = await tx.product.findMany({
+            where: { id: { in: newItems.map((i) => i.productId) } },
+            select: { id: true, productType: true, productionLocation: true },
+          });
+
+          for (const newItem of newItems) {
+            const product = products.find((p) => p.id === newItem.productId);
+
+            if (!product) {
+              throw new BadRequestException(
+                `Produto ${newItem.productId} não encontrado`,
+              );
+            }
+
+            if (
+              newItem.quantity === undefined ||
+              newItem.unitPrice === undefined
+            ) {
+              throw new BadRequestException(
+                `Produto ${newItem.productId} com erro de cadastro`,
+              );
+            }
+
+            const totalItem = newItem.quantity * newItem.unitPrice;
+            totalPedido += totalItem;
+
+            const createdItem = await tx.orderItem.create({
+              data: {
+                orderId: id,
+                productId: newItem.productId,
+                code: newItem.code!,
+                name: newItem.name!,
+                quantity: newItem.quantity,
+                unitPrice: newItem.unitPrice,
+                total: totalItem,
+                observation: newItem.observation ?? null,
+              },
+            });
+
+            if (product.productType === ProductType.RESALE) {
+              await tx.product.update({
+                where: { id: newItem.productId },
+                data: { quantity: { decrement: newItem.quantity } },
+              });
+
+              addToPrintIfHasLocation(product.productionLocation, {
+                name: newItem.name!,
+                quantity: newItem.quantity,
+                observation: newItem.observation,
+              });
+            }
+
+            if (this.isProduced(product.productType)) {
+              await tx.orderProduction.create({
+                data: {
+                  orderItemId: createdItem.id,
+                  productionLocation: product.productionLocation || 'LOCAL_01',
+                  status: 'PENDING',
+                  quantityRequested: createdItem.quantity,
+                  quantityProduced: 0,
+                  pendingAt: new Date(),
+                  observation: newItem.observation ?? null,
+                },
+              });
+
+              addToPrintJob(product.productionLocation || 'LOCAL_01', {
+                name: newItem.name!,
+                quantity: newItem.quantity,
+                observation: newItem.observation,
+              });
+            }
+          }
+        }
+
         await tx.order.update({
           where: { id },
           data: {
@@ -437,258 +674,9 @@ export class OrdersService {
             ...serviceChargeData,
           },
         });
-        return;
       }
 
-      const existingItems = existingOrder.items;
-      const incomingIds = items.filter((i) => i.id).map((i) => i.id!);
-
-      const removedItems = existingItems.filter(
-        (item) => !incomingIds.includes(item.id),
-      );
-
-      if (removedItems.length > 0 && !['admin', 'caixa'].includes(userRole)) {
-        throw new BadRequestException(
-          'Apenas admin e caixa podem remover itens do pedido',
-        );
-      }
-
-      for (const item of existingItems) {
-        if (incomingIds.includes(item.id)) continue;
-
-        if (this.isProduced(item.product.productType)) {
-          await tx.orderProduction.updateMany({
-            where: {
-              orderItemId: item.id,
-              status: { in: ['PENDING', 'IN_PROGRESS'] },
-            },
-            data: { status: 'CANCELED' },
-          });
-        }
-
-        await tx.orderItem.delete({ where: { id: item.id } });
-
-        if (item.product.productType === ProductType.RESALE) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { quantity: { increment: item.quantity } },
-          });
-        }
-      }
-
-      for (const incoming of items.filter((i) => i.id)) {
-        const existing = existingItems.find((i) => i.id === incoming.id);
-        if (!existing) continue;
-
-        const novaQuantidade = Number(incoming.quantity);
-        const quantidadeAtual = Number(existing.quantity);
-        const novoPreco = Number(incoming.unitPrice);
-        const precoAtual = Number(existing.unitPrice);
-
-        if (isInProduction && novoPreco !== precoAtual) {
-          throw new BadRequestException(
-            `Não é permitido alterar o preço do item "${existing.name}" após envio à cozinha`,
-          );
-        }
-
-        if (novaQuantidade > quantidadeAtual) {
-          const diferenca = novaQuantidade - quantidadeAtual;
-
-          if (this.isProduced(existing.product.productType)) {
-            await tx.orderProduction.create({
-              data: {
-                orderItemId: existing.id,
-                productionLocation:
-                  existing.product.productionLocation || 'LOCAL_01',
-                status: 'PENDING',
-                quantityRequested: diferenca,
-                quantityProduced: 0,
-                pendingAt: new Date(),
-                observation: existing.observation ?? null,
-              },
-            });
-
-            addToPrintJob(existing.product.productionLocation || 'LOCAL_01', {
-              name: existing.name,
-              quantity: diferenca,
-              observation: existing.observation,
-            });
-          }
-
-          if (existing.product.productType === ProductType.RESALE) {
-            addToPrintIfHasLocation(existing.product.productionLocation, {
-              name: existing.name,
-              quantity: diferenca,
-              observation: existing.observation,
-            });
-          }
-        }
-
-        if (novaQuantidade < quantidadeAtual) {
-          if (this.isProduced(existing.product.productType)) {
-            const pendingProductions = existing.productions.filter(
-              (p) => p.status === 'PENDING',
-            );
-
-            let restanteParaCancelar = quantidadeAtual - novaQuantidade;
-
-            for (const prod of pendingProductions) {
-              if (restanteParaCancelar <= 0) break;
-
-              const qty = Number(prod.quantityRequested);
-
-              if (qty <= restanteParaCancelar) {
-                await tx.orderProduction.update({
-                  where: { id: prod.id },
-                  data: { status: 'CANCELED' },
-                });
-                restanteParaCancelar -= qty;
-              } else {
-                await tx.orderProduction.update({
-                  where: { id: prod.id },
-                  data: { quantityRequested: qty - restanteParaCancelar },
-                });
-                restanteParaCancelar = 0;
-              }
-            }
-
-            if (restanteParaCancelar > 0) {
-              throw new BadRequestException(
-                `Não é possível reduzir "${existing.name}" pois parte já está em produção`,
-              );
-            }
-          }
-        }
-
-        const precoFinal = novoPreco !== precoAtual ? novoPreco : precoAtual;
-        const totalItem = novaQuantidade * precoFinal;
-        totalPedido += totalItem;
-
-        await tx.orderItem.update({
-          where: { id: existing.id },
-          data: {
-            quantity: novaQuantidade,
-            unitPrice: precoFinal,
-            total: totalItem,
-            observation: incoming.observation ?? existing.observation ?? null,
-          },
-        });
-
-        if (
-          incoming.observation !== undefined &&
-          incoming.observation !== existing.observation
-        ) {
-          await tx.orderProduction.updateMany({
-            where: { orderItemId: existing.id, status: 'PENDING' },
-            data: { observation: incoming.observation ?? null },
-          });
-        }
-
-        if (existing.product.productType === ProductType.RESALE) {
-          const diferenca = novaQuantidade - quantidadeAtual;
-          if (diferenca > 0) {
-            await tx.product.update({
-              where: { id: existing.productId },
-              data: { quantity: { decrement: diferenca } },
-            });
-          } else if (diferenca < 0) {
-            await tx.product.update({
-              where: { id: existing.productId },
-              data: { quantity: { increment: Math.abs(diferenca) } },
-            });
-          }
-        }
-      }
-
-      const newItems = items.filter((i) => !i.id);
-
-      if (newItems.length > 0) {
-        const productIds = newItems.map((i) => i.productId);
-
-        const products = await tx.product.findMany({
-          where: { id: { in: productIds } },
-          select: { id: true, productType: true, productionLocation: true },
-        });
-
-        for (const newItem of newItems) {
-          const product = products.find((p) => p.id === newItem.productId);
-
-          if (!product) {
-            throw new BadRequestException(
-              `Produto ${newItem.productId} não encontrado`,
-            );
-          }
-
-          if (
-            newItem.quantity === undefined ||
-            newItem.unitPrice === undefined
-          ) {
-            throw new BadRequestException(
-              `Produto ${newItem.productId} com erro de cadastro`,
-            );
-          }
-
-          const totalItem = newItem.quantity * newItem.unitPrice;
-          totalPedido += totalItem;
-
-          const createdItem = await tx.orderItem.create({
-            data: {
-              orderId: id,
-              productId: newItem.productId,
-              code: newItem.code!,
-              name: newItem.name!,
-              quantity: newItem.quantity,
-              unitPrice: newItem.unitPrice,
-              total: totalItem,
-              observation: newItem.observation ?? null,
-            },
-          });
-
-          if (product.productType === ProductType.RESALE) {
-            await tx.product.update({
-              where: { id: newItem.productId },
-              data: { quantity: { decrement: newItem.quantity } },
-            });
-
-            addToPrintIfHasLocation(product.productionLocation, {
-              name: newItem.name!,
-              quantity: newItem.quantity,
-              observation: newItem.observation,
-            });
-          }
-
-          if (this.isProduced(product.productType)) {
-            await tx.orderProduction.create({
-              data: {
-                orderItemId: createdItem.id,
-                productionLocation: product.productionLocation || 'LOCAL_01',
-                status: 'PENDING',
-                quantityRequested: createdItem.quantity,
-                quantityProduced: 0,
-                pendingAt: new Date(),
-                observation: newItem.observation ?? null,
-              },
-            });
-
-            addToPrintJob(product.productionLocation || 'LOCAL_01', {
-              name: newItem.name!,
-              quantity: newItem.quantity,
-              observation: newItem.observation,
-            });
-          }
-        }
-      }
-
-      await tx.order.update({
-        where: { id },
-        data: {
-          ...orderData,
-          total: totalPedido,
-          ...closingData,
-          ...serviceChargeData,
-        },
-      });
-
+      // --- Liberar mesa (sempre executado se isClosing) ---
       if (isClosing && table) {
         await tx.table.update({
           where: { id: table.id },
