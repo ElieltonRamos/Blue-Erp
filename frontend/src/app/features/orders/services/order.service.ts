@@ -8,6 +8,7 @@ import {
   UpdateOrderDto,
   OrderFilters,
   OrderPaginatedResponse,
+  ReprintOrderDto,
 } from '../types/order';
 import { FilterProductParams, Product } from '../../products/types/product';
 import { PaginatedResponse } from '../../../core/guards/types/paginator';
@@ -58,11 +59,8 @@ export class OrderService {
     return this.client.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  sendToKitchen(id: number): Observable<{ orderId: number; kitchenSentAt: Date; message: string }> {
-    return this.client.post<{ orderId: number; kitchenSentAt: Date; message: string }>(
-      `${this.apiUrl}/${id}/send-to-kitchen`,
-      {},
-    );
+  reopenOrder(id: number): Observable<Order> {
+    return this.client.post<Order>(`${this.apiUrl}/${id}/reopen`, {});
   }
 
   cancelOrder(id: number): Observable<Order> {
@@ -99,5 +97,9 @@ export class OrderService {
 
   convertToSale(orderId: number, dto: ConvertOrderToSaleDto): Observable<any> {
     return this.client.post<any>(`${environment.apiUrl}/sales/convert/${orderId}`, dto);
+  }
+
+  reprint(orderId: number, data: ReprintOrderDto): Observable<void> {
+    return this.client.post<void>(`${this.apiUrl}/${orderId}/reprint`, data);
   }
 }

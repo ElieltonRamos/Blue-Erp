@@ -25,6 +25,12 @@
         >
           Transferir mesa
         </button>
+        <button
+          (click)="reprint.emit(table)"
+          class="bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors text-[8px] font-medium w-14 leading-tight"
+        >
+          Reimprimir
+        </button>
       }
       <button
         (click)="edit.emit(table)"

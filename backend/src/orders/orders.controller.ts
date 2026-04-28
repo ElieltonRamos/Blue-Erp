@@ -18,6 +18,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
+  ApiBody,
 } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { OrderEntity } from './entities/order.entity';
@@ -30,6 +31,7 @@ import {
 import { JwtAuthGuard, JwtPayload } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { ReprintOrderDto } from './dto/reprint-order.dto';
 
 @ApiTags('Orders')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -156,5 +158,50 @@ export class OrdersController {
   })
   cancel(@Param('id', ParseIntPipe) id: number): Promise<OrderEntity> {
     return this.ordersService.cancel(id);
+  }
+
+  @Post(':id/reopen')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reabrir pedido' })
+  @ApiParam({ name: 'id', type: Number, description: 'ID do pedido' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Pedido reaberto com sucesso',
+    type: OrderEntity,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Pedido já aberto, pago, ou mesa ocupada',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Pedido não encontrado',
+  })
+  reopen(@Param('id', ParseIntPipe) id: number): Promise<OrderEntity> {
+    return this.ordersService.reopen(id);
+  }
+
+  @Post(':id/reprint')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Reimprimir pedido' })
+  @ApiParam({ name: 'id', type: Number, description: 'ID do pedido' })
+  @ApiBody({ type: ReprintOrderDto })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Reimpressão enviada com sucesso',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Nenhum item imprimível',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Pedido não encontrado',
+  })
+  reprint(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ReprintOrderDto,
+  ): Promise<void> {
+    return this.ordersService.reprint(id, dto);
   }
 }

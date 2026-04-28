@@ -77,6 +77,7 @@
           <app-table-card
             [table]="table"
             (transfer)="openTransferModal($event)"
+            (reprint)="openReprintModal($event)"
             [statusColors]="statusColors"
             [statusLabels]="statusLabels"
             (edit)="openModalEdit($event)"
@@ -132,5 +133,15 @@
     [fields]="transferFields"
     (close)="closeTransferModal()"
     (save)="handleTransfer($event)"
+  />
+
+  <app-modal-edit-entity
+    *ngIf="showReprintModal"
+    [show]="showReprintModal"
+    [title]="'Reimprimir Pedido'"
+    [entity]="reprintEntity"
+    [fields]="reprintFields"
+    (close)="showReprintModal = false"
+    (save)="handleReprint($event)"
   />
 </div>

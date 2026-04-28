@@ -12,6 +12,7 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrinterService } from 'src/printer/printer.service';
 import { PrintJob, PrintItem } from 'src/printer/dto/print-job.dto';
 import { resolveLogicalDateTime } from '../common/date-utils';
+import { ReprintOrderDto } from './dto/reprint-order.dto';
 
 @Injectable()
 export class OrdersService {
@@ -769,6 +770,158 @@ export class OrdersService {
     });
 
     return this.mapToEntity(canceledOrder!);
+  }
+
+  async reopen(id: number): Promise<OrderEntity> {
+    const order = await this.prisma.client.order.findUnique({
+      where: { id },
+      include: {
+        operator: { select: { id: true, username: true, role: true } },
+        closedByOperator: { select: { id: true, username: true, role: true } },
+        items: true,
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Pedido ${id} não encontrado`);
+    }
+
+    if (order.status === OrderStatus.OPEN) {
+      throw new BadRequestException('Pedido já está aberto');
+    }
+
+    if (order.status === OrderStatus.PAID) {
+      throw new BadRequestException('Pedido pago não pode ser reaberto');
+    }
+
+    let tableRecord: { id: number; status: string } | null = null;
+
+    if (order.table) {
+      const tableNumber = parseInt(order.table.replace('Mesa ', '').trim(), 10);
+
+      if (!isNaN(tableNumber)) {
+        const location = await this.prisma.client.productionLocation.findFirst({
+          where: { code: order.locationId },
+        });
+
+        if (location) {
+          tableRecord = await this.prisma.client.table.findUnique({
+            where: {
+              number_locationId: {
+                number: tableNumber,
+                locationId: location.id,
+              },
+            },
+          });
+
+          if (tableRecord?.status === 'OCCUPIED') {
+            throw new BadRequestException(
+              `Mesa ${tableNumber} já está ocupada por outro cliente`,
+            );
+          }
+        }
+      }
+    }
+
+    await this.prisma.client.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id },
+        data: {
+          status: OrderStatus.OPEN,
+          finishedAt: null,
+          closedByOperatorId: null,
+        },
+      });
+
+      if (tableRecord) {
+        await tx.table.update({
+          where: { id: tableRecord.id },
+          data: {
+            status: 'OCCUPIED',
+            orderId: id,
+            customer: order.customerName ?? null,
+            time: null,
+          },
+        });
+      }
+    });
+
+    const updated = await this.prisma.client.order.findUnique({
+      where: { id },
+      include: {
+        items: true,
+        operator: { select: { id: true, username: true, role: true } },
+        closedByOperator: { select: { id: true, username: true, role: true } },
+      },
+    });
+
+    return this.mapToEntity(updated!);
+  }
+
+  async reprint(id: number, dto: ReprintOrderDto): Promise<void> {
+    const order = await this.prisma.client.order.findUnique({
+      where: { id },
+      include: {
+        operator: { select: { username: true } },
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Pedido ${id} não encontrado`);
+    }
+
+    const productIds = dto.items.map((i) => i.productId);
+    const products = await this.prisma.client.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, productionLocation: true, productType: true },
+    });
+
+    const printJobsMap = new Map<string, PrintJob>();
+
+    const addToPrintJob = (location: string, item: PrintItem) => {
+      if (!printJobsMap.has(location)) {
+        printJobsMap.set(location, {
+          orderId: order.id,
+          table: order.table,
+          customerName: order.customerName,
+          location,
+          isReprint: true,
+          operatorName: order.operator?.username,
+          items: [],
+        });
+      }
+      printJobsMap.get(location)!.items.push(item);
+    };
+
+    for (const item of dto.items) {
+      const product = products.find((p) => p.id === item.productId);
+      if (!product) continue;
+
+      const loc = product.productionLocation?.trim();
+      const isProduced = this.isProduced(product.productType);
+      const isResaleWithLocation =
+        product.productType === ProductType.RESALE && loc;
+
+      if (isProduced) {
+        addToPrintJob(loc ?? 'LOCAL_01', {
+          name: item.name,
+          quantity: item.quantity,
+          observation: item.observation,
+        });
+      } else if (isResaleWithLocation) {
+        addToPrintJob(loc, {
+          name: item.name,
+          quantity: item.quantity,
+          observation: item.observation,
+        });
+      }
+    }
+
+    if (printJobsMap.size === 0) {
+      throw new BadRequestException('Nenhum item imprimível');
+    }
+
+    await this.printerService.printOrder([...printJobsMap.values()]);
   }
 
   private mapToEntity(order: any): OrderEntity {

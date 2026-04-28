@@ -22,6 +22,7 @@ import {
 } from '../../users/services/location.service';
 import { FormField, ModalEditEntity } from '../../../shared/modal-edit-entity/modal-edit-entity';
 import { FormsModule } from '@angular/forms';
+import { OrderService } from '../../orders/services/order.service';
 
 @Component({
   selector: 'app-table-management',
@@ -42,6 +43,7 @@ import { FormsModule } from '@angular/forms';
 export class TableManagement implements OnInit {
   private notification = inject(NotificationService);
   private tableService = inject(TableService);
+  private orderService = inject(OrderService);
   private locationService = inject(ProductionLocationsService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
@@ -61,6 +63,10 @@ export class TableManagement implements OnInit {
   transferFields: FormField[] = [];
   selectedTableForTransfer: Table | null = null;
   tableNumberFilter: string = '';
+  showReprintModal = false;
+  reprintEntity: any = {};
+  reprintFields: FormField[] = [];
+  selectedTableForReprint: Table | null = null;
 
   statusColors: Record<TableStatus, string> = {
     AVAILABLE: 'bg-emerald-600 hover:bg-emerald-700',
@@ -378,6 +384,55 @@ export class TableManagement implements OnInit {
             );
           },
         });
+    });
+  }
+
+  openReprintModal(table: Table): void {
+    this.selectedTableForReprint = table;
+    this.reprintEntity = {};
+    this.reprintFields = table.order!.items.map((item) => {
+      this.reprintEntity[item.productId] = 0; // era item.quantity
+      return {
+        name: item.productId.toString(),
+        label: item.name,
+        type: 'number',
+        placeholder: `Qtd atual: ${item.quantity}`,
+      };
+    });
+
+    this.showReprintModal = true;
+    this.cdr.markForCheck();
+  }
+
+  handleReprint(quantities: any): void {
+    const items = this.selectedTableForReprint!.order!.items.map((item) => ({
+      productId: item.productId,
+      name: item.name,
+      quantity: Number(quantities[item.productId]),
+      observation: item.observation || '',
+    })).filter((item) => item.quantity > 0);
+
+    if (!items.length) {
+      this.notification.warning('Nenhum item com quantidade válida');
+      return;
+    }
+
+    alertConfirm(
+      'Tem certeza que deseja reimprimir os itens selecionados? Essa ação enviará os itens novamente para a cozinha/bar. Confirme apenas se a impressão anterior não ocorreu ou está incompleta.',
+    ).then((confirmed) => {
+      if (!confirmed) return;
+
+      this.orderService.reprint(this.selectedTableForReprint!.order!.id, { items }).subscribe({
+        next: () => {
+          this.notification.success('Pedido reimpresso!');
+          this.showReprintModal = false;
+          this.selectedTableForReprint = null;
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          this.notification.error(`Erro ao reimprimir: ${error.error?.message || error.message}`);
+        },
+      });
     });
   }
 }

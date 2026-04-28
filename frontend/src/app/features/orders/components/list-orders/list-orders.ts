@@ -213,4 +213,21 @@ export class ListOrders implements OnInit {
       this.loadOrders();
     }
   }
+
+  async reopenOrder(orderId: number): Promise<void> {
+    const confirmed = await alertConfirm('Deseja realmente reabrir este pedido?');
+
+    if (confirmed) {
+      this.orderService.reopenOrder(orderId).subscribe({
+        next: () => {
+          this.notification.success('Pedido reaberto com sucesso');
+          this.loadOrders();
+        },
+        error: (error) => {
+          console.error('Erro ao reabrir pedido:', error);
+          this.notification.error(error?.error?.message ?? 'Erro ao reabrir pedido');
+        },
+      });
+    }
+  }
 }

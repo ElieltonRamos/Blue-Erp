@@ -49,6 +49,15 @@ export interface Order {
   };
 }
 
+export interface ReprintOrderDto {
+  items: {
+    productId: number;
+    name: string;
+    quantity: number;
+    observation?: string;
+  }[];
+}
+
 export interface CreateOrderDto {
   type: OrderType;
   locationId: string;
