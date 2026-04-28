@@ -36,7 +36,8 @@ data class TablesUiState(
     val isLoggedOut: Boolean = false,
     val pendingNotification: TablesNotification? = null,
     val isAdmin: Boolean = false,
-    val navigateToTable: Int? = null
+    val navigateToTable: Int? = null,
+    val tableFilter: String = "",
 )
 
 @HiltViewModel
@@ -63,6 +64,11 @@ class TablesViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isAdmin = role == "admin")
         }
     }
+
+    fun filterTables(query: String) {
+        _uiState.value = _uiState.value.copy(tableFilter = query)
+    }
+
     private fun startPolling() {
         viewModelScope.launch {
             while (true) {

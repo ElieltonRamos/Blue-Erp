@@ -47,7 +47,6 @@ fun NavGraph(
                     val role = JwtDecoder.getRole(token)
                     val destination = when (role) {
                         "cozinheiro" -> Screen.Kitchen.route
-                        "admin"      -> Screen.Kitchen.route
                         else         -> Screen.Tables.route
                     }
                     navController.navigate(destination) {

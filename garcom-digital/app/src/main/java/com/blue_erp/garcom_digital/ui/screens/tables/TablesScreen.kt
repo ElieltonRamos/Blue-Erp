@@ -4,6 +4,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Kitchen
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -23,9 +26,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -35,10 +40,6 @@ import com.blue_erp.garcom_digital.data.model.TableResponse
 import com.blue_erp.garcom_digital.data.model.TableStatus
 import com.blue_erp.garcom_digital.ui.components.TableCard
 import com.blue_erp.garcom_digital.ui.theme.GarcomDigitalTheme
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material.icons.filled.Kitchen
-import androidx.core.content.ContextCompat
 
 private fun showTableNotification(context: Context, tableNumber: Int, message: String) {
     val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -140,7 +141,8 @@ fun TablesScreen(
         onReserveConfirm = viewModel::reserveTable,
         onReleaseConfirm = viewModel::releaseTable,
         onNavigateToKitchen = onNavigateToKitchen,
-        onDismissDialogs = viewModel::dismissDialogs
+        onDismissDialogs = viewModel::dismissDialogs,
+        onFilterTables = viewModel::filterTables,
     )
 }
 
@@ -158,8 +160,14 @@ private fun TablesScreenContent(
     onReserveConfirm: (customer: String, time: String) -> Unit,
     onReleaseConfirm: () -> Unit,
     onNavigateToKitchen: () -> Unit,
-    onDismissDialogs: () -> Unit
+    onDismissDialogs: () -> Unit,
+    onFilterTables: (String) -> Unit,
 ) {
+    val filteredTables = remember(uiState.tables, uiState.tableFilter) {
+        if (uiState.tableFilter.isBlank()) uiState.tables
+        else uiState.tables.filter { it.number.toString().contains(uiState.tableFilter) }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -229,6 +237,17 @@ private fun TablesScreenContent(
                 }
             }
 
+            OutlinedTextField(
+                value = uiState.tableFilter,
+                onValueChange = onFilterTables,
+                label = { Text("Filtrar por número") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
             PullToRefreshBox(
                 isRefreshing = uiState.isRefreshing,
                 onRefresh = onRefresh,
@@ -244,13 +263,14 @@ private fun TablesScreenContent(
                         }
                     }
 
-                    uiState.tables.isEmpty() -> {
+                    filteredTables.isEmpty() -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Nenhuma mesa cadastrada",
+                                text = if (uiState.tableFilter.isBlank()) "Nenhuma mesa cadastrada"
+                                else "Nenhuma mesa encontrada",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -263,7 +283,7 @@ private fun TablesScreenContent(
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            items(items = uiState.tables, key = { it.id }) { table ->
+                            items(items = filteredTables, key = { it.id }) { table ->
                                 TableCard(
                                     table = table,
                                     onClick = { onTableClick(table) },
@@ -446,7 +466,8 @@ private fun TablesScreenPreview() {
             onReserveConfirm = { _, _ -> },
             onReleaseConfirm = {},
             onNavigateToKitchen = {},
-            onDismissDialogs = {}
+            onDismissDialogs = {},
+            onFilterTables = {},
         )
     }
 }
@@ -466,7 +487,8 @@ private fun TablesScreenLoadingPreview() {
             onReserveConfirm = { _, _ -> },
             onReleaseConfirm = {},
             onNavigateToKitchen = {},
-            onDismissDialogs = {}
+            onDismissDialogs = {},
+            onFilterTables = {},
         )
     }
 }
@@ -490,7 +512,8 @@ private fun TablesScreenEmptyPreview() {
             onReserveConfirm = { _, _ -> },
             onReleaseConfirm = {},
             onNavigateToKitchen = {},
-            onDismissDialogs = {}
+            onDismissDialogs = {},
+            onFilterTables = {},
         )
     }
 }
