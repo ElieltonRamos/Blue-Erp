@@ -24,18 +24,6 @@ import { resolveLogicalDateTime } from '../common/date-utils.js';
 export class SalesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private getBrasiliaTime(): Date {
-    const now = new Date();
-    const brtHour = (now.getUTCHours() - 3 + 24) % 24;
-    const result = new Date(now);
-
-    if (brtHour < 6) {
-      result.setUTCDate(result.getUTCDate() - 1);
-    }
-
-    return result;
-  }
-
   private getStartOfDayBrasilia(dateString: string): Date {
     return new Date(`${dateString}T00:00:00-03:00`);
   }
@@ -175,7 +163,7 @@ export class SalesService {
         clientId,
         userOperator: username,
         operatorId: userId,
-        date: this.getBrasiliaTime(),
+        date: resolveLogicalDateTime(),
         totalProductsWithoutDiscount,
         discount,
         total,
@@ -420,7 +408,7 @@ export class SalesService {
           clientId,
           userOperator: username,
           operatorId: userId,
-          date: this.getBrasiliaTime(),
+          date: resolveLogicalDateTime(),
           totalProductsWithoutDiscount,
           discount,
           total,

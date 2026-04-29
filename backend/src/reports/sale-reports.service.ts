@@ -28,13 +28,11 @@ export class SalesReportService {
   constructor(private prisma: PrismaService) {}
 
   private getStartOfDayBrasilia(dateString: string): Date {
-    const date = new Date(dateString + ' 00:00:00');
-    return date;
+    return new Date(`${dateString}T00:00:00-03:00`);
   }
 
   private getEndOfDayBrasilia(dateString: string): Date {
-    const date = new Date(dateString + ' 23:59:59.999');
-    return date;
+    return new Date(`${dateString}T23:59:59.999-03:00`);
   }
 
   private async fetchSalesData(

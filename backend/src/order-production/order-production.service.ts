@@ -6,6 +6,7 @@ import {
 import { PrismaService } from 'src/database/prisma.service';
 import { ProductionStatus, ProductType } from 'generated/prisma/client';
 import { Decimal } from '@prisma/client/runtime/client';
+import { resolveLogicalDateTime } from '../common/date-utils';
 
 @Injectable()
 export class ProductionService {
@@ -71,7 +72,7 @@ export class ProductionService {
       ),
       totalDuration: this.calculateDuration(
         prod.pendingAt,
-        prod.deliveredAt || new Date(),
+        prod.deliveredAt || resolveLogicalDateTime(),
       ),
       orderItem: {
         id: prod.orderItem.id,
@@ -158,7 +159,7 @@ export class ProductionService {
       ),
       totalDuration: this.calculateDuration(
         prod.pendingAt,
-        prod.deliveredAt || new Date(),
+        prod.deliveredAt || resolveLogicalDateTime(),
       ),
       orderItem: {
         id: prod.orderItem.id,
@@ -192,7 +193,7 @@ export class ProductionService {
       where: { id: productionId },
       data: {
         status: ProductionStatus.IN_PROGRESS,
-        startedAt: new Date(),
+        startedAt: resolveLogicalDateTime(),
       },
       include: {
         orderItem: {
@@ -328,13 +329,13 @@ export class ProductionService {
         data: {
           status: ProductionStatus.COMPLETED,
           quantityProduced: production.quantityRequested,
-          completedAt: new Date(),
+          completedAt: resolveLogicalDateTime(),
         },
       });
 
       await tx.orderItem.update({
         where: { id: production.orderItemId },
-        data: { kitchenReadyAt: new Date() },
+        data: { kitchenReadyAt: resolveLogicalDateTime() },
       });
 
       for (const [materialId, amount] of materialConsumption) {
@@ -348,7 +349,7 @@ export class ProductionService {
     return {
       productionId,
       status: ProductionStatus.COMPLETED,
-      completedAt: new Date(),
+      completedAt: resolveLogicalDateTime(),
       message: 'Produção completada e estoque consumido',
     };
   }
@@ -373,7 +374,7 @@ export class ProductionService {
 
     const updated = await this.prisma.client.orderProduction.update({
       where: { id: productionId },
-      data: { deliveredAt: new Date() },
+      data: { deliveredAt: resolveLogicalDateTime() },
     });
 
     return {
@@ -421,7 +422,7 @@ export class ProductionService {
     end: Date | null,
   ): number | null {
     if (!start) return null;
-    const endDate = end || new Date();
+    const endDate = end || resolveLogicalDateTime();
     const diff = endDate.getTime() - start.getTime();
     return Math.floor(diff / 1000 / 60);
   }

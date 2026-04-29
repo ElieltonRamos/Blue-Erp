@@ -130,7 +130,7 @@ export class OrdersService {
                 status: 'PENDING',
                 quantityRequested: item.quantity,
                 quantityProduced: 0,
-                pendingAt: new Date(),
+                pendingAt: resolveLogicalDateTime(),
                 observation: item.observation ?? null,
               },
             });
@@ -496,7 +496,7 @@ export class OrdersService {
                   status: 'PENDING',
                   quantityRequested: diferenca,
                   quantityProduced: 0,
-                  pendingAt: new Date(),
+                  pendingAt: resolveLogicalDateTime(),
                   observation: existing.observation ?? null,
                 },
               });
@@ -652,7 +652,7 @@ export class OrdersService {
                   status: 'PENDING',
                   quantityRequested: createdItem.quantity,
                   quantityProduced: 0,
-                  pendingAt: new Date(),
+                  pendingAt: resolveLogicalDateTime(),
                   observation: newItem.observation ?? null,
                 },
               });

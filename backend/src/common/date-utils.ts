@@ -16,13 +16,11 @@ export function toSefazDateTime(date: Date): string {
 }
 
 export function resolveLogicalDateTime(): Date {
-  const now = new Date();
-  const brtHour = (now.getUTCHours() - 3 + 24) % 24;
+  const now = nowBrasilia();
+  const hour = now.getHours();
 
-  if (brtHour < 6) {
-    const result = new Date(now);
-    result.setUTCDate(result.getUTCDate() - 1);
-    return result;
+  if (hour < 6) {
+    now.setDate(now.getDate() - 1);
   }
 
   return now;

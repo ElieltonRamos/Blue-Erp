@@ -9,11 +9,11 @@ export class ExpenseReportService {
   constructor(private prisma: PrismaService) {}
 
   private getStartOfDay(dateString: string): Date {
-    return new Date(dateString + ' 00:00:00');
+    return new Date(`${dateString}T00:00:00-03:00`);
   }
 
   private getEndOfDay(dateString: string): Date {
-    return new Date(dateString + ' 23:59:59.999');
+    return new Date(`${dateString}T23:59:59.999-03:00`);
   }
 
   async generateExpenseReport(
