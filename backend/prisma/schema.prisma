@@ -249,6 +249,7 @@ model Order {
   serviceCharge      Decimal     @default(0) @map("service_charge") @db.Decimal(10, 2)
   items              OrderItem[]
   tableRef           Table?
+  sale               Sale?
 
   @@index([status])
   @@index([locationId])
@@ -342,6 +343,8 @@ model Sale {
   fiscalXml                    String?       @map("fiscal_xml") @db.LongText
   serviceCharge                Decimal       @default(0) @map("service_charge") @db.Decimal(10, 2)
   items                        SaleItem[]
+  orderId                      Int?          @unique @map("order_id")
+  order                        Order?        @relation(fields: [orderId], references: [id])
   createdAt                    DateTime      @default(now()) @map("created_at")
   updatedAt                    DateTime      @updatedAt @map("updated_at")
 
