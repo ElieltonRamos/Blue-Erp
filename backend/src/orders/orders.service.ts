@@ -585,6 +585,7 @@ export class OrdersService {
               quantity: novaQuantidade,
               unitPrice: precoFinal,
               total: totalItem,
+              serviceCharge: incoming.serviceCharge ?? 0,
               observation: incoming.observation ?? existing.observation ?? null,
             },
           });

@@ -109,11 +109,13 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
   onServiceChargeInput(value: number): void {
     this.serviceChargeAmount = value;
     this.distributeServiceCharge();
+    this.cdr.detectChanges();
   }
 
   distributeServiceCharge(): void {
     if (!this.order) return;
 
+    console.log(this.order.items)
     if (!this.serviceChargeEnabled || this.serviceChargeAmount === 0) {
       this.order.items.forEach((item) => (item.serviceCharge = 0));
       this.order.serviceCharge = 0;
@@ -290,13 +292,16 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
       this.cdr.detectChanges();
     }
   }
-  
+
   calculateOrderTotal(): void {
     if (!this.order) return;
-    const prevDefault = this.isDefaultServiceCharge; // captura ANTES de atualizar o total
-    this.order.total = this.order.items.reduce((sum, item) => sum + item.total, 0);
+    const newTotal = this.order.items.reduce((sum, item) => sum + item.total, 0);
+    const prevDefault =
+      parseFloat(this.serviceChargeAmount.toFixed(2)) ===
+      parseFloat((this.order.total * 0.1).toFixed(2));
+    this.order.total = newTotal;
     if (prevDefault) {
-      this.serviceChargeAmount = parseFloat((this.order.total * 0.1).toFixed(2));
+      this.serviceChargeAmount = parseFloat((newTotal * 0.1).toFixed(2));
     }
     this.distributeServiceCharge();
   }

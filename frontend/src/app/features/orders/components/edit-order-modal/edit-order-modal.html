@@ -315,6 +315,7 @@
                 type="number"
                 [ngModel]="serviceChargeAmount"
                 (ngModelChange)="onServiceChargeInput($event)"
+                [ngModelOptions]="{standalone: true}"
                 [disabled]="!serviceChargeEnabled"
                 min="0"
                 step="0.01"

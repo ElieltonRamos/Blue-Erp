@@ -16,6 +16,11 @@ type SalesSummary = {
   total: number;
 };
 
+type CrossDayOrder = {
+  id: number;
+  createdAt: Date;
+};
+
 @Injectable()
 export class DailyReportService {
   private readonly logger = new Logger(DailyReportService.name);
@@ -48,14 +53,14 @@ export class DailyReportService {
   }
 
   private async fetchOrderSummary(dateString: string): Promise<OrderSummary> {
+    const start = this.getStartOfDay(dateString);
+    const end = this.getEndOfDay(dateString);
+
     const [groups, pendingOrders] = await Promise.all([
       this.prisma.client.order.groupBy({
         by: ['status'],
         where: {
-          createdAt: {
-            gte: this.getStartOfDay(dateString),
-            lte: this.getEndOfDay(dateString),
-          },
+          createdAt: { gte: start, lte: end },
         },
         _count: { id: true },
         _sum: { total: true },
@@ -63,10 +68,7 @@ export class DailyReportService {
       this.prisma.client.order.findMany({
         where: {
           status: { in: ['CLOSED', 'OPEN'] },
-          createdAt: {
-            gte: this.getStartOfDay(dateString),
-            lte: this.getEndOfDay(dateString),
-          },
+          createdAt: { gte: start, lte: end },
         },
         select: { id: true, status: true },
       }),
@@ -79,20 +81,21 @@ export class DailyReportService {
     const closed = byStatus('CLOSED');
     const canceled = byStatus('CANCELED');
 
-    const closedIds = pendingOrders
-      .filter((o) => o.status === 'CLOSED')
-      .map((o) => o.id);
-    const openIds = pendingOrders
-      .filter((o) => o.status === 'OPEN')
-      .map((o) => o.id);
-
     return {
       paid: {
         count: paid?._count?.id ?? 0,
         total: Number(paid?._sum?.total ?? 0),
       },
-      open: { count: open?._count?.id ?? 0, ids: openIds },
-      closed: { count: closed?._count?.id ?? 0, ids: closedIds },
+      open: {
+        count: open?._count?.id ?? 0,
+        ids: pendingOrders.filter((o) => o.status === 'OPEN').map((o) => o.id),
+      },
+      closed: {
+        count: closed?._count?.id ?? 0,
+        ids: pendingOrders
+          .filter((o) => o.status === 'CLOSED')
+          .map((o) => o.id),
+      },
       canceled: { count: canceled?._count?.id ?? 0 },
       total: groups.reduce((acc, g) => acc + g._count.id, 0),
     };
@@ -116,10 +119,29 @@ export class DailyReportService {
     };
   }
 
+  private async fetchCrossDayOrders(
+    dateString: string,
+  ): Promise<CrossDayOrder[]> {
+    return this.prisma.client.order.findMany({
+      where: {
+        status: 'PAID',
+        finishedAt: {
+          gte: this.getStartOfDay(dateString),
+          lte: this.getEndOfDay(dateString),
+        },
+        createdAt: {
+          lt: this.getStartOfDay(dateString),
+        },
+      },
+      select: { id: true, createdAt: true },
+    });
+  }
+
   private buildMessage(
     dateString: string,
     orders: OrderSummary,
     sales: SalesSummary,
+    crossDayOrders: CrossDayOrder[],
   ): string {
     const divergence = Math.abs(orders.paid.total - sales.total);
     const hasDivergence = divergence > 0.01;
@@ -128,28 +150,40 @@ export class DailyReportService {
       'pt-BR',
     );
 
+    const crossDayInfo =
+      crossDayOrders.length > 0
+        ? `\n   ⏱ ${crossDayOrders.length} comanda(s) de dia anterior pagas hoje: ${crossDayOrders
+            .map(
+              (o) =>
+                `ID ${o.id} (aberta em ${o.createdAt.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })})`,
+            )
+            .join(
+              ', ',
+            )}\n   ➡️ Oriente os operadores a fechar comandas no mesmo dia`
+        : '';
+
     const lines = [
       `📊 <b>Relatório Operacional — ${date}</b>`,
       ``,
       `💰 <b>Financeiro</b>`,
-      `├ Vendas brutas (sales): <b>${this.fmt(sales.total)}</b> | ${sales.count} registros`,
-      `└ Comandas pagas (PAID): <b>${this.fmt(orders.paid.total)}</b> | ${orders.paid.count} comandas`,
+      `├ Vendas brutas: <b>${this.fmt(sales.total)}</b> | ${sales.count} registros`,
+      `└ Comandas pagas: <b>${this.fmt(orders.paid.total)}</b> | ${orders.paid.count} comandas`,
       ``,
       hasDivergence
-        ? `⚠️ <b>DIVERGÊNCIA: ${this.fmt(divergence)}</b>\n   Verifique comandas PAID sem venda registrada`
-        : `✔️ Sales ↔ Orders PAID: <b>sem divergência</b>`,
+        ? `⚠️ <b>DIVERGÊNCIA: ${this.fmt(divergence)}</b>${crossDayInfo}`
+        : `✔️ Financeiro: <b>sem divergência</b>`,
       ``,
       `📋 <b>Comandas do dia (${orders.total} total)</b>`,
-      `✅ PAID     ${orders.paid.count}  — pagas e finalizadas`,
-      `🔵 CLOSED   ${orders.closed.count}  — fechadas, aguardando pagamento`,
-      `🟢 OPEN     ${orders.open.count}  — ainda em atendimento`,
-      `❌ CANCELED ${orders.canceled.count}  — canceladas`,
+      `✅ Pagas       ${orders.paid.count}  — pagas e finalizadas`,
+      `🔵 Fechadas    ${orders.closed.count}  — aguardando pagamento`,
+      `🟢 Abertas     ${orders.open.count}  — ainda em atendimento`,
+      `❌ Canceladas  ${orders.canceled.count}  — canceladas`,
     ];
 
     if (orders.closed.count > 0) {
       lines.push(``);
       lines.push(
-        `🔵 <b>${orders.closed.count} comanda(s) CLOSED sem pagamento</b>`,
+        `🔵 <b>${orders.closed.count} comanda(s) fechadas sem pagamento</b>`,
       );
       lines.push(`   IDs: ${orders.closed.ids.join(', ')}`);
       lines.push(
@@ -160,7 +194,7 @@ export class DailyReportService {
     if (orders.open.count > 0) {
       lines.push(``);
       lines.push(
-        `🚨 <b>${orders.open.count} comanda(s) OPEN no dia anterior</b>`,
+        `🚨 <b>${orders.open.count} comanda(s) abertas do dia anterior</b>`,
       );
       lines.push(`   IDs: ${orders.open.ids.join(', ')}`);
       lines.push(
@@ -177,12 +211,18 @@ export class DailyReportService {
     try {
       const dateString = this.getYesterdayString();
 
-      const [orders, sales] = await Promise.all([
+      const [orders, sales, crossDayOrders] = await Promise.all([
         this.fetchOrderSummary(dateString),
         this.fetchSalesSummary(dateString),
+        this.fetchCrossDayOrders(dateString),
       ]);
 
-      const message = this.buildMessage(dateString, orders, sales);
+      const message = this.buildMessage(
+        dateString,
+        orders,
+        sales,
+        crossDayOrders,
+      );
       await this.telegram.sendMessage(message);
       this.logger.log('Relatório enviado.');
     } catch (error) {
