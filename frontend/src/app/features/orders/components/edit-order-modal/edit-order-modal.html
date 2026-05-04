@@ -292,20 +292,11 @@
 
         <!-- Service Charge -->
         <div *ngIf="order" class="bg-slate-700/30 border border-yellow-500/30 rounded-lg p-4 mt-3">
-          <div class="flex justify-between items-center">
-            <div>
-              <span class="text-slate-300 text-sm font-medium">Taxa de Serviço (10%):</span>
-              <span class="text-yellow-400 font-bold ml-2">
-                R$ {{ (order.total * 0.1).toFixed(2) }}
-              </span>
-            </div>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <span class="text-slate-300 text-sm">{{
-                serviceChargeEnabled ? 'Ativa' : 'Inativa'
-              }}</span>
+          <div class="flex justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
               <div
                 (click)="toggleServiceCharge()"
-                class="w-10 h-6 rounded-full transition-colors cursor-pointer"
+                class="w-10 h-6 rounded-full transition-colors cursor-pointer shrink-0"
                 [class.bg-yellow-500]="serviceChargeEnabled"
                 [class.bg-slate-600]="!serviceChargeEnabled"
               >
@@ -315,7 +306,21 @@
                   [class.translate-x-1]="!serviceChargeEnabled"
                 ></div>
               </div>
-            </label>
+              <span class="text-slate-300 text-sm font-medium">Gorjeta</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-slate-400 text-sm">R$</span>
+              <input
+                type="number"
+                [ngModel]="serviceChargeAmount"
+                (ngModelChange)="onServiceChargeInput($event)"
+                [disabled]="!serviceChargeEnabled"
+                min="0"
+                step="0.01"
+                class="w-28 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-yellow-400 font-bold text-sm text-center focus:outline-none focus:border-cyan-500 disabled:opacity-40"
+              />
+            </div>
           </div>
         </div>
       </form>

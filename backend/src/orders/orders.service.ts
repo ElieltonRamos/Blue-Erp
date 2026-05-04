@@ -75,6 +75,8 @@ export class OrdersService {
               quantity: item.quantity,
               unitPrice: item.unitPrice,
               total: item.total,
+              serviceCharge: item.serviceCharge ?? 0, // adicionar
+              operatorId,
               observation: item.observation ?? null,
             })),
           },
@@ -627,6 +629,8 @@ export class OrdersService {
                 quantity: newItem.quantity,
                 unitPrice: newItem.unitPrice,
                 total: totalItem,
+                serviceCharge: newItem.serviceCharge ?? 0, // adicionar
+                operatorId,
                 observation: newItem.observation ?? null,
               },
             });
@@ -953,6 +957,8 @@ export class OrdersService {
           quantity: Number(item.quantity),
           unitPrice: Number(item.unitPrice),
           total: Number(item.total),
+          serviceCharge: Number(item.serviceCharge ?? 0), // adicionar
+          operatorId: item.operatorId ?? null,
           kitchenReadyAt: item.kitchenReadyAt,
           orderId: item.orderId,
           productId: item.productId,

@@ -476,6 +476,7 @@ export class SalesService {
               totalTaxValue: null,
               importTaxValue: new Decimal(0),
               iofValue: new Decimal(0),
+              serviceCharge: item.serviceCharge ?? new Decimal(0),
             })),
           },
           payments: { create: this.buildPaymentsData(dto.payments) },

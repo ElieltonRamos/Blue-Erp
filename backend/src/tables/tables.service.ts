@@ -559,12 +559,10 @@ export class TablesService {
 
     // --- Calcula novo total e serviceCharge proporcional ---
     const newTotal = allItems.reduce((sum, i) => sum + Number(i.total), 0);
-    const serviceChargeRatio =
-      Number(targetOpenOrder.total) > 0
-        ? Number(targetOpenOrder.serviceCharge ?? 0) /
-          Number(targetOpenOrder.total)
-        : 0;
-    const newServiceCharge = serviceChargeRatio * newTotal;
+    const newServiceCharge = allItems.reduce(
+      (sum, i) => sum + Number(i.serviceCharge ?? 0),
+      0,
+    );
 
     // --- Mescla nome do cliente ---
     const originName = originOrder.customerName?.trim() || null;
@@ -609,6 +607,8 @@ export class TablesService {
             code: item.code,
             name: item.name,
             quantity: item.quantity,
+            serviceCharge: item.serviceCharge ?? 0,
+            operatorId: item.operatorId ?? null,
             unitPrice: item.unitPrice,
             total: Number(item.quantity) * Number(item.unitPrice),
             observation: item.observation ?? null,

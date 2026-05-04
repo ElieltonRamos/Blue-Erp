@@ -7,6 +7,7 @@ export interface OrderItem {
   unitPrice: number;
   total: number;
   observation?: string;
+  serviceCharge?: number;
   kitchenReadyAt?: Date;
 }
 
