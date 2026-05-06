@@ -122,9 +122,9 @@
     [table]="selectedTableForProducts!"
     [total]="tabTotal"
     (close)="closeTabModal()"
-    (finish)="closeTab($event)"
+    (finish)="closeTab($event.serviceCharge, $event.items)"
   />
-
+  
   <app-modal-edit-entity
     *ngIf="showTransferModal"
     [show]="showTransferModal"

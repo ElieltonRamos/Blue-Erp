@@ -281,7 +281,7 @@ export class TableManagement implements OnInit {
     });
   }
 
-  closeTab(serviceCharge: number): void {
+  closeTab(serviceCharge: number, items: { id: number; serviceCharge: number }[]): void {
     if (!this.selectedTableForProducts?.id) {
       this.notification.error('Mesa não selecionada');
       return;
@@ -294,22 +294,24 @@ export class TableManagement implements OnInit {
 
     alertConfirm('Confirma o fechamento da comanda e liberação da mesa?').then((result) => {
       if (result && this.selectedTableForProducts?.id) {
-        this.tableService.closeTab(this.selectedTableForProducts.id, serviceCharge).subscribe({
-          next: (response) => {
-            this.notification.success('Comanda fechada e mesa liberada com sucesso!');
-            this.closeTabModal();
-            this.getTables();
+        this.tableService
+          .closeTab(this.selectedTableForProducts.id, serviceCharge, items)
+          .subscribe({
+            next: (response) => {
+              this.notification.success('Comanda fechada e mesa liberada com sucesso!');
+              this.closeTabModal();
+              this.getTables();
 
-            setTimeout(() => {
-              this.router.navigate(['/comandas', response.orderId]);
-            }, 100);
-          },
-          error: (error) => {
-            this.notification.error(
-              `Erro ao fechar comanda: ${error.error?.message || error.message}`,
-            );
-          },
-        });
+              setTimeout(() => {
+                this.router.navigate(['/comandas', response.orderId]);
+              }, 100);
+            },
+            error: (error) => {
+              this.notification.error(
+                `Erro ao fechar comanda: ${error.error?.message || error.message}`,
+              );
+            },
+          });
       }
     });
   }

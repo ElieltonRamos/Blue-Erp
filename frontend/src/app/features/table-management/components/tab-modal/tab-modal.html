@@ -50,16 +50,38 @@
         </div>
       </div>
 
-      <div class="mt-4 flex justify-between items-center">
-        <span class="text-slate-300">Gorjeta (10%)</span>
+      <div class="mt-4 bg-slate-700/30 border border-yellow-500/30 rounded-lg p-4">
+        <div class="flex justify-between items-center gap-4">
+          <div class="flex items-center gap-3">
+            <div
+              (click)="toggleServiceCharge()"
+              class="w-10 h-6 rounded-full transition-colors cursor-pointer shrink-0"
+              [class.bg-yellow-500]="serviceChargeEnabled"
+              [class.bg-slate-600]="!serviceChargeEnabled"
+            >
+              <div
+                class="w-4 h-4 bg-white rounded-full mt-1 transition-transform"
+                [class.translate-x-5]="serviceChargeEnabled"
+                [class.translate-x-1]="!serviceChargeEnabled"
+              ></div>
+            </div>
+            <span class="text-slate-300 text-sm font-medium">Taxa de Serviço (10%)</span>
+          </div>
 
-        <button
-          (click)="toggleServiceCharge()"
-          [class]="serviceChargeEnabled ? 'bg-emerald-600' : 'bg-slate-600'"
-          class="px-3 py-1 text-xs rounded text-white transition-colors"
-        >
-          {{ serviceChargeEnabled ? 'Ativa' : 'Removida' }}
-        </button>
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400 text-sm">R$</span>
+            <input
+              type="number"
+              [ngModel]="serviceChargeAmount"
+              (ngModelChange)="onServiceChargeInput($event)"
+              [ngModelOptions]="{ standalone: true }"
+              [disabled]="!serviceChargeEnabled"
+              min="0"
+              step="0.01"
+              class="w-28 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-yellow-400 font-bold text-sm text-center focus:outline-none focus:border-cyan-500 disabled:opacity-40"
+            />
+          </div>
+        </div>
       </div>
 
       <div class="flex justify-between mt-2 text-sm">
@@ -77,7 +99,12 @@
         Cancelar
       </button>
       <button
-        (click)="finish.emit(serviceChargeValue)"
+        (click)="
+          finish.emit({
+            serviceCharge: serviceChargeValue,
+            items: distributeServiceCharge(),
+          })
+        "
         [disabled]="!table.order?.items?.length"
         class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors"
       >

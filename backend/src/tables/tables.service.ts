@@ -349,6 +349,16 @@ export class TablesService {
     const now = resolveLogicalDateTime();
 
     const result = await this.prisma.client.$transaction(async (tx) => {
+      // Atualiza serviceCharge por item se fornecido
+      if (dto.items && dto.items.length > 0) {
+        for (const itemDto of dto.items) {
+          await tx.orderItem.update({
+            where: { id: itemDto.id },
+            data: { serviceCharge: itemDto.serviceCharge },
+          });
+        }
+      }
+
       const closedOrder = await tx.order.update({
         where: { id: table.orderId! },
         data: {

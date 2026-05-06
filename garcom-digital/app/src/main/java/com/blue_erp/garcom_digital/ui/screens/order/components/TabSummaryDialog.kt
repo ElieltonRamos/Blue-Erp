@@ -79,7 +79,7 @@ fun TabSummaryDialog(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
-                                Text("Gorjeta (10%)", fontWeight = FontWeight.Medium)
+                                Text("Taxa de Serviço (10%)", fontWeight = FontWeight.Medium)
                                 if (applyServiceCharge) {
                                     Text(
                                         text = currencyFormat.format(serviceCharge),

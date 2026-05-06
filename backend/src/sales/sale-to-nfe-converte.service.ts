@@ -41,7 +41,7 @@ export class SaleToNfeConverterService {
     const serviceCharge = this.toNumber(sale.serviceCharge ?? 0, 2);
     const totalWithServiceCharge = this.toNumber(sale.total, 2) + serviceCharge;
 
-    const infoText = `${taxText} | Venda ID: ${saleId} | Operador: ${operatorName} | Desc: R$ ${discount.toFixed(2)} | Gorjeta: R$ ${serviceCharge.toFixed(2)}`;
+    const infoText = `${taxText} | Venda ID: ${saleId} | Operador: ${operatorName} | Desc: R$ ${discount.toFixed(2)} | Taxa de Serviço: R$ ${serviceCharge.toFixed(2)}`;
 
     const primaryPayment = sale.payments.reduce((prev, curr) =>
       Number(curr.amount) > Number(prev.amount) ? curr : prev,

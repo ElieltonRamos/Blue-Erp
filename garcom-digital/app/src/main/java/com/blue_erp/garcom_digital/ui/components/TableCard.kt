@@ -221,7 +221,7 @@ fun TableCard(
                         )
                         if (serviceCharge > 0.0) {
                             Text(
-                                text = "+ 10% gorjeta",
+                                text = "+ 10% Taxa de Serviço",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
