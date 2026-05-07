@@ -12,7 +12,6 @@ import {
 import { validateDateFilters } from './utils/sale-report-utils';
 
 const EXPIRY_ALERT_DAYS = 30;
-const TOP_ITEMS_LIMIT = 10;
 const STOCK_ITEMS_LIMIT = 10;
 
 type ResolvedMaterial = {
@@ -143,8 +142,7 @@ export class ProductReportService {
             ? Number((agg.revenue / agg.totalSold).toFixed(2))
             : 0,
       }))
-      .sort((a, b) => b.totalSold - a.totalSold)
-      .slice(0, TOP_ITEMS_LIMIT);
+      .sort((a, b) => b.totalSold - a.totalSold);
 
     return {
       items,
@@ -220,8 +218,7 @@ export class ProductReportService {
           totalCost,
         };
       })
-      .sort((a, b) => b.totalCost - a.totalCost)
-      .slice(0, TOP_ITEMS_LIMIT);
+      .sort((a, b) => b.totalCost - a.totalCost);
 
     return {
       items,
