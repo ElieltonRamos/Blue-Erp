@@ -13,6 +13,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.math.RoundingMode
 import javax.inject.Inject
 
 data class OrderUiState(
@@ -36,6 +37,8 @@ data class OrderUiState(
     val showTabSummaryDialog: Boolean = false,
     val tabSummaryOrder: TableOrder? = null,
     val isLoadingTabSummary: Boolean = false,
+    val serviceChargeEnabled: Boolean = false,
+    val serviceChargeAmount: Double = 0.0,
 )
 
 @OptIn(FlowPreview::class)
@@ -134,6 +137,7 @@ class OrderViewModel @Inject constructor(
                             hasUnsavedChanges = false
                         )
                     }
+                    order?.let { initServiceCharge(it) }
                 }
                 is Resource.Error -> _uiState.update {
                     it.copy(isLoading = false, error = result.message)
@@ -142,6 +146,106 @@ class OrderViewModel @Inject constructor(
             }
         }
     }
+
+    // ── Gorjeta ────────────────────────────────────────────────────────────────
+
+    private fun initServiceCharge(order: TableOrder) {
+        val total = order.items.sumOf { it.total }
+        val enabled = order.serviceCharge > 0.0
+        val amount = if (enabled) order.serviceCharge else round2(total * 0.10)
+        _uiState.update { it.copy(serviceChargeEnabled = enabled, serviceChargeAmount = amount) }
+    }
+
+    fun toggleServiceCharge() {
+        val state = _uiState.value
+        val nowEnabled = !state.serviceChargeEnabled
+        if (!nowEnabled) {
+            val zeroed = state.editedItems.map { it.copy(serviceCharge = 0.0) }
+            _uiState.update {
+                it.copy(serviceChargeEnabled = false, serviceChargeAmount = 0.0, editedItems = zeroed, hasUnsavedChanges = true)
+            }
+        } else {
+            val default = round2(state.editedItems.sumOf { it.total } * 0.10)
+            _uiState.update { it.copy(serviceChargeEnabled = true, serviceChargeAmount = default) }
+            distributeServiceCharge()
+        }
+    }
+
+    fun onServiceChargeAmountChange(value: Double) {
+        val normalized = if (value <= 0.0) 0.0 else value
+        _uiState.update {
+            it.copy(
+                serviceChargeAmount = normalized,
+                serviceChargeEnabled = normalized > 0.0
+            )
+        }
+        if (normalized > 0.0) distributeServiceCharge()
+        else {
+            val zeroed = _uiState.value.editedItems.map { it.copy(serviceCharge = 0.0) }
+            _uiState.update { it.copy(editedItems = zeroed, hasUnsavedChanges = true) }
+        }
+    }
+
+    private fun isDefaultServiceCharge(): Boolean {
+        val state = _uiState.value
+        val default = round2(state.editedItems.sumOf { it.total } * 0.10)
+        return round2(state.serviceChargeAmount) == default
+    }
+
+    private fun distributeServiceCharge() {
+        val state = _uiState.value
+
+        if (!state.serviceChargeEnabled || state.serviceChargeAmount == 0.0) {
+            val zeroed = state.editedItems.map { it.copy(serviceCharge = 0.0) }
+            _uiState.update { it.copy(editedItems = zeroed, hasUnsavedChanges = true) }
+            return
+        }
+
+        val updated = if (isDefaultServiceCharge()) {
+            state.editedItems.map { item ->
+                item.copy(serviceCharge = round2(item.total * 0.10))
+            }
+        } else {
+            val perItem = round2(state.serviceChargeAmount / state.editedItems.size)
+            state.editedItems.map { it.copy(serviceCharge = perItem) }
+        }
+
+        val totalServiceCharge = round2(updated.sumOf { it.serviceCharge })
+
+        _uiState.update {
+            it.copy(
+                editedItems = updated,
+                serviceChargeAmount = totalServiceCharge,
+                hasUnsavedChanges = true
+            )
+        }
+    }
+
+    private fun recalculateServiceChargeAfterItemChange(previousTotal: Double) {
+        val state = _uiState.value
+
+        if (!state.serviceChargeEnabled && state.editedItems.size == 1) {
+            val default = round2(state.editedItems.sumOf { it.total } * 0.10)
+            _uiState.update {
+                it.copy(serviceChargeEnabled = true, serviceChargeAmount = default)
+            }
+            distributeServiceCharge()
+            return
+        }
+
+        if (!state.serviceChargeEnabled) return
+
+        val wasDefault = round2(state.serviceChargeAmount) == round2(previousTotal * 0.10)
+        if (wasDefault) {
+            val newDefault = round2(state.editedItems.sumOf { it.total } * 0.10)
+            _uiState.update { it.copy(serviceChargeAmount = newDefault) }
+        }
+
+        distributeServiceCharge()
+    }
+
+    private fun round2(value: Double): Double =
+        value.toBigDecimal().setScale(2, RoundingMode.HALF_UP).toDouble()
 
     // ── Edição de itens ────────────────────────────────────────────────────────
 
@@ -156,15 +260,18 @@ class OrderViewModel @Inject constructor(
     }
 
     fun removeItem(itemId: Int) {
+        val previousTotal = _uiState.value.editedItems.sumOf { it.total }
         _uiState.update {
             it.copy(
                 editedItems = it.editedItems.filter { item -> item.id != itemId },
                 hasUnsavedChanges = true
             )
         }
+        recalculateServiceChargeAfterItemChange(previousTotal)
     }
 
     private fun updateItemQuantity(itemId: Int, transform: (Double) -> Double) {
+        val previousTotal = _uiState.value.editedItems.sumOf { it.total }
         _uiState.update { state ->
             val updated = state.editedItems.map { item ->
                 if (item.id == itemId) {
@@ -174,6 +281,7 @@ class OrderViewModel @Inject constructor(
             }
             state.copy(editedItems = updated, hasUnsavedChanges = true)
         }
+        recalculateServiceChargeAfterItemChange(previousTotal)
     }
 
     fun updateObservation(itemId: Int, observation: String) {
@@ -188,9 +296,10 @@ class OrderViewModel @Inject constructor(
     // ── Adicionar produto ──────────────────────────────────────────────────────
 
     fun addProduct(product: ProductResponse) {
+        val previousTotal = _uiState.value.editedItems.sumOf { it.total }
         val existing = _uiState.value.editedItems.find { it.productId == product.id }
         if (existing != null) {
-            updateItemQuantity(existing.id) { it + 1.0 }
+            updateItemQuantity(existing.id) { it + 1.0 }  // captura previousTotal internamente
         } else {
             val newItem = TableOrderItem(
                 id = -(_uiState.value.editedItems.size + 1),
@@ -202,6 +311,7 @@ class OrderViewModel @Inject constructor(
                 productId = product.id,
                 productionLocation = "",
                 observation = "",
+                serviceCharge = 0.0,
             )
             _uiState.update {
                 it.copy(
@@ -210,6 +320,7 @@ class OrderViewModel @Inject constructor(
                     showProductSearch = false
                 )
             }
+            recalculateServiceChargeAfterItemChange(previousTotal)
         }
     }
 
@@ -237,17 +348,13 @@ class OrderViewModel @Inject constructor(
                     unitPrice = item.unitPrice,
                     total = item.total,
                     observation = item.observation,
+                    serviceCharge = item.serviceCharge,
                 )
             }
 
             val total = items.sumOf { it.total }
-            val currentServiceCharge = _uiState.value.order?.serviceCharge ?: 0.0
-            val isFirstSave = _uiState.value.order?.items.isNullOrEmpty()
-            val serviceCharge = when {
-                isFirstSave -> total * 0.10
-                currentServiceCharge == 0.0 -> 0.0
-                else -> total * 0.10
-            }
+            val serviceCharge = if (_uiState.value.serviceChargeEnabled)
+                _uiState.value.serviceChargeAmount else 0.0
 
             val request = UpdateOrderRequest(
                 items = items,
@@ -280,7 +387,9 @@ class OrderViewModel @Inject constructor(
     // ── Busca de produtos ──────────────────────────────────────────────────────
 
     fun openProductSearch() {
-        _uiState.update { it.copy(showProductSearch = true, productQuery = "", products = emptyList(), selectedCategoryId = null) }
+        _uiState.update {
+            it.copy(showProductSearch = true, productQuery = "", products = emptyList(), selectedCategoryId = null)
+        }
         viewModelScope.launch { searchProducts("") }
     }
 
@@ -291,10 +400,6 @@ class OrderViewModel @Inject constructor(
     fun onProductQueryChange(query: String) {
         _uiState.update { it.copy(productQuery = query) }
         _productQuery.value = query
-    }
-
-    private fun calculateServiceCharge(items: List<TableOrderItem>): Double {
-        return items.sumOf { it.total } * 0.10
     }
 
     private fun searchProducts(query: String, categoryId: Int? = _uiState.value.selectedCategoryId) {

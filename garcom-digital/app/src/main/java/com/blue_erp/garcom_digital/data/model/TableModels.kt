@@ -50,6 +50,7 @@ data class TableOrderItem(
     val id: Int,
     val code: String,
     val name: String,
+    val serviceCharge: Double = 0.0,
     val quantity: Double,
     @SerializedName("unitPrice")
     val unitPrice: Double,
@@ -67,34 +68,26 @@ data class TableOrderItem(
     val deliveredAt: String? = null,
     @SerializedName("canceledAt")
     val canceledAt: String? = null,
-    val productions: List<OrderProduction> = emptyList(),
+    val productions: List<OrderProduction>? = null,
     @SerializedName("createdAt")
     val createdAt: String? = null,
     @SerializedName("updatedAt")
     val updatedAt: String? = null,
 ) {
     val isReady: Boolean
-        get() = productions.any { production ->
-            production.status == "COMPLETED"
-                    && production.completedAt != null
-                    && production.deliveredAt == null
-        }
+        get() = productions?.any { it.status == "COMPLETED" && it.completedAt != null && it.deliveredAt == null } ?: false
 
     val quantityReady: Double
-        get() = productions
-            .filter { it.status == "COMPLETED" && it.deliveredAt == null }
-            .sumOf { it.quantityProduced }
+        get() = productions?.filter { it.status == "COMPLETED" && it.deliveredAt == null }?.sumOf { it.quantityProduced } ?: 0.0
 
     val producedQuantity: Double
-        get() = productions
-            .filter { it.status == "COMPLETED" }
-            .sumOf { it.quantityProduced }
+        get() = productions?.filter { it.status == "COMPLETED" }?.sumOf { it.quantityProduced } ?: 0.0
 
     val isPartiallyReady: Boolean
         get() = producedQuantity > 0 && producedQuantity < quantity
 
     val isFullyDelivered: Boolean
-        get() = productions.isNotEmpty() && productions.all { it.deliveredAt != null }
+        get() = !productions.isNullOrEmpty() && productions.all { it.deliveredAt != null }
 }
 
 data class TableOrder(
@@ -242,13 +235,10 @@ data class TableResponse(
             return calculateMinutesSince(lastActivityTime)
         }
 
-    /**
-     * Helper para calcular minutos desde uma data ISO
-     */
     private fun calculateMinutesSince(isoDate: String): Long {
         return try {
             val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-            sdf.timeZone = TimeZone.getTimeZone("UTC")
+            sdf.timeZone = TimeZone.getTimeZone("America/Sao_Paulo") // era UTC
             val dateMillis = sdf.parse(isoDate)?.time ?: return 0
 
             val now = System.currentTimeMillis()

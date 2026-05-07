@@ -178,7 +178,7 @@ export class KitchenDisplay implements OnInit, OnDestroy {
 
   getElapsedMinutes(item: KitchenOrderItem): number {
     const now = new Date();
-    const created = new Date(item.pendingAt);
+    const created = new Date(new Date(item.pendingAt).toISOString().replace('Z', '-03:00'));
     const diff = now.getTime() - created.getTime();
     return Math.floor(diff / 60000);
   }

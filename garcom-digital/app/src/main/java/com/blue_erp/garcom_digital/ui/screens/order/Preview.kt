@@ -30,6 +30,7 @@ private fun OrderScreenPreview() {
             onOpenProductSearch = {}, onCloseProductSearch = {},
             onProductQueryChange = {}, onAddProduct = {}, onCategorySelect = {},
             onCloseTab = {}, onCloseCloseTabDialog = {}, onOpenCloseTabDialog = {}, onCloseTabSummaryDialog = {},
+            onServiceChargeAmountChange = {}, onToggleServiceCharge = {}
         )
     }
 }
@@ -45,6 +46,7 @@ private fun OrderScreenEmptyPreview() {
             onOpenProductSearch = {}, onCloseProductSearch = {},
             onProductQueryChange = {}, onAddProduct = {}, onOpenCloseTabDialog = {},
             onCloseCloseTabDialog = {}, onCloseTab = {}, onCategorySelect = {}, onCloseTabSummaryDialog = {},
+            onServiceChargeAmountChange = {}, onToggleServiceCharge = {}
         )
     }
 }
@@ -60,6 +62,7 @@ private fun OrderScreenLoadingPreview() {
             onOpenProductSearch = {}, onCloseProductSearch = {},
             onProductQueryChange = {}, onAddProduct = {}, onCloseTab = {}, onCloseCloseTabDialog = {},
             onOpenCloseTabDialog = {}, onCategorySelect = {}, onCloseTabSummaryDialog = {},
+            onServiceChargeAmountChange = {}, onToggleServiceCharge = {}
         )
     }
 }

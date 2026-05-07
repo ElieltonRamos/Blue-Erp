@@ -47,7 +47,7 @@ data class KitchenOrderItem(
     val totalDuration: Long? = null,
     val orderId: Int,
     val orderNumber: String,
-    val table: String,
+    val table: String?,
     val customerName: String,
     val type: String,
     val kitchen: String

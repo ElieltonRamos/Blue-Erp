@@ -62,7 +62,9 @@ fun OrderScreen(
         onCloseCloseTabDialog = viewModel::closeCloseTabDialog,
         onCategorySelect = viewModel::selectCategory,
         onCloseTabSummaryDialog = viewModel::closeTabSummaryDialog,
-        onObservationChange = viewModel::updateObservation
+        onObservationChange = viewModel::updateObservation,
+        onToggleServiceCharge = viewModel::toggleServiceCharge,
+        onServiceChargeAmountChange = viewModel::onServiceChargeAmountChange,
     )
 }
 
@@ -85,13 +87,14 @@ fun OrderScreenContent(
     onCloseCloseTabDialog: () -> Unit,
     onCategorySelect: (Int?) -> Unit,
     onCloseTabSummaryDialog: () -> Unit,
+    onToggleServiceCharge: () -> Unit,
+    onServiceChargeAmountChange: (Double) -> Unit,
     onObservationChange: (Int, String) -> Unit
 ) {
     val table = uiState.table
     val order = uiState.order
     val total = uiState.editedItems.sumOf { it.total }
-    val serviceCharge = uiState.order?.serviceCharge ?: 0.0
-    val grandTotal = if (serviceCharge > 0.0) total + (total * 0.10) else total
+    val grandTotal = total + if (uiState.serviceChargeEnabled) uiState.serviceChargeAmount else 0.0
 
     Scaffold(
         topBar = {
@@ -240,7 +243,11 @@ fun OrderScreenContent(
                 order = tabOrder,
                 isClosingTab = uiState.isClosingTab,
                 onConfirm = onCloseTab,
-                onDismiss = onCloseTabSummaryDialog
+                onDismiss = onCloseTabSummaryDialog,
+                serviceChargeEnabled = uiState.serviceChargeEnabled,
+                serviceChargeAmount = uiState.serviceChargeAmount,
+                onToggleServiceCharge = onToggleServiceCharge,
+                onServiceChargeAmountChange = onServiceChargeAmountChange,
             )
         }
     }

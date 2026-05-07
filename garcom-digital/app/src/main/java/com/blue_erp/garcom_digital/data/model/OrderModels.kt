@@ -8,6 +8,7 @@ data class UpdateOrderItemRequest(
     val code: String,
     val name: String,
     val quantity: Double,
+    val serviceCharge: Double = 0.0,
     @SerializedName("unitPrice") val unitPrice: Double,
     val total: Double,
     val observation: String? = null,

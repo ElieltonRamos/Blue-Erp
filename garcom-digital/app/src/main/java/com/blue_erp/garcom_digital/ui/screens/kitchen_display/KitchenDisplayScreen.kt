@@ -477,13 +477,15 @@ private fun KdsItemCard(
                     )
                     Text(item.name, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     Surface(color = KdsAccent.copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp)) {
-                        Text(
-                            item.table,
-                            color = KdsAccent,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                        )
+                        item.table?.let {
+                            Text(
+                                it,
+                                color = KdsAccent,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
                     }
                 }
                 Surface(
@@ -491,8 +493,13 @@ private fun KdsItemCard(
                     color = timeColor.copy(alpha = 0.15f),
                     border = BorderStroke(1.dp, timeColor.copy(alpha = 0.5f))
                 ) {
+                    val elapsedText = when {
+                        elapsedMinutes < 60 -> "${elapsedMinutes}min"
+                        elapsedMinutes < 1440 -> "${elapsedMinutes / 60}h ${elapsedMinutes % 60}min"
+                        else -> "${elapsedMinutes / 1440}d ${(elapsedMinutes % 1440) / 60}h"
+                    }
                     Text(
-                        "${elapsedMinutes}m",
+                        elapsedText,
                         color = timeColor,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
