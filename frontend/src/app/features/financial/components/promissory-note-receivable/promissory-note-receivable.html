@@ -1,35 +1,47 @@
 <!-- CONTAINER PRINCIPAL -->
-<div class="w-full max-w-6xl bg-[#182233] rounded-2xl shadow-lg p-6">
+<div
+  class="w-full max-w-6xl rounded-2xl shadow-lg p-6"
+  [style.background-color]="'var(--color-surface)'"
+>
   <!-- 🔹 FILTROS -->
-  <section class="bg-[#1d2a3c] rounded-xl p-4 mb-6">
-    <h3 class="text-lg text-sky-400 font-semibold mb-4">Filtros</h3>
+  <section class="rounded-xl p-4 mb-6" [style.background-color]="'var(--color-surface-alt)'">
+    <h3 class="text-lg font-semibold mb-4" [style.color]="'var(--color-accent)'">Filtros</h3>
 
     <!-- Linha 1 -->
     <div class="flex flex-wrap gap-4 items-end mb-4">
       <div class="flex flex-col w-32">
-        <label class="text-sm text-white mb-1">ID</label>
+        <label class="text-sm mb-1" [style.color]="'var(--color-text-primary)'">ID</label>
         <input
           type="text"
-          class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+          class="px-3 py-2 rounded shadow focus:outline-none border"
           [(ngModel)]="filterId"
+          [style.background-color]="'var(--color-surface)'"
+          [style.color]="'var(--color-text-primary)'"
+          [style.border-color]="'var(--color-border)'"
         />
       </div>
 
       <div class="flex flex-col w-full sm:w-48">
-        <label class="text-sm text-white mb-1">Data Inicial</label>
+        <label class="text-sm mb-1" [style.color]="'var(--color-text-primary)'">Data Inicial</label>
         <input
           type="date"
-          class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+          class="px-3 py-2 rounded shadow focus:outline-none border"
           [(ngModel)]="startDate"
+          [style.background-color]="'var(--color-surface)'"
+          [style.color]="'var(--color-text-primary)'"
+          [style.border-color]="'var(--color-border)'"
         />
       </div>
 
       <div class="flex flex-col w-full sm:w-48">
-        <label class="text-sm text-white mb-1">Data Final</label>
+        <label class="text-sm mb-1" [style.color]="'var(--color-text-primary)'">Data Final</label>
         <input
           type="date"
-          class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+          class="px-3 py-2 rounded shadow focus:outline-none border"
           [(ngModel)]="endDate"
+          [style.background-color]="'var(--color-surface)'"
+          [style.color]="'var(--color-text-primary)'"
+          [style.border-color]="'var(--color-border)'"
         />
       </div>
     </div>
@@ -37,24 +49,30 @@
     <!-- Linha 2 -->
     <div class="flex flex-wrap gap-4 items-end mb-4">
       <div class="flex flex-col w-full sm:w-64">
-        <label class="text-sm text-white mb-1">Cliente</label>
+        <label class="text-sm mb-1" [style.color]="'var(--color-text-primary)'">Cliente</label>
         <input
           type="text"
-          class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+          class="px-3 py-2 rounded shadow focus:outline-none border"
           [(ngModel)]="filterClient"
+          [style.background-color]="'var(--color-surface)'"
+          [style.color]="'var(--color-text-primary)'"
+          [style.border-color]="'var(--color-border)'"
         />
       </div>
 
       <!-- SITUAÇÃO -->
       <div class="flex flex-col w-full sm:w-48">
-        <label class="text-sm text-white mb-1">Situação</label>
+        <label class="text-sm mb-1" [style.color]="'var(--color-text-primary)'">Situação</label>
         <select
-          class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+          class="px-3 py-2 rounded shadow focus:outline-none border"
           [(ngModel)]="filterStatusSelect"
           (change)="onStatusFilterChange($event)"
+          [style.background-color]="'var(--color-surface)'"
+          [style.color]="'var(--color-text-primary)'"
+          [style.border-color]="'var(--color-border)'"
         >
-          <option class="bg-[#2a3445]" value="pending">Pendentes</option>
-          <option class="bg-[#2a3445]" value="all">Todas</option>
+          <option value="pending">Pendentes</option>
+          <option value="all">Todas</option>
         </select>
       </div>
     </div>
@@ -63,14 +81,16 @@
     <div class="flex gap-2">
       <button
         (click)="applyDateFilter()"
-        class="bg-sky-600 text-white px-4 py-2 rounded hover:bg-sky-700 transition"
+        class="text-white px-4 py-2 rounded hover:opacity-80 transition font-medium"
+        [style.background-color]="'var(--color-accent)'"
       >
         Filtrar
       </button>
 
       <button
         (click)="clearDateFilter()"
-        class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
+        class="text-white px-4 py-2 rounded hover:opacity-80 transition font-medium"
+        [style.background-color]="'var(--color-text-muted)'"
       >
         Limpar Filtro
       </button>
@@ -79,14 +99,16 @@
 
   <!-- 🔹 RESUMO SELEÇÃO -->
   <section
-    class="mt-4 p-4 bg-[#1d2a3c] rounded-xl text-white flex flex-col sm:flex-row items-center justify-between gap-4"
+    class="mt-4 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4"
+    [style.background-color]="'var(--color-surface-alt)'"
   >
-    <div class="text-lg font-semibold">
+    <div class="text-lg font-semibold" [style.color]="'var(--color-text-primary)'">
       Total selecionado: R$ {{ formatNumber(totalSelectedAmount) }}
     </div>
     <button
       (click)="markSelectedAsReceived()"
-      class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded transition"
+      class="text-white px-6 py-2 rounded transition hover:opacity-80 font-medium"
+      [style.background-color]="'var(--color-success)'"
     >
       Marcar como Recebido
     </button>
@@ -94,8 +116,12 @@
 
   <!-- 🔹 TABELA DE VENDAS -->
   <section class="overflow-x-auto mt-6">
-    <table class="min-w-full text-white text-left">
-      <thead class="bg-[#1d2a3c] text-sky-400 uppercase text-sm">
+    <table class="min-w-full text-left">
+      <thead
+        class="uppercase text-sm"
+        [style.background-color]="'var(--color-surface-alt)'"
+        [style.color]="'var(--color-accent)'"
+      >
         <tr>
           <th class="py-3 px-4">
             <input
@@ -114,9 +140,18 @@
           <th class="py-3 px-4">Ações</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-700">
-        @for (sale of listSales; track sale.id) {
-          <tr class="hover:bg-[#243447] transition">
+      <tbody
+        class="divide-y"
+        [style.border-color]="'var(--color-border)'"
+        [style.color]="'var(--color-text-primary)'"
+      >
+        @for (sale of listSales; track sale.id; let i = $index) {
+          <tr
+            class="hover:opacity-80 transition"
+            [style.background-color]="
+              i % 2 === 0 ? 'var(--color-surface)' : 'var(--color-surface-alt)'
+            "
+          >
             <td class="py-3 px-4">
               <input
                 type="checkbox"
@@ -125,7 +160,7 @@
               />
             </td>
             <td class="py-3 px-4">{{ sale.id }}</td>
-            <td>
+            <td class="py-3 px-4">
               <span
                 class="text-sm"
                 [ngClass]="{
@@ -152,7 +187,8 @@
             <td class="py-3 px-4 space-x-2">
               <button
                 (click)="openSaleModal(sale)"
-                class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors cursor-pointer"
+                class="text-white py-2 px-4 rounded hover:opacity-80 transition-colors cursor-pointer font-medium"
+                [style.background-color]="'var(--color-accent)'"
               >
                 Ver Detalhes
               </button>

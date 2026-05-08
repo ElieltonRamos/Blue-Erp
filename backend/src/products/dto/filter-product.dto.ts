@@ -6,7 +6,7 @@ import {
   IsInt,
   Min,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Unit, ProductType } from 'generated/prisma/client';
 
@@ -84,11 +84,8 @@ export class FilterProductDto {
   @IsEnum(Unit)
   unit?: Unit;
 
-  @ApiPropertyOptional({
-    description: 'Filtrar por status ativo/inativo',
-  })
   @IsOptional()
-  @Type(() => Boolean)
+  @Transform(({ value }) => value === 'true')
   @IsBoolean()
   active?: boolean;
 
@@ -96,7 +93,7 @@ export class FilterProductDto {
     description: 'Filtrar apenas produtos com estoque baixo',
   })
   @IsOptional()
-  @Type(() => Boolean)
+  @Transform(({ value }) => value === 'true')
   @IsBoolean()
   lowStock?: boolean;
 

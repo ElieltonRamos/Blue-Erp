@@ -1,18 +1,19 @@
 <ng-template cdkPortal>
   <div
-    class="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
+    class="bg-surface rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-border"
     (click)="onModalClick($event)"
   >
-    <div
-      class="bg-linear-to-r from-indigo-600 to-purple-600 px-6 py-4 flex justify-between items-center"
-    >
+    <!-- Header -->
+    <div class="bg-accent px-6 py-4 flex justify-between items-center border-b border-border">
       <div>
-        <h2 class="text-2xl font-bold text-white">Editar Pedido</h2>
-        <p class="text-indigo-200 text-sm mt-1">#{{ order?.id }}</p>
+        <h2 class="text-2xl font-bold text-btn-text">Editar Pedido</h2>
+
+        <p class="text-text-secondary text-sm mt-1">#{{ order?.id }}</p>
       </div>
+
       <button
         (click)="closeModal()"
-        class="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+        class="text-btn-text hover:bg-overlay rounded-lg p-2 transition-all"
         aria-label="Fechar modal"
       >
         <svg
@@ -29,74 +30,85 @@
       </button>
     </div>
 
+    <!-- Body -->
     <div class="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
       <form *ngIf="order" #orderForm="ngForm">
-        <!-- Customer Name, Type and Status -->
+        <!-- Top -->
         <div class="grid grid-cols-3 gap-4 mb-6">
           <div>
-            <label class="text-slate-300 text-sm font-medium mb-2 block">Nome do Cliente</label>
+            <label class="text-text-primary text-sm font-medium mb-2 block">
+              Nome do Cliente
+            </label>
+
             <input
               type="text"
               [(ngModel)]="order.customerName"
               name="customerName"
               required
-              class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+              class="w-full bg-overlay border border-border rounded-lg px-4 py-3 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-all"
               placeholder="Digite o nome do cliente"
             />
           </div>
 
           <div>
-            <label class="text-slate-300 text-sm font-medium mb-2 block">Tipo de Pedido</label>
+            <label class="text-text-primary text-sm font-medium mb-2 block"> Tipo de Pedido </label>
+
             <select
               [(ngModel)]="order.type"
               name="type"
               (change)="onTypeChange()"
-              class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
+              class="w-full bg-overlay border border-border rounded-lg px-4 py-3 text-text-primary focus:outline-none focus:border-accent transition-all"
             >
-              <option value="DINE_IN">🪑 Mesa</option>
-              <option value="DELIVERY">🚚 Delivery</option>
+              <option value="DINE_IN">Mesa</option>
+              <option value="DELIVERY">Delivery</option>
             </select>
           </div>
 
           <div>
-            <label class="text-slate-300 text-sm font-medium mb-2 block">Status</label>
+            <label class="text-text-primary text-sm font-medium mb-2 block"> Status </label>
+
             <select
               [(ngModel)]="order.status"
               name="status"
-              class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
+              class="w-full bg-overlay border border-border rounded-lg px-4 py-3 text-text-primary focus:outline-none focus:border-accent transition-all"
             >
-              <option value="OPEN">📖 Aberto</option>
-              <option value="CLOSED">✅ Fechado</option>
+              <option value="OPEN">Aberto</option>
+              <option value="CLOSED">Fechado</option>
             </select>
           </div>
         </div>
 
-        <!-- Mesa ou Endereço (condicional) -->
+        <!-- Mesa -->
         <div class="mb-6" *ngIf="order.type === 'DINE_IN'">
-          <label class="text-slate-300 text-sm font-medium mb-2 block">Mesa</label>
+          <label class="text-text-primary text-sm font-medium mb-2 block"> Mesa </label>
+
           <input
             type="text"
             [(ngModel)]="order.table"
             name="table"
-            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+            class="w-full bg-overlay border border-border rounded-lg px-4 py-3 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-all"
             placeholder="Ex: Mesa 5"
           />
         </div>
 
+        <!-- Endereço -->
         <div class="mb-6" *ngIf="order.type === 'DELIVERY'">
-          <label class="text-slate-300 text-sm font-medium mb-2 block">Endereço de Entrega</label>
+          <label class="text-text-primary text-sm font-medium mb-2 block">
+            Endereço de Entrega
+          </label>
+
           <input
             type="text"
             [(ngModel)]="order.address"
             name="address"
-            class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+            class="w-full bg-overlay border border-border rounded-lg px-4 py-3 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-all"
             placeholder="Endereço completo"
           />
         </div>
 
-        <!-- Buscar Produto -->
+        <!-- Buscar -->
         <div class="mb-6">
-          <label class="text-slate-300 text-sm font-medium mb-3 block">Buscar Produto</label>
+          <label class="text-text-primary text-sm font-medium mb-3 block"> Buscar Produto </label>
 
           <div class="grid grid-cols-12 gap-3">
             <div class="col-span-4">
@@ -107,7 +119,7 @@
                 (keyup.enter)="searchProduct()"
                 [disabled]="isSearchingProduct"
                 placeholder="Código de barras"
-                class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-200 text-sm focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+                class="w-full bg-overlay border border-border rounded-lg px-3 py-2 text-text-primary text-sm focus:outline-none focus:border-accent disabled:opacity-50"
               />
             </div>
 
@@ -119,7 +131,7 @@
                 (keyup.enter)="searchProduct()"
                 [disabled]="isSearchingProduct"
                 placeholder="Nome do produto"
-                class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-200 text-sm focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+                class="w-full bg-overlay border border-border rounded-lg px-3 py-2 text-text-primary text-sm focus:outline-none focus:border-accent disabled:opacity-50"
               />
             </div>
 
@@ -128,7 +140,7 @@
                 type="button"
                 (click)="searchProduct()"
                 [disabled]="isSearchingProduct || (!searchCode && !searchName)"
-                class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+                class="w-full bg-success hover:opacity-90 text-btn-text py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
               >
                 <svg
                   *ngIf="isSearchingProduct"
@@ -142,51 +154,57 @@
                 >
                   <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
                 </svg>
-                {{ isSearchingProduct ? '...' : '🔍' }}
+
+                {{ isSearchingProduct ? '...' : 'Buscar' }}
               </button>
             </div>
           </div>
 
-          <!-- Select de produtos encontrados -->
+          <!-- Produtos encontrados -->
           <div *ngIf="searchResults.length > 0" class="mt-3">
-            <label class="text-slate-300 text-sm mb-2 block">Selecione o produto:</label>
+            <label class="text-text-primary text-sm mb-2 block"> Selecione o produto: </label>
+
             <select
               (change)="selectProduct($event)"
-              class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
+              class="w-full bg-overlay border border-border rounded-lg px-3 py-2 text-text-primary text-sm focus:outline-none focus:border-accent"
             >
               <option value="">-- Escolha um produto --</option>
+
               <option *ngFor="let product of searchResults; let i = index" [value]="i">
-                {{ product.code }} - {{ product.name }} - R$ {{ product.price.toFixed(2) }}
+                {{ product.code }} - {{ product.name }} - R$
+                {{ product.price.toFixed(2) }}
               </option>
             </select>
           </div>
         </div>
 
-        <!-- Itens do Pedido -->
+        <!-- Itens -->
         <div class="mb-6">
           <div class="flex justify-between items-center mb-3">
-            <label class="text-slate-300 text-sm font-medium">Itens do Pedido</label>
+            <label class="text-text-primary text-sm font-medium"> Itens do Pedido </label>
           </div>
 
           <div class="space-y-2">
             <div
               *ngFor="let item of order.items; let i = index"
-              class="bg-slate-700/50 rounded-lg px-3 py-2 border border-slate-600"
+              class="bg-surface-alt rounded-lg px-3 py-2 border border-border"
             >
               <div class="flex items-center gap-2">
                 <div class="w-24 shrink-0">
-                  <label class="text-slate-400 text-xs mb-1 block">Código</label>
+                  <label class="text-text-secondary text-xs mb-1 block"> Código </label>
+
                   <div
-                    class="bg-slate-800 border border-slate-600 rounded px-2 py-1.5 text-slate-400 text-xs truncate"
+                    class="bg-overlay border border-border rounded px-2 py-1.5 text-text-secondary text-xs truncate"
                   >
                     {{ item.code }}
                   </div>
                 </div>
 
                 <div class="w-40 shrink-0">
-                  <label class="text-slate-400 text-xs mb-1 block">Produto</label>
+                  <label class="text-text-secondary text-xs mb-1 block"> Produto </label>
+
                   <div
-                    class="bg-slate-800 border border-slate-600 rounded px-2 py-1.5 text-slate-200 text-xs truncate"
+                    class="bg-overlay border border-border rounded px-2 py-1.5 text-text-primary text-xs truncate"
                     [title]="item.name"
                   >
                     {{ item.name }}
@@ -194,44 +212,46 @@
                 </div>
 
                 <div class="flex-1 min-w-0">
-                  <label class="text-slate-400 text-xs mb-1 block">Observação</label>
+                  <label class="text-text-secondary text-xs mb-1 block"> Observação </label>
+
                   <input
                     type="text"
                     [value]="item.observation ?? ''"
                     (blur)="item.observation = $any($event.target).value"
                     placeholder="Obrigatório"
-                    class="w-full bg-slate-800 border rounded px-2 py-1.5 text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                    class="w-full bg-overlay border rounded px-2 py-1.5 text-text-primary text-xs focus:outline-none focus:border-accent"
                     [class.border-red-500]="!item.observation || item.observation.trim().length < 2"
-                    [class.border-slate-600]="
-                      item.observation && item.observation.trim().length >= 2
-                    "
+                    [class.border-border]="item.observation && item.observation.trim().length >= 2"
                   />
                 </div>
 
                 <div class="w-14 shrink-0">
-                  <label class="text-slate-400 text-xs mb-1 block">Qtd</label>
+                  <label class="text-text-secondary text-xs mb-1 block"> Qtd </label>
+
                   <input
                     type="number"
                     [value]="item.quantity"
                     (change)="updateQuantity(item, +$any($event.target).value)"
                     min="1"
-                    class="w-full bg-slate-800 border border-slate-600 rounded px-1 py-1.5 text-slate-200 text-xs text-center focus:outline-none focus:border-indigo-500"
+                    class="w-full bg-overlay border border-border rounded px-1 py-1.5 text-info text-xs text-center focus:outline-none focus:border-accent"
                   />
                 </div>
 
                 <div class="w-20 shrink-0">
-                  <label class="text-slate-400 text-xs mb-1 block">Preço Un.</label>
+                  <label class="text-text-secondary text-xs mb-1 block"> Preço Un. </label>
+
                   <div
-                    class="bg-slate-800 border border-slate-600 rounded px-2 py-1.5 text-slate-300 text-xs text-center"
+                    class="bg-overlay border border-border rounded px-2 py-1.5 text-text-secondary text-xs text-center"
                   >
                     R$ {{ item.unitPrice.toFixed(2) }}
                   </div>
                 </div>
 
                 <div class="w-20 shrink-0">
-                  <label class="text-slate-400 text-xs mb-1 block">Total</label>
+                  <label class="text-text-secondary text-xs mb-1 block"> Total </label>
+
                   <div
-                    class="bg-slate-800 border border-slate-600 rounded px-2 py-1.5 text-green-400 font-medium text-xs text-center"
+                    class="bg-overlay border border-border rounded px-2 py-1.5 text-success font-medium text-xs text-center"
                   >
                     R$ {{ item.total.toFixed(2) }}
                   </div>
@@ -241,7 +261,7 @@
                   <button
                     type="button"
                     (click)="removeItem(i)"
-                    class="bg-red-600 hover:bg-red-700 text-white p-1.5 rounded transition-colors"
+                    class="bg-danger hover:opacity-90 text-btn-text p-1.5 rounded transition-all"
                     title="Remover item"
                   >
                     <svg
@@ -261,10 +281,13 @@
             </div>
           </div>
 
-          <!-- Empty State -->
-          <div *ngIf="order.items.length === 0" class="text-center py-8 bg-slate-700/30 rounded-lg">
+          <!-- Empty -->
+          <div
+            *ngIf="order.items.length === 0"
+            class="text-center py-8 bg-surface-alt rounded-lg border border-border"
+          >
             <svg
-              class="mx-auto mb-3 text-slate-600"
+              class="mx-auto mb-3 text-text-muted"
               width="40"
               height="40"
               viewBox="0 0 24 24"
@@ -276,29 +299,29 @@
               <circle cx="20" cy="21" r="1"></circle>
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
             </svg>
-            <p class="text-slate-400 text-sm">Nenhum item no pedido</p>
+
+            <p class="text-text-secondary text-sm">Nenhum item no pedido</p>
           </div>
         </div>
 
-        <!-- Order Total -->
-        <div
-          class="bg-linear-to-r from-green-600/20 to-emerald-600/20 border border-green-500/30 rounded-lg p-4"
-        >
+        <!-- Total -->
+        <div class="bg-surface border border-success/40 rounded-lg p-4">
           <div class="flex justify-between items-center">
-            <span class="text-slate-300 text-lg font-medium">Total do Pedido:</span>
-            <span class="text-green-400 text-2xl font-bold">R$ {{ order.total.toFixed(2) }}</span>
+            <span class="text-text-primary text-lg font-medium"> Total do Pedido: </span>
+
+            <span class="text-success text-2xl font-bold"> R$ {{ order.total.toFixed(2) }} </span>
           </div>
         </div>
 
-        <!-- Service Charge -->
-        <div *ngIf="order" class="bg-slate-700/30 border border-yellow-500/30 rounded-lg p-4 mt-3">
+        <!-- Taxa -->
+        <div *ngIf="order" class="bg-surface border border-warning/40 rounded-lg p-4 mt-3">
           <div class="flex justify-between items-center gap-4">
             <div class="flex items-center gap-3">
               <div
                 (click)="toggleServiceCharge()"
                 class="w-10 h-6 rounded-full transition-colors cursor-pointer shrink-0"
-                [class.bg-yellow-500]="serviceChargeEnabled"
-                [class.bg-slate-600]="!serviceChargeEnabled"
+                [class.bg-warning]="serviceChargeEnabled"
+                [class.bg-overlay]="!serviceChargeEnabled"
               >
                 <div
                   class="w-4 h-4 bg-white rounded-full mt-1 transition-transform"
@@ -306,20 +329,22 @@
                   [class.translate-x-1]="!serviceChargeEnabled"
                 ></div>
               </div>
-              <span class="text-slate-300 text-sm font-medium">Taxa de Serviço</span>
+
+              <span class="text-text-primary text-sm font-medium"> Taxa de Serviço </span>
             </div>
 
             <div class="flex items-center gap-2">
-              <span class="text-slate-400 text-sm">R$</span>
+              <span class="text-text-secondary text-sm"> R$ </span>
+
               <input
                 type="number"
                 [ngModel]="serviceChargeAmount"
                 (ngModelChange)="onServiceChargeInput($event)"
-                [ngModelOptions]="{standalone: true}"
+                [ngModelOptions]="{ standalone: true }"
                 [disabled]="!serviceChargeEnabled"
                 min="0"
                 step="0.01"
-                class="w-28 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-yellow-400 font-bold text-sm text-center focus:outline-none focus:border-cyan-500 disabled:opacity-40"
+                class="w-28 bg-overlay border border-border rounded px-2 py-1 text-warning font-bold text-sm text-center focus:outline-none focus:border-accent disabled:opacity-40"
               />
             </div>
           </div>
@@ -327,17 +352,19 @@
       </form>
     </div>
 
-    <div class="bg-slate-900 px-6 py-4 flex justify-end gap-3">
+    <!-- Footer -->
+    <div class="bg-overlay px-6 py-4 flex justify-end gap-3 border-t border-border">
       <button
         (click)="closeModal()"
-        class="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg font-medium transition-colors"
+        class="px-6 py-2.5 bg-surface-alt hover:bg-overlay text-text-primary rounded-lg font-medium transition-all"
       >
         Cancelar
       </button>
+
       <button
         (click)="saveOrder()"
         [disabled]="isSaving || hasInvalidObservations"
-        class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        class="px-6 py-2.5 bg-accent hover:bg-accent-hover text-btn-text rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
       >
         <svg
           *ngIf="isSaving"
@@ -351,6 +378,7 @@
         >
           <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
         </svg>
+
         {{ isSaving ? 'Salvando...' : 'Salvar Alterações' }}
       </button>
     </div>

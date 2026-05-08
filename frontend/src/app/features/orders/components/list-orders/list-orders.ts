@@ -115,13 +115,12 @@ export class ListOrders implements OnInit {
     };
     return labels[status];
   }
-
   getStatusClass(status: OrderStatus): string {
     const styles: Record<OrderStatus, string> = {
-      OPEN: 'bg-green-500/20 text-green-400 border border-green-500/30',
-      CLOSED: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
-      PAID: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
-      CANCELED: 'bg-red-500/20 text-red-400 border border-red-500/30',
+      OPEN: 'bg-success/20 text-success border border-success/30',
+      CLOSED: 'bg-overlay text-text-muted border border-border',
+      PAID: 'bg-overlay text-text-muted border border-border',
+      CANCELED: 'bg-danger/20 text-danger border border-danger/30',
     };
     return styles[status];
   }

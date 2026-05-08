@@ -1,38 +1,44 @@
 <form
   (ngSubmit)="onSubmit()"
   [formGroup]="formCreateOrder"
-  class="bg-[#1d2a3c] p-6 rounded-lg space-y-6"
+  class="bg-base p-6 rounded-lg space-y-6"
 >
   <!-- Tipo, Local e Nome do Cliente -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <div>
-      <label for="type" class="block text-white font-bold mb-2">Tipo do Pedido</label>
+      <label for="type" class="block text-text-primary font-bold mb-2"> Tipo do Pedido </label>
+
       <select
         id="type"
         formControlName="type"
         required
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold"
+        class="text-xl w-full p-2 rounded-md bg-surface text-text-primary border border-border font-semibold"
       >
         <option value="DINE_IN">Mesa</option>
         <option value="DELIVERY">Entrega</option>
       </select>
+
       @if (formCreateOrder.get('type')?.touched && formCreateOrder.get('type')?.invalid) {
         <p class="msg-error">Selecione o Tipo do Pedido!</p>
       }
     </div>
 
     <div>
-      <label for="locationId" class="block text-white font-bold mb-2">Local de Origem</label>
+      <label for="locationId" class="block text-text-primary font-bold mb-2">
+        Local de Origem
+      </label>
+
       <select
         id="locationId"
         formControlName="locationId"
         required
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold"
+        class="text-xl w-full p-2 rounded-md bg-surface text-text-primary border border-border font-semibold"
       >
         @for (location of availableLocations; track location.code) {
           <option [value]="location.code">{{ location.name }}</option>
         }
       </select>
+
       @if (
         formCreateOrder.get('locationId')?.touched && formCreateOrder.get('locationId')?.invalid
       ) {
@@ -41,14 +47,18 @@
     </div>
 
     <div>
-      <label for="customerName" class="block text-white font-bold mb-2"> Nome do Cliente </label>
+      <label for="customerName" class="block text-text-primary font-bold mb-2">
+        Nome do Cliente
+      </label>
+
       <input
         id="customerName"
         formControlName="customerName"
         type="text"
         placeholder="Nome do cliente"
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+        class="text-xl w-full p-2 rounded-md bg-surface text-text-primary border border-border font-semibold placeholder:text-text-muted"
       />
+
       @if (
         formCreateOrder.get('customerName')?.touched && formCreateOrder.get('customerName')?.invalid
       ) {
@@ -57,46 +67,51 @@
     </div>
   </div>
 
-  <!-- Mesa (apenas para DINE_IN) -->
+  <!-- Mesa -->
   <div *ngIf="formCreateOrder.get('type')?.value === 'DINE_IN'" class="grid grid-cols-1 gap-6">
     <select
       id="table"
       formControlName="table"
-      class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold"
+      class="text-xl w-full p-2 rounded-md bg-surface text-text-primary border border-border font-semibold"
     >
       <option value="">Selecione uma mesa</option>
+
       <option *ngFor="let table of availableTables" [value]="table.id">
         Mesa {{ table.number }} ({{ table.capacity }} pessoas)
       </option>
     </select>
   </div>
 
-  <!-- Endereço (apenas para DELIVERY) -->
+  <!-- Endereço -->
   <div *ngIf="formCreateOrder.get('type')?.value === 'DELIVERY'" class="grid grid-cols-1 gap-6">
     <div>
-      <label for="address" class="block text-white font-bold mb-2">Endereço de Entrega</label>
+      <label for="address" class="block text-text-primary font-bold mb-2">
+        Endereço de Entrega
+      </label>
+
       <input
         id="address"
         formControlName="address"
         type="text"
         placeholder="Endereço completo"
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+        class="text-xl w-full p-2 rounded-md bg-surface text-text-primary border border-border font-semibold placeholder:text-text-muted"
       />
+
       @if (formCreateOrder.get('address')?.touched && formCreateOrder.get('address')?.invalid) {
         <p class="msg-error">Informe o endereço!</p>
       }
     </div>
   </div>
 
-  <!-- Seção de Produtos -->
-  <div class="bg-slate-700/30 rounded-lg p-4">
-    <h3 class="text-white font-bold text-lg mb-4">Produtos do Pedido</h3>
+  <!-- Produtos -->
+  <div class="bg-surface-alt rounded-lg p-4 border border-border">
+    <h3 class="text-text-primary font-bold text-lg mb-4">Produtos do Pedido</h3>
 
-    <!-- Campos de busca -->
     <div class="grid grid-cols-12 gap-3 mb-4">
-      <!-- Campo Código -->
+      <!-- Código -->
       <div class="col-span-4">
-        <label class="text-white font-bold text-sm mb-2 block">Código de Barras</label>
+        <label class="text-text-primary font-bold text-sm mb-2 block"> Código de Barras </label>
+
         <input
           type="text"
           [(ngModel)]="searchCode"
@@ -104,13 +119,14 @@
           (keyup.enter)="onCodeEnter()"
           placeholder="Código"
           [disabled]="isSearching"
-          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 disabled:opacity-50"
+          class="w-full bg-overlay border border-border rounded-lg px-3 py-2 text-text-primary text-sm focus:outline-none focus:border-accent disabled:opacity-50"
         />
       </div>
 
-      <!-- Campo Nome -->
+      <!-- Nome -->
       <div class="col-span-8">
-        <label class="text-white font-bold text-sm mb-2 block">Nome do Produto</label>
+        <label class="text-text-primary font-bold text-sm mb-2 block"> Nome do Produto </label>
+
         <div class="flex gap-2">
           <input
             type="text"
@@ -119,13 +135,14 @@
             (keyup.enter)="onNameEnter()"
             placeholder="Nome"
             [disabled]="isSearching"
-            class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 disabled:opacity-50"
+            class="flex-1 bg-overlay border border-border rounded-lg px-3 py-2 text-text-primary text-sm focus:outline-none focus:border-accent disabled:opacity-50"
           />
+
           <button
             type="button"
             (click)="onNameEnter()"
             [disabled]="isSearching"
-            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            class="bg-success hover:opacity-90 text-btn-text px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
           >
             <svg
               *ngIf="isSearching"
@@ -139,59 +156,72 @@
             >
               <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
             </svg>
+
             {{ isSearching ? 'Buscando...' : 'Buscar' }}
           </button>
         </div>
       </div>
 
-      <!-- Select de produtos encontrados -->
+      <!-- Produtos encontrados -->
       <div *ngIf="searchResults.length > 0" class="col-span-12">
-        <label class="text-white font-bold text-sm mb-2 block">Selecione o produto:</label>
+        <label class="text-text-primary font-bold text-sm mb-2 block"> Selecione o produto: </label>
+
         <select
           (change)="selectProduct($event)"
-          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500"
+          class="w-full bg-overlay border border-border rounded-lg px-3 py-2 text-text-primary text-sm focus:outline-none focus:border-accent"
         >
           <option value="">-- Escolha um produto --</option>
+
           <option *ngFor="let product of searchResults; let i = index" [value]="i">
-            {{ product.code }} - {{ product.name }} - R$ {{ product.price.toFixed(2) }}
+            {{ product.code }} - {{ product.name }} - R$
+            {{ product.price.toFixed(2) }}
           </option>
         </select>
       </div>
     </div>
 
-    <!-- Products Table -->
+    <!-- Tabela -->
     <div class="overflow-x-auto" style="max-height: 300px; overflow-y: auto">
       <table class="w-full text-sm">
-        <thead class="sticky top-0 bg-slate-700/50 backdrop-blur-sm">
-          <tr class="border-b border-slate-600">
-            <th class="text-left py-2 px-2 text-blue-400 text-xs font-semibold uppercase">
-              Código
-            </th>
-            <th class="text-left py-2 px-2 text-blue-400 text-xs font-semibold uppercase">
-              Produto
-            </th>
-            <th class="text-left py-2 px-2 text-orange-400 text-xs font-semibold uppercase">
+        <thead class="sticky top-0 bg-overlay backdrop-blur-sm">
+          <tr class="border-b border-border">
+            <th class="text-left py-2 px-2 text-info text-xs font-semibold uppercase">Código</th>
+
+            <th class="text-left py-2 px-2 text-info text-xs font-semibold uppercase">Produto</th>
+
+            <th class="text-left py-2 px-2 text-warning text-xs font-semibold uppercase">
               Observação
             </th>
-            <th class="text-center py-2 px-2 text-yellow-400 text-xs font-semibold uppercase">
+
+            <th class="text-center py-2 px-2 text-warning text-xs font-semibold uppercase">
               VLR. UN.
             </th>
-            <th class="text-center py-2 px-2 text-cyan-400 text-xs font-semibold uppercase">QTD</th>
-            <th class="text-center py-2 px-2 text-green-400 text-xs font-semibold uppercase">
+
+            <th class="text-center py-2 px-2 text-qty text-xs font-semibold uppercase">QTD</th>
+
+            <th class="text-center py-2 px-2 text-success text-xs font-semibold uppercase">
               Total
             </th>
-            <th class="text-center py-2 px-2 text-slate-400 text-xs font-semibold uppercase">
+
+            <th class="text-center py-2 px-2 text-text-secondary text-xs font-semibold uppercase">
               Excluir
             </th>
           </tr>
         </thead>
+
         <tbody>
           <tr
             *ngFor="let item of orderItems"
-            class="border-b border-slate-700/50 hover:bg-slate-700/20"
+            class="border-b border-border-subtle hover:bg-overlay/40"
           >
-            <td class="py-2 px-2 text-slate-300 text-xs">{{ item.code }}</td>
-            <td class="py-2 px-2 text-white text-xs">{{ item.name }}</td>
+            <td class="py-2 px-2 text-text-secondary text-xs">
+              {{ item.code }}
+            </td>
+
+            <td class="py-2 px-2 text-text-primary text-xs">
+              {{ item.name }}
+            </td>
+
             <td class="py-2 px-2">
               <input
                 type="text"
@@ -199,31 +229,35 @@
                 (blur)="updateObservation(item.productId!, $any($event.target).value)"
                 placeholder="Obrigatório - Digite 'ok' se nao tiver observacao"
                 minlength="2"
-                class="w-full bg-slate-800 border rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-cyan-500"
+                class="w-full bg-overlay border rounded px-2 py-1 text-xs text-text-primary focus:outline-none focus:border-accent"
                 [class.border-red-500]="!item.observation || item.observation.trim().length < 2"
-                [class.border-slate-600]="item.observation && item.observation.trim().length >= 2"
+                [class.border-border]="item.observation && item.observation.trim().length >= 2"
               />
             </td>
-            <td class="py-2 px-2 text-center text-slate-300 text-xs">
+
+            <td class="py-2 px-2 text-center text-text-secondary text-xs">
               R$ {{ item.unitPrice.toFixed(2) }}
             </td>
+
             <td class="py-2 px-2 text-center">
               <input
                 type="number"
                 [value]="item.quantity"
                 (change)="updateQuantity(item.productId!, +$any($event.target).value)"
                 min="1"
-                class="w-16 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-cyan-400 font-bold text-xs text-center focus:outline-none focus:border-cyan-500"
+                class="w-16 bg-overlay border border-border rounded px-2 py-1 text-info font-bold text-xs text-center focus:outline-none focus:border-accent"
               />
             </td>
-            <td class="py-2 px-2 text-center text-green-400 font-bold text-xs">
+
+            <td class="py-2 px-2 text-center text-success font-bold text-xs">
               R$ {{ item.total.toFixed(2) }}
             </td>
+
             <td class="py-2 px-2 text-center">
               <button
                 type="button"
                 (click)="removeItem(item.productId!)"
-                class="text-red-400 hover:text-red-300"
+                class="text-danger hover:opacity-80"
                 title="Remover item"
               >
                 <svg
@@ -243,10 +277,10 @@
         </tbody>
       </table>
 
-      <!-- Mensagem quando não há produtos -->
+      <!-- Sem produtos -->
       <div *ngIf="orderItems.length === 0" class="text-center py-8">
         <svg
-          class="mx-auto mb-3 text-slate-600"
+          class="mx-auto mb-3 text-text-muted"
           width="40"
           height="40"
           viewBox="0 0 24 24"
@@ -258,13 +292,16 @@
           <circle cx="20" cy="21" r="1"></circle>
           <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
         </svg>
-        <p class="text-slate-400 text-sm">Nenhum produto adicionado</p>
-        <p class="text-slate-500 text-xs mt-1">Busque e adicione produtos ao pedido</p>
+
+        <p class="text-text-secondary text-sm">Nenhum produto adicionado</p>
+
+        <p class="text-text-muted text-xs mt-1">Busque e adicione produtos ao pedido</p>
       </div>
     </div>
 
+    <!-- Taxa -->
     <div
-      class="mt-4 p-4 bg-slate-800 rounded-lg flex items-center justify-between border border-slate-600"
+      class="mt-4 p-4 bg-surface rounded-lg flex items-center justify-between border border-border"
     >
       <div class="flex items-center gap-3">
         <input
@@ -275,21 +312,24 @@
           id="serviceCharge"
           class="w-5 h-5 cursor-pointer"
         />
-        <label for="serviceCharge" class="text-white font-bold text-base cursor-pointer">
+
+        <label for="serviceCharge" class="text-text-primary font-bold cursor-pointer">
           Incluir 10% de Taxa de Serviço
         </label>
       </div>
-      <div class="text-slate-400">
-        Taxa: <span class="font-bold text-yellow-500">R$ {{ (subtotal * 0.1).toFixed(2) }}</span>
+
+      <div class="text-text-secondary">
+        Taxa:
+        <span class="font-bold text-warning"> R$ {{ (subtotal * 0.1).toFixed(2) }} </span>
       </div>
     </div>
 
-    <div
-      class="mt-4 bg-linear-to-r from-green-600/20 to-emerald-600/20 rounded-lg p-4 border border-green-500/50"
-    >
+    <!-- Total -->
+    <div class="mt-4 bg-surface rounded-lg p-4 border border-success/50">
       <div class="flex justify-between items-center">
-        <p class="text-slate-300 text-base font-medium">Total do Pedido:</p>
-        <p class="text-green-400 font-bold text-3xl">R$ {{ calculatedTotal + serviceChargeValue }}</p>
+        <p class="text-text-secondary font-medium">Total do Pedido:</p>
+
+        <p class="text-success font-bold text-3xl">R$ {{ calculatedTotal + serviceChargeValue }}</p>
       </div>
     </div>
   </div>
@@ -299,7 +339,7 @@
     <button
       type="submit"
       [disabled]="formCreateOrder.invalid || orderItems.length === 0 || hasInvalidObservations"
-      class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      class="bg-accent hover:bg-accent-hover text-btn-text px-8 py-3 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
     >
       Criar Pedido
     </button>

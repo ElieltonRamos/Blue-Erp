@@ -195,9 +195,9 @@ export class KitchenDisplay implements OnInit, OnDestroy {
         ? parseInt(elapsed) * 60 + (parseInt(elapsed.split('h ')[1]) || 0)
         : parseInt(elapsed);
 
-    if (minutes < 10) return 'text-green-400';
-    if (minutes < 20) return 'text-yellow-400';
-    return 'text-red-400';
+    if (minutes < 10) return 'text-time-ok';
+    if (minutes < 20) return 'text-time-warn';
+    return 'text-time-critical';
   }
 
   getTimeBadgeClass(elapsed: string): string {
@@ -207,11 +207,13 @@ export class KitchenDisplay implements OnInit, OnDestroy {
         ? parseInt(elapsed) * 60 + (parseInt(elapsed.split('h ')[1]) || 0)
         : parseInt(elapsed);
 
-    if (minutes < 10) return 'bg-green-500/20 border-green-500/30';
-    if (minutes < 20) return 'bg-yellow-500/20 border-yellow-500/30';
-    return 'bg-red-500/20 border-red-500/30';
+    if (minutes < 10)
+      return 'bg-[color:var(--color-time-ok)]/20 border-[color:var(--color-time-ok)]/30';
+    if (minutes < 20)
+      return 'bg-[color:var(--color-time-warn)]/20 border-[color:var(--color-time-warn)]/30';
+    return 'bg-[color:var(--color-time-critical)]/20 border-[color:var(--color-time-critical)]/30';
   }
-  
+
   private playNotificationSound(): void {
     try {
       this.notificationSound.play().catch((e) => {

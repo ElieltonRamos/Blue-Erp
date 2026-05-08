@@ -2,12 +2,13 @@
 <form
   (ngSubmit)="onSubmit()"
   [formGroup]="formCreateExpense"
-  class="bg-[#1d2a3c] p-6 rounded-lg space-y-6"
+  class="p-6 rounded-lg space-y-6"
+  [style.background-color]="'var(--color-surface)'"
 >
   <!-- Inputs lado a lado -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <div>
-      <label for="supplier" class="block text-white font-bold mb-2"
+      <label for="supplier" class="block font-bold mb-2" [style.color]="'var(--color-text-primary)'"
         >Nome do Fornecedor</label
       >
       <input
@@ -16,16 +17,29 @@
         type="text"
         required
         placeholder="Digite o Fornecedor"
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+        class="text-xl w-full p-2 rounded-md font-semibold border"
+        [style.background-color]="'var(--color-surface-alt)'"
+        [style.color]="'var(--color-text-primary)'"
+        [style.border-color]="'var(--color-border)'"
       />
-      @if (formCreateExpense.get('supplier')?.touched &&
-      formCreateExpense.get('supplier')?.invalid) {
-      <p class="msg-error">Digite o nome do Fornecedor!</p>
+      @if (
+        formCreateExpense.get('supplier')?.touched && formCreateExpense.get('supplier')?.invalid
+      ) {
+        <p
+          class="text-xs font-light mt-1 rounded px-2 py-1"
+          [style.color]="'var(--color-danger)'"
+          [style.background-color]="'var(--color-danger)'"
+        >
+          Digite o nome do Fornecedor!
+        </p>
       }
     </div>
 
     <div>
-      <label for="description" class="block text-white font-bold mb-2"
+      <label
+        for="description"
+        class="block font-bold mb-2"
+        [style.color]="'var(--color-text-primary)'"
         >Descrição</label
       >
       <input
@@ -33,12 +47,15 @@
         formControlName="description"
         type="text"
         placeholder="Digite uma Descrição ou observação"
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+        class="text-xl w-full p-2 rounded-md font-semibold border"
+        [style.background-color]="'var(--color-surface-alt)'"
+        [style.color]="'var(--color-text-primary)'"
+        [style.border-color]="'var(--color-border)'"
       />
     </div>
 
     <div>
-      <label for="value" class="block text-white font-bold mb-2"
+      <label for="value" class="block font-bold mb-2" [style.color]="'var(--color-text-primary)'"
         >Valor da Despesa</label
       >
       <input
@@ -47,16 +64,24 @@
         type="number"
         required
         placeholder="Digite o Valor"
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+        class="text-xl w-full p-2 rounded-md font-semibold border"
+        [style.background-color]="'var(--color-surface-alt)'"
+        [style.color]="'var(--color-text-primary)'"
+        [style.border-color]="'var(--color-border)'"
       />
-      @if (formCreateExpense.get('value')?.touched &&
-      formCreateExpense.get('value')?.invalid) {
-      <p class="msg-error">Digite o Valor!</p>
+      @if (formCreateExpense.get('value')?.touched && formCreateExpense.get('value')?.invalid) {
+        <p
+          class="text-xs font-light mt-1 rounded px-2 py-1"
+          [style.color]="'var(--color-danger)'"
+          [style.background-color]="'var(--color-danger)'"
+        >
+          Digite o Valor!
+        </p>
       }
     </div>
 
     <div>
-      <label for="date" class="block text-white font-bold mb-2"
+      <label for="date" class="block font-bold mb-2" [style.color]="'var(--color-text-primary)'"
         >Data de Vencimento</label
       >
       <input
@@ -64,11 +89,19 @@
         formControlName="datePayment"
         type="date"
         required
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+        class="text-xl w-full p-2 rounded-md font-semibold border"
+        [style.background-color]="'var(--color-surface-alt)'"
+        [style.color]="'var(--color-text-primary)'"
+        [style.border-color]="'var(--color-border)'"
       />
-      @if (formCreateExpense.get('datePay')?.touched &&
-      formCreateExpense.get('datePay')?.invalid) {
-      <p class="msg-error">Selecione uma Data!</p>
+      @if (formCreateExpense.get('datePay')?.touched && formCreateExpense.get('datePay')?.invalid) {
+        <p
+          class="text-xs font-light mt-1 rounded px-2 py-1"
+          [style.color]="'var(--color-danger)'"
+          [style.background-color]="'var(--color-danger)'"
+        >
+          Selecione uma Data!
+        </p>
       }
     </div>
   </div>
@@ -77,7 +110,9 @@
   <div class="flex justify-center pt-4">
     <button
       type="submit"
-      class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold"
+      class="px-8 py-3 rounded-lg font-bold transition-all duration-200 hover:scale-105"
+      [style.background-color]="'var(--color-accent)'"
+      style="color: white"
     >
       Salvar
     </button>
