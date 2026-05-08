@@ -1,14 +1,18 @@
-<div
-  class="min-h-screen bg-linear-to-b from-purple-900 to-purple-950 flex flex-col items-center justify-start py-12"
->
+<div class="min-h-screen bg-base flex flex-col items-center justify-start py-12">
   <span
-    class="bg-indigo-600 text-white px-6 py-2 rounded-full mb-8 shadow-md hover:bg-indigo-700 transition"
+    class="bg-surface border border-border text-text-secondary px-6 py-2 rounded-full mb-8 shadow-sm"
   >
     Menu
   </span>
+  <button
+    (click)="themeService.toggle()"
+    class="absolute top-4 right-4 bg-surface border border-border text-text-secondary hover:text-text-primary rounded-md px-3 py-1.5 text-sm transition-colors"
+  >
+    {{ themeService.theme() === 'dark' ? '☀️ Claro' : '🌙 Escuro' }}
+  </button>
 
   <div
-    class="bg-slate-800 rounded-xl p-10 grid grid-cols-1 md:grid-cols-3 gap-6 shadow-lg w-[90%] max-w-5xl"
+    class="bg-surface rounded-xl p-10 grid grid-cols-1 md:grid-cols-3 gap-6 shadow-lg w-[90%] max-w-5xl"
   >
     <app-card-menu
       [title]="'Cadastro de Cliente'"
@@ -80,7 +84,7 @@
 
   <button
     (click)="logout()"
-    class="fixed bottom-6 right-6 bg-gray-600 text-white px-5 py-2 rounded shadow hover:bg-gray-700 transition"
+    class="fixed bottom-6 right-6 bg-overlay text-text-primary px-5 py-2 rounded shadow hover:bg-surface-alt transition"
   >
     Sair
   </button>

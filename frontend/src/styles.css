@@ -1,15 +1,83 @@
 @import "tailwindcss";
 @import '@angular/cdk/overlay-prebuilt.css';
 
-@layer components {
-  .msg-error {
-    @apply text-red-500 font-light text-sm;
-  }
+@theme {
+  /* Fundos */
+  --color-base:        #1a1a1f;
+  --color-surface:     #242429;
+  --color-surface-alt: #2e2e35;
+  --color-overlay:     #35353d;
+
+  /* Bordas */
+  --color-border:        #3a3a42;
+  --color-border-subtle: #2a2a31;
+
+  /* Texto */
+  --color-text-primary:   #e8e8ec;
+  --color-text-secondary: #9898a6;
+  --color-text-muted:     #606070;
+
+  /* Ação */
+  --color-accent:       #4a6fa5;
+  --color-accent-hover: #3d5f8f;
+
+  /* Estados */
+  --color-danger:  #9b4545;
+  --color-success: #3d7a56;
+  --color-warning: #8a6d32;
+
+  --color-btn-edit:   #8a6d32;
+  --color-btn-delete: #9b4545;
+}
+
+.light {
+  /* Fundos */
+  --color-base:        #e7e7e7; /* fundo geral */
+  --color-surface:     #f4f4f4; /* cards e menus */
+  --color-surface-alt: #d8d8d8; /* inputs/tabelas */
+  --color-overlay:     #c9c9c9; /* overlays leves */
+
+  /* Bordas */
+  --color-border:        #b5b5b5;
+  --color-border-subtle: #d0d0d0;
+
+  /* Texto */
+  --color-text-primary:   #2f3a45; /* cinza azulado escuro */
+  --color-text-secondary: #5f6b76;
+  --color-text-muted:     #8b96a1;
+
+  /* Ação */
+  --color-accent:       #b8bcc2;
+  --color-accent-hover: #a8adb4;
+
+  /* Estados */
+  --color-danger:  #b04c4c;
+  --color-success: #4f7d60;
+  --color-warning: #b38b3d;
+
+  --color-btn-edit:   #b38b3d;
+  --color-btn-delete: #b04c4c;
 }
 
 @layer components {
+  .msg-error {
+    @apply text-danger font-light text-sm bg-danger/10 rounded px-2 py-1 mt-1;
+  }
+
   button {
     @apply cursor-pointer;
+  }
+
+  .action-btn {
+    @apply inline-flex items-center justify-center gap-1
+           w-full max-w-[140px]
+           px-2 py-1
+           text-xs font-medium
+           rounded
+           text-text-primary
+           transition-all duration-200
+           hover:scale-105
+           shadow-md;
   }
 }
 
@@ -17,19 +85,9 @@ body {
   user-select: none;
 }
 
-/* Forçar estilos do backdrop CDK */
 .cdk-overlay-backdrop {
   background: rgba(0, 0, 0, 0.6) !important;
   backdrop-filter: blur(4px) !important;
-}
-
-/* Classe customizada para seu modal específico */
-.modal-backdrop-dark {
-  background: rgba(0, 0, 0, 0.7) !important;
-}
-
-/* Animação de entrada/saída (opcional) */
-.cdk-overlay-backdrop {
   opacity: 0;
   transition: opacity 200ms ease-in-out;
 }
@@ -38,14 +96,6 @@ body {
   opacity: 1;
 }
 
-.action-btn {
-  @apply inline-flex items-center justify-center gap-1
-         w-full max-w-[140px]
-         px-2 py-1
-         text-xs font-medium
-         rounded
-         text-gray-50
-         transition-all duration-200
-         hover:scale-105
-         shadow-md;
+.modal-backdrop-dark {
+  background: rgba(0, 0, 0, 0.7) !important;
 }

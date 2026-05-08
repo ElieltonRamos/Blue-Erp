@@ -1,20 +1,18 @@
-<!-- Formulário -->
 <form
   (ngSubmit)="onSubmit()"
   [formGroup]="formCreateClient"
-  class="bg-[#1d2a3c] p-6 rounded-lg space-y-6"
+  class="bg-surface p-6 rounded-lg space-y-6"
 >
-  <!-- Inputs lado a lado -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <div>
-      <label for="name" class="block text-white font-bold mb-2">Nome do Cliente</label>
+      <label for="name" class="block text-text-primary font-bold mb-2">Nome do Cliente</label>
       <input
         id="name"
         formControlName="name"
         type="text"
         required
         placeholder="Digite o nome"
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+        class="text-xl w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold placeholder:text-text-muted"
       />
       @if (formCreateClient.get('name')?.touched && formCreateClient.get('name')?.invalid) {
         <p class="msg-error">Digite o Nome do Cliente!</p>
@@ -22,7 +20,7 @@
     </div>
 
     <div>
-      <label for="cpf" class="block text-white font-bold mb-2">CPF do Cliente</label>
+      <label for="cpf" class="block text-text-primary font-bold mb-2">CPF do Cliente</label>
       <input
         id="cpf"
         formControlName="cpf"
@@ -30,7 +28,7 @@
         required
         placeholder="Digite o CPF"
         mask="000.000.000-00"
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+        class="text-xl w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold placeholder:text-text-muted"
       />
       @if (formCreateClient.get('cpf')?.touched && formCreateClient.get('cpf')?.invalid) {
         <p class="msg-error">Digite o CPF do Cliente!</p>
@@ -38,7 +36,7 @@
     </div>
 
     <div>
-      <label for="phone" class="block text-white font-bold mb-2">Telefone: </label>
+      <label for="phone" class="block text-text-primary font-bold mb-2">Telefone:</label>
       <input
         id="phone"
         formControlName="phone"
@@ -46,7 +44,7 @@
         required
         mask="(00) 00000-0000"
         placeholder="(00) 00000-0000"
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+        class="text-xl w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold placeholder:text-text-muted"
       />
       @if (formCreateClient.get('phone')?.touched && formCreateClient.get('phone')?.invalid) {
         <p class="msg-error">Digite o Telefone!</p>
@@ -54,14 +52,14 @@
     </div>
 
     <div>
-      <label for="address" class="block text-white font-bold mb-2">Endereço: </label>
+      <label for="address" class="block text-text-primary font-bold mb-2">Endereço:</label>
       <input
         id="address"
         formControlName="address"
         type="text"
         required
         placeholder="Digite o endereço"
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+        class="text-xl w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold placeholder:text-text-muted"
       />
       @if (formCreateClient.get('address')?.touched && formCreateClient.get('address')?.invalid) {
         <p class="msg-error">Digite o Endereço!</p>
@@ -69,11 +67,10 @@
     </div>
   </div>
 
-  <!-- Botão -->
   <div class="flex justify-center pt-4">
     <button
       type="submit"
-      class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold"
+      class="bg-accent hover:bg-accent-hover text-text-primary px-8 py-3 rounded-lg font-bold transition"
     >
       Salvar
     </button>

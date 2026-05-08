@@ -6,6 +6,7 @@ import { ServiceLogin } from '../services/login.service';
 import { NotificationService } from '../../../shared/toastr/notification.service';
 import { LicenseService } from '../../../core/services/license.service';
 import { version } from '../../../../../package.json';
+import { ThemeService } from '../../../core/services/theme.service';
 
 @Component({
   selector: 'app-login',
@@ -15,6 +16,7 @@ import { version } from '../../../../../package.json';
 export class Login {
   version = version;
   private route = inject(Router);
+  themeService = inject(ThemeService);
   private loginService = inject(ServiceLogin);
   private notification = inject(NotificationService);
   private licenseService = inject(LicenseService);

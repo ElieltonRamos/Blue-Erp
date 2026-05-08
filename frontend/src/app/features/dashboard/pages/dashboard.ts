@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { CardMenu } from '../components/card-menu/card-menu';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../shared/toastr/notification.service';
+import { ThemeService } from '../../../core/services/theme.service';
 
 type Role = 'admin' | 'caixa' | 'garcom' | 'cozinheiro';
 
@@ -17,7 +18,7 @@ const PERMISSIONS: Record<string, Role[]> = {
   '/relatorios': ['admin', 'caixa'],
   '/financeiro': ['admin', 'caixa'],
   '/empresa': ['admin'],
-  '/fiscal': ['admin']
+  '/fiscal': ['admin'],
 };
 
 @Component({
@@ -29,6 +30,7 @@ export class Dashboard implements OnInit {
   private router = inject(Router);
   private auth = inject(AuthService);
   private notification = inject(NotificationService);
+  themeService = inject(ThemeService);
 
   userName: string = '';
   role: Role = 'garcom';
