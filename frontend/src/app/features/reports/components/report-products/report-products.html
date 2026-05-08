@@ -1,4 +1,4 @@
-<!-- Container Principal -->
+<!-- Container Principal (tela) -->
 <div class="w-full max-w-6xl bg-[#182233] rounded-2xl shadow-lg p-6">
   <div class="mb-4">
     <h1 class="text-3xl font-bold text-white">Relatório de Produtos</h1>
@@ -36,21 +36,29 @@
         Este Mês
       </button>
     </div>
-    <div class="flex items-end">
+    <div class="flex items-end gap-2">
       <button
         (click)="generateReport()"
         class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
       >
         Gerar Relatório
       </button>
+      @if (reportGenerated) {
+        <button
+          (click)="print()"
+          class="bg-transparent text-gray-300 px-6 py-2 rounded-lg border border-gray-600 hover:bg-[#2a3445] hover:text-white transition-all font-medium flex items-center gap-2"
+        >
+          <span>🖨️</span> Imprimir / PDF
+        </button>
+      }
     </div>
   </div>
 
+  <!-- Conteúdo tela -->
   <div class="w-full max-w-6xl mx-auto bg-[#182233] rounded-2xl shadow-lg p-6 mt-6 text-white">
     <h2 class="text-2xl font-bold mb-2">Relatório de Produtos {{ getFullDate() }}</h2>
     <p class="text-gray-400 text-sm mb-6">
       Consolidação de vendas, consumo de matéria-prima e situação de estoque no período selecionado.
-      Os custos de consumo são calculados com base nas fichas técnicas dos produtos.
     </p>
 
     <!-- Resumo Geral -->
@@ -70,49 +78,36 @@
         <p class="text-2xl font-semibold text-yellow-400">
           R$ {{ report.grandTotalConsumedCost.toFixed(2) }}
         </p>
-        <p class="text-xs text-gray-500 mt-1">
-          Custo teórico de MP consumida (ficha técnica × vendas)
-        </p>
+        <p class="text-xs text-gray-500 mt-1">Custo teórico de MP consumida</p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
         <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Custo de Reposição</h3>
         <p class="text-2xl font-semibold text-red-400">
           R$ {{ report.totalReplenishmentCost.toFixed(2) }}
         </p>
-        <p class="text-xs text-gray-500 mt-1">
-          Estimativa para repor itens abaixo do estoque mínimo
-        </p>
+        <p class="text-xs text-gray-500 mt-1">Estimativa para repor itens abaixo do mínimo</p>
       </div>
       <div class="bg-[#2a3445] p-4 rounded-xl shadow">
         <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Valor em Estoque</h3>
         <p class="text-2xl font-semibold text-blue-400">
           R$ {{ report.totalStockValue.toFixed(2) }}
         </p>
-        <p class="text-xs text-gray-500 mt-1">
-          Valor total do estoque atual (produtos + matérias-primas)
-        </p>
+        <p class="text-xs text-gray-500 mt-1">Valor total do estoque atual</p>
       </div>
-      <!-- Card explicativo CMV -->
       <div
         class="bg-[#1a2a1a] border border-yellow-700 p-4 rounded-xl shadow col-span-1 sm:col-span-2 lg:col-span-4"
       >
-        <h3 class="text-yellow-400 font-semibold mb-1">
-          💡 O que é CMV (Custo da Mercadoria Vendida)?
-        </h3>
+        <h3 class="text-yellow-400 font-semibold mb-1">💡 O que é CMV?</h3>
         <p class="text-gray-300 text-sm">
-          O CMV representa o custo total dos insumos consumidos para produzir tudo que foi vendido
-          no período. Ele é calculado cruzando as quantidades vendidas com as fichas técnicas dos
-          produtos:
+          Custo total dos insumos consumidos para produzir tudo que foi vendido.
           <span class="text-white font-medium"
-            >quantidade vendida × quantidade do insumo na ficha técnica × custo unitário do
-            insumo</span
+            >quantidade vendida × quantidade do insumo na ficha técnica × custo unitário</span
           >.
         </p>
         <p class="text-gray-400 text-sm mt-2">
           <span class="text-green-400 font-medium">Faturamento − CMV = Lucro Bruto estimado.</span>
-          Quanto menor o CMV em relação ao faturamento, maior sua margem. Atenção: este valor é
-          <span class="text-yellow-300">teórico</span> — não considera perdas, desperdício ou
-          variações de preço por lote de compra.
+          Este valor é <span class="text-yellow-300">teórico</span> — não considera perdas ou
+          variações de preço por lote.
         </p>
       </div>
     </div>
@@ -120,10 +115,7 @@
     <!-- Produtos Mais Vendidos -->
     <div class="bg-[#2a3445] p-4 rounded-xl mb-6">
       <h4 class="text-xl font-bold text-white mb-1">📊 Produtos Mais Vendidos</h4>
-      <p class="text-gray-400 text-sm mb-4">
-        Produtos mais vendidos no periodo. O preço médio é calculado
-        dividindo o faturamento pelo total de unidades vendidas.
-      </p>
+      <p class="text-gray-400 text-sm mb-4">Produtos mais vendidos no período.</p>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead class="border-b border-gray-600">
@@ -161,9 +153,7 @@
     <div class="bg-[#2a3445] p-4 rounded-xl mb-6">
       <h4 class="text-xl font-bold text-white mb-1">🥫 Matérias-Primas Mais Utilizadas</h4>
       <p class="text-gray-400 text-sm mb-4">
-        Consumo teórico calculado com base nas fichas técnicas dos produtos vendidos. Produtos
-        semi-prontos são desdobrados em seus componentes. O custo total representa o CMV individual
-        de cada material no período.
+        Consumo teórico calculado com base nas fichas técnicas.
       </p>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
@@ -202,19 +192,16 @@
       </div>
     </div>
 
-    <!-- Matérias-Primas Próximas do Vencimento -->
+    <!-- Próximas do Vencimento -->
     <div class="bg-[#2a3445] p-4 rounded-xl mb-6">
       <h4 class="text-xl font-bold text-white mb-1">⚠️ Matérias-Primas Próximas do Vencimento</h4>
-      <p class="text-gray-400 text-sm mb-4">
-        Materiais com data de validade nos próximos 30 dias. Vermelho: vence em até 7 dias. Amarelo:
-        vence entre 8 e 15 dias.
-      </p>
+      <p class="text-gray-400 text-sm mb-4">Materiais com validade nos próximos 30 dias.</p>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead class="border-b border-gray-600">
             <tr>
               <th class="py-2 px-3 text-gray-300">Material</th>
-              <th class="py-2 px-3 text-gray-300">Data de Vencimento</th>
+              <th class="py-2 px-3 text-gray-300">Vencimento</th>
               <th class="py-2 px-3 text-gray-300">Dias Restantes</th>
               <th class="py-2 px-3 text-gray-300">Estoque Atual</th>
             </tr>
@@ -259,9 +246,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
       <div class="bg-[#2a3445] p-4 rounded-xl">
         <h4 class="text-xl font-bold text-white mb-1">📉 Estoques Mais Baixos</h4>
-        <p class="text-gray-400 text-sm mb-4">
-          Itens com menor quantidade disponível. Atenção especial para valores próximos de zero.
-        </p>
+        <p class="text-gray-400 text-sm mb-4">Itens com menor quantidade disponível.</p>
         <div class="space-y-3">
           @for (item of report.lowestStocks; track $index) {
             <div class="bg-[#1f2a40] p-3 rounded-lg">
@@ -272,15 +257,13 @@
                     {{ item.type === 'product' ? 'Produto' : 'Matéria-Prima' }}
                   </p>
                 </div>
-                <div class="text-right">
-                  <p
-                    class="text-lg font-bold"
-                    [class.text-red-400]="item.currentStock === 0"
-                    [class.text-orange-400]="item.currentStock > 0"
-                  >
-                    {{ item.currentStock }} {{ item.unit }}
-                  </p>
-                </div>
+                <p
+                  class="text-lg font-bold"
+                  [class.text-red-400]="item.currentStock === 0"
+                  [class.text-orange-400]="item.currentStock > 0"
+                >
+                  {{ item.currentStock }} {{ item.unit }}
+                </p>
               </div>
             </div>
           }
@@ -289,13 +272,9 @@
           }
         </div>
       </div>
-
       <div class="bg-[#2a3445] p-4 rounded-xl">
         <h4 class="text-xl font-bold text-white mb-1">📈 Estoques Mais Altos</h4>
-        <p class="text-gray-400 text-sm mb-4">
-          Itens com maior quantidade em estoque. Volumes muito altos podem indicar excesso de
-          compra.
-        </p>
+        <p class="text-gray-400 text-sm mb-4">Itens com maior quantidade em estoque.</p>
         <div class="space-y-3">
           @for (item of report.highestStocks; track $index) {
             <div class="bg-[#1f2a40] p-3 rounded-lg">
@@ -306,11 +285,9 @@
                     {{ item.type === 'product' ? 'Produto' : 'Matéria-Prima' }}
                   </p>
                 </div>
-                <div class="text-right">
-                  <p class="text-lg font-bold text-green-400">
-                    {{ item.currentStock }} {{ item.unit }}
-                  </p>
-                </div>
+                <p class="text-lg font-bold text-green-400">
+                  {{ item.currentStock }} {{ item.unit }}
+                </p>
               </div>
             </div>
           }
@@ -324,11 +301,7 @@
     <!-- Sugestões de Compra -->
     <div class="bg-[#2a3445] p-4 rounded-xl">
       <h4 class="text-xl font-bold text-white mb-1">🛒 Sugestões de Compra</h4>
-      <p class="text-gray-400 text-sm mb-4">
-        Itens com estoque abaixo do mínimo cadastrado. A quantidade sugerida é o déficit acrescido
-        de 50% de margem de segurança. O custo estimado usa o preço de custo cadastrado para
-        produtos e o custo unitário para matérias-primas.
-      </p>
+      <p class="text-gray-400 text-sm mb-4">Itens com estoque abaixo do mínimo cadastrado.</p>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead class="border-b border-gray-600">
@@ -373,7 +346,6 @@
           </tbody>
         </table>
       </div>
-
       @if (report.purchaseSuggestions.length > 0) {
         <div class="mt-4 flex justify-end">
           <div class="bg-[#1f2a40] px-4 py-2 rounded-lg text-sm">
@@ -385,6 +357,228 @@
         </div>
       }
     </div>
+  </div>
+</div>
+
+<!-- Conteúdo oculto para impressão -->
+<div id="reportProductsContent" style="display: none">
+  <!-- Header -->
+  <div class="print-header">
+    <div class="logo-area">
+      <img src="/blue-erp.png" alt="Logo" />
+      <div>
+        <div class="company-name">{{ companyData?.tradeName || companyData?.corporateName }}</div>
+        <div class="company-sub">
+          CNPJ: {{ companyData?.cnpj }} &nbsp;|&nbsp; {{ companyData?.city }}/{{
+            companyData?.state
+          }}
+        </div>
+      </div>
+    </div>
+    <div class="report-meta">
+      <strong>Relatório de Produtos</strong>
+      Período: {{ getFullDate() }}<br />
+      Emitido em: {{ getTodayFormatted() }}
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="section-title">Resumo do Período</div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Unidades Vendidas</div>
+      <div class="kpi-value">{{ report.totalProductsSold }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Faturamento Bruto</div>
+      <div class="kpi-value green">R$ {{ report.totalRevenue.toFixed(2) }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">CMV de Matéria-Prima</div>
+      <div class="kpi-value yellow">R$ {{ report.grandTotalConsumedCost.toFixed(2) }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Custo de Reposição</div>
+      <div class="kpi-value red">R$ {{ report.totalReplenishmentCost.toFixed(2) }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Valor em Estoque</div>
+      <div class="kpi-value blue">R$ {{ report.totalStockValue.toFixed(2) }}</div>
+    </div>
+  </div>
+
+  <div class="info-box" style="margin-top: 8px">
+    <strong>CMV</strong> = quantidade vendida × quantidade do insumo na ficha técnica × custo
+    unitário.
+    <strong>Faturamento − CMV = Lucro Bruto estimado.</strong>
+    Valor teórico — não considera perdas ou variações de preço por lote.
+  </div>
+
+  <!-- Produtos Mais Vendidos -->
+  <div class="section-title">Produtos Mais Vendidos</div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Produto</th>
+        <th>Qtd. Vendida</th>
+        <th>Faturamento</th>
+        <th>Preço Médio</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (product of report.topSellingProducts; track $index) {
+        <tr>
+          <td>{{ $index + 1 }}</td>
+          <td>{{ product.productName }}</td>
+          <td>{{ product.totalSold }}</td>
+          <td class="amount">R$ {{ product.revenue.toFixed(2) }}</td>
+          <td class="amount">R$ {{ product.averagePrice.toFixed(2) }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <!-- Matérias-Primas Mais Utilizadas -->
+  <div class="section-title">Matérias-Primas Mais Utilizadas</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Material</th>
+        <th>Qtd. Usada</th>
+        <th>Unidade</th>
+        <th>Custo Unitário</th>
+        <th>Custo Total</th>
+        <th>Frequência</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (material of report.mostUsedRawMaterials; track $index) {
+        <tr>
+          <td>{{ material.materialName }}</td>
+          <td>{{ material.totalUsed }}</td>
+          <td>{{ material.unit }}</td>
+          <td class="amount">R$ {{ material.unitCost.toFixed(2) }}</td>
+          <td class="yellow">R$ {{ material.totalCost.toFixed(2) }}</td>
+          <td>{{ material.usageFrequency }}x</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <!-- Vencimentos -->
+  <div class="section-title">Matérias-Primas Próximas do Vencimento</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Material</th>
+        <th>Vencimento</th>
+        <th>Dias Restantes</th>
+        <th>Estoque Atual</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (material of report.expiringRawMaterials; track $index) {
+        <tr
+          [class.row-red]="material.daysUntilExpiry <= 7"
+          [class.row-yellow]="material.daysUntilExpiry > 7 && material.daysUntilExpiry <= 15"
+        >
+          <td>{{ material.materialName }}</td>
+          <td>{{ formatDate(material.expiryDate) }}</td>
+          <td>{{ material.daysUntilExpiry }} dias</td>
+          <td>{{ material.currentStock }} {{ material.unit }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <!-- Estoques -->
+  <div class="section-title">Situação de Estoque</div>
+  <div class="stock-grid">
+    <div>
+      <div class="stock-table-title">📉 Mais Baixos</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Tipo</th>
+            <th>Qtd.</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of report.lowestStocks; track $index) {
+            <tr>
+              <td>{{ item.itemName }}</td>
+              <td>{{ item.type === 'product' ? 'Produto' : 'MP' }}</td>
+              <td [class.red]="item.currentStock === 0">{{ item.currentStock }} {{ item.unit }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="stock-table-title">📈 Mais Altos</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Tipo</th>
+            <th>Qtd.</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of report.highestStocks; track $index) {
+            <tr>
+              <td>{{ item.itemName }}</td>
+              <td>{{ item.type === 'product' ? 'Produto' : 'MP' }}</td>
+              <td>{{ item.currentStock }} {{ item.unit }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sugestões de Compra -->
+  <div class="section-title">Sugestões de Compra</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Qtd. Sugerida</th>
+        <th>Custo Unit.</th>
+        <th>Custo Estimado</th>
+        <th>Motivo</th>
+        <th>Prioridade</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (suggestion of report.purchaseSuggestions; track $index) {
+        <tr>
+          <td>{{ suggestion.itemName }}</td>
+          <td>{{ suggestion.suggestedQuantity }} {{ suggestion.unit }}</td>
+          <td class="amount">R$ {{ suggestion.unitCost.toFixed(2) }}</td>
+          <td class="red">R$ {{ suggestion.replenishmentCost.toFixed(2) }}</td>
+          <td>{{ suggestion.reason }}</td>
+          <td>
+            <span
+              class="badge"
+              [class.badge-red]="suggestion.priority === 'high'"
+              [class.badge-yellow]="suggestion.priority === 'medium'"
+              [class.badge-blue]="suggestion.priority === 'low'"
+            >
+              {{ getPriorityLabel(suggestion.priority) }}
+            </span>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <!-- Footer -->
+  <div class="print-footer">
+    <span>{{ companyData?.tradeName }} — Sistema Blue ERP</span>
+    <span>Gerado em {{ getTodayFormatted() }}</span>
   </div>
 </div>
 

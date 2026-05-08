@@ -147,6 +147,7 @@ export class CloseOrder implements OnInit {
 
   addPayment(): void {
     if (!this.newPaymentMethod || this.newPaymentAmount <= 0) return;
+    if (this.remaining === 0) return;
 
     const change =
       this.newPaymentMethod === 'DINHEIRO'
