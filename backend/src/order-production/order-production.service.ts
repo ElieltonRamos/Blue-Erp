@@ -2,14 +2,17 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { ProductionStatus, ProductType } from 'generated/prisma/client';
 import { Decimal } from '@prisma/client/runtime/client';
 import { resolveLogicalDateTime } from '../common/date-utils';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class ProductionService {
+  private readonly logger = new Logger(ProductionService.name);
   constructor(private readonly prisma: PrismaService) {}
 
   /**
@@ -480,5 +483,55 @@ export class ProductionService {
     if (validTimes.length === 0) return null;
     const sum = validTimes.reduce((acc, t) => acc + t, 0);
     return Math.round(sum / validTimes.length);
+  }
+
+  @Cron('30 5 * * *', {
+    name: 'complete-forgotten-productions',
+    timeZone: 'America/Sao_Paulo',
+  })
+  async completeAndDeliverForgotten() {
+    const productions = await this.prisma.client.orderProduction.findMany({
+      where: {
+        deliveredAt: null, // Pega qualquer um que não foi entregue
+        status: {
+          in: [
+            ProductionStatus.PENDING,
+            ProductionStatus.IN_PROGRESS,
+            ProductionStatus.COMPLETED,
+          ],
+        },
+      },
+      select: { id: true, status: true },
+    });
+
+    this.logger.log(`Processando ${productions.length} produções com gap.`);
+
+    let succeeded = 0;
+    let failed = 0;
+
+    for (const prod of productions) {
+      try {
+        // 1. Se estiver Pendente, inicia
+        if (prod.status === ProductionStatus.PENDING) {
+          await this.startProduction(prod.id);
+        }
+
+        // 2. Se estiver Em Progresso (ou acabou de iniciar), completa
+        // Se já estava COMPLETED, o service original lançaria erro, então pulamos o complete
+        if (prod.status !== ProductionStatus.COMPLETED) {
+          await this.completeProduction(prod.id);
+        }
+
+        // 3. Entrega (Seta o deliveredAt)
+        await this.deliverProduction(prod.id);
+
+        succeeded++;
+      } catch (error: any) {
+        failed++;
+        this.logger.error(`Falha no item ${prod.id}: ${error.message}`);
+      }
+    }
+
+    return { totalFound: productions.length, succeeded, failed };
   }
 }

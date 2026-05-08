@@ -38,6 +38,14 @@
         Gerar Relatório
       </button>
     </div>
+    @if (reportGenerated) {
+      <button
+        (click)="print()"
+        class="bg-transparent text-gray-300 px-6 py-2 rounded-lg border border-gray-600 hover:bg-[#2a3445] hover:text-white transition-all font-medium flex items-center gap-2"
+      >
+        <span>🖨️</span> Imprimir / PDF
+      </button>
+    }
   </div>
 
   <div class="text-white">
@@ -133,6 +141,70 @@
         </table>
       </div>
     </div>
+  </div>
+</div>
+
+<div id="reportContent" style="display: none">
+  <div class="print-header">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <img src="/blue-erp.png" alt="Logo" />
+      <div>
+        <div class="company-name">{{ companyData?.tradeName || companyData?.corporateName }}</div>
+        <div class="company-sub">
+          CNPJ: {{ companyData?.cnpj }} &nbsp;|&nbsp; {{ companyData?.city }}/{{
+            companyData?.state
+          }}
+        </div>
+      </div>
+    </div>
+    <div class="report-meta">
+      <strong>Relatório de Despesas</strong>
+      Período: {{ getFullDate() }}<br />
+      Emitido em: {{ getTodayFormatted() }}
+    </div>
+  </div>
+
+  <div class="section-title">Resumo do Período</div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total de Despesas</div>
+      <div class="kpi-value red">R$ {{ report.totalValue.toFixed(2) }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Pago</div>
+      <div class="kpi-value green">R$ {{ report.totalByStatus.pago }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Pendente</div>
+      <div class="kpi-value yellow">R$ {{ report.totalByStatus.pendente }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Atrasado</div>
+      <div class="kpi-value red">R$ {{ report.totalByStatus.atrasado }}</div>
+    </div>
+  </div>
+
+  <div class="section-title">Total por Fornecedor</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Fornecedor</th>
+        <th>Total (R$)</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of report.totalBySupplier; track item.supplier) {
+        <tr>
+          <td>{{ item.supplier }}</td>
+          <td class="amount">R$ {{ item.total.toFixed(2) }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <div class="print-footer">
+    <span>{{ companyData?.tradeName }} — Sistema Blue ERP</span>
+    <span>Gerado em {{ getTodayFormatted() }}</span>
   </div>
 </div>
 

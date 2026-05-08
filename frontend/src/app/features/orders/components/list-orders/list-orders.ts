@@ -28,7 +28,7 @@ export class ListOrders implements OnInit {
   startDate: string = '';
   endDate: string = '';
   currentPage: number = 1;
-  itemsPerPage: number = 10;
+  itemsPerPage: number = 100;
   totalPages: number = 1;
   totalOrders: number = 0;
   isPrintModalOpen: boolean = false;

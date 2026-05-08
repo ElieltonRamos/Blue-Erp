@@ -53,6 +53,14 @@
         Gerar Relatório
       </button>
     </div>
+    @if (reportGenerated) {
+      <button
+        (click)="print()"
+        class="bg-transparent text-gray-300 px-6 py-2 rounded-lg border border-gray-600 hover:bg-[#2a3445] hover:text-white transition-all font-medium flex items-center gap-2"
+      >
+        <span>🖨️</span> Imprimir / PDF
+      </button>
+    }
   </div>
 
   @if (report.locations.length > 0) {

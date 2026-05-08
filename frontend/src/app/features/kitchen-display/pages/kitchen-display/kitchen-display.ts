@@ -176,25 +176,42 @@ export class KitchenDisplay implements OnInit, OnDestroy {
     return item.productionId;
   }
 
-  getElapsedMinutes(item: KitchenOrderItem): number {
+  getElapsedMinutes(item: KitchenOrderItem): string {
     const now = new Date();
     const created = new Date(new Date(item.pendingAt).toISOString().replace('Z', '-03:00'));
-    const diff = now.getTime() - created.getTime();
-    return Math.floor(diff / 60000);
+    const minutes = Math.floor((now.getTime() - created.getTime()) / 60000);
+
+    if (minutes < 60) return `${minutes}min`;
+    if (minutes < 1440) return `${Math.floor(minutes / 60)}h ${minutes % 60}min`;
+    const days = Math.floor(minutes / 1440);
+    const hours = Math.floor((minutes % 1440) / 60);
+    return `${days}d ${hours}h`;
   }
 
-  getTimeClass(minutes: number): string {
+  getTimeClass(elapsed: string): string {
+    const minutes = elapsed.includes('d')
+      ? Infinity
+      : elapsed.includes('h')
+        ? parseInt(elapsed) * 60 + (parseInt(elapsed.split('h ')[1]) || 0)
+        : parseInt(elapsed);
+
     if (minutes < 10) return 'text-green-400';
     if (minutes < 20) return 'text-yellow-400';
     return 'text-red-400';
   }
 
-  getTimeBadgeClass(minutes: number): string {
+  getTimeBadgeClass(elapsed: string): string {
+    const minutes = elapsed.includes('d')
+      ? Infinity
+      : elapsed.includes('h')
+        ? parseInt(elapsed) * 60 + (parseInt(elapsed.split('h ')[1]) || 0)
+        : parseInt(elapsed);
+
     if (minutes < 10) return 'bg-green-500/20 border-green-500/30';
     if (minutes < 20) return 'bg-yellow-500/20 border-yellow-500/30';
     return 'bg-red-500/20 border-red-500/30';
   }
-
+  
   private playNotificationSound(): void {
     try {
       this.notificationSound.play().catch((e) => {

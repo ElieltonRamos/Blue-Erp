@@ -42,13 +42,21 @@
         Este Mês
       </button>
     </div>
-    <div class="flex items-end">
+    <div class="flex items-end gap-2">
       <button
         (click)="generateReport()"
         class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
       >
         Gerar Relatório
       </button>
+      @if (reportGenerated) {
+        <button
+          (click)="print()"
+          class="bg-transparent text-gray-300 px-6 py-2 rounded-lg border border-gray-600 hover:bg-[#2a3445] hover:text-white transition-all font-medium flex items-center gap-2"
+        >
+          <span>🖨️</span> Imprimir / PDF
+        </button>
+      }
     </div>
   </div>
 
@@ -138,7 +146,6 @@
           cadastradas no local.
         </p>
 
-        <!-- Cards resumo por local -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           @for (loc of report.byLocation; track loc.locationId) {
             <div class="bg-[#2a3445] p-4 rounded-xl border border-[#3a4a60]">
@@ -288,8 +295,7 @@
                               [class.bg-blue-500]="s.status === 'CLOSED'"
                               [class.bg-green-500]="s.status === 'PAID'"
                               [class.bg-red-500]="s.status === 'CANCELED'"
-                            >
-                            </span>
+                            ></span>
                             <span class="text-sm">{{ getStatusLabel(s.status) }}</span>
                           </div>
                           <span class="text-sm font-semibold">
@@ -392,7 +398,7 @@
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       @for (table of loc.topTables; track table.table) {
                         <div class="bg-[#1f2a40] px-3 py-2 rounded text-center">
-                          <p class="font-bold">Mesa {{ table.table }}</p>
+                          <p class="font-bold">{{ table.table }}</p>
                           <p class="text-xs text-gray-400">{{ table.totalOrders }} pedidos</p>
                           <p class="text-sm text-green-400">
                             R$ {{ table.totalRevenue.toFixed(2) }}
@@ -429,8 +435,7 @@
                   [class.bg-blue-500]="status.status === 'CLOSED'"
                   [class.bg-green-500]="status.status === 'PAID'"
                   [class.bg-red-500]="status.status === 'CANCELED'"
-                >
-                </span>
+                ></span>
                 <span>{{ getStatusLabel(status.status) }}</span>
               </div>
               <div class="text-right">
@@ -557,7 +562,7 @@
             <div class="bg-[#1f2a40] p-3 rounded-lg">
               <div class="flex justify-between items-center">
                 <div>
-                  <p class="font-semibold">Mesa {{ table.table }}</p>
+                  <p class="font-semibold">{{ table.table }}</p>
                   <p class="text-xs text-gray-400">
                     {{ table.locationName }} · {{ table.totalOrders }} pedidos
                   </p>
@@ -616,7 +621,7 @@
                 <div>
                   <p class="font-semibold">Pedido #{{ order.orderId }}</p>
                   <p class="text-sm text-gray-400">
-                    {{ order.table ? 'Mesa ' + order.table : order.customerName }}
+                    {{ order.table ? order.table : order.customerName }}
                   </p>
                   <p class="text-xs text-gray-500">
                     {{ order.locationName }} · {{ order.totalItems }} itens
@@ -650,7 +655,7 @@
                 <div>
                   <p class="font-semibold">Pedido #{{ order.orderId }}</p>
                   <p class="text-sm text-gray-400">
-                    {{ order.table ? 'Mesa ' + order.table : order.customerName }}
+                    {{ order.table ? order.table : order.customerName }}
                   </p>
                   <p class="text-xs text-gray-500">
                     {{ order.locationName }} · {{ order.totalItems }} itens
@@ -676,7 +681,7 @@
     <div class="bg-[#2a3445] p-4 rounded-xl">
       <h4 class="text-xl font-bold mb-1">📋 Pedidos Recentes</h4>
       <p class="text-gray-400 text-sm mb-4">
-        Últimos 20 pedidos criados no período, ordenados do mais recente para o mais antigo.
+        Pedidos criados no período, ordenados do mais recente para o mais antigo.
       </p>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
@@ -698,7 +703,7 @@
                 <td class="py-2 px-3">#{{ order.orderId }}</td>
                 <td class="py-2 px-3 text-indigo-300">{{ order.locationName }}</td>
                 <td class="py-2 px-3">
-                  {{ order.table ? 'Mesa ' + order.table : order.customerName }}
+                  {{ order.table ? order.table : order.customerName }}
                 </td>
                 <td class="py-2 px-3">{{ getTypeLabel(order.type) }}</td>
                 <td class="py-2 px-3">{{ order.totalItems }}</td>
@@ -726,6 +731,257 @@
         </table>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Conteúdo oculto para impressão -->
+<div id="reportContent" style="display: none">
+  <div class="print-header">
+    <div class="logo-area">
+      <img src="/blue-erp.png" alt="Logo" />
+      <div>
+        <div class="company-name">{{ companyData?.tradeName || companyData?.corporateName }}</div>
+        <div class="company-sub">
+          CNPJ: {{ companyData?.cnpj }} &nbsp;|&nbsp; {{ companyData?.city }}/{{
+            companyData?.state
+          }}
+        </div>
+      </div>
+    </div>
+    <div class="report-meta">
+      <strong>Relatório de Pedidos</strong>
+      Período: {{ getFullDate() }}<br />
+      Emitido em: {{ getTodayFormatted() }}
+    </div>
+  </div>
+
+  <div class="section-title">Resumo do Período</div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total de Pedidos</div>
+      <div class="kpi-value">{{ report.totalOrders }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Faturamento Total</div>
+      <div class="kpi-value green">R$ {{ report.totalRevenue.toFixed(2) }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Ticket Médio</div>
+      <div class="kpi-value">R$ {{ report.averageOrderValue.toFixed(2) }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Taxa de Cancelamento</div>
+      <div class="kpi-value red">{{ report.cancellationRate.toFixed(1) }}%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Itens por Pedido</div>
+      <div class="kpi-value">{{ report.averageItemsPerOrder.toFixed(1) }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Tempo Médio Preparo</div>
+      <div class="kpi-value">{{ formatTime(report.averagePreparationTime) }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Tempo Médio do Pedido</div>
+      <div class="kpi-value">{{ formatTime(report.averageTotalOrderTime) }}</div>
+    </div>
+  </div>
+
+  <div class="section-title">Status dos Pedidos</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Status</th>
+        <th>Quantidade</th>
+        <th>%</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (status of report.ordersByStatus; track status.status) {
+        <tr>
+          <td>{{ getStatusLabel(status.status) }}</td>
+          <td>{{ status.count }}</td>
+          <td>{{ status.percentage.toFixed(1) }}%</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <div class="section-title">Tipo de Pedidos</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Tipo</th>
+        <th>Quantidade</th>
+        <th>%</th>
+        <th>Faturamento</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (type of report.ordersByType; track type.type) {
+        <tr>
+          <td>{{ getTypeLabel(type.type) }}</td>
+          <td>{{ type.count }}</td>
+          <td>{{ type.percentage.toFixed(1) }}%</td>
+          <td class="amount">R$ {{ type.totalRevenue.toFixed(2) }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  @if (report.byLocation.length > 0) {
+    <div class="section-title">Desempenho por Local</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Local</th>
+          <th>Pedidos</th>
+          <th>Faturamento</th>
+          <th>Ticket Médio</th>
+          <th>Tempo Preparo</th>
+          <th>Tempo Total</th>
+          <th>Cancelamentos</th>
+          <th>% Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (loc of report.byLocation; track loc.locationId) {
+          <tr>
+            <td>{{ loc.locationName }}</td>
+            <td>{{ loc.totalOrders }}</td>
+            <td class="amount">R$ {{ loc.totalRevenue.toFixed(2) }}</td>
+            <td class="amount">R$ {{ loc.averageOrderValue.toFixed(2) }}</td>
+            <td>{{ formatTime(loc.averagePreparationTime) }}</td>
+            <td>{{ formatTime(loc.averageTotalOrderTime) }}</td>
+            <td>{{ loc.cancellationRate.toFixed(1) }}%</td>
+            <td>{{ loc.percentage.toFixed(1) }}%</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  <div class="section-title">Produtos Mais Pedidos</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Produto</th>
+        <th>Qtd.</th>
+        <th>Faturamento</th>
+        <th>Tempo Médio Preparo</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (product of report.topProducts; track product.productId) {
+        <tr>
+          <td>{{ product.productName }}</td>
+          <td>{{ product.totalOrdered }}</td>
+          <td class="amount">R$ {{ product.totalRevenue.toFixed(2) }}</td>
+          <td>{{ formatTime(product.averagePreparationTime) }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <div class="section-title">Distribuição por Horário</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Horário</th>
+        <th>Pedidos</th>
+        <th>Faturamento</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (hour of report.ordersByHour; track hour.hour) {
+        <tr>
+          <td>{{ hour.hour }}:00 - {{ hour.hour + 1 }}:00</td>
+          <td>{{ hour.totalOrders }}</td>
+          <td class="amount">R$ {{ hour.totalRevenue.toFixed(2) }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  @if (report.topTables.length > 0) {
+    <div class="section-title">Mesas Mais Ativas</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Mesa</th>
+          <th>Local</th>
+          <th>Pedidos</th>
+          <th>Faturamento</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (table of report.topTables; track table.table) {
+          <tr>
+            <td>{{ table.table }}</td>
+            <td>{{ table.locationName }}</td>
+            <td>{{ table.totalOrders }}</td>
+            <td class="amount">R$ {{ table.totalRevenue.toFixed(2) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (report.topCustomers.length > 0) {
+    <div class="section-title">Clientes Mais Frequentes (Delivery)</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Pedidos</th>
+          <th>Faturamento</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (customer of report.topCustomers; track customer.customerName) {
+          <tr>
+            <td>{{ customer.customerName }}</td>
+            <td>{{ customer.totalOrders }}</td>
+            <td class="amount">R$ {{ customer.totalRevenue.toFixed(2) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  <div class="section-title">Pedidos Do Periodo</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Nº</th>
+        <th>Local</th>
+        <th>Mesa/Cliente</th>
+        <th>Tipo</th>
+        <th>Itens</th>
+        <th>Status</th>
+        <th>Valor</th>
+        <th>Data/Hora</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (order of report.recentOrders; track order.orderId) {
+        <tr>
+          <td>#{{ order.orderId }}</td>
+          <td>{{ order.locationName }}</td>
+          <td>{{ order.table ? order.table : order.customerName }}</td>
+          <td>{{ getTypeLabel(order.type) }}</td>
+          <td>{{ order.totalItems }}</td>
+          <td>{{ getStatusLabel(order.status) }}</td>
+          <td class="amount">R$ {{ order.totalRevenue.toFixed(2) }}</td>
+          <td>{{ formatDateTime(order.createdAt) }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <div class="print-footer">
+    <span>{{ companyData?.tradeName }} — Sistema Blue ERP</span>
+    <span>Gerado em {{ getTodayFormatted() }}</span>
   </div>
 </div>
 
