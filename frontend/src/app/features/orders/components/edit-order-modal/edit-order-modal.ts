@@ -115,7 +115,6 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
   distributeServiceCharge(): void {
     if (!this.order) return;
 
-    console.log(this.order.items)
     if (!this.serviceChargeEnabled || this.serviceChargeAmount === 0) {
       this.order.items.forEach((item) => (item.serviceCharge = 0));
       this.order.serviceCharge = 0;

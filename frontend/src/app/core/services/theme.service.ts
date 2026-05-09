@@ -9,7 +9,6 @@ export class ThemeService {
   constructor() {
     document.documentElement.classList.remove('dark', 'light');
     document.documentElement.classList.add(this.current());
-    console.log('ThemeService init:', this.current(), document.documentElement.className);
   }
 
   toggle() {

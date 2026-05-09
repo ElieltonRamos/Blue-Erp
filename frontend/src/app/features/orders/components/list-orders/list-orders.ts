@@ -78,7 +78,6 @@ export class ListOrders implements OnInit {
           this.totalOrders = response.total;
           this.totalPages = response.totalPages;
           this.isLoading = false;
-          console.log(response.data);
           this.cdr.detectChanges();
         },
         error: (error) => {

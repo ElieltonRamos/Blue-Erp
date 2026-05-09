@@ -183,7 +183,6 @@ export class ProductService {
     const offset = (page - 1) * limit;
 
     const where: Prisma.ProductWhereInput = {};
-    console.log(filters?.active, 'filtro enviado');
 
     if (filters?.active !== undefined) {
       where.active = filters.active;
