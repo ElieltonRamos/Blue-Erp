@@ -1,73 +1,107 @@
-<div
-  class="fixed inset-0 flex items-center justify-center z-50 p-4"
-  style="background-color: rgba(0, 0, 0, 0.85)"
->
+<div class="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/70 backdrop-blur-sm">
   <div
-    class="bg-linear-to-br from-[#1d2a3c] to-[#2a3f5f] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+    class="bg-surface border border-border rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
   >
     <!-- Header -->
     <div
-      class="bg-linear-to-r from-[#0f1b2e] to-[#1a2942] text-white p-6 rounded-t-2xl sticky top-0 z-10"
+      class="bg-linear-to-r from-surface to-surface-alt border-b border-border px-6 py-5 sticky top-0 z-10"
     >
-      <h2 class="text-2xl font-bold">Editar Matéria-Prima</h2>
-      <p class="text-gray-300 text-sm mt-1">
-        Atualize as informações do material {{ material.code }}
-      </p>
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-bold text-text-primary">Editar Matéria-Prima</h2>
+
+          <p class="text-text-secondary text-sm mt-1">
+            Atualize as informações do material
+            <span class="font-semibold text-accent">
+              {{ material.code }}
+            </span>
+          </p>
+        </div>
+
+        <div
+          class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-overlay border border-border"
+        >
+          <div
+            [class]="material.active ? 'bg-success' : 'bg-text-muted'"
+            class="w-2.5 h-2.5 rounded-full"
+          ></div>
+
+          <span class="text-xs font-semibold text-text-secondary">
+            {{ material.active ? 'ATIVO' : 'INATIVO' }}
+          </span>
+        </div>
+      </div>
     </div>
 
     <!-- Body -->
-    <div class="p-6 space-y-6">
+    <div class="flex-1 overflow-y-auto p-6 space-y-6">
       <!-- Seção: Informações Básicas -->
-      <div class="space-y-4">
-        <h3 class="text-lg font-semibold text-blue-400 flex items-center gap-2">
-          <span class="w-1 h-5 bg-blue-400 rounded"></span>
-          Informações Básicas
-        </h3>
+      <div class="bg-surface-alt border border-border rounded-2xl p-5 space-y-5">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-accent/15 border border-accent/20 flex items-center justify-center"
+          >
+            <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-bold text-text-primary">Informações Básicas</h3>
+
+            <p class="text-sm text-text-secondary">Dados principais da matéria-prima</p>
+          </div>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <!-- Nome -->
           <div class="md:col-span-2">
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              Nome do Material <span class="text-red-400">*</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Nome do Material
+              <span class="text-danger">*</span>
             </label>
+
             <input
               type="text"
               [(ngModel)]="material.name"
               [ngModelOptions]="{ standalone: true }"
               placeholder="Nome do material"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-medium placeholder:text-text-muted border border-border focus:border-accent focus:ring-4 focus:ring-accent/15 transition-all duration-200 outline-none"
             />
           </div>
 
           <!-- Código -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              Código <span class="text-red-400">*</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Código
+              <span class="text-danger">*</span>
             </label>
+
             <input
               type="text"
               [(ngModel)]="material.code"
               [ngModelOptions]="{ standalone: true }"
               placeholder="Código"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-medium placeholder:text-text-muted border border-border focus:border-accent focus:ring-4 focus:ring-accent/15 transition-all duration-200 outline-none"
             />
           </div>
 
           <!-- Unidade -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              Unidade <span class="text-red-400">*</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Unidade
+              <span class="text-danger">*</span>
             </label>
+
             <select
               [(ngModel)]="material.unit"
               [ngModelOptions]="{ standalone: true }"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
-              style="
-                background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
-                background-repeat: no-repeat;
-                background-position: right 0.7rem center;
-                background-size: 1.2em;
-              "
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-medium border border-border focus:border-accent focus:ring-4 focus:ring-accent/15 transition-all duration-200 outline-none appearance-none cursor-pointer"
             >
               <option *ngFor="let unitOption of unitOptions" [value]="unitOption">
                 {{ unitOption }}
@@ -75,15 +109,18 @@
             </select>
           </div>
 
-          <!-- Custo Unitário -->
+          <!-- Custo -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              Custo Unitário <span class="text-red-400">*</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Custo Unitário
+              <span class="text-danger">*</span>
             </label>
+
             <div class="relative">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold"
-                >R$</span
-              >
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-success font-bold">
+                R$
+              </span>
+
               <input
                 type="number"
                 [(ngModel)]="material.unitCost"
@@ -91,17 +128,19 @@
                 step="0.01"
                 min="0"
                 placeholder="0,00"
-                class="w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
+                class="w-full pl-12 pr-4 py-3 rounded-xl bg-surface text-text-primary font-medium placeholder:text-text-muted border border-border focus:border-success focus:ring-4 focus:ring-success/15 transition-all duration-200 outline-none"
               />
             </div>
           </div>
 
-          <!-- Status Ativo -->
+          <!-- Status -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              Status <span class="text-red-400">*</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Status
+              <span class="text-danger">*</span>
             </label>
-            <div class="flex gap-2">
+
+            <div class="flex gap-3">
               <label class="flex-1 relative cursor-pointer">
                 <input
                   type="radio"
@@ -111,12 +150,14 @@
                   [ngModelOptions]="{ standalone: true }"
                   class="peer sr-only"
                 />
+
                 <div
-                  class="p-3 rounded-lg border-2 border-gray-600 bg-white/5 peer-checked:border-green-500 peer-checked:bg-green-500/10 transition-all duration-200 text-center"
+                  class="px-4 py-3 rounded-xl border border-border bg-surface text-center peer-checked:border-success peer-checked:bg-success/10 peer-checked:text-success transition-all duration-200"
                 >
-                  <span class="text-white text-sm font-semibold">Ativo</span>
+                  <span class="text-sm font-semibold"> Ativo </span>
                 </div>
               </label>
+
               <label class="flex-1 relative cursor-pointer">
                 <input
                   type="radio"
@@ -126,10 +167,11 @@
                   [ngModelOptions]="{ standalone: true }"
                   class="peer sr-only"
                 />
+
                 <div
-                  class="p-3 rounded-lg border-2 border-gray-600 bg-white/5 peer-checked:border-gray-500 peer-checked:bg-gray-500/10 transition-all duration-200 text-center"
+                  class="px-4 py-3 rounded-xl border border-border bg-surface text-center peer-checked:border-danger peer-checked:bg-danger/10 peer-checked:text-danger transition-all duration-200"
                 >
-                  <span class="text-white text-sm font-semibold">Inativo</span>
+                  <span class="text-sm font-semibold"> Inativo </span>
                 </div>
               </label>
             </div>
@@ -137,19 +179,37 @@
         </div>
       </div>
 
-      <!-- Seção: Estoque -->
-      <div class="space-y-4">
-        <h3 class="text-lg font-semibold text-green-400 flex items-center gap-2">
-          <span class="w-1 h-5 bg-green-400 rounded"></span>
-          Controle de Estoque
-        </h3>
+      <!-- Estoque -->
+      <div class="bg-surface-alt border border-border rounded-2xl p-5 space-y-5">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-success/15 border border-success/20 flex items-center justify-center"
+          >
+            <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0H4"
+              />
+            </svg>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-bold text-text-primary">Controle de Estoque</h3>
+
+            <p class="text-sm text-text-secondary">Quantidade e movimentação</p>
+          </div>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- Estoque Atual -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              Estoque Atual <span class="text-red-400">*</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Estoque Atual
+              <span class="text-danger">*</span>
             </label>
+
             <input
               type="number"
               [(ngModel)]="material.currentStock"
@@ -157,15 +217,17 @@
               step="0.01"
               min="0"
               placeholder="0"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-medium placeholder:text-text-muted border border-border focus:border-success focus:ring-4 focus:ring-success/15 transition-all duration-200 outline-none"
             />
           </div>
 
-          <!-- Estoque Mínimo -->
+          <!-- Estoque Min -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              Estoque Mínimo <span class="text-gray-400 text-xs">(opcional)</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Estoque Mínimo
+              <span class="text-text-muted text-xs">(opcional)</span>
             </label>
+
             <input
               type="number"
               [(ngModel)]="material.minStock"
@@ -173,27 +235,31 @@
               step="0.01"
               min="0"
               placeholder="0"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-medium placeholder:text-text-muted border border-border focus:border-warning focus:ring-4 focus:ring-warning/15 transition-all duration-200 outline-none"
             />
           </div>
 
-          <!-- Valor Total em Estoque (Calculado) -->
-          <div class="bg-white/5 p-3 rounded-lg border border-green-400/30">
-            <label class="block text-gray-300 font-medium mb-2 text-sm">Valor em Estoque</label>
-            <div class="text-2xl font-bold text-green-400">
+          <!-- Valor -->
+          <div
+            class="rounded-2xl bg-success/10 border border-success/20 p-4 flex flex-col justify-center"
+          >
+            <span class="text-sm font-semibold text-text-secondary"> Valor em Estoque </span>
+
+            <div class="text-3xl font-bold text-success mt-1">
               R$ {{ calculateStockValue().toFixed(2) }}
             </div>
-            <p class="text-xs text-gray-400 mt-1">Calculado automaticamente</p>
+
+            <p class="text-xs text-text-muted mt-1">Calculado automaticamente</p>
           </div>
         </div>
 
-        <!-- Alerta de Estoque Baixo -->
+        <!-- Alerta -->
         @if (isStockLow()) {
           <div
-            class="flex items-center gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg"
+            class="flex items-start gap-3 p-4 rounded-2xl bg-warning/10 border border-warning/25"
           >
             <svg
-              class="w-6 h-6 text-yellow-400 shrink-0"
+              class="w-6 h-6 text-warning shrink-0 mt-0.5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -205,9 +271,11 @@
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
             </svg>
+
             <div>
-              <p class="text-yellow-400 font-semibold">Estoque Baixo</p>
-              <p class="text-yellow-300 text-sm">
+              <p class="text-warning font-semibold">Estoque Baixo</p>
+
+              <p class="text-sm text-text-secondary mt-1">
                 O estoque atual está abaixo do mínimo configurado
               </p>
             </div>
@@ -215,35 +283,53 @@
         }
       </div>
 
-      <!-- Seção: Validade -->
-      <div class="space-y-4">
-        <h3 class="text-lg font-semibold text-purple-400 flex items-center gap-2">
-          <span class="w-1 h-5 bg-purple-400 rounded"></span>
-          Validade
-        </h3>
+      <!-- Validade -->
+      <div class="bg-surface-alt border border-border rounded-2xl p-5 space-y-5">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-fiscal/15 border border-fiscal/20 flex items-center justify-center"
+          >
+            <svg class="w-5 h-5 text-fiscal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10m-11 9h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v11a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-bold text-text-primary">Validade</h3>
+
+            <p class="text-sm text-text-secondary">Controle de vencimento</p>
+          </div>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Data de Validade -->
+          <!-- Data -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              Data de Validade <span class="text-gray-400 text-xs">(opcional)</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Data de Validade
+              <span class="text-text-muted text-xs">(opcional)</span>
             </label>
+
             <input
               type="date"
               [(ngModel)]="material.expiryDate"
               [ngModelOptions]="{ standalone: true }"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 outline-none"
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-medium border border-border focus:border-fiscal focus:ring-4 focus:ring-fiscal/15 transition-all duration-200 outline-none"
             />
           </div>
 
-          <!-- Alerta de Validade -->
+          <!-- Alertas -->
           <div class="flex items-center">
             @if (isExpired()) {
               <div
-                class="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex-1"
+                class="flex items-start gap-3 p-4 bg-danger/10 border border-danger/25 rounded-2xl flex-1"
               >
                 <svg
-                  class="w-6 h-6 text-red-400 shrink-0"
+                  class="w-6 h-6 text-danger shrink-0 mt-0.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -255,17 +341,21 @@
                     d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
+
                 <div>
-                  <p class="text-red-400 font-semibold">Material Vencido</p>
-                  <p class="text-red-300 text-sm">Este material está fora da validade</p>
+                  <p class="text-danger font-semibold">Material Vencido</p>
+
+                  <p class="text-sm text-text-secondary mt-1">
+                    Este material está fora da validade
+                  </p>
                 </div>
               </div>
             } @else if (isExpiringSoon()) {
               <div
-                class="flex items-center gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex-1"
+                class="flex items-start gap-3 p-4 bg-warning/10 border border-warning/25 rounded-2xl flex-1"
               >
                 <svg
-                  class="w-6 h-6 text-yellow-400 shrink-0"
+                  class="w-6 h-6 text-warning shrink-0 mt-0.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -277,9 +367,11 @@
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
+
                 <div>
-                  <p class="text-yellow-400 font-semibold">Vencimento Próximo</p>
-                  <p class="text-yellow-300 text-sm">Material vence em menos de 30 dias</p>
+                  <p class="text-warning font-semibold">Vencimento Próximo</p>
+
+                  <p class="text-sm text-text-secondary mt-1">Material vence em menos de 30 dias</p>
                 </div>
               </div>
             }
@@ -287,44 +379,66 @@
         </div>
       </div>
 
-      <!-- Seção: Informações Fiscais -->
-      <div class="space-y-4 bg-white/5 p-5 rounded-xl border border-white/10">
-        <h3 class="text-lg font-semibold text-yellow-400 flex items-center gap-2">
-          <span class="w-1 h-5 bg-yellow-400 rounded"></span>
-          Informações Fiscais
-        </h3>
+      <!-- Fiscal -->
+      <div class="bg-surface-alt border border-border rounded-2xl p-5 space-y-5">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-warning/15 border border-warning/20 flex items-center justify-center"
+          >
+            <svg class="w-5 h-5 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 14l2-2 4 4m0 0l-4-4-2 2m6 2V6"
+              />
+            </svg>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-bold text-text-primary">Informações Fiscais</h3>
+
+            <p class="text-sm text-text-secondary">Dados fiscais opcionais</p>
+          </div>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- NCM -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              NCM <span class="text-gray-400 text-xs">(opcional)</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              NCM
+              <span class="text-text-muted text-xs">(opcional)</span>
             </label>
+
             <input
               type="text"
               [(ngModel)]="material.ncm"
               [ngModelOptions]="{ standalone: true }"
               maxlength="8"
               placeholder="12345678"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-mono font-medium placeholder-gray-400 border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none"
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-mono font-medium placeholder:text-text-muted border border-border focus:border-warning focus:ring-4 focus:ring-warning/15 transition-all duration-200 outline-none"
             />
-            <p class="text-gray-400 text-xs mt-1">8 dígitos numéricos</p>
+
+            <p class="text-text-muted text-xs mt-1">8 dígitos numéricos</p>
           </div>
 
           <!-- CFOP -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              CFOP <span class="text-gray-400 text-xs">(opcional)</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              CFOP
+              <span class="text-text-muted text-xs">(opcional)</span>
             </label>
+
             <input
               type="text"
               [(ngModel)]="material.cfop"
               [ngModelOptions]="{ standalone: true }"
               maxlength="4"
               placeholder="5102"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-mono font-medium placeholder-gray-400 border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none"
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-mono font-medium placeholder:text-text-muted border border-border focus:border-warning focus:ring-4 focus:ring-warning/15 transition-all duration-200 outline-none"
             />
-            <p class="text-gray-400 text-xs mt-1">4 dígitos numéricos</p>
+
+            <p class="text-text-muted text-xs mt-1">4 dígitos numéricos</p>
           </div>
         </div>
       </div>
@@ -332,17 +446,18 @@
 
     <!-- Footer -->
     <div
-      class="flex justify-end gap-3 p-6 border-t border-white/10 bg-black/20 rounded-b-2xl sticky bottom-0"
+      class="flex flex-col sm:flex-row justify-end gap-3 p-6 border-t border-border bg-surface sticky bottom-0"
     >
       <button
         (click)="onCancel()"
-        class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors duration-200"
+        class="px-6 py-3 bg-overlay hover:bg-surface-alt text-text-primary border border-border rounded-xl font-semibold transition-all duration-200"
       >
         Cancelar
       </button>
+
       <button
         (click)="onSave()"
-        class="px-8 py-3 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold shadow-lg hover:shadow-blue-500/50 transition-all duration-200 transform hover:scale-105"
+        class="px-8 py-3 bg-accent hover:bg-accent-hover text-btn-text rounded-xl font-semibold shadow-lg transition-all duration-200 hover:scale-[1.02]"
       >
         Salvar Alterações
       </button>

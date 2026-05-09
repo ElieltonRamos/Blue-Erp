@@ -1,11 +1,10 @@
 <div
-  class="bg-slate-700/50 rounded-lg p-5 border border-slate-600/50 hover:border-slate-500/50 transition-all"
+  class="bg-surface-alt rounded-lg p-5 border border-border-subtle hover:border-border transition-all shadow-sm"
 >
-  <!-- Header: Número + Capacidade + Edit/Delete -->
   <div class="flex justify-between items-start mb-4">
     <div>
-      <h3 class="text-xl font-bold text-white mb-1">Mesa {{ table.number }}</h3>
-      <div class="flex items-center gap-2 text-slate-400 text-sm">
+      <h3 class="text-xl font-bold text-text-primary mb-1">Mesa {{ table.number }}</h3>
+      <div class="flex items-center gap-2 text-text-secondary text-sm">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -21,20 +20,20 @@
       @if (table.status === 'OCCUPIED') {
         <button
           (click)="transfer.emit(table)"
-          class="bg-orange-600 hover:bg-orange-700 text-white rounded transition-colors text-[8px] font-medium w-14 leading-tight"
+          class="bg-delivery hover:opacity-90 text-btn-text rounded transition-colors text-[8px] font-medium w-14 leading-tight shadow-sm"
         >
           Transferir mesa
         </button>
         <button
           (click)="reprint.emit(table)"
-          class="bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors text-[8px] font-medium w-14 leading-tight"
+          class="bg-info hover:opacity-90 text-btn-text rounded transition-colors text-[8px] font-medium w-14 leading-tight shadow-sm"
         >
           Reimprimir
         </button>
       }
       <button
         (click)="edit.emit(table)"
-        class="p-2 bg-slate-600 hover:bg-slate-500 text-white rounded transition-colors"
+        class="p-2 bg-btn-edit hover:opacity-90 text-btn-text rounded transition-colors shadow-sm"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -47,7 +46,7 @@
       </button>
       <button
         (click)="delete.emit(table)"
-        class="p-2 bg-rose-600 hover:bg-rose-700 text-white rounded transition-colors"
+        class="p-2 bg-btn-delete hover:opacity-90 text-btn-text rounded transition-colors shadow-sm"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -61,24 +60,22 @@
     </div>
   </div>
 
-  <!-- Status Badge -->
   <div
     [class]="
       statusColors[table.status] +
-      ' text-white text-center py-2 rounded-md mb-3 text-sm font-medium'
+      ' text-btn-text text-center py-2 rounded-md mb-3 text-sm font-medium shadow-sm'
     "
   >
     {{ statusLabels[table.status] }}
   </div>
 
-  <!-- Customer Info -->
   @if (table.status === 'OCCUPIED' || table.status === 'RESERVED') {
-    <div class="bg-slate-800/50 rounded-md p-3 mb-3 space-y-2">
-      <div class="text-slate-300 text-sm">
-        <span class="text-slate-500">Cliente:</span> {{ table.customer }}
+    <div class="bg-overlay rounded-md p-3 mb-3 space-y-2 border border-border-subtle">
+      <div class="text-text-primary text-sm">
+        <span class="text-text-muted">Cliente:</span> {{ table.customer }}
       </div>
       @if (table.time) {
-        <div class="flex items-center gap-2 text-slate-300 text-sm">
+        <div class="flex items-center gap-2 text-text-primary text-sm">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
@@ -93,19 +90,18 @@
     </div>
   }
 
-  <!-- Action Buttons -->
   <div class="space-y-2">
     @if (table.status === 'AVAILABLE') {
       <div class="flex gap-2">
         <button
           (click)="reserve.emit(table)"
-          class="flex-1 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm font-medium transition-colors"
+          class="flex-1 px-3 py-2 bg-warning hover:opacity-90 text-btn-text rounded text-sm font-medium transition-colors shadow-sm"
         >
           Reservar
         </button>
         <button
           (click)="occupy.emit(table)"
-          class="flex-1 px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded text-sm font-medium transition-colors"
+          class="flex-1 px-3 py-2 bg-danger hover:opacity-90 text-btn-text rounded text-sm font-medium transition-colors shadow-sm"
         >
           Ocupar
         </button>
@@ -115,13 +111,13 @@
       <div class="flex gap-2 mb-2">
         <button
           (click)="occupy.emit(table)"
-          class="flex-1 px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded text-sm font-medium transition-colors"
+          class="flex-1 px-3 py-2 bg-danger hover:opacity-90 text-btn-text rounded text-sm font-medium transition-colors shadow-sm"
         >
           Ocupar
         </button>
         <button
           (click)="release.emit(table)"
-          class="flex-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-medium transition-colors"
+          class="flex-1 px-3 py-2 bg-success hover:opacity-90 text-btn-text rounded text-sm font-medium transition-colors shadow-sm"
         >
           Cancelar Reserva
         </button>
@@ -131,20 +127,20 @@
       <div class="flex gap-2">
         <button
           (click)="products.emit(table)"
-          class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition-colors"
+          class="flex-1 px-3 py-2 bg-info hover:opacity-90 text-btn-text rounded text-sm font-medium transition-colors shadow-sm"
         >
           Produtos
         </button>
         <button
           (click)="tab.emit(table)"
-          class="flex-1 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium transition-colors"
+          class="flex-1 px-3 py-2 bg-fiscal hover:opacity-90 text-btn-text rounded text-sm font-medium transition-colors shadow-sm"
         >
           Comanda
         </button>
       </div>
       <button
         (click)="release.emit(table)"
-        class="w-full px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-medium transition-colors"
+        class="w-full px-3 py-2 bg-success hover:opacity-90 text-btn-text rounded text-sm font-medium transition-colors shadow-sm"
       >
         Liberar Mesa
       </button>

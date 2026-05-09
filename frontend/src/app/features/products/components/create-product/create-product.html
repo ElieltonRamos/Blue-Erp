@@ -2,163 +2,135 @@
 <form
   (ngSubmit)="onSubmit()"
   [formGroup]="formCreateProduct"
-  class="bg-linear-to-br from-[#1d2a3c] to-[#2a3f5f] p-8 rounded-2xl shadow-2xl space-y-8"
+  class="bg-surface border border-border rounded-2xl shadow-2xl p-8 space-y-8"
 >
-  <!-- Cabeçalho do Formulário -->
-  <div class="border-b border-gray-600 pb-4">
-    <h2 class="text-3xl font-bold text-white mb-2">Cadastro de Produto</h2>
-    <p class="text-gray-300 text-sm">Preencha as informações do produto para emissão de NFC-e</p>
+  <!-- Cabeçalho -->
+  <div class="border-b border-border pb-4">
+    <h2 class="text-3xl font-bold text-text-primary mb-2">Cadastro de Produto</h2>
+
+    <p class="text-text-secondary text-sm">
+      Preencha as informações do produto para emissão de NFC-e
+    </p>
   </div>
 
-  <!-- Seção: Informações Básicas -->
+  <!-- Informações Básicas -->
   <div class="space-y-6">
-    <h3 class="text-xl font-semibold text-blue-400 flex items-center gap-2">
-      <span class="w-1 h-6 bg-blue-400 rounded"></span>
+    <h3 class="text-xl font-semibold text-accent flex items-center gap-2">
+      <span class="w-1 h-6 bg-accent rounded"></span>
       Informações Básicas
     </h3>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      <!-- Nome do Produto -->
+      <!-- Nome -->
       <div class="md:col-span-2 xl:col-span-2">
-        <label for="name" class="block text-gray-300 font-medium mb-2 text-sm"
-          >Nome do Produto <span class="text-red-400">*</span></label
-        >
+        <label for="name" class="block text-text-secondary font-medium mb-2 text-sm">
+          Nome do Produto <span class="text-danger">*</span>
+        </label>
+
         <input
           id="name"
           formControlName="name"
           type="text"
           required
           placeholder="Ex: Picanha Bovina"
-          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
+          class="w-full px-4 py-3 rounded-lg bg-surface-alt border border-border text-text-primary font-medium placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200"
         />
+
         @if (formCreateProduct.get('name')?.touched && formCreateProduct.get('name')?.invalid) {
-          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            Digite o nome do produto
-          </p>
+          <p class="msg-error">Digite o nome do produto</p>
         }
       </div>
 
       <!-- Código -->
       <div>
-        <label for="code" class="block text-gray-300 font-medium mb-2 text-sm"
-          >Código/SKU <span class="text-red-400">*</span></label
-        >
+        <label for="code" class="block text-text-secondary font-medium mb-2 text-sm">
+          Código/SKU <span class="text-danger">*</span>
+        </label>
+
         <input
           id="code"
           formControlName="code"
           type="text"
           required
           placeholder="Ex: PROD-001"
-          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
+          class="w-full px-4 py-3 rounded-lg bg-surface-alt border border-border text-text-primary font-medium placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200"
         />
+
         @if (formCreateProduct.get('code')?.touched && formCreateProduct.get('code')?.invalid) {
-          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            Digite o código
-          </p>
+          <p class="msg-error">Digite o código</p>
         }
       </div>
 
       <!-- Unidade -->
       <div>
-        <label for="unit" class="block text-gray-300 font-medium mb-2 text-sm"
-          >Unidade <span class="text-red-400">*</span></label
-        >
+        <label for="unit" class="block text-text-secondary font-medium mb-2 text-sm">
+          Unidade <span class="text-danger">*</span>
+        </label>
+
         <select
           id="unit"
           formControlName="unit"
           required
-          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
-          style="
-            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
-            background-repeat: no-repeat;
-            background-position: right 0.7rem center;
-            background-size: 1.2em;
-          "
+          class="w-full px-4 py-3 rounded-lg bg-surface-alt border border-border text-text-primary font-medium focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 appearance-none cursor-pointer"
         >
           <option *ngFor="let unitOption of unitOptions" [value]="unitOption">
             {{ unitOption }}
           </option>
         </select>
+
         @if (formCreateProduct.get('unit')?.touched && formCreateProduct.get('unit')?.invalid) {
-          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            Selecione a unidade
-          </p>
+          <p class="msg-error">Selecione a unidade</p>
         }
+      </div>
+
+      <!-- Categoria -->
+      <div>
+        <label for="categoryId" class="block text-text-secondary font-medium mb-2 text-sm">
+          Categoria
+          <span class="text-text-muted text-xs">(opcional)</span>
+        </label>
+
+        <select
+          id="categoryId"
+          formControlName="categoryId"
+          class="w-full px-4 py-3 rounded-lg bg-surface-alt border border-border text-text-primary font-medium focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 appearance-none cursor-pointer"
+        >
+          <option [value]="null">Sem categoria</option>
+
+          <option *ngFor="let cat of categories" [value]="cat.id">
+            {{ cat.name }}
+          </option>
+        </select>
       </div>
     </div>
 
-    <!-- Categoria - adicionar no grid da seção "Informações Básicas", após o campo unit -->
-    <div>
-      <label for="categoryId" class="block text-gray-300 font-medium mb-2 text-sm">
-        Categoria <span class="text-gray-400 text-xs">(opcional)</span>
-      </label>
-      <select
-        id="categoryId"
-        formControlName="categoryId"
-        class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
-        style="
-          background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
-          background-repeat: no-repeat;
-          background-position: right 0.7rem center;
-          background-size: 1.2em;
-        "
-      >
-        <option [value]="null">Sem categoria</option>
-        <option *ngFor="let cat of categories" [value]="cat.id">
-          {{ cat.name }}
-        </option>
-      </select>
-    </div>
-
-    <!-- Tipo de Produto e Local de Produção -->
+    <!-- Tipo e Produção -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      <!-- Tipo -->
       <div>
-        <label for="productType" class="block text-gray-300 font-medium mb-2 text-sm"
-          >Tipo de Produto <span class="text-red-400">*</span></label
-        >
+        <label for="productType" class="block text-text-secondary font-medium mb-2 text-sm">
+          Tipo de Produto <span class="text-danger">*</span>
+        </label>
+
         <select
           id="productType"
           formControlName="productType"
           required
-          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
-          style="
-            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
-            background-repeat: no-repeat;
-            background-position: right 0.7rem center;
-            background-size: 1.2em;
-          "
+          class="w-full px-4 py-3 rounded-lg bg-surface-alt border border-border text-text-primary font-medium focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 appearance-none cursor-pointer"
         >
-          <option value="manufactured">🏭 Produto Manufaturado (com composição)</option>
-          <option value="semi_manufactured">⚙️ Produto Semipronto (com composição)</option>
-          <option value="resale">📦 Produto de Revenda (sem composição)</option>
+          <option value="manufactured">🏭 Produto Manufaturado</option>
+
+          <option value="semi_manufactured">⚙️ Produto Semipronto</option>
+
+          <option value="resale">📦 Produto de Revenda</option>
         </select>
-        <p class="text-gray-400 text-xs mt-1">
+
+        <p class="text-text-muted text-xs mt-2">
           @if (isManufacturedProduct) {
-            Produto com composição de matérias-primas, uso interno
+            Produto com composição de matérias-primas
           }
           @if (isSemiManufacturedProduct) {
-            Produto com composição, pode ser vendido ou usado em outros produtos
+            Produto com composição, pode ser vendido
           }
           @if (isResaleProduct) {
             Produto adquirido para revenda direta
@@ -166,38 +138,41 @@
         </p>
       </div>
 
-      <!-- Local de Produção (manufaturado e semipronto) -->
-      <!-- Local de Produção -->
+      <!-- Local Produção -->
       <div>
-        <label for="productionLocation" class="block text-gray-300 font-medium mb-2 text-sm">
+        <label for="productionLocation" class="block text-text-secondary font-medium mb-2 text-sm">
           Local de Produção
+
           @if (hasComposition) {
-            <span class="text-red-400">*</span>
+            <span class="text-danger">*</span>
           } @else {
-            <span class="text-gray-400 text-xs">(opcional)</span>
+            <span class="text-text-muted text-xs">(opcional)</span>
           }
         </label>
+
         <select
           id="productionLocation"
           formControlName="productionLocation"
-          class="w-full p-3 rounded-lg bg-white/95 ..."
+          class="w-full px-4 py-3 rounded-lg bg-surface-alt border border-border text-text-primary font-medium focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all duration-200 appearance-none cursor-pointer"
         >
           <option value="" disabled selected>Selecione o local</option>
+
           <option *ngFor="let location of productionLocationOptions" [value]="location.code">
             {{ location.name }}
           </option>
         </select>
+
         @if (
           formCreateProduct.get('productionLocation')?.touched &&
           formCreateProduct.get('productionLocation')?.invalid
         ) {
-          <p class="text-red-400 text-sm mt-2 ...">Selecione o local de produção</p>
+          <p class="msg-error">Selecione o local de produção</p>
         }
       </div>
     </div>
   </div>
 
-  <!-- Seção: Composição (manufaturado e semipronto) -->
+  <!-- Composição -->
   <div *ngIf="hasComposition">
     <app-product-composition
       [productName]="productName"
@@ -205,21 +180,25 @@
     ></app-product-composition>
   </div>
 
-  <!-- Seção: Valores -->
+  <!-- Valores -->
   <div class="space-y-6">
-    <h3 class="text-xl font-semibold text-green-400 flex items-center gap-2">
-      <span class="w-1 h-6 bg-green-400 rounded"></span>
+    <h3 class="text-xl font-semibold text-success flex items-center gap-2">
+      <span class="w-1 h-6 bg-success rounded"></span>
       Valores e Estoque
     </h3>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <!-- Preço de Venda -->
+      <!-- Preço -->
       <div class="relative">
-        <label for="price" class="block text-gray-300 font-medium mb-2 text-sm"
-          >Preço de Venda <span class="text-red-400">*</span></label
-        >
+        <label for="price" class="block text-text-secondary font-medium mb-2 text-sm">
+          Preço de Venda <span class="text-danger">*</span>
+        </label>
+
         <div class="relative">
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">R$</span>
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">
+            R$
+          </span>
+
           <input
             id="price"
             formControlName="price"
@@ -227,34 +206,30 @@
             step="0.01"
             required
             placeholder="0,00"
-            class="w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
+            class="w-full pl-10 pr-3 py-3 rounded-lg bg-surface-alt border border-border text-text-primary font-medium placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-success focus:border-success transition-all duration-200"
           />
         </div>
+
         @if (formCreateProduct.get('price')?.touched && formCreateProduct.get('price')?.invalid) {
-          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            Digite o preço
-          </p>
+          <p class="msg-error">Digite o preço</p>
         }
       </div>
 
-      <!-- Preço de Custo -->
+      <!-- Custo -->
       <div class="relative">
-        <label for="cost-price" class="block text-gray-300 font-medium mb-2 text-sm">
+        <label for="cost-price" class="block text-text-secondary font-medium mb-2 text-sm">
           @if (hasComposition) {
-            Custo de Produção <span class="text-blue-400 text-xs">(calculado)</span>
+            Custo de Produção
           } @else {
-            Preço de Custo <span class="text-red-400">*</span>
+            Preço de Custo <span class="text-danger">*</span>
           }
         </label>
+
         <div class="relative">
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">R$</span>
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">
+            R$
+          </span>
+
           <input
             id="cost-price"
             formControlName="costPrice"
@@ -264,17 +239,13 @@
             placeholder="0,00"
             [class]="
               hasComposition
-                ? 'w-full pl-10 pr-3 py-3 rounded-lg bg-gray-200 text-gray-700 font-bold placeholder-gray-400 border-2 border-gray-300 cursor-not-allowed'
-                : 'w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none'
-            "
-            [title]="
-              hasComposition
-                ? 'Este valor é calculado automaticamente com base na composição'
-                : 'Digite o custo de compra do produto'
+                ? 'w-full pl-10 pr-3 py-3 rounded-lg bg-overlay border border-border text-text-muted font-bold cursor-not-allowed'
+                : 'w-full pl-10 pr-3 py-3 rounded-lg bg-surface-alt border border-border text-text-primary font-medium placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-success focus:border-success transition-all duration-200'
             "
           />
         </div>
-        <p class="text-gray-400 text-xs mt-1">
+
+        <p class="text-text-muted text-xs mt-1">
           @if (hasComposition) {
             Baseado na composição de itens
           }
@@ -282,280 +253,153 @@
             Custo de compra para revenda
           }
         </p>
+
         @if (
           formCreateProduct.get('costPrice')?.touched && formCreateProduct.get('costPrice')?.invalid
         ) {
-          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            Digite o custo
-          </p>
+          <p class="msg-error">Digite o custo</p>
         }
       </div>
 
-      <!-- Custos Extras -->
-      <div class="relative">
-        <label for="extra-costs" class="block text-gray-300 font-medium mb-2 text-sm"
-          >Custos Extras <span class="text-gray-400 text-xs">(opcional)</span></label
-        >
-        <div class="relative">
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">R$</span>
-          <input
-            id="extra-costs"
-            formControlName="extraCosts"
-            type="number"
-            step="0.01"
-            placeholder="0,00"
-            class="w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
-          />
-        </div>
-        <p class="text-gray-400 text-xs mt-1">Embalagem, frete, impostos adicionais</p>
-      </div>
-
-      <!-- Margem de Lucro -->
-      <div class="relative">
-        <label class="block text-gray-300 font-medium mb-2 text-sm">Margem de Lucro</label>
-        <div class="relative">
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">%</span>
-          <input
-            type="text"
-            readonly
-            [value]="calculateProfitMargin()"
-            class="w-full pl-10 pr-3 py-3 rounded-lg bg-gray-200 text-gray-700 font-bold border-2 border-gray-300 cursor-not-allowed"
-          />
-        </div>
-        <p class="text-gray-400 text-xs mt-1">{{ calculateProfitMargin() }}% sobre o custo</p>
-      </div>
-
-      <!-- Quantidade em Estoque -->
+      <!-- Estoque -->
       <div>
-        <label for="quantity" class="block text-gray-300 font-medium mb-2 text-sm"
-          >Estoque Inicial <span class="text-red-400">*</span></label
-        >
+        <label for="quantity" class="block text-text-secondary font-medium mb-2 text-sm">
+          Estoque Inicial <span class="text-danger">*</span>
+        </label>
+
         <input
           id="quantity"
           formControlName="quantity"
           type="number"
           required
           placeholder="0"
-          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
+          class="w-full px-4 py-3 rounded-lg bg-surface-alt border border-border text-text-primary font-medium placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-success focus:border-success transition-all duration-200"
         />
+
         @if (
           formCreateProduct.get('quantity')?.touched && formCreateProduct.get('quantity')?.invalid
         ) {
-          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            Digite a quantidade
-          </p>
+          <p class="msg-error">Digite a quantidade</p>
         }
+      </div>
+
+      <!-- Margem -->
+      <div>
+        <label class="block text-text-secondary font-medium mb-2 text-sm"> Margem de Lucro </label>
+
+        <input
+          type="text"
+          readonly
+          [value]="calculateProfitMargin()"
+          class="w-full px-4 py-3 rounded-lg bg-overlay border border-border text-text-primary font-bold cursor-not-allowed"
+        />
+
+        <p class="text-text-muted text-xs mt-1">{{ calculateProfitMargin() }}% sobre o custo</p>
       </div>
     </div>
   </div>
 
-  <!-- Seção: Informações Fiscais -->
+  <!-- Informações Fiscais -->
   <div class="space-y-6">
-    <h3 class="text-xl font-semibold text-yellow-400 flex items-center gap-2">
-      <span class="w-1 h-6 bg-yellow-400 rounded"></span>
+    <h3 class="text-xl font-semibold text-warning flex items-center gap-2">
+      <span class="w-1 h-6 bg-warning rounded"></span>
       Informações Fiscais (NFC-e)
     </h3>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <!-- NCM -->
       <div>
-        <label for="ncm" class="block text-gray-300 font-medium mb-2 text-sm"
-          >NCM <span class="text-red-400">*</span></label
-        >
+        <label for="ncm" class="block text-text-secondary font-medium mb-2 text-sm">
+          NCM <span class="text-danger">*</span>
+        </label>
+
         <input
           id="ncm"
           formControlName="ncm"
           type="text"
           maxlength="8"
           placeholder="12345678"
-          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-mono font-medium placeholder-gray-400 border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none"
+          class="w-full px-4 py-3 rounded-lg bg-surface-alt border border-border text-text-primary font-mono font-medium placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-warning focus:border-warning transition-all duration-200"
         />
-        <p class="text-gray-400 text-xs mt-1">8 dígitos numéricos</p>
-        <p class="text-gray-400 text-xs mt-1">Sem NCM, não é possível emitir nota fiscal</p>
+
+        <p class="text-text-muted text-xs mt-1">8 dígitos numéricos</p>
       </div>
 
-      <!-- CEST -->
       <div>
-        <label for="cest" class="block text-gray-300 font-medium mb-2 text-sm"
-          >CEST <span class="text-gray-400 text-xs">(opcional)</span></label
-        >
-        <input
-          id="cest"
-          formControlName="cest"
-          type="text"
-          maxlength="7"
-          placeholder="1234567"
-          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-mono font-medium placeholder-gray-400 border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none"
-        />
-        <p class="text-gray-400 text-xs mt-1">7 dígitos numéricos</p>
-        @if (formCreateProduct.get('cest')?.touched && formCreateProduct.get('cest')?.invalid) {
-          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            CEST inválido (7 dígitos)
-          </p>
-        }
-      </div>
+        <label for="csosn" class="block text-text-secondary font-medium mb-2 text-sm">
+          CSOSN <span class="text-danger">*</span>
+        </label>
 
-      <!-- CSOSN -->
-      <div>
-        <label for="csosn" class="block text-gray-300 font-medium mb-2 text-sm"
-          >CSOSN <span class="text-red-400">*</span></label
-        >
         <select
           id="csosn"
           formControlName="csosn"
           required
-          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
-          style="
-            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
-            background-repeat: no-repeat;
-            background-position: right 0.7rem center;
-            background-size: 1.2em;
-          "
+          class="w-full px-4 py-3 rounded-lg bg-surface-alt border border-border text-text-primary font-medium focus:outline-none focus:ring-2 focus:ring-warning focus:border-warning transition-all duration-200 appearance-none cursor-pointer"
         >
           <option value="" disabled>Selecione</option>
+
           <option *ngFor="let option of csosnOptions" [value]="option.value">
             {{ option.label }}
           </option>
         </select>
-        @if (formCreateProduct.get('csosn')?.touched && formCreateProduct.get('csosn')?.invalid) {
-          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            Selecione o CSOSN
-          </p>
-        }
-      </div>
 
-      <!-- Origem -->
-      <div>
-        <label for="origin" class="block text-gray-300 font-medium mb-2 text-sm"
-          >Origem <span class="text-red-400">*</span></label
-        >
-        <select
-          id="origin"
-          formControlName="origin"
-          required
-          class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
-          style="
-            background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
-            background-repeat: no-repeat;
-            background-position: right 0.7rem center;
-            background-size: 1.2em;
-          "
-        >
-          <option *ngFor="let option of originOptions" [value]="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-        @if (formCreateProduct.get('origin')?.touched && formCreateProduct.get('origin')?.invalid) {
-          <p class="text-red-400 text-sm mt-2 flex items-center gap-1">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            Selecione a origem
-          </p>
+        @if (formCreateProduct.get('csosn')?.touched && formCreateProduct.get('csosn')?.invalid) {
+          <p class="msg-error">Selecione o CSOSN</p>
         }
       </div>
     </div>
   </div>
 
-  <!-- Status Ativo -->
+  <!-- Status -->
   <div class="space-y-3">
-    <label class="block text-gray-300 font-medium text-sm">
-      Status do Produto <span class="text-red-400">*</span>
+    <label class="block text-text-secondary font-medium text-sm">
+      Status do Produto <span class="text-danger">*</span>
     </label>
+
     <div class="grid grid-cols-2 gap-4">
+      <!-- Ativo -->
       <label class="relative cursor-pointer">
         <input type="radio" formControlName="active" [value]="true" class="peer sr-only" />
+
         <div
-          class="p-4 rounded-lg border-2 border-gray-600 bg-white/5 peer-checked:border-green-500 peer-checked:bg-green-500/10 transition-all duration-200 flex items-center justify-center gap-3"
+          class="p-4 rounded-xl border border-border bg-surface-alt peer-checked:border-success peer-checked:bg-success/10 transition-all duration-200 flex items-center justify-center gap-3"
         >
           <div
-            class="w-5 h-5 rounded-full border-2 border-gray-400 peer-checked:border-green-500 peer-checked:bg-green-500 flex items-center justify-center"
-          >
-            <svg
-              class="w-3 h-3 text-white hidden peer-checked:block"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </div>
-          <span class="text-white font-semibold">Ativo</span>
+            class="w-5 h-5 rounded-full border-2 border-border peer-checked:border-success peer-checked:bg-success"
+          ></div>
+
+          <span class="text-text-primary font-semibold"> Ativo </span>
         </div>
       </label>
 
+      <!-- Inativo -->
       <label class="relative cursor-pointer">
         <input type="radio" formControlName="active" [value]="false" class="peer sr-only" />
+
         <div
-          class="p-4 rounded-lg border-2 border-gray-600 bg-white/5 peer-checked:border-red-500 peer-checked:bg-red-500/10 transition-all duration-200 flex items-center justify-center gap-3"
+          class="p-4 rounded-xl border border-border bg-surface-alt peer-checked:border-danger peer-checked:bg-danger/10 transition-all duration-200 flex items-center justify-center gap-3"
         >
           <div
-            class="w-5 h-5 rounded-full border-2 border-gray-400 peer-checked:border-red-500 peer-checked:bg-red-500 flex items-center justify-center"
-          >
-            <svg
-              class="w-3 h-3 text-white hidden peer-checked:block"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </div>
-          <span class="text-white font-semibold">Inativo</span>
+            class="w-5 h-5 rounded-full border-2 border-border peer-checked:border-danger peer-checked:bg-danger"
+          ></div>
+
+          <span class="text-text-primary font-semibold"> Inativo </span>
         </div>
       </label>
     </div>
   </div>
 
   <!-- Botões -->
-  <div class="flex justify-end gap-4 pt-6 border-t border-gray-600">
+  <div class="flex justify-end gap-4 pt-6 border-t border-border">
     <button
       type="button"
-      class="px-6 py-3 rounded-lg font-semibold text-gray-300 bg-gray-700 hover:bg-gray-600 transition-colors duration-200"
+      class="px-6 py-3 rounded-lg font-semibold bg-overlay text-text-primary hover:brightness-110 border border-border transition-all duration-200"
     >
       Cancelar
     </button>
+
     <button
       type="submit"
-      class="px-8 py-3 rounded-lg font-semibold text-white bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-blue-500/50 transition-all duration-200 transform hover:scale-105"
+      class="px-8 py-3 rounded-lg font-semibold bg-accent hover:bg-accent-hover text-white shadow-lg transition-all duration-200 hover:scale-105"
     >
       Salvar Produto
     </button>

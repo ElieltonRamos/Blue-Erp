@@ -1,37 +1,35 @@
-<!-- Container Principal (tela) -->
-<div class="w-full max-w-6xl bg-[#182233] rounded-2xl shadow-lg p-6">
+<div class="w-full max-w-6xl bg-surface rounded-2xl shadow-lg p-6 border border-border">
   <div class="mb-4">
-    <h1 class="text-3xl font-bold text-white">Relatório de Vendas</h1>
+    <h1 class="text-3xl font-bold text-text-primary">Relatório de Vendas</h1>
   </div>
 
-  <!-- Filtros -->
   <div class="flex flex-wrap gap-4 mb-6">
     <div class="flex flex-col">
-      <label class="text-white text-sm mb-1">Data Início</label>
+      <label class="text-text-secondary text-sm mb-1">Data Início</label>
       <input
         type="date"
         [(ngModel)]="startDate"
-        class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+        class="bg-surface-alt text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none focus:border-accent"
       />
     </div>
     <div class="flex flex-col">
-      <label class="text-white text-sm mb-1">Data Fim</label>
+      <label class="text-text-secondary text-sm mb-1">Data Fim</label>
       <input
         type="date"
         [(ngModel)]="endDate"
-        class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+        class="bg-surface-alt text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none focus:border-accent"
       />
     </div>
     <div class="flex items-end gap-2">
       <button
         (click)="setToday()"
-        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+        class="bg-accent text-btn-text px-4 py-2 rounded hover:bg-accent-hover transition shadow-sm"
       >
         Hoje
       </button>
       <button
         (click)="setThisMonth()"
-        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+        class="bg-accent text-btn-text px-4 py-2 rounded hover:bg-accent-hover transition shadow-sm"
       >
         Este Mês
       </button>
@@ -39,14 +37,14 @@
     <div class="flex items-end gap-2">
       <button
         (click)="generateReport()"
-        class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
+        class="bg-success text-btn-text px-6 py-2 rounded hover:opacity-90 transition shadow-sm"
       >
         Gerar Relatório
       </button>
       @if (reportGenerated) {
         <button
           (click)="print()"
-          class="bg-transparent text-gray-300 px-6 py-2 rounded-lg border border-gray-600 hover:bg-[#2a3445] hover:text-white transition-all font-medium flex items-center gap-2"
+          class="bg-transparent text-text-secondary px-6 py-2 rounded border border-border hover:bg-surface-alt hover:text-text-primary transition-all font-medium flex items-center gap-2"
         >
           <span>🖨️</span> Imprimir / PDF
         </button>
@@ -54,70 +52,75 @@
     </div>
   </div>
 
-  <!-- Conteúdo do relatório (tela) -->
-  <div class="w-full max-w-6xl mx-auto bg-[#182233] rounded-2xl shadow-lg p-6 mt-6 text-white">
-    <h2 class="text-2xl font-bold mb-2">Relatório de Vendas {{ getFullDate() }}</h2>
-    <p class="text-gray-400 text-sm mb-6">
+  <div
+    class="w-full max-w-6xl mx-auto bg-base rounded-2xl shadow-lg p-6 mt-6 text-text-primary border border-border-subtle"
+  >
+    <h2 class="text-2xl font-bold mb-2 text-text-primary">
+      Relatório de Vendas {{ getFullDate() }}
+    </h2>
+    <p class="text-text-secondary text-sm mb-6">
       Consolidação das vendas realizadas no período selecionado.
     </p>
 
-    <!-- Card explicativo -->
-    <div class="bg-[#1a2a1a] border border-indigo-700 p-4 rounded-xl shadow mb-6">
-      <h3 class="text-indigo-400 font-semibold mb-2">💡 Entenda seus números</h3>
+    <div class="bg-surface-alt border border-accent/50 p-4 rounded-xl shadow mb-6">
+      <h3 class="text-accent font-semibold mb-2">💡 Entenda seus números</h3>
       <div class="space-y-3 text-sm">
-        <p class="text-gray-300">
-          💰 <span class="text-white font-medium">Faturamento Bruto:</span>
+        <p class="text-text-secondary">
+          💰 <span class="text-text-primary font-medium">Faturamento Bruto:</span>
           Soma de todas as vendas incluindo gorjetas (taxa de serviço). Representa tudo que entrou
           no caixa.
         </p>
-        <p class="text-gray-300">
-          📈 <span class="text-white font-medium">Lucro Bruto:</span> Calculado como
-          <span class="text-white font-medium">(preço de venda − custo) × quantidade</span> por
-          item. As gorjetas
-          <span class="text-yellow-300 font-medium">não entram nesse cálculo</span>
+        <p class="text-text-secondary">
+          📈 <span class="text-text-primary font-medium">Lucro Bruto:</span> Calculado como
+          <span class="text-text-primary font-medium">(preço de venda − custo) × quantidade</span>
+          por item. As gorjetas
+          <span class="text-warning font-medium">não entram nesse cálculo</span>
         </p>
-        <p class="text-gray-300">
-          🏷️ <span class="text-white font-medium">Descontos Concedidos:</span>
+        <p class="text-text-secondary">
+          🏷️ <span class="text-text-primary font-medium">Descontos Concedidos:</span>
           Valor abatido do preço original. Reduz diretamente o faturamento e o lucro bruto.
         </p>
       </div>
     </div>
 
-    <!-- Totais -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       @for (
         card of [
-          { label: 'Vendas Realizadas', value: report.totalSales, color: 'text-white', prefix: '' },
+          {
+            label: 'Vendas Realizadas',
+            value: report.totalSales,
+            color: 'text-text-primary',
+            prefix: '',
+          },
           {
             label: 'Faturamento Bruto',
             value: report.grossRevenue,
-            color: 'text-green-400',
+            color: 'text-success',
             prefix: 'R$ ',
           },
           {
             label: 'Lucro Bruto',
             value: report.grossProfit,
-            color: 'text-indigo-400',
+            color: 'text-accent',
             prefix: 'R$ ',
           },
           {
             label: 'Descontos Concedidos',
             value: report.totalDiscounts,
-            color: 'text-red-400',
+            color: 'text-danger',
             prefix: 'R$ ',
           },
         ];
         track $index
       ) {
-        <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-          <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">{{ card.label }}</h3>
+        <div class="bg-surface p-4 rounded-xl shadow border border-border">
+          <h3 class="text-xs text-text-muted uppercase tracking-wide mb-1">{{ card.label }}</h3>
           <p class="text-2xl font-semibold {{ card.color }}">{{ card.prefix }}{{ card.value }}</p>
         </div>
       }
     </div>
 
-    <!-- Formas de pagamento -->
-    <h4 class="text-xl font-bold mb-4">💳 Receita por Forma de Pagamento</h4>
+    <h4 class="text-xl font-bold mb-4 text-text-primary">💳 Receita por Forma de Pagamento</h4>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
       @for (
         method of [
@@ -129,38 +132,43 @@
         ];
         track $index
       ) {
-        <div class="bg-[#2a3445] p-4 rounded-xl">
-          <h4 class="text-xs text-gray-400 uppercase tracking-wide mb-1">{{ method.label }}</h4>
-          <p class="text-xl font-semibold">R$ {{ method.value }}</p>
+        <div class="bg-surface p-4 rounded-xl border border-border">
+          <h4 class="text-xs text-text-muted uppercase tracking-wide mb-1">{{ method.label }}</h4>
+          <p class="text-xl font-semibold text-text-primary">R$ {{ method.value }}</p>
         </div>
       }
     </div>
 
-    <!-- Operadores -->
-    <div class="bg-[#2a3445] p-4 rounded-xl mb-6">
-      <h4 class="text-xl font-bold mb-4">👤 Resumo por Operador</h4>
+    <div class="bg-surface p-4 rounded-xl mb-6 border border-border">
+      <h4 class="text-xl font-bold mb-4 text-text-primary">👤 Resumo por Operador</h4>
       <div class="flex gap-4 overflow-x-auto pb-2">
         @for (item of report.salesByOperator; track $index) {
-          <div class="w-full sm:w-1/2 bg-[#1f2a40] p-4 rounded-xl shadow-md shrink-0">
-            <div class="text-lg font-bold mb-1">{{ item.operator }}</div>
-            <div class="text-md font-semibold text-indigo-300 mb-2">
+          <div
+            class="w-full sm:w-1/2 bg-surface-alt p-4 rounded-xl shadow-md border border-border-subtle shrink-0"
+          >
+            <div class="text-lg font-bold mb-1 text-text-primary">{{ item.operator }}</div>
+            <div class="text-md font-semibold text-accent mb-2">
               {{ item.totalSales }} Vendas – R$ {{ item.revenue }}
             </div>
-            <div class="text-sm text-gray-300 space-y-1">
+            <div class="text-sm text-text-secondary space-y-1">
               <div>
-                <span class="font-semibold">Dinheiro:</span> R$ {{ item.paymentBreakdown.dinheiro }}
+                <span class="font-semibold text-text-primary">Dinheiro:</span> R$
+                {{ item.paymentBreakdown.dinheiro }}
               </div>
               <div>
-                <span class="font-semibold">Cartão Crédito:</span> R$
+                <span class="font-semibold text-text-primary">Cartão Crédito:</span> R$
                 {{ item.paymentBreakdown.cartaoCredito }}
               </div>
               <div>
-                <span class="font-semibold">Cartão Débito:</span> R$
+                <span class="font-semibold text-text-primary">Cartão Débito:</span> R$
                 {{ item.paymentBreakdown.cartaoDebito }}
               </div>
-              <div><span class="font-semibold">PIX:</span> R$ {{ item.paymentBreakdown.pix }}</div>
               <div>
-                <span class="font-semibold">Notinha:</span> R$
+                <span class="font-semibold text-text-primary">PIX:</span> R$
+                {{ item.paymentBreakdown.pix }}
+              </div>
+              <div>
+                <span class="font-semibold text-text-primary">Notinha:</span> R$
                 {{ item.paymentBreakdown.creditoLoja }}
               </div>
             </div>
@@ -171,9 +179,7 @@
   </div>
 </div>
 
-<!-- Conteúdo oculto para impressão -->
 <div id="reportContent" style="display: none">
-  <!-- Header -->
   <div class="print-header">
     <div class="logo-area">
       <img src="/blue-erp.png" alt="Logo" />
@@ -193,7 +199,6 @@
     </div>
   </div>
 
-  <!-- KPIs -->
   <div class="section-title">Resumo do Período</div>
   <div class="kpi-grid">
     <div class="kpi-card">
@@ -214,7 +219,6 @@
     </div>
   </div>
 
-  <!-- Info box -->
   <div class="info-box" style="margin-top: 8px">
     <strong>Faturamento Bruto</strong> = soma de todas as vendas incluindo gorjetas (taxa de
     serviço).<br />
@@ -223,7 +227,6 @@
     <strong>Descontos</strong> reduzem diretamente o faturamento e o lucro bruto.
   </div>
 
-  <!-- Formas de pagamento -->
   <div class="section-title">Receita por Forma de Pagamento</div>
   <table>
     <thead>
@@ -256,7 +259,6 @@
     </tbody>
   </table>
 
-  <!-- Operadores -->
   <div class="section-title">Resumo por Operador</div>
   <table>
     <thead>
@@ -287,7 +289,6 @@
     </tbody>
   </table>
 
-  <!-- Footer -->
   <div class="print-footer">
     <span>{{ companyData?.tradeName }} — Sistema Blue ERP</span>
     <span>Gerado em {{ getTodayFormatted() }}</span>
@@ -295,13 +296,15 @@
 </div>
 
 @if (isLoading) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-    <div class="text-white text-lg font-semibold animate-pulse text-center px-4">
-      <p>Carregando relatório...</p>
-      <p class="mt-2">Isso pode demorar um pouco.</p>
-      <p class="mt-2 text-sm text-indigo-300">
-        ⚠️ Evite gerar relatórios com mais de <strong>30 dias</strong> de diferença.
-      </p>
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="text-text-primary text-lg font-semibold animate-pulse text-center px-4">
+      <div class="bg-surface p-8 rounded-2xl border border-border shadow-2xl">
+        <p>Carregando relatório...</p>
+        <p class="mt-2 text-text-secondary font-normal">Isso pode demorar um pouco.</p>
+        <p class="mt-4 text-sm text-accent">
+          ⚠️ Evite gerar relatórios com mais de <strong>30 dias</strong> de diferença.
+        </p>
+      </div>
     </div>
   </div>
 }
