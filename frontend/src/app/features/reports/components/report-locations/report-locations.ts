@@ -329,7 +329,7 @@ export class ReportLocations {
           tr.cat-header { background: #e8e8f4 !important; }
           tr.cat-header td { padding: 5px 8px; }
 
-          .loc-card { border: 1px solid #d0d0e8; border-radius: 4px; padding: 10px 12px; margin-bottom: 14px; page-break-inside: avoid; }
+          .loc-card { border: 1px solid #d0d0e8; border-radius: 4px; padding: 10px 12px; margin-bottom: 14px; }
           .loc-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; border-bottom: 1px solid #e0e0ec; padding-bottom: 6px; }
           .loc-name { font-size: 11pt; font-weight: 700; }
           .loc-total { font-size: 11pt; font-weight: 700; color: #1a6b3c; }
