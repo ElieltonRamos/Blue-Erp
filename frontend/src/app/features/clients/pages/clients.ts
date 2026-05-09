@@ -13,10 +13,11 @@ export class Clients {
   menuContext = 'create';
 
   classBtnSelected =
-    'bg-accent text-text-primary px-4 py-2 rounded-lg flex items-center gap-2 font-semibold';
-  classBtnUnselected =
-    'text-text-secondary hover:text-text-primary px-4 py-2 rounded-lg flex items-center gap-2 font-semibold';
+    'bg-accent hover:bg-accent-hover text-btn-text px-4 py-2 rounded-lg flex items-center gap-2 font-semibold transition-all shadow-md';
 
+  classBtnUnselected =
+    'text-text-secondary hover:text-text-primary hover:bg-surface-alt px-4 py-2 rounded-lg flex items-center gap-2 font-semibold transition-all';
+  
   changeMenuContext(context: string): void {
     this.menuContext = context;
   }
