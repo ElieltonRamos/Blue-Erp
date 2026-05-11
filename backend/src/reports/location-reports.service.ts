@@ -9,6 +9,7 @@ type OrderItem = {
   total: number | { toNumber(): number };
   serviceCharge: number | { toNumber(): number } | null;
   operatorId: number | null;
+  operator: { id: number; username: string } | null;
   product: {
     id: number;
     name: string;
@@ -112,6 +113,7 @@ export class LocationReportService {
       include: {
         items: {
           include: {
+            operator: { select: { id: true, username: true } },
             product: {
               select: {
                 id: true,
@@ -196,16 +198,6 @@ export class LocationReportService {
     return location.operators[id];
   }
 
-  private resolveOperatorUsername(
-    order: OrderWithIncludes,
-    operatorId: number,
-  ): string {
-    if (order.operator?.id === operatorId) return order.operator.username;
-    if (order.closedByOperator?.id === operatorId)
-      return order.closedByOperator.username;
-    return `op_${operatorId}`;
-  }
-
   private processOrder(
     order: OrderWithIncludes,
     aggregators: Record<string, LocationAggregator>,
@@ -278,7 +270,7 @@ export class LocationReportService {
       category.items[item.product.name].value += value;
 
       if (item.operatorId) {
-        const username = this.resolveOperatorUsername(order, item.operatorId);
+        const username = item.operator?.username ?? `op_${item.operatorId}`;
         const op = this.ensureOperator(location, item.operatorId, username);
         op.totalServiceCharge += this.toNumber(item.serviceCharge);
       }

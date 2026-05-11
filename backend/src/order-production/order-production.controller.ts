@@ -171,19 +171,19 @@ export class ProductionController {
     return this.productionService.cancelProduction(id);
   }
 
-  // @Post('maintenance/complete-and-deliver-forgotten')
-  // @ApiOperation({
-  //   summary:
-  //     'Finaliza e entrega produções de dias anteriores que ficaram presas em progresso',
-  //   description:
-  //     'Busca todas as produções com status IN_PROGRESS e startedAt anterior a hoje, completando-as e marcando como entregues.',
-  // })
-  // async completeAndDeliverForgotten() {
-  //   const result = await this.productionService.completeAndDeliverForgotten();
+  @Post('maintenance/complete-and-deliver-forgotten')
+  @ApiOperation({
+    summary:
+      'Finaliza e entrega produções de dias anteriores que ficaram presas em progresso',
+    description:
+      'Busca todas as produções com status IN_PROGRESS e startedAt anterior a hoje, completando-as e marcando como entregues.',
+  })
+  async completeAndDeliverForgotten() {
+    const result = await this.productionService.completeAndDeliverForgotten();
 
-  //   return {
-  //     message: 'Processamento de produções esquecidas finalizado',
-  //     ...result,
-  //   };
-  // }
+    return {
+      message: 'Processamento de produções esquecidas finalizado',
+      ...result,
+    };
+  }
 }
