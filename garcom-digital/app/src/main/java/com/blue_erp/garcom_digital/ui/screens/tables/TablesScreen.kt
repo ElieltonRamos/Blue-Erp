@@ -9,6 +9,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -93,13 +96,8 @@ fun TablesScreen(
         if (!uiState.isLoading) viewModel.loadTables()
     }
 
-    LaunchedEffect(uiState.pendingNotification) {
-        uiState.pendingNotification?.let { notif ->
-            val canNotify = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-                    ContextCompat.checkSelfPermission(
-                        context, android.Manifest.permission.POST_NOTIFICATIONS
-                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-            if (canNotify) showTableNotification(context, notif.tableNumber, notif.message)
+    LaunchedEffect(uiState.pendingNotifications) {
+        uiState.pendingNotifications.firstOrNull()?.let { notif ->
             viewModel.clearNotification()
         }
     }
@@ -228,7 +226,7 @@ private fun TablesScreenContent(
                                 Text(
                                     text = location.name.uppercase(),
                                     color = if (isSelected) MaterialTheme.colorScheme.onSecondary
-                                    else Color.White,
+                                    else MaterialTheme.colorScheme.onSurface,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
                             }
@@ -278,10 +276,12 @@ private fun TablesScreenContent(
                     }
 
                     else -> {
-                        LazyColumn(
+                        LazyVerticalGrid(
+                            columns = GridCells.Adaptive(minSize = 140.dp),
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            contentPadding = PaddingValues(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             items(items = filteredTables, key = { it.id }) { table ->
                                 TableCard(

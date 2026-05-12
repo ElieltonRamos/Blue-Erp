@@ -26,7 +26,9 @@ sealed class Screen(val route: String) {
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = Screen.Login.route
+    startDestination: String = Screen.Login.route,
+    onToggleTheme: () -> Unit,
+    isDarkTheme: Boolean
 ) {
 
     LaunchedEffect(Unit) {
@@ -47,12 +49,14 @@ fun NavGraph(
                     val role = JwtDecoder.getRole(token)
                     val destination = when (role) {
                         "cozinheiro" -> Screen.Kitchen.route
-                        else         -> Screen.Tables.route
+                        else -> Screen.Tables.route
                     }
                     navController.navigate(destination) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
-                }
+                },
+                onToggleTheme = onToggleTheme,
+                isDarkTheme = isDarkTheme
             )
         }
 

@@ -18,6 +18,7 @@ android {
         versionName = "1.0"
 
         buildConfigField("String", "BASE_URL", "\"https://blue-erp-api.portfoliostudio.cfd/\"")
+//        buildConfigField("String", "BASE_URL", "\"http://100.90.243.105:3000/\"")
 //        buildConfigField("String", "BASE_URL", "\"http://192.168.0.219:3000/\"")
     }
 
@@ -48,6 +49,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.foundation)
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

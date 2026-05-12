@@ -9,6 +9,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -40,6 +42,8 @@ import com.blue_erp.garcom_digital.util.isAndroidTv
 @Composable
 fun LoginScreen(
     onLoginSuccess: (token: String) -> Unit,
+    onToggleTheme: () -> Unit,
+    isDarkTheme: Boolean,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -58,6 +62,8 @@ fun LoginScreen(
         onPasswordChange = viewModel::onPasswordChange,
         onLogin = viewModel::login,
         onClearLicenseWarning = viewModel::clearLicenseWarning,
+        onToggleTheme = onToggleTheme,
+        isDarkTheme = isDarkTheme,
         isTV = isTV
     )
 }
@@ -69,6 +75,8 @@ private fun LoginScreenContent(
     onPasswordChange: (String) -> Unit,
     onLogin: () -> Unit,
     onClearLicenseWarning: () -> Unit,
+    onToggleTheme: () -> Unit = {},
+    isDarkTheme: Boolean = true,
     isTV: Boolean = false
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
@@ -76,7 +84,6 @@ private fun LoginScreenContent(
     val scrollState = rememberScrollState()
     val colors = MaterialTheme.colorScheme
 
-    // foco automático no campo usuário (só TV)
     val usernameFocusRequester = remember { FocusRequester() }
     val loginButtonFocusRequester = remember { FocusRequester() }
 
@@ -86,7 +93,6 @@ private fun LoginScreenContent(
         }
     }
 
-    // no TV: sem detecção de IME (teclado é overlay, não empurra layout)
     val density = LocalDensity.current
     val imeBottom = if (isTV) 0 else WindowInsets.ime.getBottom(density)
     val imeVisible = imeBottom > 0
@@ -167,7 +173,6 @@ private fun LoginScreenContent(
                 ),
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
-                    // no TV: remove o IconButton do traversal de foco
                     IconButton(
                         onClick = { passwordVisible = !passwordVisible },
                         modifier = if (isTV) Modifier.focusProperties { canFocus = false } else Modifier
@@ -226,6 +231,21 @@ private fun LoginScreenContent(
 
             Spacer(modifier = Modifier.height(300.dp))
         }
+
+        IconButton(
+            onClick = onToggleTheme,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .statusBarsPadding()
+                .padding(8.dp)
+                .then(if (isTV) Modifier.focusProperties { canFocus = false } else Modifier)
+        ) {
+            Icon(
+                imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                contentDescription = "Alternar tema",
+                tint = colors.onBackground
+            )
+        }
     }
 
     uiState.licenseWarning?.let { warning ->
@@ -265,7 +285,8 @@ private fun LoginScreenPreview() {
             onUsernameChange = {},
             onPasswordChange = {},
             onLogin = {},
-            onClearLicenseWarning = {}
+            onClearLicenseWarning = {},
+            isDarkTheme = true
         )
     }
 }

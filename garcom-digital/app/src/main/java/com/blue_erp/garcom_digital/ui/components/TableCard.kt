@@ -5,10 +5,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.TableBar
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
@@ -20,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.blue_erp.garcom_digital.data.config.TableAlertConfig
 import com.blue_erp.garcom_digital.data.model.*
 import com.blue_erp.garcom_digital.ui.theme.GarcomDigitalTheme
@@ -43,224 +46,81 @@ fun TableCard(
         TableStatus.RESERVED -> TableReserved
     }
 
-    val statusText = when (table.status) {
-        TableStatus.AVAILABLE -> "Disponível"
-        TableStatus.OCCUPIED -> "Ocupada"
-        TableStatus.RESERVED -> "Reservada"
-    }
-
     Card(
         modifier = modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick
-            ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+            .aspectRatio(1f)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        colors = CardDefaults.cardColors(containerColor = statusColor.copy(alpha = 0.12f)),
+        border = androidx.compose.foundation.BorderStroke(1.5.dp, statusColor)
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Ícone com cor do status
-                Surface(
-                    modifier = Modifier.size(48.dp),
-                    shape = MaterialTheme.shapes.medium,
-                    color = statusColor.copy(alpha = 0.15f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.TableBar,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .padding(12.dp)
-                            .fillMaxSize(),
-                        tint = statusColor
+        Box(modifier = Modifier.fillMaxSize().padding(10.dp)) {
+
+            // Número da mesa — destaque principal
+            Column(modifier = Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "${table.number}",
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = statusColor
+                )
+                if (table.customer != null) {
+                    Text(
+                        text = table.customer,
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                // Informações da mesa
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "Mesa ${table.number}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Surface(
-                            shape = MaterialTheme.shapes.small,
-                            color = statusColor
-                        ) {
-                            Text(
-                                text = statusText,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.White
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
+                if (table.status == TableStatus.RESERVED && table.time != null) {
                     Text(
-                        text = table.location.name,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    if (table.customer != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = table.customer,
-                            style = MaterialTheme.typography.bodyMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    if (table.status == TableStatus.RESERVED && table.time != null) {
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Reserva: ${table.time}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TableReserved
-                        )
-                    }
-
-                    // ✅ ALERTAS DE MESA
-                    if (table.hasAlert) {
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        val (backgroundColor, textColor) = when (table.alertLevel) {
-                            TableAlertLevel.WARNING ->
-                                Color(TableAlertConfig.Colors.WARNING_BACKGROUND) to
-                                        Color(TableAlertConfig.Colors.WARNING_TEXT)
-                            TableAlertLevel.CRITICAL ->
-                                Color(TableAlertConfig.Colors.CRITICAL_BACKGROUND) to
-                                        Color(TableAlertConfig.Colors.CRITICAL_TEXT)
-                            TableAlertLevel.NONE ->
-                                Color.Transparent to Color.Transparent
-                        }
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier
-                                .background(
-                                    color = backgroundColor,
-                                    shape = MaterialTheme.shapes.small
-                                )
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Icon(
-                                imageVector = when (table.alertLevel) {
-                                    TableAlertLevel.WARNING -> Icons.Default.Warning
-                                    TableAlertLevel.CRITICAL -> Icons.Default.ErrorOutline
-                                    TableAlertLevel.NONE -> Icons.Default.Info
-                                },
-                                contentDescription = null,
-                                tint = textColor,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = table.alertMessage,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = textColor,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    // ✅ Badge de itens prontos (texto)
-                    if (table.hasReadyItems) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Notifications,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = "${table.readyItemsCount} ${
-                                    if (table.readyItemsCount == 1) "pronto" else "prontos"
-                                }",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.error,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-
-                // Total da comanda (se ocupada)
-                if (table.status == TableStatus.OCCUPIED && table.order != null) {
-                    val serviceCharge = table.order.serviceCharge
-                    val grandTotal = if (serviceCharge > 0.0) table.order.total + (table.order.total * 0.10) else table.order.total
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = formatCurrency(grandTotal),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        if (serviceCharge > 0.0) {
-                            Text(
-                                text = "+ 10% Taxa de Serviço",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Text(
-                            text = "${table.order.items.size} ${if (table.order.items.size == 1) "item" else "itens"}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                // Capacidade (se disponível)
-                if (table.status == TableStatus.AVAILABLE) {
-                    Text(
-                        text = "${table.capacity} lugares",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = table.time,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = statusColor
                     )
                 }
             }
 
-            // ✅ Badge de alerta no canto (só aparece se tiver alerta e NÃO tiver itens prontos)
-            if (table.hasAlert && !table.hasReadyItems) {
-                AlertBadge(
-                    alertLevel = table.alertLevel,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
+            Row(
+                modifier = Modifier.align(Alignment.BottomStart),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    modifier = Modifier.size(11.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "${table.capacity} Pessoas",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            // ✅ Badge de itens prontos no canto (prioridade sobre alerta)
+            // Total — canto inferior direito (se ocupada)
+            if (table.status == TableStatus.OCCUPIED && table.order != null) {
+                Text(
+                    text = formatCurrency(table.order.total),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.align(Alignment.BottomEnd)
+                )
+            }
+
+            // Badge itens prontos — canto superior direito
             if (table.hasReadyItems) {
                 ReadyItemsBadge(
                     count = table.readyItemsCount,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
+                    modifier = Modifier.align(Alignment.TopEnd)
+                )
+            } else if (table.hasAlert) {
+                AlertBadge(
+                    alertLevel = table.alertLevel,
+                    modifier = Modifier.align(Alignment.TopEnd)
                 )
             }
         }
@@ -272,28 +132,30 @@ fun AlertBadge(
     alertLevel: TableAlertLevel,
     modifier: Modifier = Modifier
 ) {
-    val (backgroundColor, icon) = when (alertLevel) {
-        TableAlertLevel.WARNING ->
-            Color(TableAlertConfig.Colors.WARNING_TEXT) to Icons.Default.Warning
-        TableAlertLevel.CRITICAL ->
-            Color(TableAlertConfig.Colors.CRITICAL_TEXT) to Icons.Default.ErrorOutline
+    val (backgroundColor, icon, label) = when (alertLevel) {
+        TableAlertLevel.WARNING -> Triple(Color(0xFFF59E0B), Icons.Default.Warning, "Alerta")
+        TableAlertLevel.CRITICAL -> Triple(Color(0xFFDC2626), Icons.Default.ErrorOutline, "Urgente")
         TableAlertLevel.NONE -> return
     }
 
-    Box(
+    Row(
         modifier = modifier
-            .size(24.dp)
-            .background(
-                color = backgroundColor,
-                shape = CircleShape
-            ),
-        contentAlignment = Alignment.Center
+            .background(backgroundColor, RoundedCornerShape(12.dp))
+            .padding(horizontal = 6.dp, vertical = 3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(3.dp)
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = "Alerta",
+            contentDescription = null,
             tint = Color.White,
-            modifier = Modifier.size(14.dp)
+            modifier = Modifier.size(11.dp)
+        )
+        Text(
+            text = label,
+            color = Color.White,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold
         )
     }
 }

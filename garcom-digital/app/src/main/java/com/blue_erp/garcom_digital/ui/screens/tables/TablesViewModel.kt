@@ -34,7 +34,7 @@ data class TablesUiState(
     val actionLoading: Boolean = false,
     val actionSuccess: String? = null,
     val isLoggedOut: Boolean = false,
-    val pendingNotification: TablesNotification? = null,
+    val pendingNotifications: List<TablesNotification> = emptyList(),
     val isAdmin: Boolean = false,
     val navigateToTable: Int? = null,
     val tableFilter: String = "",
@@ -75,33 +75,43 @@ class TablesViewModel @Inject constructor(
                 delay(60_000)
                 val result = tableRepository.getTables(_uiState.value.selectedLocationId)
                 if (result is Resource.Success) {
-                    val tables = result.data
-                    _uiState.value = _uiState.value.copy(tables = tables)
-                    checkAlerts(tables)
+                    mergeTables(result.data)
+                    checkAlerts(result.data)
                 }
             }
         }
     }
 
+    // Preserva referências iguais para evitar recomposição desnecessária
+    private fun mergeTables(newTables: List<TableResponse>) {
+        val current = _uiState.value.tables
+        val merged = newTables.map { new ->
+            current.find { it.id == new.id && it == new } ?: new
+        }
+        _uiState.value = _uiState.value.copy(tables = merged)
+    }
+
     private fun checkAlerts(tables: List<TableResponse>) {
-        tables.filter { it.hasAlert && it.id !in _alertedTableIds }
-            .forEach { table ->
+        val newNotifications = tables
+            .filter { it.hasAlert && it.id !in _alertedTableIds }
+            .map { table ->
                 _alertedTableIds.add(table.id)
-                _uiState.value = _uiState.value.copy(
-                    pendingNotification = TablesNotification(
-                        tableNumber = table.number,
-                        message = table.alertMessage
-                    )
-                )
+                TablesNotification(tableNumber = table.number, message = table.alertMessage)
             }
 
-        // limpa mesas que saíram do estado de alerta
+        if (newNotifications.isNotEmpty()) {
+            _uiState.value = _uiState.value.copy(
+                pendingNotifications = _uiState.value.pendingNotifications + newNotifications
+            )
+        }
+
         val alertIds = tables.filter { it.hasAlert }.map { it.id }.toSet()
         _alertedTableIds.removeAll { it !in alertIds }
     }
 
     fun clearNotification() {
-        _uiState.value = _uiState.value.copy(pendingNotification = null)
+        val remaining = _uiState.value.pendingNotifications.drop(1)
+        _uiState.value = _uiState.value.copy(pendingNotifications = remaining)
     }
 
     private fun loadInitial() {
@@ -137,16 +147,22 @@ class TablesViewModel @Inject constructor(
         loadTables()
     }
 
+    // isLoading apenas no primeiro load (lista vazia) — evita pisca em reloads
     fun loadTables() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            val firstLoad = _uiState.value.tables.isEmpty()
+            if (firstLoad) _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
             when (val result = tableRepository.getTables(_uiState.value.selectedLocationId)) {
                 is Resource.Success -> {
-                    _uiState.value = _uiState.value.copy(
-                        tables = result.data,
-                        isLoading = false
-                    )
+                    if (firstLoad) {
+                        _uiState.value = _uiState.value.copy(
+                            tables = result.data,
+                            isLoading = false
+                        )
+                    } else {
+                        mergeTables(result.data)
+                    }
                 }
                 is Resource.Error -> {
                     _uiState.value = _uiState.value.copy(
@@ -165,10 +181,8 @@ class TablesViewModel @Inject constructor(
 
             when (val result = tableRepository.getTables(_uiState.value.selectedLocationId)) {
                 is Resource.Success -> {
-                    _uiState.value = _uiState.value.copy(
-                        tables = result.data,
-                        isRefreshing = false
-                    )
+                    mergeTables(result.data)
+                    _uiState.value = _uiState.value.copy(isRefreshing = false)
                 }
                 is Resource.Error -> {
                     _uiState.value = _uiState.value.copy(
