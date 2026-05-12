@@ -45,7 +45,7 @@ fun ProductSearchSheet(
     isLoading: Boolean,
     onQueryChange: (String) -> Unit,
     onCategorySelect: (Int?) -> Unit,
-    onProductClick: (ProductResponse) -> Unit,
+    onOpenProductDetail: (ProductResponse) -> Unit,
     onDismiss: () -> Unit
 ) {
     ModalBottomSheet(
@@ -112,7 +112,7 @@ fun ProductSearchSheet(
                 ) {
                     items(products) { product ->
                         Surface(
-                            onClick = { onProductClick(product) },
+                            onClick = { onOpenProductDetail(product) },
                             shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant
                         ) {

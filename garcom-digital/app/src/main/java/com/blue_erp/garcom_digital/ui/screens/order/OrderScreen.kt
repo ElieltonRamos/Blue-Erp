@@ -15,6 +15,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.blue_erp.garcom_digital.data.model.ProductResponse
 import com.blue_erp.garcom_digital.ui.screens.order.components.OrderBottomBar
 import com.blue_erp.garcom_digital.ui.screens.order.components.OrderItemCard
+import com.blue_erp.garcom_digital.ui.screens.order.components.ProductDetailSheet
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import com.blue_erp.garcom_digital.ui.screens.order.components.ProductSearchSheet
 import com.blue_erp.garcom_digital.ui.screens.order.components.TabSummaryDialog
 import java.text.NumberFormat
@@ -28,17 +31,20 @@ fun OrderScreen(
     viewModel: OrderViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
-            snackbarHostState.showSnackbar(it)
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
             viewModel.clearError()
         }
     }
 
     LaunchedEffect(uiState.success) {
-        uiState.success?.let { viewModel.clearSuccess(); snackbarHostState.showSnackbar(it) }
+        uiState.success?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearSuccess()
+        }
     }
 
     LaunchedEffect(uiState.shouldNavigateBack) {
@@ -47,7 +53,6 @@ fun OrderScreen(
 
     OrderScreenContent(
         uiState = uiState,
-        snackbarHostState = snackbarHostState,
         onBack = onBack,
         onSave = viewModel::saveChanges,
         onIncrement = viewModel::incrementItem,
@@ -56,15 +61,15 @@ fun OrderScreen(
         onOpenProductSearch = viewModel::openProductSearch,
         onCloseProductSearch = viewModel::closeProductSearch,
         onProductQueryChange = viewModel::onProductQueryChange,
-        onAddProduct = viewModel::addProduct,
         onCloseTab = viewModel::closeTab,
-        onOpenCloseTabDialog = viewModel::openCloseTabDialog,
-        onCloseCloseTabDialog = viewModel::closeCloseTabDialog,
         onCategorySelect = viewModel::selectCategory,
         onCloseTabSummaryDialog = viewModel::closeTabSummaryDialog,
-        onObservationChange = viewModel::updateObservation,
         onToggleServiceCharge = viewModel::toggleServiceCharge,
         onServiceChargeAmountChange = viewModel::onServiceChargeAmountChange,
+        onOpenProductDetail = viewModel::openProductDetail,
+        onCloseProductDetail = viewModel::closeProductDetail,
+        onAddProduct = viewModel::addProduct,
+        onOpenTabSummary = viewModel::openCloseTabDialog,
     )
 }
 
@@ -72,7 +77,6 @@ fun OrderScreen(
 @Composable
 fun OrderScreenContent(
     uiState: OrderUiState,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onBack: () -> Unit,
     onSave: () -> Unit,
     onIncrement: (Int) -> Unit,
@@ -81,15 +85,15 @@ fun OrderScreenContent(
     onOpenProductSearch: () -> Unit,
     onCloseProductSearch: () -> Unit,
     onProductQueryChange: (String) -> Unit,
-    onAddProduct: (ProductResponse) -> Unit,
+    onAddProduct: (ProductResponse, String) -> Unit,
+    onOpenProductDetail: (ProductResponse) -> Unit,
+    onCloseProductDetail: () -> Unit,
+    onOpenTabSummary: () -> Unit,
     onCloseTab: (serviceCharge: Double) -> Unit,
-    onOpenCloseTabDialog: () -> Unit,
-    onCloseCloseTabDialog: () -> Unit,
     onCategorySelect: (Int?) -> Unit,
     onCloseTabSummaryDialog: () -> Unit,
     onToggleServiceCharge: () -> Unit,
     onServiceChargeAmountChange: (Double) -> Unit,
-    onObservationChange: (Int, String) -> Unit
 ) {
     val table = uiState.table
     val order = uiState.order
@@ -119,21 +123,6 @@ fun OrderScreenContent(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
                     }
                 },
-                actions = {
-                    if (uiState.hasUnsavedChanges) {
-                        IconButton(onClick = onSave, enabled = !uiState.isSaving) {
-                            if (uiState.isSaving) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Icon(Icons.Default.Check, contentDescription = "Salvar")
-                            }
-                        }
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
@@ -142,7 +131,6 @@ fun OrderScreenContent(
                 )
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onOpenProductSearch,
@@ -155,8 +143,11 @@ fun OrderScreenContent(
         bottomBar = {
             OrderBottomBar(
                 total = grandTotal,
+                hasUnsavedChanges = uiState.hasUnsavedChanges,
+                isSaving = uiState.isSaving,
                 isClosingTab = uiState.isClosingTab,
-                onCloseTab = onOpenCloseTabDialog
+                onSave = onSave,
+                onCloseTab = onOpenTabSummary
             )
         }
     ) { paddingValues ->
@@ -201,26 +192,11 @@ fun OrderScreenContent(
                             onIncrement = { onIncrement(item.id) },
                             onDecrement = { onDecrement(item.id) },
                             onRemove = { onRemove(item.id) },
-                            onObservationChange = { onObservationChange(item.id, it) }
                         )
                     }
                 }
             }
         }
-    }
-
-    if (uiState.showCloseTabDialog) {
-        AlertDialog(
-            onDismissRequest = onCloseCloseTabDialog,
-            title = { Text("Fechar comanda") },
-            text = { Text("Deseja fechar comanda e liberar mesa?") },
-            confirmButton = {
-                TextButton(onClick = { onCloseTab(0.0) }) { Text("Confirmar") }
-            },
-            dismissButton = {
-                TextButton(onClick = onCloseCloseTabDialog) { Text("Cancelar") }
-            }
-        )
     }
 
     if (uiState.showProductSearch) {
@@ -232,9 +208,19 @@ fun OrderScreenContent(
             isLoading = uiState.isSearchingProducts,
             onQueryChange = onProductQueryChange,
             onCategorySelect = onCategorySelect,
-            onProductClick = onAddProduct,
-            onDismiss = onCloseProductSearch
+            onDismiss = onCloseProductSearch,
+            onOpenProductDetail = onOpenProductDetail,
         )
+    }
+
+    if (uiState.showProductDetailSheet) {
+        uiState.selectedProduct?.let { product ->
+            ProductDetailSheet(
+                product = product,
+                onConfirm = { observation -> onAddProduct(product, observation) },
+                onDismiss = onCloseProductDetail
+            )
+        }
     }
 
     if (uiState.showTabSummaryDialog) {
