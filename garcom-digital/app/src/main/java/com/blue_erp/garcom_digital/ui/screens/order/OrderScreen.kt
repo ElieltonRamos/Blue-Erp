@@ -85,7 +85,7 @@ fun OrderScreenContent(
     onOpenProductSearch: () -> Unit,
     onCloseProductSearch: () -> Unit,
     onProductQueryChange: (String) -> Unit,
-    onAddProduct: (ProductResponse, String) -> Unit,
+    onAddProduct: (ProductResponse, String, Int) -> Unit,
     onOpenProductDetail: (ProductResponse) -> Unit,
     onCloseProductDetail: () -> Unit,
     onOpenTabSummary: () -> Unit,
@@ -217,7 +217,7 @@ fun OrderScreenContent(
         uiState.selectedProduct?.let { product ->
             ProductDetailSheet(
                 product = product,
-                onConfirm = { observation -> onAddProduct(product, observation) },
+                onConfirm = { observation, quantity -> onAddProduct(product, observation, quantity) },
                 onDismiss = onCloseProductDetail
             )
         }

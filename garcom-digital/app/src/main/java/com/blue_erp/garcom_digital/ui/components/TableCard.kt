@@ -40,10 +40,21 @@ fun TableCard(
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val statusColor = when (table.status) {
-        TableStatus.AVAILABLE -> TableAvailable
-        TableStatus.OCCUPIED -> TableOccupied
-        TableStatus.RESERVED -> TableReserved
+    val statusColor = when {
+        table.status == TableStatus.AVAILABLE ->
+            TableAvailable
+
+        table.status == TableStatus.RESERVED ->
+            TableReserved
+
+        table.status == TableStatus.OCCUPIED && table.hasAlert ->
+            MaterialTheme.colorScheme.error
+
+        table.status == TableStatus.OCCUPIED ->
+            MaterialTheme.colorScheme.outline
+
+        else ->
+            MaterialTheme.colorScheme.outline
     }
 
     Card(
@@ -120,6 +131,7 @@ fun TableCard(
             } else if (table.hasAlert) {
                 AlertBadge(
                     alertLevel = table.alertLevel,
+                    message = table.alertMessage,
                     modifier = Modifier.align(Alignment.TopEnd)
                 )
             }
@@ -130,11 +142,20 @@ fun TableCard(
 @Composable
 fun AlertBadge(
     alertLevel: TableAlertLevel,
+    message: String,
     modifier: Modifier = Modifier
 ) {
-    val (backgroundColor, icon, label) = when (alertLevel) {
-        TableAlertLevel.WARNING -> Triple(Color(0xFFF59E0B), Icons.Default.Warning, "Alerta")
-        TableAlertLevel.CRITICAL -> Triple(Color(0xFFDC2626), Icons.Default.ErrorOutline, "Urgente")
+    val (backgroundColor, icon) = when (alertLevel) {
+        TableAlertLevel.WARNING -> Pair(
+            Color(0xFFF59E0B),
+            Icons.Default.Warning
+        )
+
+        TableAlertLevel.CRITICAL -> Pair(
+            Color(0xFFDC2626),
+            Icons.Default.ErrorOutline
+        )
+
         TableAlertLevel.NONE -> return
     }
 
@@ -151,8 +172,9 @@ fun AlertBadge(
             tint = Color.White,
             modifier = Modifier.size(11.dp)
         )
+
         Text(
-            text = label,
+            text = message,
             color = Color.White,
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold

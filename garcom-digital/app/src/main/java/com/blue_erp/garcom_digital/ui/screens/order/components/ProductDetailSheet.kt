@@ -21,9 +21,11 @@ data class CategoryComplements(
 
 private val categoryComplements = mapOf(
     // Carnes — seleção única
+    1 to CategoryComplements(ComplementType.SINGLE, listOf("Mal passada", "Ao ponto", "Bem passada")),
     2 to CategoryComplements(ComplementType.SINGLE, listOf("Mal passada", "Ao ponto", "Bem passada")),
     3 to CategoryComplements(ComplementType.SINGLE, listOf("Mal passada", "Ao ponto", "Bem passada")),
     4 to CategoryComplements(ComplementType.SINGLE, listOf("Mal passada", "Ao ponto", "Bem passada")),
+    5 to CategoryComplements(ComplementType.SINGLE, listOf("Mal passada", "Ao ponto", "Bem passada")),
     // Bebidas — checkbox + quantidade
     7  to CategoryComplements(ComplementType.MULTI_QTY, listOf("Copo c/ gelo", "Copo s/ gelo", "Copo c/ gelo e limão")),
     8  to CategoryComplements(ComplementType.MULTI_QTY, listOf("Copo c/ gelo", "Copo s/ gelo", "Copo c/ gelo e limão")),
@@ -40,11 +42,12 @@ private val categoryComplements = mapOf(
 @Composable
 fun ProductDetailSheet(
     product: ProductResponse,
-    onConfirm: (observation: String) -> Unit,
+    onConfirm: (observation: String, quantity: Int) -> Unit,
     onDismiss: () -> Unit
 ) {
     val config = categoryComplements[product.categoryId]
     val options = config?.options ?: emptyList()
+    var quantity by remember { mutableIntStateOf(1) }
 
     var selectedSingle by remember { mutableStateOf<String?>(null) }
     val selectedMulti = remember { mutableStateMapOf<String, Int>() }
@@ -99,6 +102,23 @@ fun ProductDetailSheet(
             }
 
             HorizontalDivider()
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Quantidade",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { if (quantity > 1) quantity-- }) { Text("-") }
+                    Text(text = quantity.toString(), style = MaterialTheme.typography.bodyMedium)
+                    IconButton(onClick = { quantity++ }) { Text("+") }
+                }
+            }
 
             if (options.isNotEmpty()) {
                 Text(
@@ -181,7 +201,7 @@ fun ProductDetailSheet(
             Spacer(modifier = Modifier.height(4.dp))
 
             Button(
-                onClick = { onConfirm(observation) },
+                onClick = { onConfirm(observation, quantity) },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Adicionar à comanda")

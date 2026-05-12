@@ -90,18 +90,33 @@ class OrderViewModel @Inject constructor(
         }
     }
 
-    fun addProduct(product: ProductResponse, observation: String = "") {
+    fun addProduct(product: ProductResponse, observation: String = "", quantity: Int = 1) {
         val previousTotal = _uiState.value.editedItems.sumOf { it.total }
         val existing = _uiState.value.editedItems.find { it.productId == product.id }
         if (existing != null) {
-            updateItemQuantity(existing.id) { it + 1.0 }
-            _uiState.update {
-                it.copy(
+            if (observation.isBlank() || observation.trim().length < 2) {
+                _uiState.update { it.copy(error = "Informe uma observação para o item") }
+                return
+            }
+            _uiState.update { state ->
+                val updated = state.editedItems.map { item ->
+                    if (item.productId == product.id)
+                        item.copy(
+                            quantity = item.quantity + quantity.toDouble(),
+                            total = (item.quantity + quantity.toDouble()) * item.unitPrice,
+                            observation = observation
+                        )
+                    else item
+                }
+                state.copy(
+                    editedItems = updated,
+                    hasUnsavedChanges = true,
                     showProductDetailSheet = false,
                     selectedProduct = null,
                     showProductSearch = false,
                 )
             }
+            recalculateServiceChargeAfterItemChange(previousTotal)
             saveChanges(successMessage = "Quantidade de ${product.name} atualizada")
         } else {
             if (observation.isBlank() || observation.trim().length < 2) {
@@ -112,9 +127,9 @@ class OrderViewModel @Inject constructor(
                 id = -(_uiState.value.editedItems.size + 1),
                 code = product.code,
                 name = product.name,
-                quantity = 1.0,
+                quantity = quantity.toDouble(),
                 unitPrice = product.price,
-                total = product.price,
+                total = product.price * quantity.toDouble(),
                 productId = product.id,
                 productionLocation = "",
                 observation = observation,
@@ -166,6 +181,34 @@ class OrderViewModel @Inject constructor(
 
     fun closeTab(serviceCharge: Double) {
         viewModelScope.launch {
+            val orderId = _uiState.value.order?.id ?: return@launch
+
+            // salva itens com serviceCharge distribuído
+            val items = _uiState.value.editedItems.map { item ->
+                UpdateOrderItemRequest(
+                    id = if (item.id > 0) item.id else null,
+                    productId = item.productId,
+                    code = item.code,
+                    name = item.name,
+                    quantity = item.quantity,
+                    unitPrice = item.unitPrice,
+                    total = item.total,
+                    observation = item.observation,
+                    serviceCharge = item.serviceCharge,
+                )
+            }
+
+            val request = UpdateOrderRequest(
+                items = items,
+                total = items.sumOf { it.total },
+                serviceCharge = serviceCharge
+            )
+
+            Log.d("OrderViewModel", "closeTab → serviceCharge: $serviceCharge")
+            Log.d("OrderViewModel", "closeTab → items: ${items.map { "${it.name} serviceCharge=${it.serviceCharge}" }}")
+
+            orderRepository.updateOrder(orderId, request)
+
             _uiState.update { it.copy(isClosingTab = true, showTabSummaryDialog = false, error = null) }
             when (val result = tableRepository.closeTab(tableId, serviceCharge)) {
                 is Resource.Success -> _uiState.update {
@@ -231,16 +274,9 @@ class OrderViewModel @Inject constructor(
     fun onServiceChargeAmountChange(value: Double) {
         val normalized = if (value <= 0.0) 0.0 else value
         _uiState.update {
-            it.copy(
-                serviceChargeAmount = normalized,
-                serviceChargeEnabled = normalized > 0.0
-            )
+            it.copy(serviceChargeAmount = normalized, serviceChargeEnabled = normalized > 0.0)
         }
         if (normalized > 0.0) distributeServiceCharge()
-        else {
-            val zeroed = _uiState.value.editedItems.map { it.copy(serviceCharge = 0.0) }
-            _uiState.update { it.copy(editedItems = zeroed, hasUnsavedChanges = true) }
-        }
     }
 
     private fun isDefaultServiceCharge(): Boolean {
@@ -251,6 +287,7 @@ class OrderViewModel @Inject constructor(
 
     private fun distributeServiceCharge() {
         val state = _uiState.value
+        Log.d("OrderViewModel", "distribute → amount=${state.serviceChargeAmount} isDefault=${isDefaultServiceCharge()}")
 
         if (!state.serviceChargeEnabled || state.serviceChargeAmount == 0.0) {
             val zeroed = state.editedItems.map { it.copy(serviceCharge = 0.0) }
@@ -272,7 +309,7 @@ class OrderViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 editedItems = updated,
-                serviceChargeAmount = totalServiceCharge,
+//                serviceChargeAmount = totalServiceCharge,
                 hasUnsavedChanges = true
             )
         }
@@ -304,10 +341,19 @@ class OrderViewModel @Inject constructor(
     private fun round2(value: Double): Double =
         value.toBigDecimal().setScale(2, RoundingMode.HALF_UP).toDouble()
 
-    // ── Edição de itens ────────────────────────────────────────────────────────
 
     fun incrementItem(itemId: Int) {
-        updateItemQuantity(itemId) { it + 1.0 }
+        val item = _uiState.value.editedItems.find { it.id == itemId } ?: return
+        val product = ProductResponse(
+            id = item.productId,
+            name = item.name,
+            code = item.code,
+            price = item.unitPrice,
+            unit = "",
+            active = true,
+            categoryId = null
+        )
+        openProductDetail(product)
     }
 
     fun decrementItem(itemId: Int) {

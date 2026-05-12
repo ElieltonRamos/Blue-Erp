@@ -209,6 +209,7 @@ fun TabSummaryDialog(
                     val finalCharge = if (serviceChargeEnabled)
                         localServiceChargeValue.toDoubleOrNull() ?: serviceChargeAmount
                     else 0.0
+                    if (serviceChargeEnabled) onServiceChargeAmountChange(finalCharge)
                     onConfirm(finalCharge)
                 },
                 enabled = !isClosingTab,

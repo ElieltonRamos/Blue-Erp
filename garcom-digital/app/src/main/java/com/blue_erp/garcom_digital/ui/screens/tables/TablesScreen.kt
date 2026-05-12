@@ -93,6 +93,7 @@ fun TablesScreen(
     }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.clearActionSuccess()
         if (!uiState.isLoading) viewModel.loadTables()
     }
 

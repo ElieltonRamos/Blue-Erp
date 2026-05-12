@@ -499,27 +499,25 @@ export class OrdersService {
                   quantityRequested: diferenca,
                   quantityProduced: 0,
                   pendingAt: resolveLogicalDateTime(),
-                  observation: existing.observation ?? null,
+                  observation:
+                    incoming.observation ?? existing.observation ?? null,
                 },
               });
-
               addToPrintJob(existing.product.productionLocation || 'LOCAL_01', {
                 name: existing.name,
                 quantity: diferenca,
-                observation: existing.observation,
+                observation: incoming.observation ?? existing.observation,
               });
             }
-
             if (existing.product.productType === ProductType.RESALE) {
               await tx.product.update({
                 where: { id: existing.productId },
                 data: { quantity: { decrement: diferenca } },
               });
-
               addToPrintIfHasLocation(existing.product.productionLocation, {
                 name: existing.name,
                 quantity: diferenca,
-                observation: existing.observation,
+                observation: incoming.observation ?? existing.observation,
               });
             }
           }
@@ -563,16 +561,6 @@ export class OrdersService {
                 data: { quantity: { increment: Math.abs(diferenca) } },
               });
             }
-          }
-
-          if (
-            incoming.observation !== undefined &&
-            incoming.observation !== existing.observation
-          ) {
-            await tx.orderProduction.updateMany({
-              where: { orderItemId: existing.id, status: 'PENDING' },
-              data: { observation: incoming.observation ?? null },
-            });
           }
 
           const precoFinal = novoPreco !== precoAtual ? novoPreco : precoAtual;

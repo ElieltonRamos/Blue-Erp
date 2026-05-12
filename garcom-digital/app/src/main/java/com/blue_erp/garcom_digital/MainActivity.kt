@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
                     val token = tokenManager.getToken()
                     startDestination = if (!token.isNullOrBlank()) {
                         when (JwtDecoder.getRole(token)) {
-                            "cozinheiro", "admin" -> Screen.Kitchen.route
+                            "cozinheiro" -> Screen.Kitchen.route
                             else -> Screen.Tables.route
                         }
                     } else {
