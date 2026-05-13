@@ -17,8 +17,10 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-//        buildConfigField("String", "BASE_URL", "\"http://100.90.243.105:3000/\"")
-        buildConfigField("String", "BASE_URL", "\"http://192.168.0.219:3000/\"")
+        buildConfigField("String", "BASE_URL", "\"http://100.102.211.42:3000/\"") // servidor teste
+//        buildConfigField("String", "BASE_URL", "\"https://blue-erp-api.portfoliostudio.cfd/\"") // teste nuvem
+//        buildConfigField("String", "BASE_URL", "\"http://100.90.243.105:3000/\"") // vpn casa do lago
+//        buildConfigField("String", "BASE_URL", "\"http://192.168.0.219:3000/\"") // casa do lago
     }
 
     buildTypes {
@@ -48,6 +50,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.foundation)
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

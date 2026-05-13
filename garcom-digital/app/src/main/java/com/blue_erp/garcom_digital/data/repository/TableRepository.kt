@@ -1,5 +1,6 @@
 package com.blue_erp.garcom_digital.data.repository
 
+import android.util.Log
 import com.blue_erp.garcom_digital.data.api.ApiService
 import com.blue_erp.garcom_digital.data.model.*
 import com.blue_erp.garcom_digital.util.Resource
@@ -32,11 +33,22 @@ class TableRepository @Inject constructor(
     }
 
     suspend fun getTables(locationId: Int? = null): Resource<List<TableResponse>> {
+        val tag = "TableRepository"
+        Log.d(tag, "Iniciando busca de mesas para locationId: $locationId")
+
         return try {
             val response = apiService.getTables(locationId)
-            if (response.isSuccessful) Resource.Success(response.body() ?: emptyList())
-            else Resource.Error(parseError(response.code()))
+            if (response.isSuccessful) {
+                val tables = response.body() ?: emptyList()
+                Log.d(tag, "Busca bem-sucedida: ${tables.size} mesas encontradas")
+                Resource.Success(tables)
+            } else {
+                val errorMsg = parseError(response.code())
+                Log.e(tag, "Erro na API: Code ${response.code()} - $errorMsg")
+                Resource.Error(errorMsg)
+            }
         } catch (e: Exception) {
+            Log.e(tag, "Falha na rede/exceção ao buscar mesas", e)
             Resource.Error(parseNetworkError(e))
         }
     }

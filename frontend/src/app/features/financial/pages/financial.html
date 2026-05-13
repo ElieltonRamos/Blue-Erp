@@ -1,40 +1,59 @@
 <div
-  class="min-h-screen flex flex-col items-center justify-start bg-linear-to-b from-[#1a103d] to-[#2a204d] px-4 py-6"
+  class="min-h-screen flex flex-col items-center justify-start px-4 py-6"
+  [style.background-color]="'var(--color-base)'"
 >
   <!-- Botão fixo -->
   <button
     (click)="goToMenu()"
-    class="self-center mb-6 bg-indigo-600 text-white px-6 py-2 rounded shadow-md hover:bg-indigo-700 transition cursor-pointer"
+    class="self-center mb-6 text-white px-6 py-2 rounded shadow-md transition cursor-pointer"
+    [style.background-color]="'var(--color-accent)'"
   >
     Voltar para menu
   </button>
 
   <!-- Container de conteúdo -->
-  <div class="w-full max-w-4xl bg-[#182233] rounded-2xl shadow-lg p-6">
-    <div class="flex items-center justify-between mb-6 border-b border-gray-500 pb-4">
+  <div
+    class="w-full max-w-[90%] rounded-2xl shadow-lg p-6"
+    [style.background-color]="'var(--color-surface)'"
+  >
+    <div
+      class="flex items-center justify-between mb-6 border-b pb-4"
+      [style.border-color]="'var(--color-border)'"
+    >
       <div class="flex flex-wrap gap-4">
         <button
           (click)="changeMenuContext('listExpenses')"
-          [attr.class]="menuContext === 'listExpenses' ? classBtnSelected : classBtnUnselected"
-          class="text-white flex items-center gap-2 hover:underline"
+          class="px-4 py-2 rounded-lg flex items-center gap-2 font-semibold transition"
+          [style.background-color]="
+            menuContext === 'listExpenses' ? 'var(--color-accent)' : 'var(--color-surface-alt)'
+          "
+          [style.color]="menuContext === 'listExpenses' ? 'var(--color-btn-text)' : 'var(--color-text-primary)'"
         >
-          <i class="fas fa-users"></i> Contas a Pagar
+          <i class="fas fa-list"></i> Contas a Pagar
         </button>
+
         <button
           (click)="changeMenuContext('createExpenses')"
-          [attr.class]="menuContext === 'createExpenses' ? classBtnSelected : classBtnUnselected"
-          class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-semibold"
+          class="px-4 py-2 rounded-lg flex items-center gap-2 font-semibold transition"
+          [style.background-color]="
+            menuContext === 'createExpenses' ? 'var(--color-accent)' : 'var(--color-surface-alt)'
+          "
+          [style.color]="menuContext === 'createExpenses' ? 'var(--color-btn-text)' : 'var(--color-text-primary)'"
         >
-          <i class="fas fa-user-plus"></i> Nova Despesa
+          <i class="fas fa-plus"></i> Nova Despesa
         </button>
+
         <button
           (click)="changeMenuContext('promissoryNoteReceivable')"
-          [attr.class]="
-            menuContext === 'promissoryNoteReceivable' ? classBtnSelected : classBtnUnselected
+          class="px-4 py-2 rounded-lg flex items-center gap-2 font-semibold transition"
+          [style.background-color]="
+            menuContext === 'promissoryNoteReceivable'
+              ? 'var(--color-accent)'
+              : 'var(--color-surface-alt)'
           "
-          class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-semibold"
+          [style.color]="menuContext === 'promissoryNoteReceivable' ? 'var(--color-btn-text)' : 'var(--color-text-primary)'"
         >
-          <i class="fas fa-user-plus"></i> Contas a Receber
+          <i class="fas fa-file-invoice-dollar"></i> Contas a Receber
         </button>
       </div>
     </div>

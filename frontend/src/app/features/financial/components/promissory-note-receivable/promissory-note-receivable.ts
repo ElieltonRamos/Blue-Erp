@@ -101,7 +101,6 @@ export class PromissoryNoteReceivable {
 
   markSelectedAsReceived(): void {
     const saleIds: MarkAsReceivedDto = { salesIds: this.selectedSalesIds };
-    console.log(saleIds);
     this.saleService.markAsReceived(saleIds).subscribe({
       next: () => {
         this.notification.success('Baixa de notinhas realizada com sucesso!');

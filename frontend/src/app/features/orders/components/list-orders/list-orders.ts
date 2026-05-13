@@ -21,13 +21,14 @@ export class ListOrders implements OnInit {
   private router = inject(Router);
 
   searchName: string = '';
-  searchId: string = '';
+  searchTable: string = '';
+  searchWaiterOpen: string = '';
+  searchWaiterClose: string = '';
   statusFilter: string = 'all';
-  locationFilter: string = 'all';
   startDate: string = '';
   endDate: string = '';
   currentPage: number = 1;
-  itemsPerPage: number = 10;
+  itemsPerPage: number = 100;
   totalPages: number = 1;
   totalOrders: number = 0;
   isPrintModalOpen: boolean = false;
@@ -45,24 +46,27 @@ export class ListOrders implements OnInit {
   }
 
   private setDefaultDates(): void {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
+    const now = new Date();
+    const referenceDate =
+      now.getHours() < 6 ? new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1) : now;
+
+    const year = referenceDate.getFullYear();
+    const month = String(referenceDate.getMonth() + 1).padStart(2, '0');
+    const day = String(referenceDate.getDate()).padStart(2, '0');
 
     this.startDate = `${year}-${month}-${day}`;
     this.endDate = `${year}-${month}-${day}`;
   }
-
   loadOrders(): void {
     this.isLoading = true;
 
     this.orderService
       .getOrders({
         searchName: this.searchName || undefined,
-        searchId: this.searchId ? parseInt(this.searchId) : undefined,
+        searchTable: this.searchTable || undefined,
+        searchWaiterOpen: this.searchWaiterOpen || undefined,
+        searchWaiterClose: this.searchWaiterClose || undefined,
         status: this.statusFilter !== 'all' ? (this.statusFilter as OrderStatus) : undefined,
-        location: this.locationFilter !== 'all' ? (this.locationFilter as any) : undefined,
         startDate: this.startDate || undefined,
         endDate: this.endDate || undefined,
         page: this.currentPage,
@@ -74,7 +78,6 @@ export class ListOrders implements OnInit {
           this.totalOrders = response.total;
           this.totalPages = response.totalPages;
           this.isLoading = false;
-          console.log(response.data);
           this.cdr.detectChanges();
         },
         error: (error) => {
@@ -93,9 +96,10 @@ export class ListOrders implements OnInit {
 
   clearFilters(): void {
     this.searchName = '';
-    this.searchId = '';
+    this.searchTable = '';
+    this.searchWaiterOpen = '';
+    this.searchWaiterClose = '';
     this.statusFilter = 'all';
-    this.locationFilter = 'all';
     this.setDefaultDates();
     this.currentPage = 1;
     this.loadOrders();
@@ -110,25 +114,14 @@ export class ListOrders implements OnInit {
     };
     return labels[status];
   }
-
   getStatusClass(status: OrderStatus): string {
     const styles: Record<OrderStatus, string> = {
-      OPEN: 'bg-green-500/20 text-green-400 border border-green-500/30',
-      CLOSED: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
-      PAID: 'bg-gray-500/20 text-gray-400 border border-gray-500/30',
-      CANCELED: 'bg-red-500/20 text-red-400 border border-red-500/30',
+      OPEN: 'bg-success/20 text-success border border-success/30',
+      CLOSED: 'bg-overlay text-text-muted border border-border',
+      PAID: 'bg-overlay text-text-muted border border-border',
+      CANCELED: 'bg-danger/20 text-danger border border-danger/30',
     };
     return styles[status];
-  }
-
-  getLocationLabel(locationId: string): string {
-    const labels: Record<string, string> = {
-      LOCAL_01: 'Local 01',
-      LOCAL_02: 'Local 02',
-      LOCAL_03: 'Local 03',
-      DELIVERY: 'Delivery',
-    };
-    return labels[locationId] || locationId;
   }
 
   getTypeLabel(type: string): string {
@@ -216,6 +209,23 @@ export class ListOrders implements OnInit {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
       this.loadOrders();
+    }
+  }
+
+  async reopenOrder(orderId: number): Promise<void> {
+    const confirmed = await alertConfirm('Deseja realmente reabrir este pedido?');
+
+    if (confirmed) {
+      this.orderService.reopenOrder(orderId).subscribe({
+        next: () => {
+          this.notification.success('Pedido reaberto com sucesso');
+          this.loadOrders();
+        },
+        error: (error) => {
+          console.error('Erro ao reabrir pedido:', error);
+          this.notification.error(error?.error?.message ?? 'Erro ao reabrir pedido');
+        },
+      });
     }
   }
 }

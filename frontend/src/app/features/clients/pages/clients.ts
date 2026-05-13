@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { ListClients } from "../components/list-clients/list-clients";
-import { CreateClient } from "../components/create-client/create-client";
+import { ListClients } from '../components/list-clients/list-clients';
+import { CreateClient } from '../components/create-client/create-client';
 
 @Component({
   selector: 'app-clients',
@@ -11,11 +11,13 @@ import { CreateClient } from "../components/create-client/create-client";
 export class Clients {
   private router = inject(Router);
   menuContext = 'create';
-  classBtnSelected =
-    'bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-semibold';
-  classBtnUnselected =
-    'text-white hover:underline px-4 py-2 rounded-lg flex items-center gap-2 font-semibold';
 
+  classBtnSelected =
+    'bg-accent hover:bg-accent-hover text-btn-text px-4 py-2 rounded-lg flex items-center gap-2 font-semibold transition-all shadow-md';
+
+  classBtnUnselected =
+    'text-text-secondary hover:text-text-primary hover:bg-surface-alt px-4 py-2 rounded-lg flex items-center gap-2 font-semibold transition-all';
+  
   changeMenuContext(context: string): void {
     this.menuContext = context;
   }

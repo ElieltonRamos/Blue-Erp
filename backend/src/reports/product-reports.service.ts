@@ -12,7 +12,6 @@ import {
 import { validateDateFilters } from './utils/sale-report-utils';
 
 const EXPIRY_ALERT_DAYS = 30;
-const TOP_ITEMS_LIMIT = 10;
 const STOCK_ITEMS_LIMIT = 10;
 
 type ResolvedMaterial = {
@@ -27,11 +26,11 @@ export class ProductReportService {
   constructor(private prisma: PrismaService) {}
 
   private getStartOfDay(dateString: string): Date {
-    return new Date(dateString + ' 00:00:00');
+    return new Date(`${dateString}T00:00:00-03:00`);
   }
 
   private getEndOfDay(dateString: string): Date {
-    return new Date(dateString + ' 23:59:59.999');
+    return new Date(`${dateString}T23:59:59.999-03:00`);
   }
 
   private calcDaysUntilExpiry(expiryDate: Date): number {
@@ -143,8 +142,7 @@ export class ProductReportService {
             ? Number((agg.revenue / agg.totalSold).toFixed(2))
             : 0,
       }))
-      .sort((a, b) => b.totalSold - a.totalSold)
-      .slice(0, TOP_ITEMS_LIMIT);
+      .sort((a, b) => b.totalSold - a.totalSold);
 
     return {
       items,
@@ -220,8 +218,7 @@ export class ProductReportService {
           totalCost,
         };
       })
-      .sort((a, b) => b.totalCost - a.totalCost)
-      .slice(0, TOP_ITEMS_LIMIT);
+      .sort((a, b) => b.totalCost - a.totalCost);
 
     return {
       items,

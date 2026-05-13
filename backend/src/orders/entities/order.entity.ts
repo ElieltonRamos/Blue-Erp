@@ -26,9 +26,11 @@ export class OrderEntity {
   finishedAt: Date | null;
   tableOccupiedUntil: Date | null;
   operatorId: number | null;
-  operator: string | null;
   closedByOperatorId: number | null;
-  items: OrderItemEntity[];
   serviceCharge: number;
+  items: OrderItemEntity[];
+  operator: { id: number; username: string; role: string } | null;
   closedByOperator: { id: number; username: string; role: string } | null;
+  waiterOpen: { id: number; username: string; role: string } | null;
+  waiterClose: { id: number; username: string; role: string } | null;
 }

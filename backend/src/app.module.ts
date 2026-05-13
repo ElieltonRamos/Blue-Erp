@@ -21,6 +21,7 @@ import { LicenseSystemService } from './license-system/license-system.service';
 import { FiscalModule } from './fiscal-module/fiscal.module';
 import { CategoryProductModule } from './category-product/category-product.module';
 import { PrinterModule } from './printer/printer.module';
+import { TelegramModule } from './telegram/telegram.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { PrinterModule } from './printer/printer.module';
     FiscalModule,
     CategoryProductModule,
     PrinterModule,
+    TelegramModule,
   ],
   controllers: [AppController],
   providers: [AppService, LicenseSystemService],

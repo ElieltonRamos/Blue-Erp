@@ -11,4 +11,5 @@ export interface PrintJob {
   location: string; // ProductionLocation.code
   items: PrintItem[];
   operatorName?: string;
+  isReprint?: boolean;
 }

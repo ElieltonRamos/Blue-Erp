@@ -15,7 +15,6 @@ import {
 } from './entities/order-report.entity';
 
 const TOP_LIMIT = 10;
-const RECENT_LIMIT = 20;
 const PERFORMANCE_LIMIT = 5;
 const TZ = 'America/Sao_Paulo';
 
@@ -620,9 +619,9 @@ export class OrderReportService {
         .reverse()
         .map((x) => this.buildOrderSummary(x.order, locationNameMap));
 
-      const recentOrders = orders
-        .slice(0, RECENT_LIMIT)
-        .map((o) => this.buildOrderSummary(o, locationNameMap));
+      const recentOrders = orders.map((o) =>
+        this.buildOrderSummary(o, locationNameMap),
+      );
 
       return {
         status: 'OK',

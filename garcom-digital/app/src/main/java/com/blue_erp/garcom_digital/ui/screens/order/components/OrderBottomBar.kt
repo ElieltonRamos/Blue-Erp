@@ -1,5 +1,6 @@
 package com.blue_erp.garcom_digital.ui.screens.order.components
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,35 +23,56 @@ import com.blue_erp.garcom_digital.ui.screens.order.currencyFormat
 @Composable
 fun OrderBottomBar(
     total: Double,
+    hasUnsavedChanges: Boolean,
+    isSaving: Boolean,
     isClosingTab: Boolean,
-    onCloseTab: () -> Unit
+    onSave: () -> Unit,
+    onCloseTab: () -> Unit,
 ) {
     Surface(tonalElevation = 4.dp, color = MaterialTheme.colorScheme.surface) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text("Total", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(
-                    text = currencyFormat.format(total),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Total", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = currencyFormat.format(total),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                if (!hasUnsavedChanges) {
+                    Button(
+                        onClick = onCloseTab,
+                        enabled = !isClosingTab,
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        if (isClosingTab) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onError)
+                        } else {
+                            Text("Fechar Comanda")
+                        }
+                    }
+                }
             }
-            Button(
-                onClick = onCloseTab,
-                enabled = !isClosingTab,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-            ) {
-                if (isClosingTab) {
-                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onError)
-                } else {
-                    Text("Fechar Comanda")
+            if (hasUnsavedChanges) {
+                Button(
+                    onClick = onSave,
+                    enabled = !isSaving,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    if (isSaving) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                    } else {
+                        Text("Salvar alterações")
+                    }
                 }
             }
         }

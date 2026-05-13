@@ -1,66 +1,54 @@
-<div
-  class="min-h-screen flex flex-col items-center justify-start bg-linear-to-b from-[#1a103d] to-[#2a204d] px-4 py-6"
->
-  <!-- Botão de Voltar -->
+<div class="min-h-screen flex flex-col items-center justify-start bg-base px-4 py-6">
   <button
     (click)="goToMenu()"
-    class="self-center mb-6 bg-indigo-600 text-white px-6 py-2 rounded shadow-md hover:bg-indigo-700 transition"
+    class="self-center mb-6 bg-accent text-btn-text px-6 py-2 rounded shadow-md hover:bg-accent-hover transition"
   >
     Voltar para menu
   </button>
 
-  <!-- Container Principal -->
-  <div class="w-full max-w-6xl bg-[#182233] rounded-2xl shadow-lg p-6">
-    <!-- Título Principal -->
+  <div class="w-full max-w-6xl bg-surface rounded-2xl shadow-lg p-6 border border-border-subtle">
     <div class="mb-4">
-      <h1 class="text-3xl font-bold text-white">Histórico de Vendas</h1>
+      <h1 class="text-3xl font-bold text-text-primary">Histórico de Vendas</h1>
     </div>
 
-    <!-- Seção de Filtros -->
-    <div class="bg-[#1d2a3c] rounded-xl p-4 mb-6">
-      <h3 class="text-lg text-sky-400 font-semibold mb-4">Filtros</h3>
+    <div class="bg-surface-alt rounded-xl p-4 mb-6 border border-border-subtle">
+      <h3 class="text-lg text-accent font-semibold mb-4">Filtros</h3>
 
-      <!-- Primeira Linha: ID, Data Inicial, Data Final -->
       <div class="flex flex-wrap gap-4 items-end mb-4">
-        <!-- Filtro por ID do Cliente -->
         <div class="flex flex-col w-32">
-          <label class="text-sm text-white mb-1">ID Cliente</label>
+          <label class="text-sm text-text-secondary mb-1">ID Cliente</label>
           <input
             type="number"
-            class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+            class="bg-overlay text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none"
             [(ngModel)]="filterId"
             placeholder="ID"
           />
         </div>
 
-        <!-- Filtro por Data Inicial -->
         <div class="flex flex-col w-full sm:w-48">
-          <label class="text-sm text-white mb-1">Data Inicial</label>
+          <label class="text-sm text-text-secondary mb-1">Data Inicial</label>
           <input
             type="date"
-            class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+            class="bg-overlay text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none"
             [(ngModel)]="startDate"
           />
         </div>
 
-        <!-- Filtro por Data Final -->
         <div class="flex flex-col w-full sm:w-48">
-          <label class="text-sm text-white mb-1">Data Final</label>
+          <label class="text-sm text-text-secondary mb-1">Data Final</label>
           <input
             type="date"
-            class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+            class="bg-overlay text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none"
             [(ngModel)]="endDate"
           />
         </div>
       </div>
 
-      <!-- Segunda Linha: Operador, Método de Pagamento, Status Fiscal -->
       <div class="flex flex-wrap gap-4 items-end mb-4">
-        <!-- Filtro por Operador -->
         <div class="flex flex-col w-full sm:w-64">
-          <label class="text-sm text-white mb-1">Operador</label>
+          <label class="text-sm text-text-secondary mb-1">Operador</label>
           <select
-            class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+            class="bg-overlay text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none"
             [(ngModel)]="filterOperator"
           >
             <option value="">Todos</option>
@@ -70,11 +58,10 @@
           </select>
         </div>
 
-        <!-- Filtro por Método de Pagamento -->
         <div class="flex flex-col w-full sm:w-64">
-          <label class="text-sm text-white mb-1">Método de Pagamento</label>
+          <label class="text-sm text-text-secondary mb-1">Método de Pagamento</label>
           <select
-            class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+            class="bg-overlay text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none"
             [(ngModel)]="filterMethod"
           >
             <option value="">Todos</option>
@@ -86,11 +73,10 @@
           </select>
         </div>
 
-        <!-- Filtro por Status Fiscal -->
         <div class="flex flex-col w-full sm:w-64">
-          <label class="text-sm text-white mb-1">Status Fiscal</label>
+          <label class="text-sm text-text-secondary mb-1">Status Fiscal</label>
           <select
-            class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+            class="bg-overlay text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none"
             [(ngModel)]="filterFiscalStatus"
           >
             <option [value]="null">Todos</option>
@@ -101,13 +87,11 @@
         </div>
       </div>
 
-      <!-- Terceira Linha: Status de Pagamento -->
       <div class="flex flex-wrap gap-4 items-end mb-4">
-        <!-- Filtro por Status de Pagamento -->
         <div class="flex flex-col w-full sm:w-64">
-          <label class="text-sm text-white mb-1">Status de Pagamento</label>
+          <label class="text-sm text-text-secondary mb-1">Status de Pagamento</label>
           <select
-            class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+            class="bg-overlay text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none"
             [(ngModel)]="filterIsPaid"
           >
             <option [value]="null">Todos</option>
@@ -117,11 +101,10 @@
         </div>
       </div>
 
-      <!-- Botões -->
       <div class="flex gap-2">
         <button
           (click)="applyDateFilter()"
-          class="bg-sky-600 text-white px-4 py-2 rounded hover:bg-sky-700 transition"
+          class="bg-accent text-btn-text px-4 py-2 rounded hover:bg-accent-hover transition"
         >
           Filtrar
         </button>
@@ -137,7 +120,7 @@
         ) {
           <button
             (click)="clearDateFilter()"
-            class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
+            class="bg-surface-alt text-text-primary border border-border px-4 py-2 rounded hover:bg-overlay transition"
           >
             Limpar Filtro
           </button>
@@ -145,10 +128,9 @@
       </div>
     </div>
 
-    <!-- Tabela -->
     <div class="overflow-x-auto">
-      <table class="min-w-full text-white text-left">
-        <thead class="bg-[#1d2a3c] text-sky-400 uppercase text-sm">
+      <table class="min-w-full text-text-primary text-left">
+        <thead class="bg-surface-alt text-accent uppercase text-sm">
           <tr>
             <th class="py-3 px-4">ID</th>
             <th class="py-3 px-4">Data</th>
@@ -160,30 +142,37 @@
             <th class="py-3 px-4">Ações</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-700">
+        <tbody class="divide-y divide-border-subtle">
           @for (sale of listSales; track sale.id) {
-            <tr class="hover:bg-[#243447] transition">
-              <td class="py-3 px-4">{{ sale.id }}</td>
+            <tr class="hover:bg-overlay transition">
+              <td class="py-3 px-4 text-text-secondary">{{ sale.id }}</td>
               <td class="py-3 px-4">{{ sale.date | date: 'dd/MM/yyyy HH:mm' }}</td>
-              <td class="py-3 px-4">{{ sale.client.name }}</td>
-              <td class="py-3 px-4">{{ sale.payments[0].method }}</td>
+              <td class="py-3 px-4 font-medium">{{ sale.client.name }}</td>
+              <td class="py-3 px-4 text-text-secondary">{{ sale.payments[0].method }}</td>
               <td class="py-3 px-4">{{ sale.userOperator }}</td>
               <td class="py-3 px-4">
                 <span
                   [class]="
                     sale.isPaid
-                      ? 'bg-green-600 text-white px-2 py-1 rounded text-xs'
-                      : 'bg-red-600 text-white px-2 py-1 rounded text-xs'
+                      ? 'bg-success text-btn-text px-2 py-1 rounded text-xs'
+                      : 'bg-danger text-btn-text px-2 py-1 rounded text-xs'
                   "
                 >
                   {{ sale.isPaid ? 'PAGO' : 'PENDENTE' }}
                 </span>
               </td>
-              <td class="py-3 px-4">R$ {{ sale.total.toFixed(2) }}</td>
+              <td class="py-3 px-4">
+                <span class="font-bold">R$ {{ sale.total.toFixed(2) }}</span>
+                @if (sale.serviceCharge) {
+                  <span class="text-warning text-xs block">
+                    Taxa de Serviço: R$ {{ sale.serviceCharge.toFixed(2) }}
+                  </span>
+                }
+              </td>
               <td class="py-3 px-4 space-x-2">
                 <button
                   (click)="openSaleModal(sale)"
-                  class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors cursor-pointer"
+                  class="bg-accent text-btn-text py-2 px-4 rounded hover:bg-accent-hover transition-colors cursor-pointer"
                 >
                   Ver Detalhes
                 </button>
@@ -191,14 +180,13 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="9" class="text-center py-8 text-gray-400">Nenhuma venda encontrada</td>
+              <td colspan="9" class="text-center py-8 text-text-muted">Nenhuma venda encontrada</td>
             </tr>
           }
         </tbody>
       </table>
     </div>
 
-    <!-- Paginação -->
     <div class="flex justify-end mt-4">
       <app-paginator
         [totalItems]="totalItems"
@@ -210,7 +198,6 @@
     </div>
   </div>
 
-  <!-- Modal -->
   @if (showSaleModal) {
     <app-modal-sales-note [saleData]="saleSelected!" (closeModal)="closeSaleModal()" />
   }

@@ -63,6 +63,16 @@ export class UpdateOrderItemDto {
   @Min(0)
   @IsOptional()
   total?: number;
+
+  @ApiPropertyOptional({
+    description: 'Taxa de serviço do item',
+    example: 4.5,
+    minimum: 0,
+  })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  serviceCharge?: number;
 }
 
 export class UpdateOrderDto {

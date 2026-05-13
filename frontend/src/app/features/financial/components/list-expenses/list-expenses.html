@@ -3,22 +3,28 @@
     <!-- Filtros com labels -->
     <div class="flex flex-wrap gap-4 items-end">
       <div class="flex flex-col">
-        <label class="text-white text-sm mb-1">Fornecedor</label>
+        <label class="text-sm mb-1" [style.color]="'var(--color-text-primary)'">Fornecedor</label>
         <input
           type="text"
           placeholder="Fornecedor..."
-          class="px-3 py-2 rounded bg-gray-800 text-white"
+          class="px-3 py-2 rounded border"
           [(ngModel)]="filter.supplier"
           (ngModelChange)="applyFilters()"
+          [style.background-color]="'var(--color-surface-alt)'"
+          [style.color]="'var(--color-text-primary)'"
+          [style.border-color]="'var(--color-border)'"
         />
       </div>
 
       <div class="flex flex-col">
-        <label class="text-white text-sm mb-1">Status</label>
+        <label class="text-sm mb-1" [style.color]="'var(--color-text-primary)'">Status</label>
         <select
-          class="px-3 py-2 rounded bg-gray-800 text-white"
+          class="px-3 py-2 rounded border"
           [(ngModel)]="filter.status"
           (change)="applyFilters()"
+          [style.background-color]="'var(--color-surface-alt)'"
+          [style.color]="'var(--color-text-primary)'"
+          [style.border-color]="'var(--color-border)'"
         >
           <option value="">Todos os Status</option>
           <option value="Pago">Pago</option>
@@ -28,30 +34,38 @@
       </div>
 
       <div class="flex flex-col">
-        <label class="text-white text-sm mb-1">Data Inicial</label>
+        <label class="text-sm mb-1" [style.color]="'var(--color-text-primary)'">Data Inicial</label>
         <input
           type="date"
-          class="px-3 py-2 rounded bg-gray-800 text-white"
+          class="px-3 py-2 rounded border"
           [(ngModel)]="filter.startDate"
           (change)="applyFilters()"
+          [style.background-color]="'var(--color-surface-alt)'"
+          [style.color]="'var(--color-text-primary)'"
+          [style.border-color]="'var(--color-border)'"
         />
       </div>
 
       <div class="flex flex-col">
-        <label class="text-white text-sm mb-1">Data Final</label>
+        <label class="text-sm mb-1" [style.color]="'var(--color-text-primary)'">Data Final</label>
         <input
           type="date"
-          class="px-3 py-2 rounded bg-gray-800 text-white"
+          class="px-3 py-2 rounded border"
           [(ngModel)]="filter.endDate"
           (change)="applyFilters()"
+          [style.background-color]="'var(--color-surface-alt)'"
+          [style.color]="'var(--color-text-primary)'"
+          [style.border-color]="'var(--color-border)'"
         />
       </div>
 
       <div class="flex flex-col">
-        <label class="text-white text-sm mb-1 invisible">.</label>
+        <label class="text-sm mb-1 invisible">.</label>
         <button
-          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 text-sm"
+          class="px-4 py-2 rounded hover:opacity-80 text-sm font-medium transition-all duration-200"
           (click)="clearFilters()"
+          [style.background-color]="'var(--color-danger)'"
+          [style.color]="'var(--color-btn-text)'"
         >
           Limpar Filtros
         </button>
@@ -69,11 +83,15 @@
   </div>
 
   <!-- Tabela -->
-  <div class="text-gray-400 text-xs italic mb-2 select-none">
+  <div class="text-xs italic mb-2 select-none" [style.color]="'var(--color-text-muted)'">
     Clique no cabeçalho das colunas para ordenar (▲ ascendente, ▼ descendente).
   </div>
-  <table class="min-w-full text-white text-left">
-    <thead class="bg-[#1d2a3c] text-sky-400 uppercase text-sm">
+  <table class="min-w-full text-left">
+    <thead
+      class="uppercase text-sm"
+      [style.background-color]="'var(--color-surface)'"
+      [style.color]="'var(--color-accent)'"
+    >
       <tr>
         <th class="py-3 px-4 cursor-pointer select-none" (click)="sortBy('id')">
           ID
@@ -114,9 +132,16 @@
         <th class="py-3 px-4">Ações</th>
       </tr>
     </thead>
-    <tbody class="divide-y divide-gray-700">
+    <tbody
+      class="divide-y"
+      [style.border-color]="'var(--color-border)'"
+      [style.color]="'var(--color-text-primary)'"
+    >
       @for (expense of listExpenses; track expense.id) {
-        <tr class="hover:bg-[#243447] transition">
+        <tr
+          class="hover:opacity-80 transition"
+          [style.background-color]="'var(--color-surface-alt)'"
+        >
           <td class="py-3 px-4">{{ expense.id }}</td>
           <td class="py-3 px-4">{{ expense.supplier }}</td>
           <td class="py-3 px-4">{{ expense.description }}</td>
@@ -141,8 +166,9 @@
             <div class="flex flex-col space-y-2">
               <button
                 (click)="openModalEdit(expense)"
-                class="flex items-center gap-2 text-yellow-400 hover:text-yellow-300"
+                class="flex items-center gap-2 hover:opacity-80 transition"
                 title="Editar"
+                [style.color]="'var(--color-warning)'"
               >
                 ✏️ <span>Editar</span>
               </button>
@@ -150,9 +176,12 @@
                 (click)="markAsPaid(expense)"
                 [disabled]="expense.status === 'Pago'"
                 [ngClass]="{
-                  'text-green-400 hover:text-green-300': expense.status !== 'Pago',
-                  'text-gray-400 cursor-not-allowed opacity-50': expense.status === 'Pago',
+                  'hover:opacity-80 transition': expense.status !== 'Pago',
+                  'opacity-50 cursor-not-allowed': expense.status === 'Pago',
                 }"
+                [style.color]="
+                  expense.status === 'Pago' ? 'var(--color-text-muted)' : 'var(--color-success)'
+                "
                 class="flex items-center gap-2"
                 title="Marcar como Pago"
               >
@@ -161,8 +190,9 @@
 
               <button
                 (click)="deleteExpense(expense)"
-                class="flex items-center gap-2 text-red-400 hover:text-red-300"
+                class="flex items-center gap-2 hover:opacity-80 transition"
                 title="Excluir"
+                [style.color]="'var(--color-danger)'"
               >
                 🗑️ <span>Excluir</span>
               </button>

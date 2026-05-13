@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   Injectable,
   NotFoundException,
@@ -19,15 +18,11 @@ import {
 } from './dto/response-sale.dto.js';
 import { SaleFiltersDto } from './dto/filters-sale.dto.js';
 import { ConvertOrderToSaleDto } from '../orders/dto/convert-order-to-sale.js';
+import { resolveLogicalDateTime } from '../common/date-utils.js';
 
 @Injectable()
 export class SalesService {
   constructor(private readonly prisma: PrismaService) {}
-
-  private getBrasiliaTime(): Date {
-    const now = new Date();
-    return new Date(now.getTime() + -3 * 60 * 60 * 1000);
-  }
 
   private getStartOfDayBrasilia(dateString: string): Date {
     return new Date(`${dateString}T00:00:00-03:00`);
@@ -99,6 +94,30 @@ export class SalesService {
     const { items, payments, ...saleData } = createSaleDto;
     const clientId = saleData.clientId ?? 1;
 
+    const order = await this.prisma.client.order.findUnique({
+      where: { id: saleData.orderId },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Pedido ${saleData.orderId} não encontrado`);
+    }
+
+    if (order.status !== OrderStatus.CLOSED) {
+      throw new BadRequestException(
+        'Apenas pedidos fechados podem gerar uma venda',
+      );
+    }
+
+    const existingSale = await this.prisma.client.sale.findUnique({
+      where: { orderId: saleData.orderId },
+    });
+
+    if (existingSale) {
+      throw new BadRequestException(
+        `Pedido ${saleData.orderId} já possui uma venda associada (sale ${existingSale.id})`,
+      );
+    }
+
     const client = await this.prisma.client.client.findUnique({
       where: { id: clientId },
     });
@@ -168,7 +187,9 @@ export class SalesService {
         clientId,
         userOperator: username,
         operatorId: userId,
-        date: this.getBrasiliaTime(),
+        orderId: saleData.orderId,
+        serviceCharge: order.serviceCharge ?? new Decimal(0),
+        date: resolveLogicalDateTime(),
         totalProductsWithoutDiscount,
         discount,
         total,
@@ -176,6 +197,7 @@ export class SalesService {
         isPaid: clientId === 1,
         cfop,
         fiscalStatus: FiscalStatus.PENDENTE,
+        createdAt: resolveLogicalDateTime(),
         items: { create: itemsData },
         payments: { create: this.buildPaymentsData(payments) },
       },
@@ -406,13 +428,23 @@ export class SalesService {
       return acc.plus(new Decimal(item.total).minus(itemCost));
     }, new Decimal(0));
 
+    const existingSale = await this.prisma.client.sale.findUnique({
+      where: { orderId },
+    });
+
+    if (existingSale) {
+      throw new BadRequestException(
+        `Pedido ${orderId} já possui uma venda associada (sale ${existingSale.id})`,
+      );
+    }
+
     const sale = await this.prisma.client.$transaction(async (tx) => {
       const createdSale = await tx.sale.create({
         data: {
           clientId,
           userOperator: username,
           operatorId: userId,
-          date: this.getBrasiliaTime(),
+          date: resolveLogicalDateTime(),
           totalProductsWithoutDiscount,
           discount,
           total,
@@ -421,6 +453,8 @@ export class SalesService {
           cfop: dto.cfop || '5102',
           fiscalStatus: FiscalStatus.PENDENTE,
           serviceCharge: order.serviceCharge ?? new Decimal(0),
+          orderId: orderId,
+          createdAt: resolveLogicalDateTime(),
           items: {
             create: order.items.map((item, index) => ({
               itemNumber: index + 1,
@@ -442,6 +476,7 @@ export class SalesService {
               totalTaxValue: null,
               importTaxValue: new Decimal(0),
               iofValue: new Decimal(0),
+              serviceCharge: item.serviceCharge ?? new Decimal(0),
             })),
           },
           payments: { create: this.buildPaymentsData(dto.payments) },

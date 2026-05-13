@@ -1,30 +1,24 @@
 @if (show) {
-  <!-- Background escuro (overlay) -->
-  <div
-    class="fixed inset-0 flex items-center justify-center z-50"
-    style="background-color: rgba(0, 0, 0, 0.63)"
-  >
-    <!-- Modal -->
+  <div class="fixed inset-0 flex items-center justify-center z-50 bg-black/60 backdrop-blur-sm">
     <div
-      class="bg-[#182233] w-full max-w-lg rounded-2xl shadow-lg overflow-hidden transition-all max-h-[90vh] flex flex-col"
+      class="bg-surface w-full max-w-lg rounded-2xl shadow-lg overflow-hidden transition-all max-h-[90vh] flex flex-col border border-border"
     >
-      <!-- Cabeçalho -->
-      <div class="flex justify-between items-center border-b border-gray-600 px-6 py-4">
-        <h2 class="text-white text-xl font-bold">{{ title }}</h2>
-        <button class="text-gray-400 hover:text-white text-2xl font-bold" (click)="onClose()">
+      <div class="flex justify-between items-center border-b border-border px-6 py-4">
+        <h2 class="text-text-primary text-xl font-bold">{{ title }}</h2>
+        <button
+          class="text-text-muted hover:text-text-primary text-2xl font-bold cursor-pointer"
+          (click)="onClose()"
+        >
           ✖
         </button>
       </div>
 
-      <!-- Conteúdo -->
       <div class="p-6 flex flex-col gap-4 overflow-y-auto">
-        <!-- Conteúdo customizado via ng-content -->
         <ng-content></ng-content>
 
-        <!-- Formulário dinâmico -->
         @for (field of fields; track field.name) {
           <div>
-            <label class="text-white font-semibold block mb-1">
+            <label class="text-text-primary font-semibold block mb-1">
               {{ field.label }}
             </label>
 
@@ -33,22 +27,24 @@
                 [type]="field.type"
                 [(ngModel)]="entity[field.name]"
                 [placeholder]="field.placeholder"
-                class="text-lg w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+                class="text-lg w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold placeholder:text-text-muted focus:border-accent outline-hidden"
               />
             }
             @if (field.type === 'password') {
-              <div class="flex items-center rounded-md bg-white px-3 py-2">
+              <div
+                class="flex items-center rounded-md bg-surface-alt border border-border px-3 py-2 focus-within:border-accent"
+              >
                 <input
                   [type]="showPassword ? 'text' : 'password'"
                   [(ngModel)]="entity[field.name]"
                   [placeholder]="field.placeholder || 'Digite a senha'"
-                  class="text-lg w-full text-black font-semibold placeholder-gray-500 focus:outline-none border-none"
+                  class="text-lg w-full bg-transparent text-text-primary font-semibold placeholder:text-text-muted focus:outline-none border-none"
                 />
 
                 <button
                   type="button"
                   (click)="showPassword = !showPassword"
-                  class="ml-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  class="ml-2 text-text-muted hover:text-text-primary focus:outline-none cursor-pointer"
                 >
                   <ng-icon
                     [name]="showPassword ? 'heroEyeSlashSolid' : 'heroEyeSolid'"
@@ -61,20 +57,20 @@
               <input
                 type="date"
                 [(ngModel)]="entity[field.name]"
-                class="text-lg w-full p-2 rounded-md bg-white text-black font-semibold"
+                class="text-lg w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold focus:border-accent outline-hidden"
               />
             }
             @if (field.type === 'datetime-local') {
               <input
                 type="datetime-local"
                 [(ngModel)]="entity[field.name]"
-                class="text-lg w-full p-2 rounded-md bg-white text-black font-semibold"
+                class="text-lg w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold focus:border-accent outline-hidden"
               />
             }
             @if (field.type === 'select') {
               <select
                 [(ngModel)]="entity[field.name]"
-                class="text-lg w-full p-2 rounded-md bg-white text-black font-semibold"
+                class="text-lg w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold focus:border-accent outline-hidden"
               >
                 @for (opt of field.options; track opt) {
                   <option [value]="opt">{{ opt }}</option>
@@ -85,16 +81,15 @@
         }
       </div>
 
-      <!-- Rodapé -->
-      <div class="flex justify-end gap-4 border-t border-gray-600 px-6 py-4">
+      <div class="flex justify-end gap-4 border-t border-border px-6 py-4 bg-base/50">
         <button
-          class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-bold"
+          class="bg-surface-alt hover:bg-overlay text-text-primary px-6 py-2 rounded-lg font-bold transition-colors cursor-pointer"
           (click)="onClose()"
         >
           Cancelar
         </button>
         <button
-          class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold"
+          class="bg-accent hover:bg-accent-hover text-btn-text px-6 py-2 rounded-lg font-bold transition-all shadow-md cursor-pointer active:scale-95"
           (click)="onSave()"
         >
           Salvar

@@ -6,7 +6,7 @@ import {
   IsInt,
   Min,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Unit } from 'generated/prisma/client';
 
@@ -74,7 +74,7 @@ export class FilterPrimaryMaterialDto {
     example: true,
   })
   @IsOptional()
-  @Type(() => Boolean)
+  @Transform(({ value }) => value === 'true')
   @IsBoolean()
   active?: boolean;
 
@@ -83,7 +83,7 @@ export class FilterPrimaryMaterialDto {
     example: false,
   })
   @IsOptional()
-  @Type(() => Boolean)
+  @Transform(({ value }) => value === 'true')
   @IsBoolean()
   lowStock?: boolean;
 }

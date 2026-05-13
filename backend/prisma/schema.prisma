@@ -109,18 +109,19 @@ model Client {
 }
 
 model User {
-  id           Int       @id @default(autoincrement())
-  username     String    @unique
+  id           Int         @id @default(autoincrement())
+  username     String      @unique
   password     String
-  role         String    @default("USER")
-  active       Boolean   @default(true)
+  role         String      @default("USER")
+  active       Boolean     @default(true)
   workplace    String
   sales        Sale[]
-  orders       Order[]   @relation("OrderOperator")
-  closedOrders Order[]   @relation("OrderClosedBy")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-  deletedAt    DateTime? @map("deleted_at")
+  orders       Order[]     @relation("OrderOperator")
+  closedOrders Order[]     @relation("OrderClosedBy")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  deletedAt    DateTime?   @map("deleted_at")
+  orderItems   OrderItem[] @relation("OrderItemOperator")
 
   @@index([role])
   @@index([active])
@@ -249,6 +250,7 @@ model Order {
   serviceCharge      Decimal     @default(0) @map("service_charge") @db.Decimal(10, 2)
   items              OrderItem[]
   tableRef           Table?
+  sale               Sale?
 
   @@index([status])
   @@index([locationId])
@@ -272,12 +274,16 @@ model OrderItem {
   productId      Int               @map("product_id")
   product        Product           @relation(fields: [productId], references: [id])
   productions    OrderProduction[]
+  serviceCharge  Decimal           @default(0) @map("service_charge") @db.Decimal(10, 2)
+  operatorId     Int?              @map("operator_id")
+  operator       User?             @relation("OrderItemOperator", fields: [operatorId], references: [id])
   observation    String?
   createdAt      DateTime          @default(now()) @map("created_at")
   updatedAt      DateTime          @updatedAt @map("updated_at")
 
   @@index([orderId])
   @@index([productId])
+  @@index([operatorId])
   @@map("order_items")
 }
 
@@ -342,6 +348,8 @@ model Sale {
   fiscalXml                    String?       @map("fiscal_xml") @db.LongText
   serviceCharge                Decimal       @default(0) @map("service_charge") @db.Decimal(10, 2)
   items                        SaleItem[]
+  orderId                      Int?          @unique @map("order_id")
+  order                        Order?        @relation(fields: [orderId], references: [id])
   createdAt                    DateTime      @default(now()) @map("created_at")
   updatedAt                    DateTime      @updatedAt @map("updated_at")
 
@@ -373,6 +381,7 @@ model SaleItem {
   importTaxValue Decimal? @default(0) @map("import_tax_value") @db.Decimal(10, 2)
   iofValue       Decimal? @default(0) @map("iof_value") @db.Decimal(10, 2)
   createdAt      DateTime @default(now()) @map("created_at")
+  serviceCharge  Decimal  @default(0) @map("service_charge") @db.Decimal(10, 2)
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@unique([saleId, itemNumber])

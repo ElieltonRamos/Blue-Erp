@@ -182,7 +182,8 @@ class KitchenDisplayViewModel @Inject constructor(
     fun closeKitchenConfigDialog() = _uiState.update { it.copy(showKitchenConfigDialog = false) }
 
     fun getElapsedMinutes(item: KitchenOrderItem): Int {
-        val diff = System.currentTimeMillis() - item.pendingAt.time
+        val correctedMillis = item.pendingAt.time + (3 * 60 * 60 * 1000)
+        val diff = System.currentTimeMillis() - correctedMillis
         return (diff / 60_000).toInt()
     }
 

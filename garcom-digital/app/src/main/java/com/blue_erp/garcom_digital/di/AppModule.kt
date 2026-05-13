@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 import android.content.Context
 import android.content.SharedPreferences
+import com.blue_erp.garcom_digital.ui.theme.ThemePreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
 
 @Module
@@ -31,9 +32,9 @@ object AppModule {
         return OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(5, TimeUnit.SECONDS)
+            .writeTimeout(5, TimeUnit.SECONDS)
             .build()
     }
 
@@ -57,5 +58,11 @@ object AppModule {
     @Singleton
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
         return context.getSharedPreferences("garcom_digital_prefs", Context.MODE_PRIVATE)
+    }
+
+    @Provides
+    @Singleton
+    fun provideThemePreferences(@ApplicationContext context: Context): ThemePreferences {
+        return ThemePreferences(context)
     }
 }

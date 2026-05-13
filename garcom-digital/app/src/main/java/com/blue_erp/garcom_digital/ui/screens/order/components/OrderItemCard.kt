@@ -39,119 +39,60 @@ fun OrderItemCard(
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
     onRemove: () -> Unit,
-    onObservationChange: (String) -> Unit,
 ) {
-    val suggestions = listOf(
-        "Ok",
-        "Bem passada",
-        "Ao ponto",
-        "Mal passada",
-        "1 copo c/ gelo",
-        "2 copos c/ gelo",
-        "3 copos c/ gelo",
-        "4 copos c/ gelo",
-        "1 copo s/ gelo",
-        "2 copos s/ gelo",
-        "3 copos s/ gelo",
-        "4 copos s/ gelo",
-    )
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = item.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = currencyFormat.format(item.unitPrice),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    IconButton(onClick = onDecrement, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Remove, contentDescription = "Diminuir", tint = MaterialTheme.colorScheme.primary)
-                    }
-                    Text(
-                        text = if (item.quantity % 1.0 == 0.0) item.quantity.toInt().toString()
-                        else String.format("%.2f", item.quantity),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.widthIn(min = 28.dp),
-                        textAlign = TextAlign.Center
-                    )
-                    IconButton(onClick = onIncrement, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Add, contentDescription = "Aumentar", tint = MaterialTheme.colorScheme.primary)
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = currencyFormat.format(item.total),
+                    text = item.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = currencyFormat.format(item.unitPrice),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                IconButton(onClick = onDecrement, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.Remove, contentDescription = "Diminuir", tint = MaterialTheme.colorScheme.primary)
+                }
+                Text(
+                    text = if (item.quantity % 1.0 == 0.0) item.quantity.toInt().toString()
+                    else String.format("%.2f", item.quantity),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.widthIn(min = 64.dp),
-                    textAlign = TextAlign.End
+                    modifier = Modifier.widthIn(min = 28.dp),
+                    textAlign = TextAlign.Center
                 )
-
-                IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Default.Delete, contentDescription = "Remover", tint = MaterialTheme.colorScheme.error)
+                IconButton(onClick = onIncrement, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.Add, contentDescription = "Aumentar", tint = MaterialTheme.colorScheme.primary)
                 }
             }
-
-            val isError = item.observation.isNullOrBlank() || item.observation.trim().length < 2
-
-            OutlinedTextField(
-                value = item.observation ?: "",
-                onValueChange = onObservationChange,
-                placeholder = {
-                    Text("Observação (obrigatório)", style = MaterialTheme.typography.bodySmall)
-                },
-                isError = isError,
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                textStyle = MaterialTheme.typography.bodySmall,
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = currencyFormat.format(item.total),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.widthIn(min = 64.dp),
+                textAlign = TextAlign.End
             )
-
-            LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                items(suggestions) { suggestion ->
-                    val isSelected = item.observation.orEmpty().contains(suggestion)
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = {
-                            val current = item.observation.orEmpty().trim()
-                            val newValue = if (current.isEmpty()) suggestion else "$current, $suggestion"
-                            onObservationChange(newValue)
-                        },
-                        label = {
-                            Text(
-                                text = suggestion,
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }
-                    )
-                }
+            IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
+                Icon(Icons.Default.Delete, contentDescription = "Remover", tint = MaterialTheme.colorScheme.error)
             }
         }
     }

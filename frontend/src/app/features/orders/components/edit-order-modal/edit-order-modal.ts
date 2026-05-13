@@ -39,6 +39,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
 
   isSaving: boolean = false;
   private overlayRef: OverlayRef | null = null;
+  serviceChargeAmount: number = 0;
 
   searchCode = '';
   searchName = '';
@@ -63,6 +64,14 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
     );
   }
 
+  get isDefaultServiceCharge(): boolean {
+    if (!this.order) return true; // <-- falta isso
+    const defaultValue = parseFloat(
+      (this.order.items.reduce((s, i) => s + i.total, 0) * 0.1).toFixed(2),
+    );
+    return parseFloat(this.serviceChargeAmount.toFixed(2)) === defaultValue;
+  }
+
   ngAfterViewInit(): void {
     if (this.isOpen) {
       this.openModal();
@@ -71,7 +80,11 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['order'] && this.order) {
+      const totalItems = this.order.items.reduce((s, i) => s + i.total, 0);
       this.serviceChargeEnabled = (this.order.serviceCharge ?? 0) > 0;
+      this.serviceChargeAmount = this.serviceChargeEnabled
+        ? (this.order.serviceCharge ?? totalItems * 0.1)
+        : totalItems * 0.1;
     }
 
     if (changes['isOpen']) {
@@ -89,8 +102,37 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
 
   toggleServiceCharge(): void {
     this.serviceChargeEnabled = !this.serviceChargeEnabled;
-    this.calculateOrderTotal();
+    this.distributeServiceCharge();
     this.cdr.detectChanges();
+  }
+
+  onServiceChargeInput(value: number): void {
+    this.serviceChargeAmount = value;
+    this.distributeServiceCharge();
+    this.cdr.detectChanges();
+  }
+
+  distributeServiceCharge(): void {
+    if (!this.order) return;
+
+    if (!this.serviceChargeEnabled || this.serviceChargeAmount === 0) {
+      this.order.items.forEach((item) => (item.serviceCharge = 0));
+      this.order.serviceCharge = 0;
+      return;
+    }
+
+    if (this.isDefaultServiceCharge) {
+      // modo padrão: cada item calcula 10% do próprio total
+      this.order.items.forEach((item) => {
+        item.serviceCharge = parseFloat((item.total * 0.1).toFixed(2));
+      });
+    } else {
+      // valor fixo: divide igualmente
+      const perItem = parseFloat((this.serviceChargeAmount / this.order.items.length).toFixed(2));
+      this.order.items.forEach((item) => (item.serviceCharge = perItem));
+    }
+
+    this.order.serviceCharge = this.order.items.reduce((s, i) => s + (i.serviceCharge ?? 0), 0);
   }
 
   private openModal(): void {
@@ -218,6 +260,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
         quantity: 1,
         unitPrice: product.price,
         total: product.price,
+        serviceCharge: 0,
         observation: '',
       };
       this.order.items.push(newItem);
@@ -251,58 +294,29 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
 
   calculateOrderTotal(): void {
     if (!this.order) return;
-    this.order.total = this.order.items.reduce((sum, item) => sum + item.total, 0);
-    this.order.serviceCharge = this.serviceChargeEnabled ? this.order.total * 0.1 : 0;
+    const newTotal = this.order.items.reduce((sum, item) => sum + item.total, 0);
+    const prevDefault =
+      parseFloat(this.serviceChargeAmount.toFixed(2)) ===
+      parseFloat((this.order.total * 0.1).toFixed(2));
+    this.order.total = newTotal;
+    if (prevDefault) {
+      this.serviceChargeAmount = parseFloat((newTotal * 0.1).toFixed(2));
+    }
+    this.distributeServiceCharge();
   }
 
   saveOrder(): void {
     if (!this.order || this.isSaving) return;
 
-    if (!this.order.customerName || this.order.customerName.trim() === '') {
-      this.notification.error('Nome do cliente é obrigatório');
-      return;
-    }
-
-    if (this.order.type === 'DINE_IN' && (!this.order.table || this.order.table.trim() === '')) {
-      this.notification.error('Mesa é obrigatória para pedidos no local');
-      return;
-    }
-
-    if (this.hasInvalidObservations) {
-      this.notification.error('Preencha a observação de todos os itens (mínimo 2 caracteres)');
-      return;
-    }
-
-    if (
-      this.order.type === 'DELIVERY' &&
-      (!this.order.address || this.order.address.trim() === '')
-    ) {
-      this.notification.error('Endereço é obrigatório para delivery');
+    const validationError = this.validateOrder();
+    if (validationError) {
+      this.notification.error(validationError);
       return;
     }
 
     this.isSaving = true;
 
-    const updateDto = {
-      customerName: this.order.customerName,
-      table: this.order.type === 'DINE_IN' ? this.order.table : undefined,
-      address: this.order.type === 'DELIVERY' ? this.order.address : undefined,
-      status: this.order.status,
-      items: this.order.items.map((item) => ({
-        ...(typeof item.id === 'number' && { id: item.id }),
-        productId: item.productId,
-        code: item.code,
-        name: item.name,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        total: item.total,
-        observation: item.observation,
-      })),
-      total: this.order.total,
-      serviceCharge: this.serviceChargeEnabled ? this.order.total * 0.1 : 0,
-    };
-
-    this.orderService.updateOrder(this.order.id, updateDto).subscribe({
+    this.orderService.updateOrder(this.order.id, this.buildUpdateDto()).subscribe({
       next: (updatedOrder) => {
         this.notification.success('Pedido atualizado com sucesso');
         this.isSaving = false;
@@ -318,6 +332,39 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
         this.closeModal();
       },
     });
+  }
+
+  private validateOrder(): string | null {
+    const o = this.order!;
+    if (!o.customerName?.trim()) return 'Nome do cliente é obrigatório';
+    if (o.type === 'DINE_IN' && !o.table?.trim()) return 'Mesa é obrigatória para pedidos no local';
+    if (o.type === 'DELIVERY' && !o.address?.trim()) return 'Endereço é obrigatório para delivery';
+    if (this.hasInvalidObservations)
+      return 'Preencha a observação de todos os itens (mínimo 2 caracteres)';
+    return null;
+  }
+
+  private buildUpdateDto() {
+    const o = this.order!;
+    return {
+      customerName: o.customerName,
+      table: o.type === 'DINE_IN' ? o.table : undefined,
+      address: o.type === 'DELIVERY' ? o.address : undefined,
+      status: o.status,
+      total: o.total,
+      serviceCharge: o.serviceCharge,
+      items: o.items.map((item) => ({
+        ...(typeof item.id === 'number' && { id: item.id }),
+        productId: item.productId,
+        code: item.code,
+        name: item.name,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        total: item.total,
+        serviceCharge: item.serviceCharge ?? 0,
+        observation: item.observation,
+      })),
+    };
   }
 
   closeModal(): void {

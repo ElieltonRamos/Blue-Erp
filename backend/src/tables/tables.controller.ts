@@ -30,6 +30,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import { CloseTabDto } from './dto/close-tab.dto.js';
+import { TransferTableDto } from './dto/transfer-table.dto.js';
 
 @ApiTags('Tables')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -181,5 +182,33 @@ export class TablesController {
     @Body() dto: CloseTabDto,
   ) {
     return this.tablesService.closeTab(id, operatorId, dto);
+  }
+
+  @Patch(':id/transfer')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Transferir/fundir comanda entre mesas' })
+  @ApiParam({ name: 'id', type: Number, description: 'ID do pedido origem' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Comanda transferida ou fundida com sucesso',
+    schema: { properties: { message: { type: 'string' } } },
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Pedido ou mesa não encontrada',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Pedido não está aberto ou mesa destino ocupada',
+  })
+  transferTable(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: TransferTableDto,
+  ) {
+    return this.tablesService.transferTable(
+      id,
+      dto.targetTableNumber,
+      dto.targetLocationCode,
+    );
   }
 }

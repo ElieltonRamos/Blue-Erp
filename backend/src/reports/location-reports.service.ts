@@ -1,30 +1,35 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { Prisma } from 'generated/prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { validateDateFilters } from './utils/sale-report-utils';
 import { LocationReportResponseDto } from './dto/response-report-location.dto';
 import { LocationReportFilterDto } from './dto/create-report-location.dto';
 
-type OrderWithIncludes = Prisma.OrderGetPayload<{
-  include: {
-    items: {
-      include: {
-        product: {
-          select: {
-            id: true;
-            name: true;
-            productionLocation: true;
-            category: { select: { name: true } };
-          };
-        };
-      };
-    };
-    operator: { select: { id: true; username: true } };
-    closedByOperator: { select: { id: true; username: true } };
+type OrderItem = {
+  quantity: number | { toNumber(): number };
+  total: number | { toNumber(): number };
+  serviceCharge: number | { toNumber(): number } | null;
+  operatorId: number | null;
+  operator: { id: number; username: string } | null;
+  product: {
+    id: number;
+    name: string;
+    productionLocation: string | null;
+    category: { name: string } | null;
   };
-}> & {
+};
+
+type OrderWithIncludes = {
+  id: number;
+  locationId: string;
+  table: string | null;
+  total: number | { toNumber(): number };
+  serviceCharge: number | { toNumber(): number } | null;
+  createdAt: Date;
   finishedAt: Date | null;
   tableOccupiedUntil: Date | null;
+  operator: { id: number; username: string } | null;
+  closedByOperator: { id: number; username: string } | null;
+  items: OrderItem[];
 };
 
 type ItemAggregator = {
@@ -67,11 +72,11 @@ export class LocationReportService {
   constructor(private prisma: PrismaService) {}
 
   private getStartOfDay(dateString: string): Date {
-    return new Date(dateString + ' 00:00:00');
+    return new Date(`${dateString}T00:00:00-03:00`);
   }
 
   private getEndOfDay(dateString: string): Date {
-    return new Date(dateString + ' 23:59:59.999');
+    return new Date(`${dateString}T23:59:59.999-03:00`);
   }
 
   private diffMinutes(a: Date, b: Date): number {
@@ -83,6 +88,14 @@ export class LocationReportService {
     return Number(
       (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2),
     );
+  }
+
+  private toNumber(
+    val: number | { toNumber(): number } | null | undefined,
+  ): number {
+    if (val == null) return 0;
+    if (typeof val === 'object' && 'toNumber' in val) return val.toNumber();
+    return Number(val);
   }
 
   private async fetchOrdersData(
@@ -100,6 +113,7 @@ export class LocationReportService {
       include: {
         items: {
           include: {
+            operator: { select: { id: true, username: true } },
             product: {
               select: {
                 id: true,
@@ -114,7 +128,7 @@ export class LocationReportService {
         closedByOperator: { select: { id: true, username: true } },
       },
       orderBy: { createdAt: 'desc' },
-    }) as Promise<OrderWithIncludes[]>;
+    }) as unknown as Promise<OrderWithIncludes[]>;
   }
 
   private async fetchLocationNames(): Promise<
@@ -188,32 +202,29 @@ export class LocationReportService {
     order: OrderWithIncludes,
     aggregators: Record<string, LocationAggregator>,
     locationMap: Record<string, { id: number; name: string }>,
-  ) {
+  ): void {
     const location = this.ensureLocation(
       aggregators,
       order.locationId,
       locationMap,
     );
-    const orderValue = Number(order.total);
+    const orderValue = this.toNumber(order.total);
 
     location.totalOrders += 1;
     location.totalValue += orderValue;
 
-    // Tempo de comanda: abertura → fechamento
     if (order.finishedAt) {
       location.commandaDurations.push(
         this.diffMinutes(order.createdAt, order.finishedAt),
       );
     }
 
-    // Tempo de ocupação de mesa
     if (order.tableOccupiedUntil && order.table) {
       location.tableOccupationTimes.push(
         this.diffMinutes(order.createdAt, order.tableOccupiedUntil),
       );
     }
 
-    // Operador que abriu
     if (order.operator) {
       const op = this.ensureOperator(
         location,
@@ -223,7 +234,6 @@ export class LocationReportService {
       op.opened += 1;
     }
 
-    // Operador que fechou
     if (order.closedByOperator) {
       const op = this.ensureOperator(
         location,
@@ -232,10 +242,8 @@ export class LocationReportService {
       );
       op.closed += 1;
       op.totalValue += orderValue;
-      op.totalServiceCharge += Number(order.serviceCharge ?? 0);
     }
 
-    // Itens por categoria
     for (const item of order.items) {
       const categoryName = item.product.category?.name ?? 'Sem Categoria';
       const producedAt = item.product.productionLocation
@@ -243,8 +251,8 @@ export class LocationReportService {
           item.product.productionLocation)
         : location.name;
 
-      const qty = Number(item.quantity);
-      const value = Number(item.total);
+      const qty = this.toNumber(item.quantity);
+      const value = this.toNumber(item.total);
 
       const category = this.ensureCategory(location, categoryName);
       category.totalValue += value;
@@ -260,6 +268,12 @@ export class LocationReportService {
       }
       category.items[item.product.name].qty += qty;
       category.items[item.product.name].value += value;
+
+      if (item.operatorId) {
+        const username = item.operator?.username ?? `op_${item.operatorId}`;
+        const op = this.ensureOperator(location, item.operatorId, username);
+        op.totalServiceCharge += this.toNumber(item.serviceCharge);
+      }
     }
   }
 

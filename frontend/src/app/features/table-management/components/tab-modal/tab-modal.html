@@ -3,16 +3,15 @@
   [class.hidden]="!show"
 >
   <div
-    class="bg-slate-800 rounded-lg shadow-2xl border border-slate-700 max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+    class="bg-surface rounded-lg shadow-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
   >
-    <!-- Header -->
-    <div class="flex justify-between items-center p-6 border-b border-slate-700">
+    <div class="flex justify-between items-center p-6 border-b border-border">
       <div>
-        <h3 class="text-xl font-bold text-white">Comanda - Mesa {{ table.number }}</h3>
-        <p class="text-slate-400 text-sm">{{ table.customer }}</p>
+        <h3 class="text-xl font-bold text-text-primary">Comanda - Mesa {{ table.number }}</h3>
+        <p class="text-text-secondary text-sm">{{ table.customer }}</p>
       </div>
-      <button (click)="close.emit()" class="p-1 hover:bg-slate-700 rounded transition-colors">
-        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <button (click)="close.emit()" class="p-1 hover:bg-surface-alt rounded transition-colors">
+        <svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -23,63 +22,87 @@
       </button>
     </div>
 
-    <!-- Body -->
     <div class="p-6 overflow-y-auto flex-1">
       <div class="space-y-3 mb-6">
         @if (!table.order?.items || table.order!.items.length === 0) {
-          <div class="text-center py-8 text-slate-400">Nenhum produto na comanda</div>
+          <div class="text-center py-8 text-text-muted">Nenhum produto na comanda</div>
         }
         @for (item of table.order?.items; track item.id) {
-          <div class="flex justify-between items-center py-3 border-b border-slate-700/50">
+          <div class="flex justify-between items-center py-3 border-b border-border-subtle">
             <div class="flex-1">
-              <div class="text-white font-medium">{{ item.name }}</div>
-              <div class="text-slate-400 text-sm">
+              <div class="text-text-primary font-medium">{{ item.name }}</div>
+              <div class="text-text-secondary text-sm">
                 {{ item.quantity }}x R$ {{ item.unitPrice.toFixed(2) }}
               </div>
             </div>
-            <div class="text-white font-bold">R$ {{ item.total.toFixed(2) }}</div>
+            <div class="text-text-primary font-bold">R$ {{ item.total.toFixed(2) }}</div>
           </div>
         }
       </div>
 
-      <!-- Total -->
-      <div class="bg-slate-700/50 rounded-lg p-4 border border-slate-600/50">
+      <div class="bg-surface-alt rounded-lg p-4 border border-border-subtle">
         <div class="flex justify-between items-center text-lg">
-          <span class="text-slate-300 font-medium">Total:</span>
-          <span class="text-white font-bold text-2xl">R$ {{ total.toFixed(2) }}</span>
+          <span class="text-text-secondary font-medium">Total:</span>
+          <span class="text-text-primary font-bold text-2xl">R$ {{ total.toFixed(2) }}</span>
         </div>
       </div>
 
-      <div class="mt-4 flex justify-between items-center">
-        <span class="text-slate-300">Gorjeta (10%)</span>
+      <div class="mt-4 bg-overlay/30 border border-warning/30 rounded-lg p-4">
+        <div class="flex justify-between items-center gap-4">
+          <div class="flex items-center gap-3">
+            <div
+              (click)="toggleServiceCharge()"
+              class="w-10 h-6 rounded-full transition-colors cursor-pointer shrink-0"
+              [class.bg-warning]="serviceChargeEnabled"
+              [class.bg-border]="!serviceChargeEnabled"
+            >
+              <div
+                class="w-4 h-4 bg-white rounded-full mt-1 transition-transform"
+                [class.translate-x-5]="serviceChargeEnabled"
+                [class.translate-x-1]="!serviceChargeEnabled"
+              ></div>
+            </div>
+            <span class="text-text-secondary text-sm font-medium">Taxa de Serviço (10%)</span>
+          </div>
 
-        <button
-          (click)="toggleServiceCharge()"
-          [class]="serviceChargeEnabled ? 'bg-emerald-600' : 'bg-slate-600'"
-          class="px-3 py-1 text-xs rounded text-white transition-colors"
-        >
-          {{ serviceChargeEnabled ? 'Ativa' : 'Removida' }}
-        </button>
+          <div class="flex items-center gap-2">
+            <span class="text-text-muted text-sm">R$</span>
+            <input
+              type="number"
+              [ngModel]="serviceChargeAmount"
+              (ngModelChange)="onServiceChargeInput($event)"
+              [ngModelOptions]="{ standalone: true }"
+              [disabled]="!serviceChargeEnabled"
+              min="0"
+              step="1"
+              class="w-28 bg-surface border border-border rounded px-2 py-1 text-warning font-bold text-sm text-center focus:outline-none focus:border-accent disabled:opacity-40"
+            />
+          </div>
+        </div>
       </div>
 
       <div class="flex justify-between mt-2 text-sm">
-        <span class="text-slate-400">Valor:</span>
-        <span class="text-white font-medium"> R$ {{ serviceChargeValue.toFixed(2) }} </span>
+        <span class="text-text-muted">Valor:</span>
+        <span class="text-text-primary font-medium"> R$ {{ serviceChargeValue.toFixed(2) }} </span>
       </div>
     </div>
 
-    <!-- Footer -->
-    <div class="flex gap-3 p-6 border-t border-slate-700">
+    <div class="flex gap-3 p-6 border-t border-border">
       <button
         (click)="close.emit()"
-        class="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm font-medium transition-colors"
+        class="flex-1 px-4 py-2 bg-surface-alt hover:bg-overlay text-text-primary rounded-md text-sm font-medium transition-colors border border-border-subtle"
       >
         Cancelar
       </button>
       <button
-        (click)="finish.emit(serviceChargeValue)"
+        (click)="
+          finish.emit({
+            serviceCharge: serviceChargeValue,
+            items: distributeServiceCharge(),
+          })
+        "
         [disabled]="!table.order?.items?.length"
-        class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors"
+        class="flex-1 px-4 py-2 bg-success hover:opacity-90 disabled:bg-border-subtle disabled:text-text-muted disabled:cursor-not-allowed text-btn-text rounded-md text-sm font-medium transition-colors"
       >
         Fechar Comanda
       </button>

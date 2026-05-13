@@ -34,6 +34,9 @@ export class PrinterService {
     });
 
     let text = '';
+    if (job.isReprint) {
+      text += CENTER + FONT_BIG + BOLD_ON + `#REIMPRESSAO#` + LF;
+    }
     text +=
       CENTER + FONT_BIG + BOLD_ON + `PEDIDO #${job.orderId}` + BOLD_OFF + LF;
     text += FONT_BIG + CENTER + now + LF;

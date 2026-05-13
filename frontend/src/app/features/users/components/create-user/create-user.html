@@ -1,34 +1,32 @@
-<!-- Formulário -->
 <form
   (ngSubmit)="onSubmit()"
   [formGroup]="formCreateUser"
-  class="bg-[#1d2a3c] p-6 rounded-lg space-y-6"
+  class="bg-surface p-6 rounded-lg space-y-6"
 >
-  <!-- Inputs lado a lado -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <div>
-      <label for="username" class="block text-white font-bold mb-2">Nome do Usuário</label>
+      <label for="username" class="block text-text-primary font-bold mb-2">Nome do Usuário</label>
       <input
         id="username"
         formControlName="username"
         type="text"
         required
         placeholder="Digite o nome"
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+        class="text-xl w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold placeholder-text-muted"
       />
       @if (formCreateUser.get('username')?.touched && formCreateUser.get('username')?.invalid) {
         <p class="msg-error">Digite o usuário!</p>
       }
     </div>
     <div>
-      <label for="password" class="block text-white font-bold mb-2">Senha de Acesso</label>
+      <label for="password" class="block text-text-primary font-bold mb-2">Senha de Acesso</label>
       <input
         id="password"
         formControlName="password"
         type="text"
         required
         placeholder="Crie uma senha"
-        class="text-xl w-full p-2 rounded-md bg-white text-black font-semibold placeholder-gray-500"
+        class="text-xl w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold placeholder-text-muted"
       />
       @if (formCreateUser.get('password')?.touched && formCreateUser.get('password')?.invalid) {
         <p class="msg-error">Digite a senha!</p>
@@ -36,70 +34,39 @@
     </div>
   </div>
 
-  <!-- Tipo de Usuário -->
-  <div class="text-white font-bold">
+  <div class="text-text-primary font-bold">
     <label class="block mb-2">Tipo de Usuário: </label>
     <div class="flex gap-8">
-      <label class="flex items-center gap-3 text-base">
-        <input
-          type="radio"
-          name="role"
-          value="caixa"
-          formControlName="role"
-          class="w-8 h-8 accent-blue-500"
-        />
-        Caixa
-      </label>
-      <label class="flex items-center gap-3 text-base">
-        <input
-          type="radio"
-          name="role"
-          value="garcom"
-          formControlName="role"
-          class="w-8 h-8 accent-blue-500"
-        />
-        Garçom
-      </label>
-      <label class="flex items-center gap-3 text-base">
-        <input
-          type="radio"
-          name="role"
-          value="cozinheiro"
-          formControlName="role"
-          class="w-8 h-8 accent-blue-500"
-        />
-        Cozinheiro
-      </label>
-      <label class="flex items-center gap-3 text-base">
-        <input
-          type="radio"
-          name="role"
-          value="admin"
-          formControlName="role"
-          class="w-8 h-8 accent-blue-500"
-        />
-        Admin
-      </label>
+      @for (role of ['caixa', 'garcom', 'cozinheiro', 'admin']; track role) {
+        <label class="flex items-center gap-3 text-base cursor-pointer">
+          <input type="radio" [value]="role" formControlName="role" class="w-8 h-8 accent-accent" />
+
+          <span class="capitalize text-text-primary font-medium">
+            {{ role }}
+          </span>
+        </label>
+      }
     </div>
     @if (formCreateUser.get('role')?.touched && formCreateUser.get('role')?.invalid) {
       <p class="msg-error">Escolha a função!</p>
     }
   </div>
 
-  <!-- Local de Trabalho (DINÂMICO) -->
-  <div class="text-white font-bold">
+  <div class="text-text-primary font-bold">
     <label class="block mb-2">Local de Trabalho: </label>
     <div class="flex gap-8 flex-wrap">
       @for (location of productionLocations; track location.code) {
-        <label class="flex items-center gap-3 text-base">
+        <label class="flex items-center gap-3 text-base cursor-pointer">
           <input
             type="radio"
-            name="workplace"
             [value]="location.code"
             formControlName="workplace"
-            class="w-8 h-8 accent-blue-500"
+            class="w-8 h-8 accent-accent"
           />
-          {{ location.name }}
+
+          <span class="text-text-primary font-medium">
+            {{ location.name }}
+          </span>
         </label>
       }
     </div>
@@ -108,11 +75,10 @@
     }
   </div>
 
-  <!-- Botão -->
   <div class="flex justify-center pt-4">
     <button
       type="submit"
-      class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold"
+      class="bg-accent hover:bg-accent-hover text-btn-text px-8 py-3 rounded-lg font-bold transition-all shadow-md active:scale-95"
     >
       Salvar
     </button>

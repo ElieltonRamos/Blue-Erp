@@ -29,7 +29,7 @@ export class ListProducts {
 
   listProducts: Product[] = [];
   page: number = 1;
-  limit: number = 20;
+  limit: number = 100;
   totalPages: number = 0;
   totalItems: number = 0;
   showModalBasic: boolean = false;

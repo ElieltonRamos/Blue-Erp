@@ -77,4 +77,9 @@ export class CreateSaleDto {
   @IsString()
   @IsOptional()
   cfop?: string;
+
+  @ApiProperty({ example: 1 })
+  @IsInt()
+  @IsNotEmpty()
+  orderId!: number;
 }

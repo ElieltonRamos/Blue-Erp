@@ -56,7 +56,11 @@ export class CreateOrder implements OnInit {
 
   toggleServiceCharge(value: boolean) {
     this.includeServiceCharge = value;
-    this.cdr.detectChanges(); // Garante a atualização na tela
+    this.orderItems = this.orderItems.map((item) => ({
+      ...item,
+      serviceCharge: value ? item.total * 0.1 : 0,
+    }));
+    this.cdr.detectChanges();
   }
 
   get hasInvalidObservations(): boolean {
@@ -262,7 +266,14 @@ export class CreateOrder implements OnInit {
     if (existingItem) {
       this.orderItems = this.orderItems.map((item) =>
         item.productId === product.id
-          ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.unitPrice }
+          ? {
+              ...item,
+              quantity: item.quantity + 1,
+              total: (item.quantity + 1) * item.unitPrice,
+              serviceCharge: this.includeServiceCharge
+                ? (item.quantity + 1) * item.unitPrice * 0.1
+                : 0,
+            }
           : item,
       );
       this.notification.success('Quantidade atualizada');
@@ -276,6 +287,7 @@ export class CreateOrder implements OnInit {
       quantity: 1,
       unitPrice: product.price,
       total: product.price,
+      serviceCharge: this.includeServiceCharge ? product.price * 0.1 : 0,
       observation: '',
     };
 
@@ -287,7 +299,12 @@ export class CreateOrder implements OnInit {
     if (newQuantity <= 0) return;
     this.orderItems = this.orderItems.map((item) =>
       item.productId === productId
-        ? { ...item, quantity: newQuantity, total: newQuantity * item.unitPrice }
+        ? {
+            ...item,
+            quantity: newQuantity,
+            total: newQuantity * item.unitPrice,
+            serviceCharge: this.includeServiceCharge ? newQuantity * item.unitPrice * 0.1 : 0,
+          }
         : item,
     );
   }
@@ -334,6 +351,7 @@ export class CreateOrder implements OnInit {
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         total: item.total,
+        serviceCharge: item.serviceCharge ?? 0,
         observation: item.observation,
       })),
       total: this.calculatedTotal,

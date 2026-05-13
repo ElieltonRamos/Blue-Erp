@@ -18,4 +18,6 @@ export class TableCard {
   @Output() products = new EventEmitter<any>();
   @Output() tab = new EventEmitter<any>();
   @Output() release = new EventEmitter<any>();
+  @Output() transfer = new EventEmitter<any>();
+  @Output() reprint = new EventEmitter<any>();
 }

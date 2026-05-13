@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 // src/production/order-production.controller.ts (atualizado)
 import {
   Controller,
@@ -168,5 +169,21 @@ export class ProductionController {
   @ApiParam({ name: 'id', description: 'ID da produção' })
   cancelProduction(@Param('id', ParseIntPipe) id: number) {
     return this.productionService.cancelProduction(id);
+  }
+
+  @Post('maintenance/complete-and-deliver-forgotten')
+  @ApiOperation({
+    summary:
+      'Finaliza e entrega produções de dias anteriores que ficaram presas em progresso',
+    description:
+      'Busca todas as produções com status IN_PROGRESS e startedAt anterior a hoje, completando-as e marcando como entregues.',
+  })
+  async completeAndDeliverForgotten() {
+    const result = await this.productionService.completeAndDeliverForgotten();
+
+    return {
+      message: 'Processamento de produções esquecidas finalizado',
+      ...result,
+    };
   }
 }

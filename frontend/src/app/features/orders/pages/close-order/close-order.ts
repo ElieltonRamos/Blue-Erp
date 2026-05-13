@@ -30,6 +30,12 @@ export interface PaymentEntry {
   change: number;
 }
 
+interface PaymentMethodConfig {
+  id: PaymentMethod;
+  name: string;
+  icon: string;
+}
+
 @Component({
   selector: 'app-close-order',
   standalone: true,
@@ -59,12 +65,12 @@ export class CloseOrder implements OnInit {
   newPaymentMethod: PaymentMethod | null = null;
   newPaymentAmount = 0;
 
-  paymentMethods = [
-    { id: 'DINHEIRO' as PaymentMethod, name: 'Dinheiro', icon: '💵' },
-    { id: 'CARTAO_CREDITO' as PaymentMethod, name: 'Crédito', icon: '💳' },
-    { id: 'CARTAO_DEBITO' as PaymentMethod, name: 'Débito', icon: '💳' },
-    { id: 'PIX' as PaymentMethod, name: 'PIX', icon: '📱' },
-    { id: 'CREDITO_LOJA' as PaymentMethod, name: 'Prazo', icon: '📅' },
+  paymentMethods: PaymentMethodConfig[] = [
+    { id: 'DINHEIRO', name: 'Dinheiro', icon: '💵' },
+    { id: 'CARTAO_CREDITO', name: 'Crédito', icon: '💳' },
+    { id: 'CARTAO_DEBITO', name: 'Débito', icon: '💳' },
+    { id: 'PIX', name: 'PIX', icon: '📱' },
+    { id: 'CREDITO_LOJA', name: 'Prazo', icon: '📅' },
   ];
 
   customerSearchId = '';
@@ -73,12 +79,20 @@ export class CloseOrder implements OnInit {
   isSearchingClient = false;
   searchResults: Client[] = [];
   selectedClientId: number | null = null;
+
   cfop = '5102';
   csosn = '102';
+
   showSaleModal = false;
   saleData: any = null;
 
+  Math = Math;
+
   ngOnInit(): void {
+    this.initializeOrder();
+  }
+
+  private initializeOrder(): void {
     this.orderId = Number(this.route.snapshot.paramMap.get('id')) || 0;
     if (!this.orderId) {
       this.notification.error('ID do pedido não informado');
@@ -105,9 +119,9 @@ export class CloseOrder implements OnInit {
     });
   }
 
-  calculateTotals(): void {
+  private calculateTotals(): void {
     if (!this.order) return;
-    this.subtotal = this.order.items.reduce((sum, i) => sum + i.total, 0);
+    this.subtotal = this.order.items.reduce((sum, item) => sum + item.total, 0);
     this.total = this.subtotal - this.discount;
     this.cdr.markForCheck();
   }
@@ -125,48 +139,106 @@ export class CloseOrder implements OnInit {
   }
 
   get remaining(): number {
-    const service = this.order?.serviceCharge ?? 0;
-    return Math.max(0, this.total + service - (this.totalPaid - this.totalChange));
+    const serviceCharge = this.order?.serviceCharge ?? 0;
+    const totalWithService = this.total + serviceCharge;
+    const amountPaidWithoutChange = this.totalPaid - this.totalChange;
+    return Math.max(0, totalWithService - amountPaidWithoutChange);
+  }
+
+  get previewChange(): number {
+    return Math.max(0, this.newPaymentAmount - this.remaining);
   }
 
   get isValidPayment(): boolean {
     if (this.payments.length === 0) return false;
-    const service = this.order?.serviceCharge ?? 0;
-    return this.totalPaid - this.totalChange >= this.total + service;
+    const serviceCharge = this.order?.serviceCharge ?? 0;
+    const totalWithService = this.total + serviceCharge;
+    const amountPaidWithoutChange = this.totalPaid - this.totalChange;
+    return amountPaidWithoutChange >= totalWithService;
+  }
+
+  get isValidNewPayment(): boolean {
+    if (!this.newPaymentMethod || this.newPaymentAmount <= 0) return false;
+    if (this.remaining <= 0) return false;
+    return true;
+  }
+
+  isPaymentMethodDisabled(methodId: PaymentMethod): boolean {
+    return methodId === 'CREDITO_LOJA' && !this.selectedClient;
+  }
+
+  getPaymentMethodTooltip(method: PaymentMethodConfig): string {
+    if (method.id === 'CREDITO_LOJA' && !this.selectedClient) {
+      return 'Selecione um cliente para usar venda a prazo';
+    }
+    return method.name;
+  }
+
+  getFinishButtonTooltip(): string {
+    if (this.payments.length === 0) {
+      return 'Adicione pelo menos um método de pagamento';
+    }
+    if (this.remaining > 0.01) {
+      return `Faltam R$ ${this.remaining.toFixed(2)} para completar o pagamento`;
+    }
+    if (this.isFinishing) {
+      return 'Finalizando venda...';
+    }
+    return 'Finalizar venda';
+  }
+
+  getAddPaymentButtonTooltip(): string {
+    if (this.newPaymentAmount <= 0) {
+      return 'Digite um valor válido';
+    }
+    if (this.remaining <= 0) {
+      return 'Pagamento já foi completado';
+    }
+    return 'Adicionar este pagamento';
   }
 
   selectNewMethod(method: PaymentMethod): void {
-    if (method === 'CREDITO_LOJA' && !this.selectedClient) {
+    if (this.isPaymentMethodDisabled(method)) {
       this.notification.warning('Venda a prazo requer cliente cadastrado');
       return;
     }
+
     this.newPaymentMethod = method;
     this.newPaymentAmount = this.remaining;
     this.cdr.markForCheck();
   }
 
   addPayment(): void {
-    if (!this.newPaymentMethod || this.newPaymentAmount <= 0) return;
+    if (!this.isValidNewPayment) return;
 
-    const change =
-      this.newPaymentMethod === 'DINHEIRO'
-        ? Math.max(0, this.newPaymentAmount - this.remaining)
-        : 0;
+    // NOVO: Bloquear pagamento maior que restante (exceto DINHEIRO)
+    if (this.newPaymentMethod !== 'DINHEIRO' && this.newPaymentAmount > this.remaining) {
+      this.notification.error(
+        `${this.getMethodLabel(this.newPaymentMethod!)} não pode exceder R$ ${this.remaining.toFixed(2)}`,
+      );
+      return;
+    }
+
+    const change = this.newPaymentMethod === 'DINHEIRO' ? this.previewChange : 0;
 
     this.payments.push({
-      method: this.newPaymentMethod,
+      method: this.newPaymentMethod!,
       amount: this.newPaymentAmount,
       change,
     });
 
-    this.newPaymentMethod = null;
-    this.newPaymentAmount = 0;
+    this.resetPaymentInput();
     this.cdr.markForCheck();
   }
 
   removePayment(index: number): void {
     this.payments.splice(index, 1);
     this.cdr.markForCheck();
+  }
+
+  private resetPaymentInput(): void {
+    this.newPaymentMethod = null;
+    this.newPaymentAmount = 0;
   }
 
   getMethodLabel(method: PaymentMethod): string {
@@ -177,27 +249,32 @@ export class CloseOrder implements OnInit {
     return this.paymentMethods.find((m) => m.id === method)?.icon ?? '';
   }
 
+  trackByClientId(_: number, client: Client): number {
+    return client.id!;
+  }
+
   searchCustomerById(): void {
-    if (!this.customerSearchId.trim()) {
+    const id = this.customerSearchId.trim();
+    if (!id) {
       this.notification.warning('Digite o ID do cliente');
       return;
     }
-    const id = Number(this.customerSearchId);
-    if (isNaN(id)) {
+
+    const numId = Number(id);
+    if (isNaN(numId)) {
       this.notification.error('ID inválido');
       return;
     }
+
     this.isSearchingClient = true;
-    this.clientService.findClientById(id).subscribe({
+    this.clientService.findClientById(numId).subscribe({
       next: (client) => {
         this.setClient(client);
-        this.isSearchingClient = false;
-        this.cdr.markForCheck();
+        this.clearSearchState();
       },
       error: () => {
         this.notification.error('Cliente não encontrado');
-        this.isSearchingClient = false;
-        this.cdr.markForCheck();
+        this.clearSearchState();
       },
     });
   }
@@ -208,28 +285,26 @@ export class CloseOrder implements OnInit {
       this.notification.warning('Digite um nome');
       return;
     }
+
     this.isSearchingClient = true;
     this.clientService.findClientByName(name).subscribe({
       next: (clients) => {
-        this.searchResults = clients;
-        if (clients.length === 1) {
-          this.setClient(clients[0]);
-          this.clearSearchResults();
-        } else if (clients.length === 0) {
+        if (clients.length === 0) {
           this.notification.warning('Nenhum cliente encontrado');
           this.clearSearchResults();
+        } else if (clients.length === 1) {
+          this.setClient(clients[0]);
+          this.clearSearchResults();
         } else {
+          this.searchResults = clients;
           this.selectedClientId = null;
-          this.notification.info('Selecione um cliente');
+          this.notification.info('Selecione um cliente da lista');
         }
-        this.isSearchingClient = false;
-        this.cdr.markForCheck();
+        this.clearSearchState();
       },
       error: () => {
         this.notification.error('Erro ao buscar cliente');
-        this.isSearchingClient = false;
-        this.clearSearchResults();
-        this.cdr.markForCheck();
+        this.clearSearchState();
       },
     });
   }
@@ -237,6 +312,7 @@ export class CloseOrder implements OnInit {
   selectClientFromResults(): void {
     const client = this.searchResults.find((c) => c.id === Number(this.selectedClientId));
     if (!client) return;
+
     this.setClient(client);
     this.clearSearchResults();
     this.cdr.markForCheck();
@@ -246,22 +322,26 @@ export class CloseOrder implements OnInit {
     if (!client.id) return;
     this.selectedClient = { ...client };
     this.notification.success(`Cliente ${client.name} selecionado`);
+    this.cdr.markForCheck();
   }
 
   clearCustomer(): void {
     this.selectedClient = null;
     this.customerSearchId = '';
     this.customerSearchName = '';
+    this.clearSearchResults();
     this.notification.info('Cliente removido');
+    this.cdr.markForCheck();
   }
 
-  clearSearchResults(): void {
+  private clearSearchResults(): void {
     this.searchResults = [];
     this.selectedClientId = null;
   }
 
-  trackByClientId(_: number, client: Client): number {
-    return client.id!;
+  private clearSearchState(): void {
+    this.isSearchingClient = false;
+    this.cdr.markForCheck();
   }
 
   finishOrder(): void {
@@ -269,6 +349,7 @@ export class CloseOrder implements OnInit {
       this.notification.error('Pagamento inválido');
       return;
     }
+
     if (!this.order?.items.length) {
       this.notification.error('Pedido vazio');
       return;
@@ -291,14 +372,15 @@ export class CloseOrder implements OnInit {
 
     this.orderService.convertToSale(this.orderId, dto).subscribe({
       next: (sale) => {
-        this.notification.success('Venda finalizada');
+        this.notification.success('Venda finalizada com sucesso');
         this.isFinishing = false;
         this.saleData = sale;
         this.showSaleModal = true;
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.notification.error(err?.error?.message || 'Erro ao finalizar');
+        const errorMsg = err?.error?.message || 'Erro ao finalizar venda';
+        this.notification.error(errorMsg);
         this.isFinishing = false;
         this.cdr.markForCheck();
       },
@@ -312,14 +394,21 @@ export class CloseOrder implements OnInit {
 
   async cancelOrder(): Promise<void> {
     const confirmed = await alertConfirm('Cancelar venda?');
-    if (confirmed) this.router.navigate(['/comandas']);
+    if (confirmed) {
+      this.router.navigate(['/comandas']);
+    }
+  }
+
+  getMaxPaymentAmount(): number {
+    // DINHEIRO pode pagar mais (gera troco)
+    if (this.newPaymentMethod === 'DINHEIRO') {
+      return Number.MAX_SAFE_INTEGER;
+    }
+    // Outros métodos: máximo é o restante
+    return this.remaining;
   }
 
   goToMenu(): void {
     this.router.navigate(['/dashboard']);
-  }
-
-  get previewChange(): number {
-    return Math.max(0, this.newPaymentAmount - this.remaining);
   }
 }

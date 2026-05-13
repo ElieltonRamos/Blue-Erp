@@ -1,23 +1,37 @@
 <form
   [formGroup]="companyForm"
   (ngSubmit)="onSubmit()"
-  class="mx-auto p-6 bg-linear-to-br from-[#1a1f3a] via-[#2d1b4e] to-[#1a1f3a] min-h-screen"
+  class="mx-auto p-6 min-h-screen"
+  [style.background-color]="'var(--color-base)'"
 >
   <!-- Botão Voltar ao Menu -->
   <div class="mb-6 flex justify-center">
     <button
       type="button"
       (click)="goToMenu()"
-      class="px-8 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+      class="px-8 py-3 rounded-lg text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+      [style.background-color]="'var(--color-accent)'"
+      [style.background-color]="'var(--color-accent-hover)'"
     >
       Voltar para menu
     </button>
   </div>
 
   <!-- Seção: Dados da Empresa -->
-  <div class="bg-[#2c3e5c] rounded-xl shadow-2xl overflow-hidden mb-6 border border-gray-700/50">
-    <div class="bg-linear-to-r from-[#3b82f6] to-[#2563eb] px-6 py-4 border-b border-blue-600/50">
-      <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+  <div
+    class="bg-surface rounded-xl shadow-2xl overflow-hidden mb-6 border"
+    [style.background-color]="'var(--color-surface)'"
+    [style.border-color]="'var(--color-border-subtle)'"
+  >
+    <div
+      class="px-6 py-4 border-b"
+      [style.background-color]="'var(--color-accent)'"
+      [style.border-color]="'var(--color-border)'"
+    >
+      <h2
+        class="text-xl font-semibold flex items-center gap-2"
+        [style.color]="'var(--color-text-primary)'"
+      >
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -34,77 +48,111 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- CNPJ -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            CNPJ <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            CNPJ <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <input
             type="text"
             formControlName="cnpj"
             placeholder="00.000.000/0000-00"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('cnpj')?.invalid && companyForm.get('cnpj')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
 
         <!-- Razão Social -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Razão Social <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Razão Social <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <input
             type="text"
             formControlName="corporateName"
             placeholder="Digite a razão social"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('corporateName')?.invalid && companyForm.get('corporateName')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
 
         <!-- Nome Fantasia -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Nome Fantasia <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Nome Fantasia <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <input
             type="text"
             formControlName="tradeName"
             placeholder="Digite o nome fantasia"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('tradeName')?.invalid && companyForm.get('tradeName')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
 
         <!-- Inscrição Estadual -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Inscrição Estadual <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Inscrição Estadual <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <input
             type="text"
             formControlName="stateRegistration"
             placeholder="Digite a IE"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('stateRegistration')?.invalid &&
               companyForm.get('stateRegistration')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
 
         <!-- Regime Tributário -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Regime Tributário <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Regime Tributário <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <select
             formControlName="taxRegime"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="'var(--color-border)'"
           >
             <option value="1">Simples Nacional</option>
             <option value="2">Simples Nacional - Excesso</option>
@@ -114,30 +162,46 @@
 
         <!-- Telefone -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Telefone <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Telefone <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <input
             type="text"
             formControlName="phone"
             placeholder="(00) 0000-0000"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('phone')?.invalid && companyForm.get('phone')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
 
         <!-- Email -->
         <div class="md:col-span-2 lg:col-span-3">
-          <label class="block text-gray-300 font-medium mb-2 text-sm"> E-mail </label>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            E-mail
+          </label>
           <input
             type="email"
             formControlName="email"
             placeholder="contato@empresa.com"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('email')?.invalid && companyForm.get('email')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
@@ -146,9 +210,20 @@
   </div>
 
   <!-- Seção: Endereço -->
-  <div class="bg-[#2c3e5c] rounded-xl shadow-2xl overflow-hidden mb-6 border border-gray-700/50">
-    <div class="bg-linear-to-r from-[#10b981] to-[#059669] px-6 py-4 border-b border-green-600/50">
-      <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+  <div
+    class="bg-surface rounded-xl shadow-2xl overflow-hidden mb-6 border"
+    [style.background-color]="'var(--color-surface)'"
+    [style.border-color]="'var(--color-border-subtle)'"
+  >
+    <div
+      class="px-6 py-4 border-b"
+      [style.background-color]="'var(--color-success)'"
+      [style.border-color]="'var(--color-border)'"
+    >
+      <h2
+        class="text-xl font-semibold flex items-center gap-2"
+        [style.color]="'var(--color-text-primary)'"
+      >
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -171,119 +246,175 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- CEP -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            CEP <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            CEP <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <input
             type="text"
             formControlName="zipCode"
             placeholder="00000-000"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('zipCode')?.invalid && companyForm.get('zipCode')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
 
         <!-- Logradouro -->
         <div class="md:col-span-2">
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Logradouro <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Logradouro <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <input
             type="text"
             formControlName="street"
             placeholder="Rua, Avenida, etc."
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('street')?.invalid && companyForm.get('street')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
 
         <!-- Número -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Número <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Número <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <input
             type="text"
             formControlName="number"
             placeholder="123"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('number')?.invalid && companyForm.get('number')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
 
         <!-- Complemento -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm"> Complemento </label>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Complemento
+          </label>
           <input
             type="text"
             formControlName="complement"
             placeholder="Apto, Sala, etc."
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="'var(--color-border)'"
           />
         </div>
 
         <!-- Bairro -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Bairro <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Bairro <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <input
             type="text"
             formControlName="neighborhood"
             placeholder="Nome do bairro"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('neighborhood')?.invalid && companyForm.get('neighborhood')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
 
         <!-- Município -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Município <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Município <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <input
             type="text"
             formControlName="city"
             placeholder="Nome da cidade"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('city')?.invalid && companyForm.get('city')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
 
         <!-- Código Município -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Código Município (IBGE) <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Código Município (IBGE) <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <input
             type="text"
             formControlName="cityCode"
             placeholder="0000000"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('cityCode')?.invalid && companyForm.get('cityCode')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
 
         <!-- UF -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            UF <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            UF <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <select
             formControlName="state"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-green-400 focus:ring-2 focus:ring-green-400/30 transition-all duration-200 outline-none"
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="'var(--color-border)'"
           >
             <option value="">Selecione</option>
             <option value="AC">Acre</option>
@@ -321,17 +452,31 @@
 
   <!-- Seção: Configurações NFC-e -->
   <div
-    class="bg-[#2c3e5c] rounded-xl shadow-2xl overflow-hidden mb-6 border border-gray-700/50"
+    class="bg-surface rounded-xl shadow-2xl overflow-hidden mb-6 border"
+    [style.background-color]="'var(--color-surface)'"
+    [style.border-color]="'var(--color-border-subtle)'"
     [class.opacity-60]="!canAccessFiscalFeatures"
     [class.pointer-events-none]="!canAccessFiscalFeatures"
   >
     @if (!canAccessFiscalFeatures) {
-      <div class="p-3 bg-yellow-50 border border-yellow-300 rounded-lg text-yellow-800 text-sm">
+      <div
+        class="p-3 border rounded-lg text-sm"
+        [style.background-color]="'var(--color-warning)'"
+        [style.border-color]="'var(--color-warning)'"
+        [style.color]="'var(--color-text-primary)'"
+      >
         ⚠️ Configurações fiscais disponíveis apenas no plano Pro
       </div>
     }
-    <div class="bg-linear-to-r from-[#f59e0b] to-[#d97706] px-6 py-4 border-b border-orange-600/50">
-      <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+    <div
+      class="px-6 py-4 border-b"
+      [style.background-color]="'var(--color-warning)'"
+      [style.border-color]="'var(--color-border)'"
+    >
+      <h2
+        class="text-xl font-semibold flex items-center gap-2"
+        [style.color]="'var(--color-text-primary)'"
+      >
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -348,45 +493,65 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Série NFC-e -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Série NFC-e <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Série NFC-e <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <input
             type="text"
             formControlName="nfceSeries"
             placeholder="1"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('nfceSeries')?.invalid && companyForm.get('nfceSeries')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
 
         <!-- Número Atual NFC-e -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Número Atual NFC-e <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Número Atual NFC-e <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <input
             type="number"
             formControlName="nfceCurrentNumber"
             placeholder="0"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('nfceCurrentNumber')?.invalid &&
               companyForm.get('nfceCurrentNumber')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
 
         <!-- Ambiente NFC-e -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Ambiente <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Ambiente <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <select
             formControlName="nfceEnvironment"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30 transition-all duration-200 outline-none"
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="'var(--color-border)'"
           >
             <option value="staging">Homologação</option>
             <option value="production">Produção</option>
@@ -395,32 +560,46 @@
 
         <!-- CSC -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            CSC (Código de Segurança) <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            CSC (Código de Segurança) <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <input
             type="text"
             formControlName="nfceCsc"
             [placeholder]="nfceCscConfigured ? SENSITIVE_PLACEHOLDER : 'Digite o CSC'"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('nfceCsc')?.invalid && companyForm.get('nfceCsc')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
 
         <!-- ID CSC -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            ID CSC <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            ID CSC <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <input
             type="text"
             formControlName="nfceCscId"
             [placeholder]="nfceCscIdConfigured ? SENSITIVE_PLACEHOLDER : 'Digite o ID do CSC'"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('nfceCscId')?.invalid && companyForm.get('nfceCscId')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
@@ -430,17 +609,30 @@
 
   <!-- Seção: Certificado Digital -->
   <div
-    class="bg-[#1d2a3c] rounded-xl shadow-lg overflow-hidden mb-6"
+    class="rounded-xl shadow-lg overflow-hidden mb-6"
+    [style.background-color]="'var(--color-surface)'"
     [class.opacity-60]="!canAccessFiscalFeatures"
     [class.pointer-events-none]="!canAccessFiscalFeatures"
   >
     @if (!canAccessFiscalFeatures) {
-      <div class="p-3 bg-yellow-50 border border-yellow-300 rounded-lg text-yellow-800 text-sm">
+      <div
+        class="p-3 border rounded-lg text-sm"
+        [style.background-color]="'var(--color-warning)'"
+        [style.border-color]="'var(--color-warning)'"
+        [style.color]="'var(--color-text-primary)'"
+      >
         ⚠️ Configurações fiscais disponíveis apenas no plano Pro
       </div>
     }
-    <div class="bg-linear-to-r from-[#0f1b2e] to-[#1a2942] px-6 py-4 border-b border-gray-700">
-      <h2 class="text-xl font-semibold text-purple-400 flex items-center gap-2">
+    <div
+      class="px-6 py-4 border-b"
+      [style.background-color]="'var(--color-accent)'"
+      [style.border-color]="'var(--color-border)'"
+    >
+      <h2
+        class="text-xl font-semibold flex items-center gap-2"
+        [style.color]="'var(--color-text-primary)'"
+      >
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -457,11 +649,13 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Upload Certificado -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Arquivo do Certificado (.pfx) <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Arquivo do Certificado (.pfx) <span [style.color]="'var(--color-danger)'">*</span>
           </label>
 
-          <!-- input de arquivo oculto -->
           <input
             type="file"
             id="certificateFile"
@@ -470,11 +664,12 @@
             class="hidden"
           />
 
-          <!-- botão para abrir o seletor de arquivo -->
           <button
             type="button"
             (click)="triggerFileInput()"
-            class="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border-2 border-gray-600 hover:border-purple-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 outline-none flex items-center justify-center gap-2"
+            class="w-full px-4 py-3 rounded-lg border-2 text-white font-medium transition-all duration-200 outline-none flex items-center justify-center gap-2"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.border-color]="'var(--color-border)'"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -487,9 +682,8 @@
             <span>{{ selectedFileName || 'Selecionar arquivo' }}</span>
           </button>
 
-          <!-- mostra o arquivo atual salvo no banco quando não há novo selecionado -->
           @if (certificateConfigured && !selectedFileName) {
-            <p class="text-xs text-emerald-400 mt-2 flex items-center gap-1">
+            <p class="text-xs mt-2 flex items-center gap-1" [style.color]="'var(--color-success)'">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
@@ -505,23 +699,29 @@
 
         <!-- Senha Certificado -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Senha do Certificado <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Senha do Certificado <span [style.color]="'var(--color-danger)'">*</span>
           </label>
           <input
             type="password"
             formControlName="certificatePassword"
             placeholder="Digite a senha"
-            class="w-full px-4 py-3 rounded-lg bg-[#374151] text-white border-2 border-gray-600 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/30 transition-all duration-200 outline-none"
-            [class.border-red-500]="
+            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+            [style.border-color]="
               companyForm.get('certificatePassword')?.invalid &&
               companyForm.get('certificatePassword')?.touched
+                ? 'var(--color-danger)'
+                : 'var(--color-border)'
             "
           />
         </div>
       </div>
 
-      <!-- Botão Enviar Certificado -->
       <div class="mt-6">
         <button
           type="button"
@@ -533,7 +733,8 @@
           [class.cursor-not-allowed]="
             !selectedFile || !companyForm.get('certificatePassword')?.value || isLoading
           "
-          class="px-6 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-200 shadow-md flex items-center gap-2"
+          class="px-6 py-3 rounded-lg text-white font-medium transition-all duration-200 shadow-md flex items-center gap-2"
+          [style.background-color]="'var(--color-accent)'"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -551,14 +752,18 @@
         </button>
       </div>
 
-      <!-- Aviso Importante -->
-      <div class="mt-4 bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+      <div
+        class="mt-4 border rounded-lg p-4"
+        [style.background-color]="'var(--color-accent)'"
+        [style.border-color]="'var(--color-accent)'"
+      >
         <div class="flex gap-3">
           <svg
-            class="w-5 h-5 text-purple-400 shrink-0 mt-0.5"
+            class="w-5 h-5 shrink-0 mt-0.5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            [style.color]="'var(--color-text-secondary)'"
           >
             <path
               stroke-linecap="round"
@@ -568,10 +773,10 @@
             />
           </svg>
           <div>
-            <p class="text-purple-300 font-medium text-sm">
+            <p class="font-medium text-sm" [style.color]="'var(--color-text-primary)'">
               Importante sobre o certificado digital
             </p>
-            <p class="text-gray-400 text-xs mt-1">
+            <p class="text-xs mt-1" [style.color]="'var(--color-text-secondary)'">
               O certificado digital é necessário para emissão de NFC-e. Certifique-se de que o
               arquivo está no formato .pfx ou .p12 e que a senha está correta.
             </p>
@@ -583,17 +788,30 @@
 
   <!-- Seção: Atualização Tabela IBPT -->
   <div
-    class="bg-[#1d2a3c] rounded-xl shadow-lg overflow-hidden mb-6"
+    class="rounded-xl shadow-lg overflow-hidden mb-6"
+    [style.background-color]="'var(--color-surface)'"
     [class.opacity-60]="!canAccessFiscalFeatures"
     [class.pointer-events-none]="!canAccessFiscalFeatures"
   >
     @if (!canAccessFiscalFeatures) {
-      <div class="p-3 bg-yellow-50 border border-yellow-300 rounded-lg text-yellow-800 text-sm">
+      <div
+        class="p-3 border rounded-lg text-sm"
+        [style.background-color]="'var(--color-warning)'"
+        [style.border-color]="'var(--color-warning)'"
+        [style.color]="'var(--color-text-primary)'"
+      >
         ⚠️ Upload de tabela IBPT disponível apenas no plano Pro
       </div>
     }
-    <div class="bg-linear-to-r from-[#0f1b2e] to-[#1a2942] px-6 py-4 border-b border-gray-700">
-      <h2 class="text-xl font-semibold text-emerald-400 flex items-center gap-2">
+    <div
+      class="px-6 py-4 border-b"
+      [style.background-color]="'var(--color-success)'"
+      [style.border-color]="'var(--color-border)'"
+    >
+      <h2
+        class="text-xl font-semibold flex items-center gap-2"
+        [style.color]="'var(--color-text-primary)'"
+      >
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -610,11 +828,13 @@
       <div class="grid grid-cols-1 gap-6">
         <!-- Upload CSV IBPT -->
         <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Arquivo CSV da Tabela IBPT <span class="text-red-400">*</span>
+          <label
+            class="block font-medium mb-2 text-sm"
+            [style.color]="'var(--color-text-secondary)'"
+          >
+            Arquivo CSV da Tabela IBPT <span [style.color]="'var(--color-danger)'">*</span>
           </label>
 
-          <!-- input de arquivo oculto -->
           <input
             type="file"
             id="ibptFile"
@@ -623,11 +843,12 @@
             class="hidden"
           />
 
-          <!-- botão para abrir o seletor de arquivo -->
           <button
             type="button"
             (click)="triggerIbptFileInput()"
-            class="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border-2 border-gray-600 hover:border-emerald-500 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200 outline-none flex items-center justify-center gap-2"
+            class="w-full px-4 py-3 rounded-lg border-2 text-white font-medium transition-all duration-200 outline-none flex items-center justify-center gap-2"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.border-color]="'var(--color-border)'"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -641,7 +862,7 @@
           </button>
 
           @if (selectedIbptFileName) {
-            <p class="text-xs text-emerald-400 mt-2 flex items-center gap-1">
+            <p class="text-xs mt-2 flex items-center gap-1" [style.color]="'var(--color-success)'">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
@@ -663,7 +884,8 @@
             [disabled]="!selectedIbptFile || isUploadingIbpt"
             [class.opacity-50]="!selectedIbptFile || isUploadingIbpt"
             [class.cursor-not-allowed]="!selectedIbptFile || isUploadingIbpt"
-            class="px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition-all duration-200 shadow-md flex items-center gap-2"
+            class="px-6 py-3 rounded-lg text-white font-medium transition-all duration-200 shadow-md flex items-center gap-2"
+            [style.background-color]="'var(--color-success)'"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -682,13 +904,18 @@
         </div>
 
         <!-- Aviso Importante IBPT -->
-        <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
+        <div
+          class="border rounded-lg p-4"
+          [style.background-color]="'var(--color-success)'"
+          [style.border-color]="'var(--color-success)'"
+        >
           <div class="flex gap-3">
             <svg
-              class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5"
+              class="w-5 h-5 shrink-0 mt-0.5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              [style.color]="'var(--color-text-secondary)'"
             >
               <path
                 stroke-linecap="round"
@@ -698,14 +925,17 @@
               />
             </svg>
             <div>
-              <p class="text-emerald-300 font-medium text-sm">Sobre a Tabela IBPT</p>
-              <p class="text-gray-400 text-xs mt-1">
+              <p class="font-medium text-sm" [style.color]="'var(--color-text-primary)'">
+                Sobre a Tabela IBPT
+              </p>
+              <p class="text-xs mt-1" [style.color]="'var(--color-text-secondary)'">
                 A tabela IBPT contém as alíquotas de impostos aproximados por NCM. Baixe a tabela
                 atualizada em
                 <a
                   href="https://deolhonoimposto.ibpt.org.br"
                   target="_blank"
-                  class="text-emerald-400 hover:text-emerald-300 underline"
+                  class="underline"
+                  [style.color]="'var(--color-success)'"
                 >
                   deolhonoimposto.ibpt.org.br
                 </a>
@@ -719,16 +949,20 @@
   </div>
 
   <!-- Botões de Ação Final -->
-  <div class="bg-[#1d2a3c] rounded-xl shadow-lg p-6">
-    <!-- Alerta de Validação -->
+  <div class="rounded-xl shadow-lg p-6" [style.background-color]="'var(--color-surface)'">
     @if (companyForm.invalid && showValidationErrors) {
-      <div class="mb-6 bg-red-500/10 border-2 border-red-500/50 rounded-lg p-4 animate-pulse">
+      <div
+        class="mb-6 border-2 rounded-lg p-4 animate-pulse"
+        [style.background-color]="'var(--color-danger)'"
+        [style.border-color]="'var(--color-danger)'"
+      >
         <div class="flex gap-3">
           <svg
-            class="w-6 h-6 text-red-400 shrink-0 mt-0.5"
+            class="w-6 h-6 shrink-0 mt-0.5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            [style.color]="'var(--color-text-primary)'"
           >
             <path
               stroke-linecap="round"
@@ -738,15 +972,18 @@
             />
           </svg>
           <div class="flex-1">
-            <h3 class="text-red-400 font-semibold text-sm mb-2">
+            <h3 class="font-semibold text-sm mb-2" [style.color]="'var(--color-text-primary)'">
               ⚠️ Campos obrigatórios não preenchidos
             </h3>
-            <p class="text-gray-300 text-sm mb-3">
+            <p class="text-sm mb-3" [style.color]="'var(--color-text-secondary)'">
               Os seguintes campos precisam ser preenchidos para salvar:
             </p>
             <ul class="space-y-1">
               @for (field of getInvalidFields(); track field) {
-                <li class="text-red-300 text-sm flex items-center gap-2">
+                <li
+                  class="text-sm flex items-center gap-2"
+                  [style.color]="'var(--color-text-secondary)'"
+                >
                   <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fill-rule="evenodd"
@@ -767,7 +1004,8 @@
       <button
         type="button"
         (click)="goToMenu()"
-        class="px-6 py-3 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-medium transition-all duration-200 flex items-center gap-2"
+        class="px-6 py-3 rounded-lg text-white font-medium transition-all duration-200 flex items-center gap-2"
+        [style.background-color]="'var(--color-surface-alt)'"
       >
         <span>Cancelar</span>
       </button>
@@ -777,12 +1015,15 @@
         [disabled]="companyForm.invalid || isLoading"
         [class.opacity-50]="companyForm.invalid || isLoading"
         [class.cursor-not-allowed]="companyForm.invalid || isLoading"
-        class="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all duration-200 hover:scale-105 shadow-md flex items-center gap-2 relative"
+        class="px-6 py-3 rounded-lg text-white font-medium transition-all duration-200 hover:scale-105 shadow-md flex items-center gap-2 relative"
+        [style.background-color]="'var(--color-accent)'"
       >
         @if (companyForm.invalid && !isLoading) {
           <span
-            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-bounce"
+            class="absolute -top-2 -right-2 rounded-full w-6 h-6 flex items-center justify-center animate-bounce font-bold text-xs"
             title="Campos obrigatórios faltando"
+            [style.background-color]="'var(--color-danger)'"
+            [style.color]="'var(--color-text-primary)'"
           >
             {{ getInvalidFields().length }}
           </span>

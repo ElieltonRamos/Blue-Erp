@@ -14,3 +14,14 @@ export function nowBrasilia(): Date {
 export function toSefazDateTime(date: Date): string {
   return date.toISOString().replace(/\.\d{3}Z$/, '-03:00');
 }
+
+export function resolveLogicalDateTime(): Date {
+  const now = nowBrasilia();
+  const hour = now.getHours();
+
+  if (hour < 6) {
+    now.setDate(now.getDate() - 1);
+  }
+
+  return now;
+}

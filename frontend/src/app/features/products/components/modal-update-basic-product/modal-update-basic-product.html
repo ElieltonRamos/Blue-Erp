@@ -1,127 +1,162 @@
-<div
-  class="fixed inset-0 flex items-center justify-center z-50 p-4"
-  style="background-color: rgba(0, 0, 0, 0.85)"
->
+<div class="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/70 backdrop-blur-sm">
   <div
-    class="bg-linear-to-br from-[#1d2a3c] to-[#2a3f5f] rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto"
+    class="bg-surface border border-border rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col"
   >
     <!-- Header -->
     <div
-      class="bg-linear-to-r from-[#0f1b2e] to-[#1a2942] text-white p-6 rounded-t-2xl sticky top-0 z-10"
+      class="bg-linear-to-r from-surface to-surface-alt border-b border-border px-6 py-5 sticky top-0 z-10"
     >
-      <h2 class="text-2xl font-bold">Editar Informações Básicas</h2>
-      <p class="text-gray-300 text-sm mt-1">Produto #{{ product.id }} - {{ product.name }}</p>
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-bold text-text-primary">Editar Informações Básicas</h2>
+
+          <p class="text-sm text-text-secondary mt-1">
+            Produto
+            <span class="font-semibold text-accent"> #{{ product.id }} </span>
+            —
+            <span class="font-medium text-text-primary">
+              {{ product.name }}
+            </span>
+          </p>
+        </div>
+
+        <div
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-overlay border border-border"
+        >
+          <div
+            [class]="product.active ? 'bg-success' : 'bg-text-muted'"
+            class="w-2.5 h-2.5 rounded-full"
+          ></div>
+
+          <span class="text-xs font-semibold text-text-secondary">
+            {{ product.active ? 'ATIVO' : 'INATIVO' }}
+          </span>
+        </div>
+      </div>
     </div>
 
     <!-- Body -->
-    <div class="p-6 space-y-6">
-      <!-- Seção: Informações Básicas -->
-      <div class="space-y-4">
-        <h3 class="text-lg font-semibold text-blue-400 flex items-center gap-2">
-          <span class="w-1 h-5 bg-blue-400 rounded"></span>
-          Informações Básicas
-        </h3>
+    <div class="flex-1 overflow-y-auto p-6 space-y-6">
+      <!-- Informações Básicas -->
+      <div class="bg-surface-alt border border-border rounded-2xl p-5 space-y-5">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-accent/15 border border-accent/20 flex items-center justify-center"
+          >
+            <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-bold text-text-primary">Informações Básicas</h3>
+
+            <p class="text-sm text-text-secondary">Dados principais do produto</p>
+          </div>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <!-- Nome -->
           <div class="md:col-span-2">
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              Nome do Produto <span class="text-red-400">*</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Nome do Produto
+              <span class="text-danger">*</span>
             </label>
+
             <input
               type="text"
               [(ngModel)]="product.name"
               [ngModelOptions]="{ standalone: true }"
               placeholder="Nome do produto"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-medium placeholder:text-text-muted border border-border focus:border-accent focus:ring-4 focus:ring-accent/15 transition-all duration-200 outline-none"
             />
           </div>
 
           <!-- Código -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              Código/SKU <span class="text-red-400">*</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Código/SKU
+              <span class="text-danger">*</span>
             </label>
+
             <input
               type="text"
               [(ngModel)]="product.code"
               [ngModelOptions]="{ standalone: true }"
               placeholder="Código"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none"
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-medium placeholder:text-text-muted border border-border focus:border-accent focus:ring-4 focus:ring-accent/15 transition-all duration-200 outline-none"
             />
           </div>
 
-          <!-- Tipo de Produto -->
+          <!-- Tipo -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              Tipo de Produto <span class="text-red-400">*</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Tipo de Produto
+              <span class="text-danger">*</span>
             </label>
+
             <select
               [(ngModel)]="editableProductType"
               (ngModelChange)="onProductTypeChange()"
               [ngModelOptions]="{ standalone: true }"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
-              style="
-                background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
-                background-repeat: no-repeat;
-                background-position: right 0.7rem center;
-                background-size: 1.2em;
-              "
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-medium border border-border focus:border-accent focus:ring-4 focus:ring-accent/15 transition-all duration-200 outline-none appearance-none cursor-pointer"
             >
               <option value="MANUFACTURED">Manufaturado (Produzido)</option>
+
               <option value="SEMI_MANUFACTURED">Semipronto (Produzido)</option>
+
               <option value="RESALE">Revenda</option>
             </select>
-            <p class="text-gray-400 text-xs mt-1">
+
+            <p class="text-text-muted text-xs mt-1">
               @if (hasComposition) {
                 Produto com composição de matérias-primas
               }
+
               @if (editableProductType === 'RESALE') {
                 Produto adquirido para revenda direta
               }
             </p>
           </div>
 
-          <!-- Local de Produção -->
+          <!-- Local -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
               Local de Produção
-              <span class="text-gray-400 text-xs">(opcional)</span>
+              <span class="text-text-muted text-xs">(opcional)</span>
             </label>
+
             <select
               [(ngModel)]="product.productionLocation"
               [ngModelOptions]="{ standalone: true }"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
-              style="
-                background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
-                background-repeat: no-repeat;
-                background-position: right 0.7rem center;
-                background-size: 1.2em;
-              "
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-medium border border-border focus:border-accent focus:ring-4 focus:ring-accent/15 transition-all duration-200 outline-none appearance-none cursor-pointer"
             >
               <option [value]="null">Nenhum</option>
+
               <option *ngFor="let location of productionLocationOptions" [value]="location.code">
                 {{ location.name }}
               </option>
             </select>
-            <p class="text-gray-400 text-xs mt-1">Onde este produto é preparado/produzido</p>
+
+            <p class="text-text-muted text-xs mt-1">Onde este produto é preparado/produzido</p>
           </div>
 
           <!-- Unidade -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              Unidade <span class="text-red-400">*</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Unidade
+              <span class="text-danger">*</span>
             </label>
+
             <select
               [(ngModel)]="product.unit"
               [ngModelOptions]="{ standalone: true }"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
-              style="
-                background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
-                background-repeat: no-repeat;
-                background-position: right 0.7rem center;
-                background-size: 1.2em;
-              "
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-medium border border-border focus:border-accent focus:ring-4 focus:ring-accent/15 transition-all duration-200 outline-none appearance-none cursor-pointer"
             >
               <option *ngFor="let unitOption of unitOptions" [value]="unitOption">
                 {{ unitOption }}
@@ -131,30 +166,31 @@
 
           <!-- Categoria -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              Categoria <span class="text-gray-400 text-xs">(opcional)</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Categoria
+              <span class="text-text-muted text-xs">(opcional)</span>
             </label>
+
             <select
               [(ngModel)]="product.categoryId"
               [ngModelOptions]="{ standalone: true }"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
-              style="
-                background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
-                background-repeat: no-repeat;
-                background-position: right 0.7rem center;
-                background-size: 1.2em;
-              "
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-medium border border-border focus:border-accent focus:ring-4 focus:ring-accent/15 transition-all duration-200 outline-none appearance-none cursor-pointer"
             >
               <option [ngValue]="null">Sem categoria</option>
-              <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+
+              <option *ngFor="let cat of categories" [value]="cat.id">
+                {{ cat.name }}
+              </option>
             </select>
           </div>
 
           <!-- Quantidade -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              Quantidade em Estoque <span class="text-red-400">*</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Quantidade em Estoque
+              <span class="text-danger">*</span>
             </label>
+
             <input
               type="number"
               [(ngModel)]="product.quantity"
@@ -162,158 +198,224 @@
               [disabled]="hasComposition"
               min="0"
               placeholder="0"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 outline-none disabled:bg-gray-300 disabled:cursor-not-allowed"
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-medium placeholder:text-text-muted border border-border focus:border-info focus:ring-4 focus:ring-info/15 transition-all duration-200 outline-none disabled:bg-overlay disabled:text-text-muted disabled:cursor-not-allowed"
             />
+
             @if (hasComposition) {
-              <p class="text-gray-400 text-xs mt-1">
+              <p class="text-text-muted text-xs mt-1">
                 Calculado automaticamente pelas matérias-primas
               </p>
             }
           </div>
 
-          <!-- Estoque Mínimo -->
+          <!-- Min -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">Estoque Mínimo</label>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Estoque Mínimo
+            </label>
+
             <input
               type="number"
               [(ngModel)]="product.minStock"
               [ngModelOptions]="{ standalone: true }"
               min="0"
               placeholder="0"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none"
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-medium placeholder:text-text-muted border border-border focus:border-warning focus:ring-4 focus:ring-warning/15 transition-all duration-200 outline-none"
             />
           </div>
         </div>
       </div>
 
       <!-- Valores -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <!-- Preço de Venda -->
-        <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Preço de Venda <span class="text-red-400">*</span>
-          </label>
-          <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">R$</span>
-            <input
-              type="number"
-              [(ngModel)]="product.price"
-              [ngModelOptions]="{ standalone: true }"
-              step="0.01"
-              min="0"
-              placeholder="0,00"
-              class="w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
-            />
+      <div class="bg-surface-alt border border-border rounded-2xl p-5 space-y-5">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-success/15 border border-success/20 flex items-center justify-center"
+          >
+            <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8c-3.866 0-7 1.79-7 4s3.134 4 7 4 7-1.79 7-4-3.134-4-7-4zm0 0V4m0 12v4"
+              />
+            </svg>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-bold text-text-primary">Valores e Custos</h3>
+
+            <p class="text-sm text-text-secondary">Precificação e margem de lucro</p>
           </div>
         </div>
 
-        <!-- Preço de Custo -->
-        <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">
-            Preço de Custo <span class="text-red-400">*</span>
-          </label>
-          <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">R$</span>
-            <input
-              type="number"
-              [(ngModel)]="product.costPrice"
-              [ngModelOptions]="{ standalone: true }"
-              step="0.01"
-              min="0"
-              placeholder="0,00"
-              [disabled]="hasComposition"
-              class="w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none disabled:bg-gray-300 disabled:cursor-not-allowed"
-            />
-          </div>
-          @if (hasComposition) {
-            <p class="text-gray-400 text-xs mt-1">Calculado automaticamente pela composição</p>
-          }
-        </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- Venda -->
+          <div>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Preço de Venda
+              <span class="text-danger">*</span>
+            </label>
 
-        <!-- Custos Extras -->
-        <div>
-          <label class="block text-gray-300 font-medium mb-2 text-sm">Custos Extras</label>
-          <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">R$</span>
-            <input
-              type="number"
-              [(ngModel)]="product.extraCosts"
-              [ngModelOptions]="{ standalone: true }"
-              step="0.01"
-              min="0"
-              placeholder="0,00"
-              class="w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 outline-none"
-            />
-          </div>
-          <p class="text-gray-400 text-xs mt-1">Embalagem, transporte, taxas, etc.</p>
-        </div>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-success font-bold">
+                R$
+              </span>
 
-        <!-- Margem de Lucro -->
-        <div class="bg-white/5 p-3 rounded-lg border border-green-400/30">
-          <label class="block text-gray-300 font-medium mb-2 text-sm">Margem de Lucro</label>
-          <div class="text-2xl font-bold text-green-400">
-            {{ calculateProfitMargin().toFixed(2) }}%
+              <input
+                type="number"
+                [(ngModel)]="product.price"
+                [ngModelOptions]="{ standalone: true }"
+                step="1"
+                min="0"
+                placeholder="0,00"
+                class="w-full pl-12 pr-4 py-3 rounded-xl bg-surface text-text-primary font-medium placeholder:text-text-muted border border-border focus:border-success focus:ring-4 focus:ring-success/15 transition-all duration-200 outline-none"
+              />
+            </div>
           </div>
-          <p class="text-xs text-gray-400 mt-1">Calculado automaticamente</p>
+
+          <!-- Custo -->
+          <div>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Preço de Custo
+              <span class="text-danger">*</span>
+            </label>
+
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-warning font-bold">
+                R$
+              </span>
+
+              <input
+                type="number"
+                [(ngModel)]="product.costPrice"
+                [ngModelOptions]="{ standalone: true }"
+                step="1"
+                min="0"
+                placeholder="0,00"
+                [disabled]="hasComposition"
+                class="w-full pl-12 pr-4 py-3 rounded-xl bg-surface text-text-primary font-medium placeholder:text-text-muted border border-border focus:border-warning focus:ring-4 focus:ring-warning/15 transition-all duration-200 outline-none disabled:bg-overlay disabled:text-text-muted disabled:cursor-not-allowed"
+              />
+            </div>
+
+            @if (hasComposition) {
+              <p class="text-text-muted text-xs mt-1">Calculado automaticamente pela composição</p>
+            }
+          </div>
+
+          <!-- Extras -->
+          <div>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Custos Extras
+            </label>
+
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-info font-bold"> R$ </span>
+
+              <input
+                type="number"
+                [(ngModel)]="product.extraCosts"
+                [ngModelOptions]="{ standalone: true }"
+                step="1"
+                min="0"
+                placeholder="0,00"
+                class="w-full pl-12 pr-4 py-3 rounded-xl bg-surface text-text-primary font-medium placeholder:text-text-muted border border-border focus:border-info focus:ring-4 focus:ring-info/15 transition-all duration-200 outline-none"
+              />
+            </div>
+
+            <p class="text-text-muted text-xs mt-1">Embalagem, transporte, taxas, etc.</p>
+          </div>
+
+          <!-- Margem -->
+          <div
+            class="rounded-2xl bg-success/10 border border-success/20 p-4 flex flex-col justify-center"
+          >
+            <span class="text-sm font-semibold text-text-secondary"> Margem de Lucro </span>
+
+            <div class="text-3xl font-bold text-success mt-1">
+              {{ calculateProfitMargin().toFixed(2) }}%
+            </div>
+
+            <p class="text-xs text-text-muted mt-1">Calculado automaticamente</p>
+          </div>
         </div>
       </div>
 
-      <!-- Seção: Informações Fiscais -->
-      <div class="space-y-4 bg-white/5 p-5 rounded-xl border border-white/10">
-        <h3 class="text-lg font-semibold text-yellow-400 flex items-center gap-2">
-          <span class="w-1 h-5 bg-yellow-400 rounded"></span>
-          Informações Fiscais
-        </h3>
+      <!-- Fiscal -->
+      <div class="bg-surface-alt border border-border rounded-2xl p-5 space-y-5">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-warning/15 border border-warning/20 flex items-center justify-center"
+          >
+            <svg class="w-5 h-5 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 14l2-2 4 4m0 0l-4-4-2 2m6 2V6"
+              />
+            </svg>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-bold text-text-primary">Informações Fiscais</h3>
+
+            <p class="text-sm text-text-secondary">Dados necessários para emissão fiscal</p>
+          </div>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <!-- NCM -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              NCM <span class="text-red-400">*</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              NCM
+              <span class="text-danger">*</span>
             </label>
+
             <input
               type="text"
               [(ngModel)]="product.ncm"
               [ngModelOptions]="{ standalone: true }"
               maxlength="8"
               placeholder="12345678"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-mono font-medium placeholder-gray-400 border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none"
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-mono font-medium placeholder:text-text-muted border border-border focus:border-warning focus:ring-4 focus:ring-warning/15 transition-all duration-200 outline-none"
             />
-            <p class="text-gray-400 text-xs mt-1">8 dígitos numéricos</p>
-            <p class="text-gray-400 text-xs mt-1">Sem NCM, não é possível emitir nota fiscal</p>
+
+            <p class="text-text-muted text-xs mt-1">8 dígitos numéricos</p>
+
+            <p class="text-danger text-xs mt-1">Sem NCM não é possível emitir nota fiscal</p>
           </div>
 
           <!-- CEST -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              CEST <span class="text-gray-400 text-xs">(opcional)</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              CEST
+              <span class="text-text-muted text-xs">(opcional)</span>
             </label>
+
             <input
               type="text"
               [(ngModel)]="product.cest"
               [ngModelOptions]="{ standalone: true }"
               maxlength="7"
               placeholder="1234567"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-mono font-medium placeholder-gray-400 border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none"
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-mono font-medium placeholder:text-text-muted border border-border focus:border-warning focus:ring-4 focus:ring-warning/15 transition-all duration-200 outline-none"
             />
-            <p class="text-gray-400 text-xs mt-1">7 dígitos numéricos</p>
+
+            <p class="text-text-muted text-xs mt-1">7 dígitos numéricos</p>
           </div>
 
           <!-- CSOSN -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              CSOSN <span class="text-red-400">*</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              CSOSN
+              <span class="text-danger">*</span>
             </label>
+
             <select
               [(ngModel)]="product.csosn"
               [ngModelOptions]="{ standalone: true }"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
-              style="
-                background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
-                background-repeat: no-repeat;
-                background-position: right 0.7rem center;
-                background-size: 1.2em;
-              "
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-medium border border-border focus:border-warning focus:ring-4 focus:ring-warning/15 transition-all duration-200 outline-none appearance-none cursor-pointer"
             >
               <option *ngFor="let option of csosnOptions" [value]="option.value">
                 {{ option.label }}
@@ -323,19 +425,15 @@
 
           <!-- Origem -->
           <div>
-            <label class="block text-gray-300 font-medium mb-2 text-sm">
-              Origem <span class="text-red-400">*</span>
+            <label class="block text-text-secondary font-semibold mb-2 text-sm">
+              Origem
+              <span class="text-danger">*</span>
             </label>
+
             <select
               [(ngModel)]="product.origin"
               [ngModelOptions]="{ standalone: true }"
-              class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium border-2 border-transparent focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200 outline-none appearance-none cursor-pointer"
-              style="
-                background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e');
-                background-repeat: no-repeat;
-                background-position: right 0.7rem center;
-                background-size: 1.2em;
-              "
+              class="w-full px-4 py-3 rounded-xl bg-surface text-text-primary font-medium border border-border focus:border-warning focus:ring-4 focus:ring-warning/15 transition-all duration-200 outline-none appearance-none cursor-pointer"
             >
               <option *ngFor="let option of originOptions" [value]="option.value">
                 {{ option.label }}
@@ -345,15 +443,36 @@
         </div>
       </div>
 
-      <!-- Seção: Status -->
-      <div class="space-y-4">
-        <h3 class="text-lg font-semibold text-gray-400 flex items-center gap-2">
-          <span class="w-1 h-5 bg-gray-400 rounded"></span>
-          Status do Produto
-        </h3>
+      <!-- Status -->
+      <div class="bg-surface-alt border border-border rounded-2xl p-5 space-y-5">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-overlay border border-border flex items-center justify-center"
+          >
+            <svg
+              class="w-5 h-5 text-text-secondary"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
 
-        <div class="flex gap-4">
-          <label class="flex-1 relative cursor-pointer">
+          <div>
+            <h3 class="text-lg font-bold text-text-primary">Status do Produto</h3>
+
+            <p class="text-sm text-text-secondary">Controle de disponibilidade</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label class="relative cursor-pointer">
             <input
               type="radio"
               name="active"
@@ -362,13 +481,17 @@
               [ngModelOptions]="{ standalone: true }"
               class="peer sr-only"
             />
+
             <div
-              class="p-4 rounded-lg border-2 border-gray-600 bg-white/5 peer-checked:border-green-500 peer-checked:bg-green-500/10 transition-all duration-200 text-center"
+              class="p-4 rounded-2xl border border-border bg-surface peer-checked:border-success peer-checked:bg-success/10 transition-all duration-200 text-center"
             >
-              <span class="text-white text-base font-semibold">✓ Ativo</span>
+              <span class="text-base font-semibold peer-checked:text-success">
+                ✓ Ativo
+              </span>
             </div>
           </label>
-          <label class="flex-1 relative cursor-pointer">
+
+          <label class="relative cursor-pointer">
             <input
               type="radio"
               name="active"
@@ -377,10 +500,13 @@
               [ngModelOptions]="{ standalone: true }"
               class="peer sr-only"
             />
+
             <div
-              class="p-4 rounded-lg border-2 border-gray-600 bg-white/5 peer-checked:border-gray-500 peer-checked:bg-gray-500/10 transition-all duration-200 text-center"
+              class="p-4 rounded-2xl border border-border bg-surface peer-checked:border-danger peer-checked:bg-danger/10 transition-all duration-200 text-center"
             >
-              <span class="text-white text-base font-semibold">✗ Inativo</span>
+              <span class="text-base font-semibold peer-checked:text-danger">
+                ✗ Inativo
+              </span>
             </div>
           </label>
         </div>
@@ -389,17 +515,18 @@
 
     <!-- Footer -->
     <div
-      class="flex justify-end gap-3 p-6 border-t border-white/10 bg-black/20 rounded-b-2xl sticky bottom-0"
+      class="flex flex-col sm:flex-row justify-end gap-3 p-6 border-t border-border bg-surface sticky bottom-0"
     >
       <button
         (click)="onCancel()"
-        class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors duration-200"
+        class="px-6 py-3 bg-overlay hover:bg-surface-alt text-text-primary border border-border rounded-xl font-semibold transition-all duration-200"
       >
         Cancelar
       </button>
+
       <button
         (click)="onSave()"
-        class="px-8 py-3 bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold shadow-lg hover:shadow-blue-500/50 transition-all duration-200 transform hover:scale-105"
+        class="px-8 py-3 bg-accent hover:bg-accent-hover text-btn-text rounded-xl font-semibold shadow-lg transition-all duration-200 hover:scale-[1.02]"
       >
         Salvar Informações
       </button>

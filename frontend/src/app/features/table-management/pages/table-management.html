@@ -1,28 +1,23 @@
-<div class="min-h-screen bg-linear-to-br from-indigo-950 via-purple-950 to-purple-900 p-6">
+<div class="min-h-screen bg-base p-6">
   <div class="max-w-7xl mx-auto">
-    <!-- Header -->
     <div class="flex justify-between items-center mb-8">
       <button
         (click)="goToMenu()"
-        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-sm font-medium transition-colors"
+        class="px-4 py-2 bg-accent hover:bg-accent-hover text-btn-text rounded-md text-sm font-medium transition-colors shadow-md"
       >
         Voltar para menu
       </button>
     </div>
 
-    <!-- Main Card -->
-    <div
-      class="bg-slate-800/50 backdrop-blur-sm rounded-lg shadow-2xl border border-slate-700/50 p-8"
-    >
-      <!-- Tabs -->
+    <div class="bg-surface rounded-lg shadow-2xl border border-border-subtle p-8">
       <div class="flex gap-2 mb-8">
         @for (location of locations; track location.id) {
           <button
             (click)="selectLocation(location.id)"
             [class]="
               selectedLocation === location.id
-                ? 'px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-md text-sm font-medium transition-colors'
-                : 'px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-md text-sm font-medium transition-colors'
+                ? 'px-6 py-2 bg-accent text-btn-text rounded-md text-sm font-medium transition-colors shadow-sm'
+                : 'px-6 py-2 bg-surface-alt hover:bg-overlay text-text-secondary rounded-md text-sm font-medium transition-colors border border-border-subtle'
             "
           >
             {{ location.name }}
@@ -30,17 +25,15 @@
         }
       </div>
 
-      <!-- Title -->
       <div class="mb-6">
-        <h2 class="text-2xl font-bold text-white mb-1">Gerenciamento de Mesas</h2>
-        <p class="text-slate-400 text-sm">Gerencie as mesas do restaurante e suas comandas</p>
+        <h2 class="text-2xl font-bold text-text-primary mb-1">Gerenciamento de Mesas</h2>
+        <p class="text-text-muted text-sm">Gerencie as mesas do restaurante e suas comandas</p>
       </div>
 
-      <!-- Action Button -->
       <div class="mb-6">
         <button
           (click)="openModalAdd()"
-          class="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-md text-sm font-medium transition-colors"
+          class="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-btn-text rounded-md text-sm font-medium transition-colors shadow-md"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -54,18 +47,27 @@
         </button>
       </div>
 
-      <!-- Stats -->
       <app-table-stats
         [total]="totalTables"
         [available]="availableTables"
         [occupied]="occupiedTables"
       />
 
-      <!-- Tables Grid -->
+      <div class="mb-4">
+        <input
+          type="number"
+          [(ngModel)]="tableNumberFilter"
+          placeholder="Filtrar por número da mesa"
+          class="w-48 px-3 py-2 bg-overlay border border-border text-text-primary rounded-md text-sm placeholder-text-muted focus:outline-none focus:border-accent"
+        />
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         @for (table of sortedTables; track table.id) {
           <app-table-card
             [table]="table"
+            (transfer)="openTransferModal($event)"
+            (reprint)="openReprintModal($event)"
             [statusColors]="statusColors"
             [statusLabels]="statusLabels"
             (edit)="openModalEdit($event)"
@@ -81,7 +83,6 @@
     </div>
   </div>
 
-  <!-- Table CRUD Modal -->
   <app-table-modal
     *ngIf="showModal"
     [show]="showModal"
@@ -94,7 +95,6 @@
     (saved)="onTableModalSave()"
   />
 
-  <!-- Products Modal -->
   <app-table-product-modal
     *ngIf="showProductModal && selectedTableForProducts"
     [show]="showProductModal"
@@ -103,13 +103,32 @@
     (updated)="getTables()"
   />
 
-  <!-- Tab/Comanda Modal -->
   <app-tab-modal
     *ngIf="showTabModal && selectedTableForProducts"
     [show]="showTabModal"
     [table]="selectedTableForProducts!"
     [total]="tabTotal"
     (close)="closeTabModal()"
-    (finish)="closeTab($event)"
+    (finish)="closeTab($event.serviceCharge, $event.items)"
+  />
+
+  <app-modal-edit-entity
+    *ngIf="showTransferModal"
+    [show]="showTransferModal"
+    [title]="'Transferir Mesa'"
+    [entity]="transferEntity"
+    [fields]="transferFields"
+    (close)="closeTransferModal()"
+    (save)="handleTransfer($event)"
+  />
+
+  <app-modal-edit-entity
+    *ngIf="showReprintModal"
+    [show]="showReprintModal"
+    [title]="'Reimprimir Pedido'"
+    [entity]="reprintEntity"
+    [fields]="reprintFields"
+    (close)="showReprintModal = false"
+    (save)="handleReprint($event)"
   />
 </div>

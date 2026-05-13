@@ -1,18 +1,16 @@
-<div class="flex space-x-2 items-center text-sm text-white">
+<div class="flex space-x-2 items-center text-sm text-text-primary">
   <button
-    class="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600"
+    class="px-3 py-1 bg-surface-alt border border-border rounded hover:bg-overlay disabled:opacity-50 transition-colors"
     [disabled]="page === 1"
     (click)="changePage(page - 1)"
   >
     Anterior
   </button>
 
-  <span>
-    Página {{ page }} de {{ totalPages }}
-  </span>
+  <span class="font-medium"> Página {{ page }} de {{ totalPages }} </span>
 
   <button
-    class="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600"
+    class="px-3 py-1 bg-surface-alt border border-border rounded hover:bg-overlay transition-colors"
     (click)="changePage(page + 1)"
   >
     Próxima

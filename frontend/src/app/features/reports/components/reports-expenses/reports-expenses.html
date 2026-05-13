@@ -1,31 +1,29 @@
-<!-- Container Principal -->
-<div class="w-full max-w-6xl bg-[#182233] rounded-2xl shadow-lg p-6">
+<div class="w-full max-w-6xl bg-surface rounded-2xl shadow-lg p-6 border border-border">
   <div class="mb-4">
-    <h1 class="text-3xl font-bold text-white">Relatório de Despesas</h1>
+    <h1 class="text-3xl font-bold text-text-primary">Relatório de Despesas</h1>
   </div>
 
-  <!-- Filtros -->
   <div class="flex flex-wrap gap-4 mb-6">
     <div class="flex flex-col">
-      <label class="text-white text-sm mb-1">Data Início</label>
+      <label class="text-text-secondary text-sm mb-1">Data Início</label>
       <input
         type="date"
         [(ngModel)]="startDate"
-        class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+        class="bg-surface-alt text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none focus:border-accent"
       />
     </div>
     <div class="flex flex-col">
-      <label class="text-white text-sm mb-1">Data Fim</label>
+      <label class="text-text-secondary text-sm mb-1">Data Fim</label>
       <input
         type="date"
         [(ngModel)]="endDate"
-        class="bg-[#2a3445] text-white px-3 py-2 rounded shadow focus:outline-none"
+        class="bg-surface-alt text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none focus:border-accent"
       />
     </div>
     <div class="flex items-end gap-2">
       <button
         (click)="setThisMonth()"
-        class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+        class="bg-accent text-btn-text px-4 py-2 rounded hover:bg-accent-hover transition shadow-sm"
       >
         Este Mês
       </button>
@@ -33,73 +31,76 @@
     <div class="flex items-end">
       <button
         (click)="generateReport()"
-        class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
+        class="bg-success text-btn-text px-6 py-2 rounded hover:opacity-90 transition shadow-sm"
       >
         Gerar Relatório
       </button>
     </div>
+    @if (reportGenerated) {
+      <button
+        (click)="print()"
+        class="bg-transparent text-text-secondary px-6 py-2 rounded border border-border hover:bg-surface-alt hover:text-text-primary transition-all font-medium flex items-center gap-2"
+      >
+        <span>🖨️</span> Imprimir / PDF
+      </button>
+    }
   </div>
 
-  <div class="text-white">
+  <div class="text-text-primary">
     <h2 class="text-2xl font-bold mb-2">Relatório de Despesas {{ getFullDate() }}</h2>
-    <p class="text-gray-400 text-sm mb-6">
+    <p class="text-text-secondary text-sm mb-6">
       Consolidação das despesas registradas no período, agrupadas por status de pagamento e por
       fornecedor. Use este relatório para acompanhar compromissos financeiros em aberto e controlar
       o fluxo de saídas de caixa.
     </p>
 
-    <!-- Total Geral -->
-    <div class="bg-[#2a3445] p-4 rounded-xl shadow mb-4 max-w-sm">
-      <h3 class="text-xs text-gray-400 uppercase tracking-wide mb-1">
+    <div class="bg-surface p-4 rounded-xl shadow mb-4 max-w-sm border border-border">
+      <h3 class="text-xs text-text-muted uppercase tracking-wide mb-1">
         Total de Despesas no Período
       </h3>
-      <p class="text-3xl font-bold text-red-400">R$ {{ report.totalValue.toFixed(2) }}</p>
-      <p class="text-xs text-gray-500 mt-1">Soma de todas as despesas independente do status</p>
+      <p class="text-3xl font-bold text-danger">R$ {{ report.totalValue.toFixed(2) }}</p>
+      <p class="text-xs text-text-muted mt-1">Soma de todas as despesas independente do status</p>
     </div>
 
-    <!-- Card explicativo -->
-    <div class="bg-[#2a1a1a] border border-red-700 p-4 rounded-xl shadow mb-6 max-w-4xl">
-      <h3 class="text-red-400 font-semibold mb-1">💡 Como interpretar este relatório</h3>
-      <p class="text-gray-300 text-sm">
+    <div class="bg-surface-alt border border-danger/50 p-4 rounded-xl shadow mb-6 max-w-4xl">
+      <h3 class="text-danger font-semibold mb-1">💡 Como interpretar este relatório</h3>
+      <p class="text-text-secondary text-sm">
         O total geral inclui
-        <span class="text-white font-medium">todas as despesas do período</span>, independente de
-        estarem pagas ou não. Acompanhe o status de cada parcela para evitar inadimplência:
-        <span class="text-green-400 font-medium">Pago</span> = quitado,
-        <span class="text-yellow-400 font-medium">Pendente</span> = aguardando pagamento,
-        <span class="text-red-400 font-medium">Atrasado</span> = marcado manualmente com esse status
+        <span class="text-text-primary font-medium">todas as despesas do período</span>,
+        independente de estarem pagas ou não. Acompanhe o status de cada parcela para evitar
+        inadimplência: <span class="text-success font-medium">Pago</span> = quitado,
+        <span class="text-warning font-medium">Pendente</span> = aguardando pagamento,
+        <span class="text-danger font-medium">Atrasado</span> = marcado manualmente com esse status
         no cadastro da despesa.
       </p>
-      <p class="text-gray-400 text-sm mt-2">
+      <p class="text-text-muted text-sm mt-2">
         O detalhamento por fornecedor permite identificar quais parceiros concentram maior volume de
         gastos, auxiliando em negociações e revisão de contratos.
       </p>
     </div>
 
-    <!-- Total por Status -->
     <div class="mb-6">
       <h3 class="text-xl font-bold mb-1">📋 Total por Status</h3>
-      <p class="text-gray-400 text-sm mb-4">
+      <p class="text-text-secondary text-sm mb-4">
         Distribuição das despesas conforme situação de pagamento. Atenção especial para o valor em
-        <span class="text-red-400">Atrasado</span> — representa obrigações vencidas que exigem ação
-        imediata.
+        <span class="text-danger font-bold">Atrasado</span> — representa obrigações vencidas que
+        exigem ação imediata.
       </p>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl">
-        <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-          <h4 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Pago</h4>
-          <p class="text-2xl font-semibold text-green-400">R$ {{ report.totalByStatus.pago }}</p>
-          <p class="text-xs text-gray-500 mt-1">Despesas já quitadas no período</p>
+        <div class="bg-surface p-4 rounded-xl shadow border border-border">
+          <h4 class="text-xs text-text-muted uppercase tracking-wide mb-1">Pago</h4>
+          <p class="text-2xl font-semibold text-success">R$ {{ report.totalByStatus.pago }}</p>
+          <p class="text-xs text-text-muted mt-1">Despesas já quitadas no período</p>
         </div>
-        <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-          <h4 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Pendente</h4>
-          <p class="text-2xl font-semibold text-yellow-400">
-            R$ {{ report.totalByStatus.pendente }}
-          </p>
-          <p class="text-xs text-gray-500 mt-1">Despesas aguardando pagamento</p>
+        <div class="bg-surface p-4 rounded-xl shadow border border-border">
+          <h4 class="text-xs text-text-muted uppercase tracking-wide mb-1">Pendente</h4>
+          <p class="text-2xl font-semibold text-warning">R$ {{ report.totalByStatus.pendente }}</p>
+          <p class="text-xs text-text-muted mt-1">Despesas aguardando pagamento</p>
         </div>
-        <div class="bg-[#2a3445] p-4 rounded-xl shadow">
-          <h4 class="text-xs text-gray-400 uppercase tracking-wide mb-1">Atrasado</h4>
-          <p class="text-2xl font-semibold text-red-500">R$ {{ report.totalByStatus.atrasado }}</p>
-          <p class="text-xs text-gray-500 mt-1">
+        <div class="bg-surface p-4 rounded-xl shadow border border-border">
+          <h4 class="text-xs text-text-muted uppercase tracking-wide mb-1">Atrasado</h4>
+          <p class="text-2xl font-semibold text-danger">R$ {{ report.totalByStatus.atrasado }}</p>
+          <p class="text-xs text-text-muted mt-1">
             Despesas marcadas manualmente como atrasadas — verifique o cadastro para confirmar a
             situação real
           </p>
@@ -107,26 +108,33 @@
       </div>
     </div>
 
-    <!-- Total por Fornecedor -->
     <div>
       <h3 class="text-xl font-bold mb-1">🏢 Total por Fornecedor</h3>
-      <p class="text-gray-400 text-sm mb-4">
+      <p class="text-text-secondary text-sm mb-4">
         Valor total gasto com cada fornecedor no período. Fornecedores com alto volume de despesas
         são candidatos a renegociação de prazos ou condições.
       </p>
       <div class="overflow-x-auto max-w-full">
-        <table class="w-full text-left border-collapse border border-gray-700">
+        <table class="w-full text-left border-collapse border border-border">
           <thead>
-            <tr class="bg-[#2a3445]">
-              <th class="border border-gray-700 px-4 py-2 text-gray-300">Fornecedor</th>
-              <th class="border border-gray-700 px-4 py-2 text-gray-300">Total (R$)</th>
+            <tr class="bg-surface-alt">
+              <th class="border border-border px-4 py-2 text-text-secondary font-medium">
+                Fornecedor
+              </th>
+              <th class="border border-border px-4 py-2 text-text-secondary font-medium">
+                Total (R$)
+              </th>
             </tr>
           </thead>
           <tbody>
             @for (item of report.totalBySupplier; track item.supplier) {
-              <tr class="odd:bg-[#1f2a40] even:bg-[#24304a]">
-                <td class="border border-gray-700 px-4 py-2">{{ item.supplier }}</td>
-                <td class="border border-gray-700 px-4 py-2">{{ item.total.toFixed(2) }}</td>
+              <tr class="hover:bg-surface-alt/50 transition-colors">
+                <td class="border border-border px-4 py-2 text-text-primary">
+                  {{ item.supplier }}
+                </td>
+                <td class="border border-border px-4 py-2 text-text-primary font-medium">
+                  {{ item.total.toFixed(2) }}
+                </td>
               </tr>
             }
           </tbody>
@@ -136,14 +144,80 @@
   </div>
 </div>
 
+<div id="reportContent" style="display: none">
+  <div class="print-header">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <img src="/blue-erp.png" alt="Logo" />
+      <div>
+        <div class="company-name">{{ companyData?.tradeName || companyData?.corporateName }}</div>
+        <div class="company-sub">
+          CNPJ: {{ companyData?.cnpj }} &nbsp;|&nbsp; {{ companyData?.city }}/{{
+            companyData?.state
+          }}
+        </div>
+      </div>
+    </div>
+    <div class="report-meta">
+      <strong>Relatório de Despesas</strong>
+      Período: {{ getFullDate() }}<br />
+      Emitido em: {{ getTodayFormatted() }}
+    </div>
+  </div>
+
+  <div class="section-title">Resumo do Período</div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total de Despesas</div>
+      <div class="kpi-value red">R$ {{ report.totalValue.toFixed(2) }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Pago</div>
+      <div class="kpi-value green">R$ {{ report.totalByStatus.pago }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Pendente</div>
+      <div class="kpi-value yellow">R$ {{ report.totalByStatus.pendente }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Atrasado</div>
+      <div class="kpi-value red">R$ {{ report.totalByStatus.atrasado }}</div>
+    </div>
+  </div>
+
+  <div class="section-title">Total por Fornecedor</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Fornecedor</th>
+        <th>Total (R$)</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of report.totalBySupplier; track item.supplier) {
+        <tr>
+          <td>{{ item.supplier }}</td>
+          <td class="amount">R$ {{ item.total.toFixed(2) }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <div class="print-footer">
+    <span>{{ companyData?.tradeName }} — Sistema Blue ERP</span>
+    <span>Gerado em {{ getTodayFormatted() }}</span>
+  </div>
+</div>
+
 @if (isLoading) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-    <div class="text-white text-lg font-semibold animate-pulse text-center px-4">
-      <p>Carregando relatório...</p>
-      <p class="mt-2">Isso pode demorar um pouco.</p>
-      <p class="mt-2 text-sm text-indigo-300">
-        ⚠️ Evite gerar relatórios com mais de <strong>30 dias</strong> de diferença.
-      </p>
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="text-text-primary text-lg font-semibold animate-pulse text-center px-4">
+      <div class="bg-surface p-8 rounded-2xl border border-border shadow-2xl">
+        <p>Carregando relatório...</p>
+        <p class="mt-2 text-text-secondary font-normal">Isso pode demorar um pouco.</p>
+        <p class="mt-4 text-sm text-accent">
+          ⚠️ Evite gerar relatórios com mais de <strong>30 dias</strong> de diferença.
+        </p>
+      </div>
     </div>
   </div>
 }

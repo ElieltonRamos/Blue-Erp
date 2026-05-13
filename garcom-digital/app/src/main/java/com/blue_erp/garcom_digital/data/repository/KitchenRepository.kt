@@ -80,6 +80,7 @@ class KitchenRepository @Inject constructor(
                 Resource.Error(parseError(response, "Erro ao buscar pedidos da cozinha"))
             }
         } catch (e: Exception) {
+            android.util.Log.e("KitchenRepository", "Erro: ${e::class.java.name} - ${e.message}", e)
             Resource.Error(parseNetworkError(e))
         }
     }

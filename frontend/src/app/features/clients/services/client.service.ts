@@ -16,7 +16,8 @@ export class ClientService {
   }
 
   findClientByName(name: string) {
-    return this.client.get<Client[]>(`${this.apiUrl}/clients/search/${name}`);
+    const params = new HttpParams().set('name', name);
+    return this.client.get<Client[]>(`${this.apiUrl}/clients/search`, { params });
   }
 
   getClients(page: number, pageLimit: number, name?: string, status?: string) {

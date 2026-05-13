@@ -12,11 +12,29 @@ export class OrderFiltersDto {
   @IsOptional()
   searchName?: string;
 
-  @ApiPropertyOptional({ description: 'Buscar por ID do pedido', example: 1 })
-  @IsInt()
-  @Type(() => Number)
+  @ApiPropertyOptional({
+    description: 'Buscar por número da mesa',
+    example: 'Mesa 5',
+  })
+  @IsString()
   @IsOptional()
-  searchId?: number;
+  searchTable?: string;
+
+  @ApiPropertyOptional({
+    description: 'Buscar por garçom que abriu',
+    example: 'Carlos',
+  })
+  @IsString()
+  @IsOptional()
+  searchWaiterOpen?: string;
+
+  @ApiPropertyOptional({
+    description: 'Buscar por garçom que fechou',
+    example: 'Ana',
+  })
+  @IsString()
+  @IsOptional()
+  searchWaiterClose?: string;
 
   @ApiPropertyOptional({
     description: 'Filtrar por status',
@@ -28,13 +46,6 @@ export class OrderFiltersDto {
   status?: OrderStatus;
 
   @ApiPropertyOptional({
-    description: 'Filtrar por local',
-    example: 'LOCAL_01',
-  })
-  @IsOptional()
-  location?: string;
-
-  @ApiPropertyOptional({
     description: 'Filtrar por tipo',
     enum: OrderType,
     example: 'DINE_IN',
@@ -42,11 +53,6 @@ export class OrderFiltersDto {
   @IsEnum(OrderType)
   @IsOptional()
   type?: OrderType;
-
-  @ApiPropertyOptional({ description: 'Filtrar por mesa', example: 'Mesa 5' })
-  @IsString()
-  @IsOptional()
-  table?: string;
 
   @ApiPropertyOptional({
     description: 'Data de início (formato: YYYY-MM-DD)',
@@ -89,7 +95,7 @@ export class OrderFiltersDto {
 
 export class OrderPaginatedResponseDto {
   @ApiProperty({ description: 'Lista de pedidos', isArray: true })
-  data: any[]; // OrderResponseDto[]
+  data: any[];
 
   @ApiProperty({ description: 'Total de registros', example: 50 })
   total: number;

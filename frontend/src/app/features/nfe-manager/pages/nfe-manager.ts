@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { reportNfe } from './report-nfe/report-nfe';
-import { FiscalNotes } from "./fiscal-notes/fiscal-notes";
+import { FiscalNotes } from './fiscal-notes/fiscal-notes';
 
 @Component({
   selector: 'app-nfe-manager',
@@ -14,9 +14,9 @@ export class NfeManager {
   menuContext = 'fiscal-notes';
 
   classBtnSelected =
-    'bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-semibold';
+    'bg-accent hover:bg-accent-hover text-btn-text px-4 py-2 rounded-lg flex items-center gap-2 font-semibold';
   classBtnUnselected =
-    'text-white hover:underline px-4 py-2 rounded-lg flex items-center gap-2 font-semibold';
+    'text-text-primary hover:underline px-4 py-2 rounded-lg flex items-center gap-2 font-semibold';
 
   changeMenuContext(context: string): void {
     this.menuContext = context;

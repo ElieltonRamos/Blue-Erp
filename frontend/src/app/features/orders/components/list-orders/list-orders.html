@@ -7,7 +7,7 @@
 
 <div *ngIf="isLoading" class="flex justify-center items-center py-12">
   <svg
-    class="animate-spin text-indigo-500"
+    class="animate-spin text-accent"
     width="48"
     height="48"
     viewBox="0 0 24 24"
@@ -20,15 +20,15 @@
 </div>
 
 <div *ngIf="!isLoading">
-  <!-- Search Filters -->
-  <div class="bg-slate-700/30 rounded-xl p-6 mb-6">
+  <!-- Filtros -->
+  <div class="bg-surface-alt rounded-xl p-6 mb-6">
+    <!-- Row 1 -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <!-- Search by Name -->
       <div>
-        <label class="text-slate-300 text-sm mb-2 block">Buscar por Cliente</label>
+        <label class="text-text-secondary text-sm mb-2 block">Buscar por Cliente</label>
         <div class="relative">
           <svg
-            class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
             width="20"
             height="20"
             viewBox="0 0 24 24"
@@ -44,32 +44,27 @@
             [(ngModel)]="searchName"
             (keyup.enter)="applyFilters()"
             placeholder="Digite o nome do cliente..."
-            class="w-full bg-slate-800 border border-slate-600 rounded-lg pl-10 pr-4 py-2.5 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
+            class="w-full bg-surface border border-border rounded-lg pl-10 pr-4 py-2.5 text-text-primary placeholder-text-muted focus:outline-none focus:border-accent transition-colors"
           />
         </div>
       </div>
 
-      <!-- Search by ID -->
       <div>
-        <label class="text-slate-300 text-sm mb-2 block">Buscar por Código</label>
-        <div class="relative">
-          <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">#</span>
-          <input
-            type="text"
-            [(ngModel)]="searchId"
-            (keyup.enter)="applyFilters()"
-            placeholder="Ex: 001"
-            class="w-full bg-slate-800 border border-slate-600 rounded-lg pl-8 pr-4 py-2.5 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
-          />
-        </div>
+        <label class="text-text-secondary text-sm mb-2 block">Número da Mesa</label>
+        <input
+          type="text"
+          [(ngModel)]="searchTable"
+          (keyup.enter)="applyFilters()"
+          placeholder="Ex: 01"
+          class="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-text-primary placeholder-text-muted focus:outline-none focus:border-accent transition-colors"
+        />
       </div>
 
-      <!-- Status Filter -->
       <div>
-        <label class="text-slate-300 text-sm mb-2 block">Status</label>
+        <label class="text-text-secondary text-sm mb-2 block">Status</label>
         <select
           [(ngModel)]="statusFilter"
-          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:border-cyan-500 transition-colors appearance-none cursor-pointer"
+          class="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent transition-colors appearance-none cursor-pointer"
         >
           <option value="all">Todos os Status</option>
           <option value="OPEN">Abertos</option>
@@ -79,46 +74,85 @@
       </div>
     </div>
 
-    <!-- Location Filter Row -->
+    <!-- Row 2 -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
       <div>
-        <label class="text-slate-300 text-sm mb-2 block">Local de Origem</label>
-        <select
-          [(ngModel)]="locationFilter"
-          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:border-cyan-500 transition-colors appearance-none cursor-pointer"
-        >
-          <option value="all">Todos os Locais</option>
-          <option value="LOCAL_01">Local 01</option>
-          <option value="LOCAL_02">Local 02</option>
-          <option value="LOCAL_03">Local 03</option>
-          <option value="DELIVERY">Entregas</option>
-        </select>
+        <label class="text-text-secondary text-sm mb-2 block">Garçom que Abriu</label>
+        <div class="relative">
+          <svg
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <input
+            type="text"
+            [(ngModel)]="searchWaiterOpen"
+            (keyup.enter)="applyFilters()"
+            placeholder="Nome do garçom..."
+            class="w-full bg-surface border border-border rounded-lg pl-10 pr-4 py-2.5 text-text-primary placeholder-text-muted focus:outline-none focus:border-accent transition-colors"
+          />
+        </div>
       </div>
 
       <div>
-        <label class="text-slate-300 text-sm mb-2 block">Data Início</label>
+        <label class="text-text-secondary text-sm mb-2 block">Garçom que Fechou</label>
+        <div class="relative">
+          <svg
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <input
+            type="text"
+            [(ngModel)]="searchWaiterClose"
+            (keyup.enter)="applyFilters()"
+            placeholder="Nome do garçom..."
+            class="w-full bg-surface border border-border rounded-lg pl-10 pr-4 py-2.5 text-text-primary placeholder-text-muted focus:outline-none focus:border-accent transition-colors"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label class="text-text-secondary text-sm mb-2 block">Data Início</label>
         <input
           type="date"
           [(ngModel)]="startDate"
-          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:border-cyan-500 transition-colors"
-        />
-      </div>
-
-      <div>
-        <label class="text-slate-300 text-sm mb-2 block">Data Fim</label>
-        <input
-          type="date"
-          [(ngModel)]="endDate"
-          class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:border-cyan-500 transition-colors"
+          class="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent transition-colors"
         />
       </div>
     </div>
 
-    <!-- Action Buttons -->
+    <!-- Row 3 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+      <div>
+        <label class="text-text-secondary text-sm mb-2 block">Data Fim</label>
+        <input
+          type="date"
+          [(ngModel)]="endDate"
+          class="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent transition-colors"
+        />
+      </div>
+    </div>
+
+    <!-- Botões -->
     <div class="flex gap-3 mt-4">
       <button
         (click)="applyFilters()"
-        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+        class="flex-1 bg-accent hover:bg-accent-hover text-btn-text px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
       >
         <svg
           width="18"
@@ -135,7 +169,7 @@
       </button>
       <button
         (click)="clearFilters()"
-        class="flex-1 bg-slate-600 hover:bg-slate-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+        class="flex-1 bg-overlay hover:bg-border text-text-primary px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
       >
         <svg
           width="18"
@@ -155,73 +189,62 @@
 
   <!-- Results Info -->
   <div class="flex justify-between items-center mb-4">
-    <p class="text-slate-400 text-sm">
-      Mostrando <span class="text-white font-medium">{{ orders.length }}</span> de
-      <span class="text-white font-medium">{{ totalOrders }}</span> pedidos
+    <p class="text-text-muted text-sm">
+      Mostrando <span class="text-text-primary font-medium">{{ orders.length }}</span> de
+      <span class="text-text-primary font-medium">{{ totalOrders }}</span> pedidos
     </p>
     <div class="flex gap-2">
       <button
         (click)="previousPage()"
         [disabled]="currentPage === 1"
-        class="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg text-sm hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        class="px-4 py-2 bg-overlay text-text-secondary rounded-lg text-sm hover:bg-border transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Anterior
       </button>
-      <span class="px-4 py-2 bg-slate-700 text-white rounded-lg text-sm">
+      <span class="px-4 py-2 bg-overlay text-text-primary rounded-lg text-sm">
         Página {{ currentPage }} de {{ totalPages }}
       </span>
       <button
         (click)="nextPage()"
         [disabled]="currentPage >= totalPages"
-        class="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg text-sm hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        class="px-4 py-2 bg-overlay text-text-secondary rounded-lg text-sm hover:bg-border transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Próxima
       </button>
     </div>
   </div>
 
-  <!-- Orders Table -->
+  <!-- Tabela -->
   <div class="overflow-x-auto">
     <table class="w-full">
       <thead>
-        <tr class="border-b border-slate-700">
-          <th
-            class="text-left py-4 px-4 text-blue-400 text-sm font-semibold uppercase tracking-wider"
-          >
+        <tr class="border-b border-border">
+          <th class="text-left py-4 px-4 text-info text-sm font-semibold uppercase tracking-wider">
             ID
           </th>
-          <th
-            class="text-left py-4 px-4 text-blue-400 text-sm font-semibold uppercase tracking-wider"
-          >
+          <th class="text-left py-4 px-4 text-info text-sm font-semibold uppercase tracking-wider">
             Cliente
           </th>
           <th
-            class="text-left py-4 px-4 text-yellow-400 text-sm font-semibold uppercase tracking-wider"
+            class="text-left py-4 px-4 text-warning text-sm font-semibold uppercase tracking-wider"
           >
             Tipo
           </th>
-          <th
-            class="text-left py-4 px-4 text-pink-400 text-sm font-semibold uppercase tracking-wider"
-          >
-            Local
-          </th>
-          <th
-            class="text-left py-4 px-4 text-cyan-400 text-sm font-semibold uppercase tracking-wider"
-          >
+          <th class="text-left py-4 px-4 text-qty text-sm font-semibold uppercase tracking-wider">
             Itens
           </th>
           <th
-            class="text-left py-4 px-4 text-green-400 text-sm font-semibold uppercase tracking-wider"
+            class="text-left py-4 px-4 text-success text-sm font-semibold uppercase tracking-wider"
           >
             Total
           </th>
           <th
-            class="text-left py-4 px-4 text-purple-400 text-sm font-semibold uppercase tracking-wider"
+            class="text-left py-4 px-4 text-fiscal text-sm font-semibold uppercase tracking-wider"
           >
             Status
           </th>
           <th
-            class="text-left py-4 px-4 text-slate-400 text-sm font-semibold uppercase tracking-wider"
+            class="text-left py-4 px-4 text-text-muted text-sm font-semibold uppercase tracking-wider"
           >
             Ações
           </th>
@@ -230,15 +253,15 @@
       <tbody>
         <tr
           *ngFor="let order of orders"
-          class="border-b border-slate-700/50 hover:bg-slate-700/20 transition-colors"
+          class="border-b border-border/50 hover:bg-surface-alt transition-colors"
         >
           <td class="py-4 px-4">
-            <span class="text-slate-300 font-medium">#{{ order.id }}</span>
+            <span class="text-text-secondary font-medium">#{{ order.id }}</span>
           </td>
           <td class="py-4 px-4">
             <div class="flex items-center gap-2">
               <svg
-                class="text-slate-500"
+                class="text-text-muted"
                 width="18"
                 height="18"
                 viewBox="0 0 24 24"
@@ -249,35 +272,30 @@
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>
-              <span class="text-white font-medium">{{ order.customerName }}</span>
+              <span class="text-text-primary font-medium">{{ order.customerName }}</span>
             </div>
           </td>
           <td class="py-4 px-4">
-            <span *ngIf="order.type === 'DINE_IN'" class="text-blue-400 text-sm font-medium">
-              🪑 {{ order.table }}
+            <span *ngIf="order.type === 'DINE_IN'" class="text-dine-in text-sm font-medium">
+              🪑 {{ order.tableNumber ?? order.table }}
             </span>
-            <span *ngIf="order.type === 'DELIVERY'" class="text-orange-400 text-sm font-medium">
+            <span *ngIf="order.type === 'DELIVERY'" class="text-delivery text-sm font-medium">
               🚚 Delivery
             </span>
           </td>
           <td class="py-4 px-4">
-            <span class="text-pink-400 text-sm font-medium">
-              {{ getLocationLabel(order.locationId) }}
-            </span>
-          </td>
-          <td class="py-4 px-4">
-            <div class="text-slate-300 text-sm">
+            <div class="text-text-secondary text-sm">
               <div *ngFor="let item of order.items" class="mb-1">
-                <span class="text-cyan-400">{{ item.quantity }}x</span> {{ item.name }}
+                <span class="text-qty">{{ item.quantity }}x</span> {{ item.name }}
               </div>
             </div>
           </td>
           <td class="py-4 px-4">
-            <span class="text-green-400 font-bold text-lg">
+            <span class="text-success font-bold text-lg">
               R$ {{ (order.total + (order.serviceCharge ?? 0)).toFixed(2) }}
             </span>
-            <span *ngIf="order.serviceCharge" class="text-yellow-400 text-xs block">
-              Gorjeta: R$ {{ order.serviceCharge!.toFixed(2) }}
+            <span *ngIf="order.serviceCharge" class="text-warning text-xs block">
+              Taxa de Serviço: R$ {{ order.serviceCharge!.toFixed(2) }}
             </span>
           </td>
           <td class="py-4 px-4">
@@ -291,8 +309,8 @@
             <div class="flex gap-2">
               <button
                 (click)="editOrder(order.id)"
-                class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-lg transition-colors"
                 title="Editar"
+                class="bg-accent hover:bg-accent-hover text-btn-text p-2 rounded-lg transition-colors"
               >
                 <svg
                   width="18"
@@ -309,8 +327,8 @@
               <button
                 *ngIf="order.status === 'OPEN' || order.status === 'CLOSED'"
                 (click)="finishOrder(order.id)"
-                class="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg transition-colors"
                 title="Finalizar"
+                class="bg-success hover:bg-success/80 text-btn-text p-2 rounded-lg transition-colors"
               >
                 <svg
                   width="18"
@@ -326,8 +344,8 @@
               <button
                 *ngIf="order.status === 'OPEN'"
                 (click)="cancelOrder(order.id)"
-                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors"
                 title="Cancelar"
+                class="bg-danger hover:bg-danger/80 text-btn-text p-2 rounded-lg transition-colors"
               >
                 <svg
                   width="18"
@@ -342,9 +360,27 @@
                 </svg>
               </button>
               <button
+                *ngIf="order.status === 'CLOSED' || order.status === 'CANCELED'"
+                (click)="reopenOrder(order.id)"
+                title="Reabrir"
+                class="bg-info hover:bg-info/80 text-btn-text p-2 rounded-lg transition-colors"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                  <path d="M3 3v5h5"></path>
+                </svg>
+              </button>
+              <button
                 (click)="printOrder(order.id)"
-                class="bg-amber-600 hover:bg-amber-700 text-white p-2 rounded-lg transition-colors"
                 title="Imprimir"
+                class="bg-warning hover:bg-warning/80 text-btn-text p-2 rounded-lg transition-colors"
               >
                 <svg
                   width="18"
@@ -371,7 +407,7 @@
   <!-- Empty State -->
   <div *ngIf="orders.length === 0" class="text-center py-12">
     <svg
-      class="mx-auto mb-4 text-slate-600"
+      class="mx-auto mb-4 text-text-muted"
       width="48"
       height="48"
       viewBox="0 0 24 24"
@@ -383,7 +419,7 @@
       <circle cx="20" cy="21" r="1"></circle>
       <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
     </svg>
-    <p class="text-slate-400 text-lg">Nenhum pedido encontrado</p>
+    <p class="text-text-muted text-lg">Nenhum pedido encontrado</p>
   </div>
 </div>
 

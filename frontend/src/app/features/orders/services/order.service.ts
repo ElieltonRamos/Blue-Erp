@@ -8,6 +8,7 @@ import {
   UpdateOrderDto,
   OrderFilters,
   OrderPaginatedResponse,
+  ReprintOrderDto,
 } from '../types/order';
 import { FilterProductParams, Product } from '../../products/types/product';
 import { PaginatedResponse } from '../../../core/guards/types/paginator';
@@ -30,11 +31,13 @@ export class OrderService {
 
     if (filters) {
       if (filters.searchName) params = params.set('searchName', filters.searchName);
-      if (filters.searchId) params = params.set('searchId', filters.searchId.toString());
+      if (filters.searchTable) params = params.set('searchTable', filters.searchTable);
+      if (filters.searchWaiterOpen)
+        params = params.set('searchWaiterOpen', filters.searchWaiterOpen);
+      if (filters.searchWaiterClose)
+        params = params.set('searchWaiterClose', filters.searchWaiterClose);
       if (filters.status) params = params.set('status', filters.status);
-      if (filters.location) params = params.set('location', filters.location);
       if (filters.type) params = params.set('type', filters.type);
-      if (filters.table) params = params.set('table', filters.table);
       if (filters.startDate) params = params.set('startDate', filters.startDate);
       if (filters.endDate) params = params.set('endDate', filters.endDate);
       if (filters.page) params = params.set('page', filters.page.toString());
@@ -56,11 +59,8 @@ export class OrderService {
     return this.client.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  sendToKitchen(id: number): Observable<{ orderId: number; kitchenSentAt: Date; message: string }> {
-    return this.client.post<{ orderId: number; kitchenSentAt: Date; message: string }>(
-      `${this.apiUrl}/${id}/send-to-kitchen`,
-      {},
-    );
+  reopenOrder(id: number): Observable<Order> {
+    return this.client.post<Order>(`${this.apiUrl}/${id}/reopen`, {});
   }
 
   cancelOrder(id: number): Observable<Order> {
@@ -97,5 +97,9 @@ export class OrderService {
 
   convertToSale(orderId: number, dto: ConvertOrderToSaleDto): Observable<any> {
     return this.client.post<any>(`${environment.apiUrl}/sales/convert/${orderId}`, dto);
+  }
+
+  reprint(orderId: number, data: ReprintOrderDto): Observable<void> {
+    return this.client.post<void>(`${this.apiUrl}/${orderId}/reprint`, data);
   }
 }

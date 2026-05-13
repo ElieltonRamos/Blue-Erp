@@ -17,7 +17,7 @@ import { DatePipe } from '@angular/common';
 })
 export class SalesHistory {
   totalItems = 0;
-  limit = 10;
+  limit = 100;
   page = 1;
   totalPages = 0;
   listSales: Sale[] = [];

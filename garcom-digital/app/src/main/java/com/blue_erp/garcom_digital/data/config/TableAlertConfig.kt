@@ -47,11 +47,19 @@ object TableAlertConfig {
         const val INACTIVE = "Inativo"
 
         fun getFirstOrderMessage(minutes: Long): String {
-            return "Sem pedidos ($minutes min)"
+            return "Sem pedidos (${formatMinutes(minutes)})"
         }
 
         fun getInactivityMessage(minutes: Long): String {
-            return "Inativo há $minutes min"
+            return "Inativo há ${formatMinutes(minutes)}"
+        }
+
+        private fun formatMinutes(minutes: Long): String {
+            return when {
+                minutes < 60 -> "${minutes}min"
+                minutes < 1440 -> "${minutes / 60}h ${minutes % 60}min"
+                else -> "${minutes / 1440}d ${(minutes % 1440) / 60}h"
+            }
         }
     }
 }

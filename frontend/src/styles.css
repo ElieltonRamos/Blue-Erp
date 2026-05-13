@@ -1,35 +1,136 @@
 @import "tailwindcss";
 @import '@angular/cdk/overlay-prebuilt.css';
 
-@layer components {
-  .msg-error {
-    @apply text-red-500 font-light text-sm;
-  }
+@theme {
+  /* Fundos */
+  --color-base:        #1a1a1f;
+  --color-surface:     #242429;
+  --color-surface-alt: #2e2e35;
+  --color-overlay:     #35353d;
+
+  /* Bordas */
+  --color-border:        #3a3a42;
+  --color-border-subtle: #2a2a31;
+
+  /* Texto */
+  --color-text-primary:   #e8e8ec;
+  --color-text-secondary: #9898a6;
+  --color-text-muted:     #606070;
+
+  /* Ação */
+  --color-accent:       #4a6fa5;
+  --color-accent-hover: #3d5f8f;
+
+  /* Estados */
+  --color-danger:  #9b4545;
+  --color-success: #3d7a56;
+  --color-warning: #8a6d32;
+
+  --color-btn-edit:   #8a6d32;
+  --color-btn-delete: #9b4545;
+  --color-btn-text: #ffffff;
+
+  /* KDS — Status de colunas */
+  --color-pending:   #ca8a04; /* yellow-600 */
+  --color-preparing: #2563eb; /* blue-600  */
+  --color-ready:     #16a34a; /* green-600 */
+
+  /* KDS — Badge de tempo */
+  --color-time-ok:       #4ade80; /* green-400 */
+  --color-time-warn:     #facc15; /* yellow-400 */
+  --color-time-critical: #f87171; /* red-400   */
+
+  /* KDS — Tipo de pedido */
+  --color-dine-in:  #3b82f6; /* blue-500  */
+  --color-delivery: #f97316; /* orange-500 */
+
+  --color-info:    #3b82f6; /* blue-500  */
+  --color-fiscal:  #a855f7; /* purple-500 */
+  --color-support: #14b8a6; /* teal-500  */
+
+  /* KDS — Quantidade badge */
+  --color-qty: #06b6d4; /* cyan-500 */
+}
+
+.light {
+  /* Fundos */
+  --color-base:        #e7e7e7;
+  --color-surface:     #f4f4f4;
+  --color-surface-alt: #d8d8d8;
+  --color-overlay:     #c9c9c9;
+
+  /* Bordas */
+  --color-border:        #b5b5b5;
+  --color-border-subtle: #d0d0d0;
+
+  /* Texto */
+  --color-text-primary:   #2f3a45;
+  --color-text-secondary: #5f6b76;
+  --color-text-muted:     #6b7a86;
+
+  /* Ação */
+  --color-accent:       #3a5a8a;
+  --color-accent-hover: #2d4a7a;
+
+  /* Estados */
+  --color-danger:  #b04c4c;
+  --color-success: #4f7d60;
+  --color-warning: #b38b3d;
+
+  --color-btn-edit:   #b38b3d;
+  --color-btn-delete: #b04c4c;
+  --color-btn-text: #ffffff;
+
+  /* KDS — light overrides */
+  --color-pending:   #b45309;
+  --color-preparing: #1d4ed8;
+  --color-ready:     #15803d;
+
+  --color-time-ok:       #16a34a;
+  --color-time-warn:     #ca8a04;
+  --color-time-critical: #dc2626;
+
+  --color-dine-in:  #1d4ed8;
+  --color-delivery: #c2410c;
+
+  --color-qty: #0891b2;
+  --color-info:    #1d4ed8;
+  --color-fiscal:  #7c3aed;
+  --color-support: #0f766e;
 }
 
 @layer components {
+  .msg-error {
+    @apply text-danger font-light text-sm bg-danger/10 rounded px-2 py-1 mt-1;
+  }
+
   button {
     @apply cursor-pointer;
   }
+
+  .action-btn {
+    @apply inline-flex items-center justify-center gap-1
+          w-full max-w-[140px]
+          px-2 py-1
+          text-xs font-medium
+          rounded
+          transition-all duration-200
+          hover:scale-105
+          shadow-md;
+  }
+
+  .text-time-ok       { color: var(--color-time-ok); }
+  .text-time-warn     { color: var(--color-time-warn); }
+  .text-time-critical { color: var(--color-time-critical); }
 }
 
 body {
   user-select: none;
 }
 
-/* Forçar estilos do backdrop CDK */
 .cdk-overlay-backdrop {
   background: rgba(0, 0, 0, 0.6) !important;
   backdrop-filter: blur(4px) !important;
-}
-
-/* Classe customizada para seu modal específico */
-.modal-backdrop-dark {
-  background: rgba(0, 0, 0, 0.7) !important;
-}
-
-/* Animação de entrada/saída (opcional) */
-.cdk-overlay-backdrop {
   opacity: 0;
   transition: opacity 200ms ease-in-out;
 }
@@ -38,14 +139,6 @@ body {
   opacity: 1;
 }
 
-.action-btn {
-  @apply inline-flex items-center justify-center gap-1
-         w-full max-w-[140px]
-         px-2 py-1
-         text-xs font-medium
-         rounded
-         text-gray-50
-         transition-all duration-200
-         hover:scale-105
-         shadow-md;
+.modal-backdrop-dark {
+  background: rgba(0, 0, 0, 0.7) !important;
 }
