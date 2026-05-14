@@ -547,12 +547,6 @@ export class OrdersService {
                   restanteParaCancelar = 0;
                 }
               }
-
-              if (restanteParaCancelar > 0) {
-                throw new BadRequestException(
-                  `Não é possível reduzir "${existing.name}" pois parte já está em produção`,
-                );
-              }
             }
 
             if (existing.product.productType === ProductType.RESALE) {
