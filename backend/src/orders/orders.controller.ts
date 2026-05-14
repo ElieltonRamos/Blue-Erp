@@ -201,7 +201,8 @@ export class OrdersController {
   reprint(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: ReprintOrderDto,
+    @CurrentUser() user: JwtPayload,
   ): Promise<void> {
-    return this.ordersService.reprint(id, dto);
+    return this.ordersService.reprint(id, dto, user.userId);
   }
 }

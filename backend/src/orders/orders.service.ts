@@ -345,6 +345,11 @@ export class OrdersService {
       },
     });
 
+    const currentOperator = await this.prisma.client.user.findUnique({
+      where: { id: operatorId },
+      select: { username: true },
+    });
+
     if (!existingOrder) {
       throw new NotFoundException(`Pedido ${id} não encontrado`);
     }
@@ -380,9 +385,6 @@ export class OrdersService {
 
     const { items, serviceCharge, ...orderData } = updateOrderDto;
     const isClosing = orderData.status === OrderStatus.CLOSED;
-    const isInProduction = existingOrder.items.some((item) =>
-      item.productions.some((p) => p.status === 'IN_PROGRESS'),
-    );
 
     const closingData = isClosing
       ? {
@@ -404,7 +406,7 @@ export class OrdersService {
           orderId: id,
           table: existingOrder.table,
           customerName: existingOrder.customerName,
-          operatorName: existingOrder.operator?.username,
+          operatorName: currentOperator?.username,
           location,
           items: [],
         });
@@ -450,6 +452,9 @@ export class OrdersService {
         }
 
         for (const item of removedItems) {
+          // TODO: itens com produções COMPLETED que forem removidos representam uma perda real
+          // (produto já produzido e não cobrado). Considerar inserir registro em tabela de perdas
+          // com: itemId, productId, quantity, unitPrice, operatorId, motivo.
           if (this.isProduced(item.product.productType)) {
             await tx.orderProduction.updateMany({
               where: {
@@ -479,12 +484,6 @@ export class OrdersService {
           const quantidadeAtual = Number(existing.quantity);
           const novoPreco = Number(incoming.unitPrice);
           const precoAtual = Number(existing.unitPrice);
-
-          if (isInProduction && novoPreco !== precoAtual) {
-            throw new BadRequestException(
-              `Não é permitido alterar o preço do item "${existing.name}" após envio à cozinha`,
-            );
-          }
 
           const diferenca = novaQuantidade - quantidadeAtual;
 
@@ -526,9 +525,16 @@ export class OrdersService {
             if (this.isProduced(existing.product.productType)) {
               let restanteParaCancelar = Math.abs(diferenca);
 
-              for (const prod of existing.productions.filter(
-                (p) => p.status === 'PENDING',
-              )) {
+              const statusOrder = ['PENDING', 'IN_PROGRESS', 'COMPLETED'];
+              const productions = existing.productions
+                .filter((p) => statusOrder.includes(p.status))
+                .sort(
+                  (a, b) =>
+                    statusOrder.indexOf(a.status) -
+                    statusOrder.indexOf(b.status),
+                );
+
+              for (const prod of productions) {
                 if (restanteParaCancelar <= 0) break;
 
                 const qty = Number(prod.quantityRequested);
@@ -705,7 +711,7 @@ export class OrdersService {
     const order = await this.prisma.client.order.findUnique({
       where: { id },
       include: {
-        items: { include: { productions: true, product: true } },
+        items: { include: { productions: true } },
         operator: { select: { id: true, username: true, role: true } },
         closedByOperator: { select: { id: true, username: true, role: true } },
       },
@@ -715,30 +721,27 @@ export class OrdersService {
       throw new NotFoundException(`Pedido ${id} não encontrado`);
     }
 
-    if (order.status !== OrderStatus.OPEN) {
-      throw new BadRequestException(
-        'Apenas pedidos abertos podem ser cancelados',
-      );
+    if (order.status === OrderStatus.PAID) {
+      throw new BadRequestException('Pedidos pagos não podem ser cancelados');
     }
 
     await this.prisma.client.$transaction(async (tx) => {
-      for (const item of order.items) {
-        const pendingProductions = item.productions.filter(
-          (p) => p.status === 'PENDING',
-        );
+      await tx.orderProduction.updateMany({
+        where: { orderItemId: { in: order.items.map((i) => i.id) } },
+        data: { status: 'CANCELED' },
+      });
 
-        const hasProduced = item.productions.some(
-          (p) => p.status === 'IN_PROGRESS' || Number(p.quantityProduced) > 0,
-        );
-
-        if (pendingProductions.length > 0 && !hasProduced) {
-          await tx.orderProduction.updateMany({
-            where: { orderItemId: item.id, status: 'PENDING' },
-            data: { status: 'CANCELED' },
-          });
-
-          await tx.orderItem.delete({ where: { id: item.id } });
-        }
+      const table = await tx.table.findUnique({ where: { orderId: id } });
+      if (table) {
+        await tx.table.update({
+          where: { id: table.id },
+          data: {
+            status: 'AVAILABLE',
+            customer: null,
+            time: null,
+            orderId: null,
+          },
+        });
       }
 
       await tx.order.update({
@@ -845,12 +848,21 @@ export class OrdersService {
     return this.mapToEntity(updated!);
   }
 
-  async reprint(id: number, dto: ReprintOrderDto): Promise<void> {
+  async reprint(
+    id: number,
+    dto: ReprintOrderDto,
+    operatorId: number,
+  ): Promise<void> {
     const order = await this.prisma.client.order.findUnique({
       where: { id },
       include: {
         operator: { select: { username: true } },
       },
+    });
+
+    const currentOperator = await this.prisma.client.user.findUnique({
+      where: { id: operatorId },
+      select: { username: true },
     });
 
     if (!order) {
@@ -873,7 +885,7 @@ export class OrdersService {
           customerName: order.customerName,
           location,
           isReprint: true,
-          operatorName: order.operator?.username,
+          operatorName: currentOperator?.username,
           items: [],
         });
       }
