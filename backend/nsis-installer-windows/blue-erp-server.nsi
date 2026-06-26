@@ -44,6 +44,7 @@ Unicode True
 Var NodeMajorVersion
 Var NeedsNodeInstall
 Var NodePath
+Var NpmGlobalModules
 
 ; ==================== INIT ====================
 Function .onInit
@@ -61,8 +62,8 @@ Function CheckNodeVersion
     StrCpy $NeedsNodeInstall "1"
 
     nsExec::ExecToStack 'cmd /c node -v'
-    Pop $0 ; exit code
-    Pop $1 ; output, ex: "v24.0.0"
+    Pop $0
+    Pop $1
 
     ${If} $0 == 0
         StrCpy $1 $1 "" 1
@@ -203,6 +204,15 @@ Section "Instalar"
         DetailPrint "PM2 já instalado (versão $1). Pulando instalação."
     ${EndIf}
 
+    ; ---------- CAPTURAR NPM_GLOBAL_MODULES ----------
+    nsExec::ExecToStack 'cmd /c npm root -g'
+    Pop $0
+    Pop $1
+    Push $1
+    Call TrimTrailingNewline
+    Pop $NpmGlobalModules
+    DetailPrint "NPM global modules: $NpmGlobalModules"
+
     ; ---------- SERVIÇO WINDOWS (NSSM + node pm2-launcher.js) ----------
     DetailPrint "Instalando serviço ${SERVICE_NAME}..."
 
@@ -221,7 +231,7 @@ Section "Instalar"
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppDirectory "$INSTDIR"'
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} Start SERVICE_AUTO_START'
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppRestartDelay 5000'
-    nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppEnvironmentExtra "PM2_HOME=$INSTDIR\pm2-home"'
+    nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} AppEnvironmentExtra "PM2_HOME=$INSTDIR\pm2-home" "NPM_GLOBAL_MODULES=$NpmGlobalModules"'
     nsExec::ExecToLog '"$INSTDIR\nssm.exe" set ${SERVICE_NAME} Description "Servidor Blue ERP - Sistema de Gestão Empresarial (via PM2)"'
 
     DetailPrint "Configurando logs..."

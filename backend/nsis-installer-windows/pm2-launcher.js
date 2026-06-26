@@ -3,6 +3,7 @@
 const { execSync } = require('child_process');
 const path = require('path');
 const os = require('os');
+
 const OS = 'WINDOWS'; // 'WINDOWS' ou 'LINUX'
 
 // ==================== CONFIGURAÇÃO ====================
@@ -16,14 +17,14 @@ const CONFIG = {
   maxRestarts: 10,
   restartDelay: 5000,
   minUptime: '10s',
-  pm2Home: process.env.PM2_HOME ?? (OS === 'WINDOWS' ? 'C:\\blue-clinic-server\\pm2-home' : path.join(os.homedir(), '.pm2')),
+  pm2Home: process.env.PM2_HOME ?? (OS === 'WINDOWS' ? 'C:\\blue-erp-server\\pm2-home' : path.join(os.homedir(), '.pm2')),
   healthCheckIntervalMs: 60_000,
 };
 // ======================================================
 
 process.env.PM2_HOME = CONFIG.pm2Home;
 
-const globalRoot = execSync('npm root -g').toString().trim();
+const globalRoot = process.env.NPM_GLOBAL_MODULES ?? execSync('npm root -g').toString().trim();
 const pm2 = require(path.join(globalRoot, 'pm2'));
 
 const SCRIPT_PATH = path.join(__dirname, CONFIG.script);
@@ -31,11 +32,11 @@ const SCRIPT_PATH = path.join(__dirname, CONFIG.script);
 let healthCheckTimer;
 
 function log(message) {
-  console.log(`[pm2-launcher] ${new Date().toISOString()} ${message}`);
+  process.stdout.write(`[pm2-launcher] ${new Date().toISOString()} ${message}\r\n`);
 }
 
 function logError(message, err) {
-  console.error(`[pm2-launcher] ${new Date().toISOString()} ${message}`, err ?? '');
+  process.stderr.write(`[pm2-launcher] ${new Date().toISOString()} ${message} ${err ?? ''}\r\n`);
 }
 
 function startHealthCheck() {
@@ -83,6 +84,7 @@ function shutdown(signal) {
 }
 
 log(`Iniciando launcher. PM2_HOME=${CONFIG.pm2Home}`);
+log(`NPM_GLOBAL_MODULES=${globalRoot}`);
 log(`Logs do app NAO aparecem aqui. Use: set PM2_HOME=${CONFIG.pm2Home} && pm2 logs ${CONFIG.appName}`);
 log(`Monitoramento em tempo real: set PM2_HOME=${CONFIG.pm2Home} && pm2 monit`);
 log('Este log (NSSM AppStdout/AppStderr) mostra apenas status do launcher e do supervisor PM2.');
