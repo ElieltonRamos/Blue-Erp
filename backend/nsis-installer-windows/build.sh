@@ -13,20 +13,27 @@ if ! command -v makensis &> /dev/null; then
     exit 1
 fi
 
+VERSION=$(node -p "require('../package.json').version")
+
 REQUIRED_FILES=(
-    "node.exe"
     "server.js"
+    "pm2-launcher.js"
     "nssm.exe"
     "blue-erp-server-icon.ico"
     "LICENSE.txt"
     "blue-erp-server.nsi"
     ".env"
+    "node-v24-x64.msi"
 )
 
 echo "Verificando arquivos necessários..."
 for file in "${REQUIRED_FILES[@]}"; do
     if [ ! -f "$file" ]; then
         echo "ERRO: Arquivo não encontrado: $file"
+        if [ "$file" == "node-v24-x64.msi" ]; then
+            echo "  Baixe em: https://nodejs.org/dist/latest-v24.x/ (arquivo node-v24.x.x-x64.msi)"
+            echo "  Renomeie para node-v24-x64.msi nesta pasta."
+        fi
         exit 1
     fi
     echo "  ✓ $file"
@@ -34,10 +41,10 @@ done
 
 echo ""
 echo "Compilando instalador..."
-makensis blue-erp-server.nsi
+makensis -DAPP_VERSION=$VERSION blue-erp-server.nsi
 
 echo ""
 echo "================================================"
 echo "  Build concluído com sucesso!"
-echo "  Arquivo gerado: BlueERPServer-Setup-1.0.0.exe"
+echo "  Arquivo gerado: BlueERPServer-Setup-$VERSION.exe"
 echo "================================================"
