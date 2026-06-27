@@ -1,3 +1,4 @@
+// daily-report.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../database/prisma.service';
@@ -24,6 +25,7 @@ type CrossDayOrder = {
 @Injectable()
 export class DailyReportService {
   private readonly logger = new Logger(DailyReportService.name);
+  private readonly companyId = 1;
 
   constructor(
     private prisma: PrismaService,
@@ -50,6 +52,22 @@ export class DailyReportService {
 
   private fmt(v: number): string {
     return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  private async fetchCompanyName(): Promise<string> {
+    const company = await this.prisma.client.company.findUnique({
+      where: { id: this.companyId },
+      select: { tradeName: true },
+    });
+
+    if (!company) {
+      this.logger.warn(
+        `Empresa com id ${this.companyId} não encontrada. Verifique a configuração.`,
+      );
+      return 'Empresa não identificada';
+    }
+
+    return company.tradeName;
   }
 
   private async fetchOrderSummary(dateString: string): Promise<OrderSummary> {
@@ -138,6 +156,7 @@ export class DailyReportService {
   }
 
   private buildMessage(
+    companyName: string,
     dateString: string,
     orders: OrderSummary,
     sales: SalesSummary,
@@ -163,6 +182,7 @@ export class DailyReportService {
         : '';
 
     const lines = [
+      `🏢 <b>${companyName}</b>`,
       `📊 <b>Relatório Operacional — ${date}</b>`,
       ``,
       `💰 <b>Financeiro</b>`,
@@ -211,13 +231,15 @@ export class DailyReportService {
     try {
       const dateString = this.getYesterdayString();
 
-      const [orders, sales, crossDayOrders] = await Promise.all([
+      const [companyName, orders, sales, crossDayOrders] = await Promise.all([
+        this.fetchCompanyName(),
         this.fetchOrderSummary(dateString),
         this.fetchSalesSummary(dateString),
         this.fetchCrossDayOrders(dateString),
       ]);
 
       const message = this.buildMessage(
+        companyName,
         dateString,
         orders,
         sales,

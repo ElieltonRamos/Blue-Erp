@@ -182,9 +182,9 @@ export class AppService {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blue ERP - Dashboard Admin</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body class="bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 min-h-screen text-white">
+<body class="bg-linear-to-br from-blue-900 via-purple-900 to-indigo-900 min-h-screen text-white">
     <div class="container mx-auto px-6 py-8">
         <div class="text-center mb-12">
             <h1 class="text-5xl font-bold text-white mb-4">
@@ -236,7 +236,7 @@ export class AppService {
         </div>
 
         <!-- Licença -->
-        <div class="bg-gradient-to-br from-green-900/30 to-emerald-900/30 backdrop-blur-lg rounded-2xl p-8 border-2 border-green-500/30 mb-8">
+        <div class="bg-linear-to-br from-green-900/30 to-emerald-900/30 backdrop-blur-lg rounded-2xl p-8 border-2 border-green-500/30 mb-8">
             <h3 class="text-2xl font-bold mb-6 flex items-center text-green-300">
                 🔑 Licença do Sistema
             </h3>
@@ -262,7 +262,7 @@ export class AppService {
         </div>
 
         <!-- Instalador -->
-        <div class="bg-gradient-to-br from-blue-900/30 to-indigo-900/30 backdrop-blur-lg rounded-2xl p-8 border-2 border-blue-500/30 mb-8">
+        <div class="bg-linear-to-br from-blue-900/30 to-indigo-900/30 backdrop-blur-lg rounded-2xl p-8 border-2 border-blue-500/30 mb-8">
             <h3 class="text-2xl font-bold mb-6 flex items-center text-blue-300">
                 👨‍💻 Instalação por
             </h3>

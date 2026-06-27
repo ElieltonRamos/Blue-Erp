@@ -28,12 +28,16 @@ async function bootstrap() {
     'JWT_SECRET',
     'LICENSE_PUBLIC_KEY',
     'LICENSING_SERVER',
+    'TELEGRAM_BOT_TOKEN',
+    'TELEGRAM_CHAT_ID',
+    'PRINTER_BAR',
+    'PRINTER_COZINHA_DOM_JUAN',
   ];
 
   console.log('=== Environment Variables ===');
   appEnvKeys.forEach((key) => {
     const value = process.env[key];
-    const isSensitive = ['PASSWORD', 'SECRET', 'KEY', 'URL'].some((s) =>
+    const isSensitive = ['PASSWORD', 'SECRET', 'TOKEN', 'KEY'].some((s) =>
       key.includes(s),
     );
     console.log(

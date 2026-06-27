@@ -1,4 +1,3 @@
-// src/company/company.controller.ts
 import {
   Controller,
   Get,
@@ -19,14 +18,6 @@ import { CreateCompanyDto } from './dto/create-company.dto.js';
 import { UpdateCompanyDto } from './dto/update-company.dto.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
-
-// Interface para arquivo uploaded (compatível com o service)
-interface UploadedFile {
-  originalname: string;
-  buffer: Buffer;
-  mimetype: string;
-  size: number;
-}
 
 @ApiTags('company')
 @UseGuards(JwtAuthGuard, RolesGuard)
