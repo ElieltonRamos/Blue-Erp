@@ -5,966 +5,408 @@ export async function seedProducts(
   categories: any,
   locations: any,
 ) {
-  const defaults = {
-    costPrice: 0.0,
-    ncm: '00000000',
-    origin: 0,
-    csosn: '102',
-    federalTaxRate: 0.0,
-    stateTaxRate: 0.0,
-    municipalTaxRate: 0.0,
-    unit: 'UN' as Unit,
-    quantity: 0,
-    active: true,
-    productionLocation: locations.domJuan.code,
-    productType: 'MANUFACTURED' as ProductType,
-  };
-
-  const defaultsBar = {
-    ...defaults,
-    productionLocation: locations.bar.code,
-    productType: 'RESALE' as ProductType,
-  };
-
-  // ENTRADAS
-  await prisma.product.upsert({
-    where: { code: 'ENT001' },
+  // ─── MANUFACTURED (5) — produzidos do zero na cozinha ───────────────────────
+  // Picanha na Brasa
+  const picanha = await prisma.product.upsert({
+    where: { code: 'PRD001' },
     update: {},
     create: {
-      ...defaults,
-      name: 'Provolone Pachá',
-      code: 'ENT001',
-      price: 40.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT002' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Panceta',
-      code: 'ENT002',
-      price: 35.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT003' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Coxinha Dom Juan',
-      code: 'ENT003',
-      price: 38.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT004' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Beef Tartare',
-      code: 'ENT004',
-      price: 55.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT005' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Onion Rings',
-      code: 'ENT005',
-      price: 25.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT006' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Fritas Flambadas com Cheddar e Bacon',
-      code: 'ENT006',
-      price: 45.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT007' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Fritas (Vegetariano)',
-      code: 'ENT007',
-      price: 35.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT008' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Carne de Sol',
-      code: 'ENT008',
-      price: 60.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT009' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Queijo Coalho',
-      code: 'ENT009',
-      price: 32.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT010' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Pão de Alho da Parrilla',
-      code: 'ENT010',
-      price: 21.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT011' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Linguiça Provoleta',
-      code: 'ENT011',
-      price: 58.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT012' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Gran Choripán',
-      code: 'ENT012',
-      price: 35.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT013' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Bolinho de Cupim',
-      code: 'ENT013',
-      price: 36.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT014' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Bolinho de Rabada',
-      code: 'ENT014',
-      price: 40.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT015' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Mignon alla Vodka',
-      code: 'ENT015',
-      price: 70.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT016' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Fish & Chips',
-      code: 'ENT016',
-      price: 60.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT017' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Camarão Fuego',
-      code: 'ENT017',
-      price: 89.0,
-      categoryId: categories.entradas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ENT018' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Cordeiro de Sol',
-      code: 'ENT018',
-      price: 65.0,
-      categoryId: categories.entradas.id,
+      code: 'PRD001',
+      name: 'Picanha na Brasa',
+      price: 129.9,
+      costPrice: 55.0,
+      extraCosts: 5.0,
+      ncm: '02013000',
+      origin: 0,
+      csosn: '102',
+      unit: Unit.UN,
+      quantity: 0,
+      active: true,
+      productType: ProductType.MANUFACTURED,
+      productionLocation: locations.cozinha.code,
+      categoryId: categories.carnes.id,
+      federalTaxRate: 4.68,
+      stateTaxRate: 12.0,
+      municipalTaxRate: 0.0,
     },
   });
 
-  // SELEÇÃO DE CORTES
-  await prisma.product.upsert({
-    where: { code: 'COR001' },
+  // Frango ao Molho Pardo
+  const frangoPardo = await prisma.product.upsert({
+    where: { code: 'PRD002' },
     update: {},
     create: {
-      ...defaults,
-      name: 'Entrecôte (Ribeye)',
-      code: 'COR001',
-      price: 119.0,
-      categoryId: categories.cortes.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'COR002' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Bife de Tira',
-      code: 'COR002',
-      price: 119.0,
-      categoryId: categories.cortes.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'COR003' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Picanha Angus',
-      code: 'COR003',
-      price: 139.0,
-      categoryId: categories.cortes.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'COR004' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Picanha Nelore',
-      code: 'COR004',
-      price: 110.0,
-      categoryId: categories.cortes.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'COR005' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Maminha com Fonduta de Queijos',
-      code: 'COR005',
-      price: 110.0,
-      categoryId: categories.cortes.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'COR006' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Baby Beef',
-      code: 'COR006',
-      price: 105.0,
-      categoryId: categories.cortes.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'COR007' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Mignon ao Blue Cheese',
-      code: 'COR007',
-      price: 110.0,
-      categoryId: categories.cortes.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'COR008' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Fraldinha Fugazzetta Black Angus',
-      code: 'COR008',
-      price: 109.0,
-      categoryId: categories.cortes.id,
+      code: 'PRD002',
+      name: 'Frango ao Molho Pardo',
+      price: 59.9,
+      costPrice: 20.0,
+      extraCosts: 3.0,
+      ncm: '02071400',
+      origin: 0,
+      csosn: '102',
+      unit: Unit.UN,
+      quantity: 0,
+      active: true,
+      productType: ProductType.MANUFACTURED,
+      productionLocation: locations.cozinha.code,
+      categoryId: categories.carnes.id,
+      federalTaxRate: 4.68,
+      stateTaxRate: 12.0,
+      municipalTaxRate: 0.0,
     },
   });
 
-  // ESPECIAIS
-  await prisma.product.upsert({
-    where: { code: 'ESP001' },
+  // Moqueca de Camarão
+  const moquecaCamarao = await prisma.product.upsert({
+    where: { code: 'PRD003' },
     update: {},
     create: {
-      ...defaults,
-      name: 'Carré de Cordeiro',
-      code: 'ESP001',
-      price: 150.0,
-      categoryId: categories.especiais.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ESP002' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Pork Ribs',
-      code: 'ESP002',
-      price: 98.0,
-      categoryId: categories.especiais.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ESP003' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Entrecôte Suíno',
-      code: 'ESP003',
-      price: 75.0,
-      categoryId: categories.especiais.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'ESP004' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Filé de Sobrecoxa',
-      code: 'ESP004',
-      price: 70.0,
-      categoryId: categories.especiais.id,
+      code: 'PRD003',
+      name: 'Moqueca de Camarão',
+      price: 149.9,
+      costPrice: 65.0,
+      extraCosts: 6.0,
+      ncm: '16052100',
+      origin: 0,
+      csosn: '102',
+      unit: Unit.UN,
+      quantity: 0,
+      active: true,
+      productType: ProductType.MANUFACTURED,
+      productionLocation: locations.cozinha.code,
+      categoryId: categories.frutosDoMar.id,
+      federalTaxRate: 10.73,
+      stateTaxRate: 18.0,
+      municipalTaxRate: 0.0,
     },
   });
 
-  // PASTA & BRASA
-  await prisma.product.upsert({
-    where: { code: 'PAS001' },
+  // Pudim de Leite Condensado
+  const pudim = await prisma.product.upsert({
+    where: { code: 'PRD004' },
     update: {},
     create: {
-      ...defaults,
-      name: 'Filé alla Parmigiana - Frango',
-      code: 'PAS001',
-      price: 120.0,
-      categoryId: categories.pasta.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'PAS002' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Filé alla Parmigiana - Mignon',
-      code: 'PAS002',
-      price: 150.0,
-      categoryId: categories.pasta.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'PAS003' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Filé alla Parmigiana - Camarão',
-      code: 'PAS003',
-      price: 170.0,
-      categoryId: categories.pasta.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'PAS004' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Camarão do Lago',
-      code: 'PAS004',
-      price: 170.0,
-      categoryId: categories.pasta.id,
+      code: 'PRD004',
+      name: 'Pudim de Leite Condensado',
+      price: 22.9,
+      costPrice: 6.0,
+      extraCosts: 1.0,
+      ncm: '21069090',
+      origin: 0,
+      csosn: '102',
+      unit: Unit.UN,
+      quantity: 0,
+      active: true,
+      productType: ProductType.MANUFACTURED,
+      productionLocation: locations.bar.code,
+      categoryId: categories.sobremesas.id,
+      federalTaxRate: 13.45,
+      stateTaxRate: 18.0,
+      municipalTaxRate: 0.0,
     },
   });
 
-  // GUARNIÇÕES
-  await prisma.product.upsert({
-    where: { code: 'GUA001' },
+  // Caipirinha de Limão
+  const caipirinha = await prisma.product.upsert({
+    where: { code: 'PRD005' },
     update: {},
     create: {
-      ...defaults,
-      name: 'Arroz Texano / Arroz de Cupim',
-      code: 'GUA001',
-      price: 40.0,
-      categoryId: categories.guarnicoes.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'GUA002' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Purê de Mandioca',
-      code: 'GUA002',
-      price: 15.0,
-      categoryId: categories.guarnicoes.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'GUA003' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Mandioca Cremosa',
-      code: 'GUA003',
-      price: 10.0,
-      categoryId: categories.guarnicoes.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'GUA004' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Farofa de Ovos',
-      code: 'GUA004',
-      price: 15.0,
-      categoryId: categories.guarnicoes.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'GUA005' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Farofa Crocante da Chef',
-      code: 'GUA005',
-      price: 10.0,
-      categoryId: categories.guarnicoes.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'GUA006' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Vinagrete Dom Juan',
-      code: 'GUA006',
-      price: 10.0,
-      categoryId: categories.guarnicoes.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'GUA007' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Vinagrete de Milho',
-      code: 'GUA007',
-      price: 10.0,
-      categoryId: categories.guarnicoes.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'GUA008' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Arroz Branco',
-      code: 'GUA008',
-      price: 10.0,
-      categoryId: categories.guarnicoes.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'GUA009' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Creme de Milho',
-      code: 'GUA009',
-      price: 15.0,
-      categoryId: categories.guarnicoes.id,
-    },
-  });
-
-  // SANDWICHES & FRIES
-  await prisma.product.upsert({
-    where: { code: 'SAN001' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Sandwich Mignon',
-      code: 'SAN001',
-      price: 35.0,
-      categoryId: categories.sandwiches.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'SAN002' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Burger Dom Juan',
-      code: 'SAN002',
-      price: 35.0,
-      categoryId: categories.sandwiches.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'SAN003' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Crispy Chicken',
-      code: 'SAN003',
-      price: 32.0,
-      categoryId: categories.sandwiches.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'SAN004' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Brisket Sandwich',
-      code: 'SAN004',
-      price: 32.0,
-      categoryId: categories.sandwiches.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'SAN005' },
-    update: {},
-    create: {
-      ...defaults,
-      name: 'Cupim Sandwich',
-      code: 'SAN005',
-      price: 34.0,
-      categoryId: categories.sandwiches.id,
-    },
-  });
-
-  // DRINKS COM GIN
-  await prisma.product.upsert({
-    where: { code: 'DRG001' },
-    update: {},
-    create: {
-      ...defaults,
+      code: 'PRD005',
+      name: 'Caipirinha de Limão',
+      price: 18.9,
+      costPrice: 4.5,
+      extraCosts: 0.5,
+      ncm: '22082000',
+      origin: 0,
+      csosn: '102',
+      unit: Unit.UN,
+      quantity: 0,
+      active: true,
+      productType: ProductType.MANUFACTURED,
       productionLocation: locations.bar.code,
-      name: 'Pink Gin',
-      code: 'DRG001',
-      price: 32.0,
-      categoryId: categories.drinksGin.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'DRG002' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Gin Melancia',
-      code: 'DRG002',
-      price: 32.0,
-      categoryId: categories.drinksGin.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'DRG003' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Gin Tropical',
-      code: 'DRG003',
-      price: 32.0,
-      categoryId: categories.drinksGin.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'DRG004' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Martini',
-      code: 'DRG004',
-      price: 32.0,
-      categoryId: categories.drinksGin.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'DRG005' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Mojito',
-      code: 'DRG005',
-      price: 35.0,
-      categoryId: categories.drinksGin.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'DRG006' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Daiquiri',
-      code: 'DRG006',
-      price: 35.0,
-      categoryId: categories.drinksGin.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'DRG007' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Piña Colada',
-      code: 'DRG007',
-      price: 36.0,
-      categoryId: categories.drinksGin.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'DRG008' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Negroni',
-      code: 'DRG008',
-      price: 38.0,
-      categoryId: categories.drinksGin.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'DRG009' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Moscow Mule',
-      code: 'DRG009',
-      price: 36.0,
-      categoryId: categories.drinksGin.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'DRG010' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Caipiroska',
-      code: 'DRG010',
-      price: 25.0,
-      categoryId: categories.drinksGin.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'DRG011' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Caipirinha',
-      code: 'DRG011',
-      price: 18.0,
-      categoryId: categories.drinksGin.id,
-    },
-  });
-
-  // DRINKS SEM ÁLCOOL
-  await prisma.product.upsert({
-    where: { code: 'DSA001' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Soda Italiana – Maçã Verde',
-      code: 'DSA001',
-      price: 17.0,
-      categoryId: categories.drinksSemAlcool.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'DSA002' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Soda Italiana – Tropical',
-      code: 'DSA002',
-      price: 38.0,
-      categoryId: categories.drinksSemAlcool.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'DSA003' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Soda Italiana – Amora',
-      code: 'DSA003',
-      price: 0.0,
-      categoryId: categories.drinksSemAlcool.id,
-    },
-  });
-
-  // SUCOS DA FRUTA
-  await prisma.product.upsert({
-    where: { code: 'SUC001' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Suco de Abacaxi',
-      code: 'SUC001',
-      price: 12.0,
-      categoryId: categories.sucos.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'SUC002' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Suco de Laranja',
-      code: 'SUC002',
-      price: 12.0,
-      categoryId: categories.sucos.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'SUC003' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Suco de Morango',
-      code: 'SUC003',
-      price: 14.0,
-      categoryId: categories.sucos.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'SUC004' },
-    update: {},
-    create: {
-      ...defaults,
-      productionLocation: locations.bar.code,
-      name: 'Suco de Graviola',
-      code: 'SUC004',
-      price: 14.0,
-      categoryId: categories.sucos.id,
-    },
-  });
-
-  // BEBIDAS
-  await prisma.product.upsert({
-    where: { code: 'BEB001' },
-    update: {},
-    create: {
-      ...defaultsBar,
-      name: 'Coca-Cola Zero',
-      code: 'BEB001',
-      price: 6.0,
       categoryId: categories.bebidas.id,
+      federalTaxRate: 33.89,
+      stateTaxRate: 25.0,
+      municipalTaxRate: 0.0,
     },
   });
-  await prisma.product.upsert({
-    where: { code: 'BEB002' },
+
+  // ─── RESALE (5) — comprados prontos e revendidos ─────────────────────────────
+  // Água Mineral 500ml
+  const agua = await prisma.product.upsert({
+    where: { code: 'PRD006' },
     update: {},
     create: {
-      ...defaultsBar,
-      name: 'Coca-Cola',
-      code: 'BEB002',
-      price: 6.0,
+      code: 'PRD006',
+      name: 'Água Mineral 500ml',
+      price: 5.0,
+      costPrice: 1.5,
+      extraCosts: 0.0,
+      ncm: '22011000',
+      origin: 0,
+      csosn: '102',
+      unit: Unit.UN,
+      quantity: 50,
+      minStock: 20,
+      active: true,
+      productType: ProductType.RESALE,
+      productionLocation: locations.bar.code,
       categoryId: categories.bebidas.id,
+      federalTaxRate: 13.45,
+      stateTaxRate: 12.0,
+      municipalTaxRate: 0.0,
     },
   });
-  await prisma.product.upsert({
-    where: { code: 'BEB003' },
+
+  // Refrigerante Lata 350ml
+  const refri = await prisma.product.upsert({
+    where: { code: 'PRD007' },
     update: {},
     create: {
-      ...defaultsBar,
-      name: 'Guaraná Zero',
-      code: 'BEB003',
-      price: 6.0,
-      categoryId: categories.bebidas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'BEB004' },
-    update: {},
-    create: {
-      ...defaultsBar,
-      name: 'Fanta Laranja',
-      code: 'BEB004',
-      price: 6.0,
-      categoryId: categories.bebidas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'BEB005' },
-    update: {},
-    create: {
-      ...defaultsBar,
-      name: 'Red Bull Tradicional',
-      code: 'BEB005',
-      price: 15.0,
-      categoryId: categories.bebidas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'BEB006' },
-    update: {},
-    create: {
-      ...defaultsBar,
-      name: 'Red Bull Sem Açúcar',
-      code: 'BEB006',
-      price: 15.0,
-      categoryId: categories.bebidas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'BEB007' },
-    update: {},
-    create: {
-      ...defaultsBar,
-      name: 'Red Bull Tropical',
-      code: 'BEB007',
-      price: 15.0,
-      categoryId: categories.bebidas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'BEB008' },
-    update: {},
-    create: {
-      ...defaultsBar,
-      name: 'Red Bull Melancia',
-      code: 'BEB008',
-      price: 15.0,
-      categoryId: categories.bebidas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'BEB009' },
-    update: {},
-    create: {
-      ...defaultsBar,
-      name: 'Água Tônica',
-      code: 'BEB009',
+      code: 'PRD007',
+      name: 'Refrigerante Lata 350ml',
       price: 7.0,
+      costPrice: 2.5,
+      extraCosts: 0.0,
+      ncm: '22021000',
+      origin: 0,
+      csosn: '102',
+      unit: Unit.UN,
+      quantity: 80,
+      minStock: 30,
+      active: true,
+      productType: ProductType.RESALE,
+      productionLocation: locations.bar.code,
       categoryId: categories.bebidas.id,
+      federalTaxRate: 33.89,
+      stateTaxRate: 25.0,
+      municipalTaxRate: 0.0,
     },
   });
-  await prisma.product.upsert({
-    where: { code: 'BEB010' },
+
+  // Cerveja Longneck 355ml
+  const cerveja = await prisma.product.upsert({
+    where: { code: 'PRD008' },
     update: {},
     create: {
-      ...defaultsBar,
-      name: 'Água Mineral',
-      code: 'BEB010',
-      price: 6.0,
-      categoryId: categories.bebidas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'BEB011' },
-    update: {},
-    create: {
-      ...defaultsBar,
-      name: 'Água com Gás',
-      code: 'BEB011',
-      price: 7.0,
-      categoryId: categories.bebidas.id,
-    },
-  });
-  await prisma.product.upsert({
-    where: { code: 'BEB012' },
-    update: {},
-    create: {
-      ...defaultsBar,
-      name: 'Heineken Longneck',
-      code: 'BEB012',
+      code: 'PRD008',
+      name: 'Cerveja Longneck 355ml',
       price: 12.0,
+      costPrice: 4.5,
+      extraCosts: 0.0,
+      ncm: '22030000',
+      origin: 0,
+      csosn: '102',
+      unit: Unit.UN,
+      quantity: 120,
+      minStock: 40,
+      active: true,
+      productType: ProductType.RESALE,
+      productionLocation: locations.bar.code,
       categoryId: categories.bebidas.id,
+      federalTaxRate: 33.89,
+      stateTaxRate: 25.0,
+      municipalTaxRate: 0.0,
     },
   });
-  await prisma.product.upsert({
-    where: { code: 'BEB013' },
+
+  // Brigadeiro (unitário, comprado de confeitaria)
+  const brigadeiro = await prisma.product.upsert({
+    where: { code: 'PRD009' },
     update: {},
     create: {
-      ...defaultsBar,
-      name: 'Heineken 600ml',
-      code: 'BEB013',
-      price: 20.0,
-      categoryId: categories.bebidas.id,
+      code: 'PRD009',
+      name: 'Brigadeiro Gourmet',
+      price: 8.0,
+      costPrice: 3.0,
+      extraCosts: 0.0,
+      ncm: '18069000',
+      origin: 0,
+      csosn: '102',
+      unit: Unit.UN,
+      quantity: 30,
+      minStock: 10,
+      active: true,
+      productType: ProductType.RESALE,
+      productionLocation: locations.bar.code,
+      categoryId: categories.sobremesas.id,
+      federalTaxRate: 13.45,
+      stateTaxRate: 18.0,
+      municipalTaxRate: 0.0,
     },
   });
-  await prisma.product.upsert({
-    where: { code: 'BEB014' },
+
+  // Vinho Tinto Taça
+  const vinho = await prisma.product.upsert({
+    where: { code: 'PRD010' },
     update: {},
     create: {
-      ...defaultsBar,
-      name: 'Heineken Zero',
-      code: 'BEB014',
-      price: 14.0,
+      code: 'PRD010',
+      name: 'Vinho Tinto Taça',
+      price: 25.0,
+      costPrice: 10.0,
+      extraCosts: 0.0,
+      ncm: '22042100',
+      origin: 0,
+      csosn: '102',
+      unit: Unit.UN,
+      quantity: 40,
+      minStock: 15,
+      active: true,
+      productType: ProductType.RESALE,
+      productionLocation: locations.bar.code,
       categoryId: categories.bebidas.id,
+      federalTaxRate: 33.89,
+      stateTaxRate: 25.0,
+      municipalTaxRate: 0.0,
     },
   });
-  await prisma.product.upsert({
-    where: { code: 'BEB015' },
+
+  // ─── SEMI_MANUFACTURED (5) — parcialmente processados ───────────────────────
+  // Feijoada Completa (base pré-cozida, finalizada na hora)
+  const feijoada = await prisma.product.upsert({
+    where: { code: 'PRD011' },
     update: {},
     create: {
-      ...defaultsBar,
-      name: 'Praya',
-      code: 'BEB015',
-      price: 14.0,
-      categoryId: categories.bebidas.id,
+      code: 'PRD011',
+      name: 'Feijoada Completa',
+      price: 79.9,
+      costPrice: 28.0,
+      extraCosts: 4.0,
+      ncm: '21069090',
+      origin: 0,
+      csosn: '102',
+      unit: Unit.UN,
+      quantity: 0,
+      active: true,
+      productType: ProductType.SEMI_MANUFACTURED,
+      productionLocation: locations.cozinha.code,
+      categoryId: categories.carnes.id,
+      federalTaxRate: 13.45,
+      stateTaxRate: 18.0,
+      municipalTaxRate: 0.0,
     },
   });
-  await prisma.product.upsert({
-    where: { code: 'BEB016' },
+
+  // Macarrão ao Sugo (molho base pré-pronto, massa fresca na hora)
+  const macarraoSugo = await prisma.product.upsert({
+    where: { code: 'PRD012' },
     update: {},
     create: {
-      ...defaultsBar,
-      name: 'Amstel 600ml',
-      code: 'BEB016',
-      price: 14.0,
-      categoryId: categories.bebidas.id,
+      code: 'PRD012',
+      name: 'Macarrão ao Sugo',
+      price: 49.9,
+      costPrice: 15.0,
+      extraCosts: 2.0,
+      ncm: '19021900',
+      origin: 0,
+      csosn: '102',
+      unit: Unit.UN,
+      quantity: 0,
+      active: true,
+      productType: ProductType.SEMI_MANUFACTURED,
+      productionLocation: locations.cozinha.code,
+      categoryId: categories.massas.id,
+      federalTaxRate: 10.73,
+      stateTaxRate: 18.0,
+      municipalTaxRate: 0.0,
+    },
+  });
+
+  // Lasanha Bolonhesa (montada congelada, gratinada na hora)
+  const lasanha = await prisma.product.upsert({
+    where: { code: 'PRD013' },
+    update: {},
+    create: {
+      code: 'PRD013',
+      name: 'Lasanha Bolonhesa',
+      price: 64.9,
+      costPrice: 22.0,
+      extraCosts: 3.0,
+      ncm: '19021900',
+      origin: 0,
+      csosn: '102',
+      unit: Unit.UN,
+      quantity: 0,
+      active: true,
+      productType: ProductType.SEMI_MANUFACTURED,
+      productionLocation: locations.cozinha.code,
+      categoryId: categories.massas.id,
+      federalTaxRate: 10.73,
+      stateTaxRate: 18.0,
+      municipalTaxRate: 0.0,
+    },
+  });
+
+  // Bobó de Camarão (base de mandioca pré-pronta, camarão finalizado na hora)
+  const bobo = await prisma.product.upsert({
+    where: { code: 'PRD014' },
+    update: {},
+    create: {
+      code: 'PRD014',
+      name: 'Bobó de Camarão',
+      price: 99.9,
+      costPrice: 38.0,
+      extraCosts: 4.0,
+      ncm: '16052100',
+      origin: 0,
+      csosn: '102',
+      unit: Unit.UN,
+      quantity: 0,
+      active: true,
+      productType: ProductType.SEMI_MANUFACTURED,
+      productionLocation: locations.cozinha.code,
+      categoryId: categories.frutosDoMar.id,
+      federalTaxRate: 10.73,
+      stateTaxRate: 18.0,
+      municipalTaxRate: 0.0,
+    },
+  });
+
+  // Açaí na Tigela (polpa pré-batida, montagem na hora)
+  const acai = await prisma.product.upsert({
+    where: { code: 'PRD015' },
+    update: {},
+    create: {
+      code: 'PRD015',
+      name: 'Açaí na Tigela',
+      price: 29.9,
+      costPrice: 10.0,
+      extraCosts: 1.5,
+      ncm: '20089900',
+      origin: 0,
+      csosn: '102',
+      unit: Unit.UN,
+      quantity: 0,
+      active: true,
+      productType: ProductType.SEMI_MANUFACTURED,
+      productionLocation: locations.bar.code,
+      categoryId: categories.sobremesas.id,
+      federalTaxRate: 13.45,
+      stateTaxRate: 18.0,
+      municipalTaxRate: 0.0,
     },
   });
 
   console.log('✓ Products seed');
+  return {
+    // MANUFACTURED
+    picanha,
+    frangoPardo,
+    moquecaCamarao,
+    pudim,
+    caipirinha,
+    // RESALE
+    agua,
+    refri,
+    cerveja,
+    brigadeiro,
+    vinho,
+    // SEMI_MANUFACTURED
+    feijoada,
+    macarraoSugo,
+    lasanha,
+    bobo,
+    acai,
+  };
 }
