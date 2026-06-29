@@ -116,7 +116,7 @@ export async function seedOrders(
     },
   });
 
-  // ─── ORDER 2: DINE_IN - CLOSED → Sale EMITIDA, pagamento crédito ─────────────
+  // ─── ORDER 2: DINE_IN - CLOSED → Sale EMITIDA, pagamento cartão crédito ──────
   const order2 = await prisma.order.upsert({
     where: { id: 2 },
     update: {},
@@ -241,7 +241,6 @@ export async function seedOrders(
     },
   });
 
-  // 149.9 + 18.9*2 + 22.9 = 210.6 produtos; service 21.06; total 231.66
   const sale2 = await prisma.sale.upsert({
     where: { id: 1 },
     update: {},
@@ -275,6 +274,7 @@ export async function seedOrders(
       saleId: sale2.id,
       itemNumber: 1,
       productId: products.moquecaCamarao.id,
+      xProd: products.moquecaCamarao.name,
       quantity: 1,
       unitPrice: products.moquecaCamarao.price,
       totalPrice: products.moquecaCamarao.price,
@@ -290,6 +290,7 @@ export async function seedOrders(
       saleId: sale2.id,
       itemNumber: 2,
       productId: products.caipirinha.id,
+      xProd: products.caipirinha.name,
       quantity: 2,
       unitPrice: products.caipirinha.price,
       totalPrice: Number(products.caipirinha.price) * 2,
@@ -305,6 +306,7 @@ export async function seedOrders(
       saleId: sale2.id,
       itemNumber: 3,
       productId: products.pudim.id,
+      xProd: products.pudim.name,
       quantity: 1,
       unitPrice: products.pudim.price,
       totalPrice: products.pudim.price,
@@ -319,13 +321,13 @@ export async function seedOrders(
     create: {
       id: 1,
       saleId: sale2.id,
-      method: 'CREDITO',
+      method: 'CARTAO_CREDITO',
       amount: 231.66,
       change: 0,
     },
   });
 
-  // ─── ORDER 3: DELIVERY - CLOSED → Sale PENDENTE ───────────────────────────────
+  // ─── ORDER 3: DELIVERY - CLOSED → Sale PENDENTE, cliente identificado ─────────
   const order3 = await prisma.order.upsert({
     where: { id: 3 },
     update: {},
@@ -333,8 +335,8 @@ export async function seedOrders(
       id: 3,
       type: OrderType.DELIVERY,
       locationId: locations.cozinha.code,
-      customerName: 'Roberto Alves',
-      address: 'Rua das Flores, 200 - Centro',
+      customerName: 'Maria Santos',
+      address: 'Av. Paulista, 1000 - Bela Vista - São Paulo/SP',
       status: OrderStatus.CLOSED,
       total: 79.9,
       serviceCharge: 0,
@@ -385,7 +387,7 @@ export async function seedOrders(
     update: {},
     create: {
       id: 2,
-      clientId: clients.consumidorFinal.id,
+      clientId: clients.maria.id,
       userOperator: users.admin.username,
       operatorId: users.admin.id,
       orderId: order3.id,
@@ -394,7 +396,7 @@ export async function seedOrders(
       discount: 0,
       total: 79.9,
       profitSale: 47.9,
-      isPaid: true,
+      isPaid: false,
       serviceCharge: 0,
       cfop: '5102',
       fiscalStatus: FiscalStatus.PENDENTE,
@@ -408,6 +410,7 @@ export async function seedOrders(
       saleId: sale3.id,
       itemNumber: 1,
       productId: products.feijoada.id,
+      xProd: products.feijoada.name,
       quantity: 1,
       unitPrice: products.feijoada.price,
       totalPrice: products.feijoada.price,
@@ -422,7 +425,7 @@ export async function seedOrders(
     create: {
       id: 2,
       saleId: sale3.id,
-      method: 'PIX',
+      method: 'CREDITO_LOJA',
       amount: 79.9,
       change: 0,
     },
@@ -577,7 +580,7 @@ export async function seedOrders(
     },
   });
 
-  // ─── ORDER 6: DINE_IN - CLOSED → Sale fiscal ERRO ────────────────────────────
+  // ─── ORDER 6: DINE_IN - CLOSED → Sale fiscal ERRO, pagamento dinheiro ────────
   const order6 = await prisma.order.upsert({
     where: { id: 6 },
     update: {},
@@ -660,6 +663,7 @@ export async function seedOrders(
       saleId: sale6.id,
       itemNumber: 1,
       productId: products.lasanha.id,
+      xProd: products.lasanha.name,
       quantity: 1,
       unitPrice: products.lasanha.price,
       totalPrice: products.lasanha.price,
@@ -680,7 +684,7 @@ export async function seedOrders(
     },
   });
 
-  // ─── ORDER 7: DINE_IN - CLOSED → Sale CANCELADA ──────────────────────────────
+  // ─── ORDER 7: DINE_IN - CLOSED → Sale CANCELADA, pagamento débito ────────────
   const order7 = await prisma.order.upsert({
     where: { id: 7 },
     update: {},
@@ -768,6 +772,7 @@ export async function seedOrders(
       saleId: sale7.id,
       itemNumber: 1,
       productId: products.bobo.id,
+      xProd: products.bobo.name,
       quantity: 1,
       unitPrice: products.bobo.price,
       totalPrice: products.bobo.price,
@@ -782,7 +787,7 @@ export async function seedOrders(
     create: {
       id: 4,
       saleId: sale7.id,
-      method: 'DEBITO',
+      method: 'CARTAO_DEBITO',
       amount: 109.89,
       change: 0,
     },
@@ -968,7 +973,6 @@ export async function seedOrders(
     },
   });
 
-  // 2x picanha=259.8 + 4x vinho=100 + 2x acai=59.8 = 419.6, desconto 30 = 389.6, service 38.96
   const sale9 = await prisma.sale.upsert({
     where: { id: 5 },
     update: {},
@@ -1002,6 +1006,7 @@ export async function seedOrders(
       saleId: sale9.id,
       itemNumber: 1,
       productId: products.picanha.id,
+      xProd: products.picanha.name,
       quantity: 2,
       unitPrice: products.picanha.price,
       totalPrice: Number(products.picanha.price) * 2,
@@ -1017,6 +1022,7 @@ export async function seedOrders(
       saleId: sale9.id,
       itemNumber: 2,
       productId: products.vinho.id,
+      xProd: products.vinho.name,
       quantity: 4,
       unitPrice: products.vinho.price,
       totalPrice: Number(products.vinho.price) * 4,
@@ -1032,6 +1038,7 @@ export async function seedOrders(
       saleId: sale9.id,
       itemNumber: 3,
       productId: products.acai.id,
+      xProd: products.acai.name,
       quantity: 2,
       unitPrice: products.acai.price,
       totalPrice: Number(products.acai.price) * 2,
@@ -1046,7 +1053,7 @@ export async function seedOrders(
     create: {
       id: 5,
       saleId: sale9.id,
-      method: 'CREDITO',
+      method: 'CARTAO_CREDITO',
       amount: 250.0,
       change: 0,
     },
