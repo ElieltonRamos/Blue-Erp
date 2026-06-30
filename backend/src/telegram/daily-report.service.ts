@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../database/prisma.service';
 import { TelegramService } from './telegram.service';
+import { SingleInstance } from 'src/common/decorators/single-instance.decorator';
 
 type OrderSummary = {
   paid: { count: number; total: number };
@@ -226,6 +227,7 @@ export class DailyReportService {
   }
 
   @Cron('0 6 * * *', { name: 'daily-report' })
+  @SingleInstance()
   async sendDailyReport(): Promise<void> {
     this.logger.log('Gerando relatório diário...');
     try {

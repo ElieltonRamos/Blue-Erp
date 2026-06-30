@@ -47,6 +47,10 @@ async function bootstrap() {
       value ? (isSensitive ? '***' : value) : 'nao-identificado',
     );
   });
+  console.log(
+    'PM2 instance:',
+    process.env.NODE_APP_INSTANCE ?? 'nao-identificado',
+  );
   console.log('=============================');
 
   if (process.env.NODE_ENV !== 'production') {

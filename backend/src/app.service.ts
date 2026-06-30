@@ -9,6 +9,7 @@ import { exec } from 'child_process';
 import { Cron } from '@nestjs/schedule';
 import { LicenseSystemService } from './license-system/license-system.service';
 import { version } from '../package.json';
+import { SingleInstance } from './common/decorators/single-instance.decorator';
 
 const INSTALADOR_INFO = {
   nome: 'BlueTech Informática',
@@ -28,6 +29,7 @@ export class AppService {
   ) {}
 
   @Cron('0 5 * * *', { name: 'scheduled-backup' }) // Todos os dias às 5h
+  @SingleInstance()
   async scheduledBackup() {
     console.log('🕐 Executando backup agendado...');
     await this.execBackup();
