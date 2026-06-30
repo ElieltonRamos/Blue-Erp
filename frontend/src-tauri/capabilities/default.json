@@ -11,6 +11,15 @@
     "fs:allow-write-file",
     "fs:scope-download",
     "fs:scope-document",
-    "fs:scope-home"
+    "fs:scope-home",
+    "fs:default",
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
+    "fs:allow-exists",
+    "fs:allow-mkdir",
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "$APPCONFIG" }, { "path": "$APPCONFIG/*" }]
+    }
   ]
 }
