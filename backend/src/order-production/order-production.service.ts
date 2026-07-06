@@ -486,10 +486,7 @@ export class ProductionService {
     return Math.round(sum / validTimes.length);
   }
 
-  @Cron('30 5 * * *', {
-    name: 'complete-forgotten-productions',
-    timeZone: 'America/Sao_Paulo',
-  })
+  @Cron('30 5 * * *', { name: 'complete-forgotten-productions' })
   @SingleInstance()
   async completeAndDeliverForgotten() {
     const productions = await this.prisma.client.orderProduction.findMany({

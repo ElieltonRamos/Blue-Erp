@@ -11,6 +11,39 @@
     {{ themeService.theme() === 'dark' ? '☀️ Claro' : '🌙 Escuro' }}
   </button>
 
+  @if (hasWarnings && !bannerDismissed()) {
+    <div
+      class="w-[90%] max-w-5xl bg-surface border border-border rounded-lg mb-6 shadow-sm relative"
+    >
+      <button
+        (click)="dismissBanner()"
+        class="absolute top-2 right-3 text-text-secondary hover:text-text-primary"
+      >
+        ✕
+      </button>
+
+      @if (subscriptionOverdue()) {
+        <div class="px-4 py-2 border-b border-border text-red-500 text-sm font-medium">
+          🚨 Mensalidade vencida — regularize para evitar bloqueio do sistema
+        </div>
+      }
+
+      @if (autoClosedOrders().length > 0) {
+        <div class="px-4 py-2 border-b border-border text-text-secondary text-sm font-medium">
+          ⚠️ {{ autoClosedOrders().length }} comanda(s) fechada(s) automaticamente pelo sistema
+          (mesas liberadas) — IDs: {{ autoClosedIds() }} — verifique o pagamento!
+        </div>
+      }
+
+      @if (closedWithoutPayment().length > 0) {
+        <div class="px-4 py-2 text-text-secondary text-sm font-medium">
+          💳 {{ closedWithoutPayment().length }} comanda(s) fechada(s) pelos garçons aguardando pagamento — IDs:
+          {{ closedWithoutPaymentIds() }} — Verifique!
+        </div>
+      }
+    </div>
+  }
+
   <div
     class="bg-surface rounded-xl p-10 grid grid-cols-1 md:grid-cols-3 gap-6 shadow-lg w-[90%] max-w-5xl"
   >
