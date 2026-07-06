@@ -6,6 +6,7 @@ import {
   Output,
   OnInit,
   ChangeDetectorRef,
+  HostListener,
 } from '@angular/core';
 import { FiscalStatus, Sale, SaleItem } from '../../types/sale';
 import { LicenseService } from '../../../../core/services/license.service';
@@ -35,6 +36,17 @@ export class ModalSalesNote implements OnInit {
 
   canEmitNfce = this.licenseService.getCurrentPlan() === 'pro';
 
+  @HostListener('document:keydown', ['$event'])
+  handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.print();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      this.close();
+    }
+  }
+  
   ngOnInit() {
     this.loadCompanyData();
   }

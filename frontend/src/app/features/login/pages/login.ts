@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ElementRef, ViewChild, afterNextRender } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { alertLoading, closeLoading } from '../../../shared/alerts/custom-alerts';
 import { Router } from '@angular/router';
@@ -21,13 +21,26 @@ export class Login {
   private notification = inject(NotificationService);
   private licenseService = inject(LicenseService);
 
+  @ViewChild('usernameInput') usernameInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('passwordInput') passwordInput!: ElementRef<HTMLInputElement>;
+
   form = new FormGroup({
     username: new FormControl('', [Validators.required]),
     password: new FormControl('', [Validators.required]),
   });
 
+  constructor() {
+    afterNextRender(() => {
+      this.usernameInput.nativeElement.focus();
+    });
+  }
+
   ngOnInit() {
     localStorage.removeItem('token');
+  }
+
+  focusPassword() {
+    this.passwordInput.nativeElement.focus();
   }
 
   onSubmit() {
@@ -61,7 +74,13 @@ export class Login {
       error: (err) => {
         closeLoading();
         localStorage.removeItem('token');
-        this.notification.error(err.error?.message || 'Credenciais inválidas');
+
+        if (err.status === 0) {
+          this.notification.error('Servidor indisponível');
+        } else {
+          this.notification.error(err.error?.message || 'Credenciais inválidas');
+        }
+
         this.form.reset();
       },
     });

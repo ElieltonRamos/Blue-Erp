@@ -14,11 +14,15 @@ import { Orders } from './features/orders/pages/orders/orders';
 import { CloseOrder } from './features/orders/pages/close-order/close-order';
 import { KitchenDisplay } from './features/kitchen-display/pages/kitchen-display/kitchen-display';
 import { NfeManager } from './features/nfe-manager/pages/nfe-manager';
+import { offlineGuard } from './core/guards/offline.guard';
+import { OfflineComponent } from './features/offline/pages/offline.component';
+import { NotFound } from './features/offline/pages/not-found';
 
 export const routes: Routes = [
   {
     path: '',
     component: Login,
+    canActivate: [offlineGuard],
   },
   {
     path: 'dashboard',
@@ -84,5 +88,13 @@ export const routes: Routes = [
     path: 'fiscal',
     component: NfeManager,
     canActivate: [authGuard],
+  },
+  {
+    path: 'offline',
+    component: OfflineComponent,
+  },
+  {
+    path: '**',
+    component: NotFound,
   },
 ];

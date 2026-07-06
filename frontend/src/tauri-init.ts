@@ -22,13 +22,18 @@ export async function initTauri(bootstrap: () => void): Promise<void> {
 
   if (config.mode === 'remote' && config.remote_url) {
     try {
-      await fetch(config.remote_url, { mode: 'no-cors' });
+      await Promise.race([
+        fetch(config.remote_url, { mode: 'no-cors' }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000)),
+      ]);
       window.location.href = config.remote_url;
-      return; // não bootstrapa o Angular
+      return;
     } catch (e) {
-      // falha: bootstrapa normalmente, tela de erro fica a seu critério
+      console.error('falhou conexão remota:', e);
+      (window as any).__TAURI_OFFLINE__ = true;
     }
   }
 
+  console.log('chamando bootstrap');
   bootstrap();
 }

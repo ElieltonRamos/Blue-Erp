@@ -50,7 +50,7 @@
             />
           </div>
 
-          <div>
+          <!-- <div>
             <label class="text-text-primary text-sm font-medium mb-2 block"> Tipo de Pedido </label>
 
             <select
@@ -62,7 +62,7 @@
               <option value="DINE_IN">Mesa</option>
               <option value="DELIVERY">Delivery</option>
             </select>
-          </div>
+          </div> -->
 
           <div>
             <label class="text-text-primary text-sm font-medium mb-2 block"> Status </label>
@@ -79,7 +79,7 @@
         </div>
 
         <!-- Mesa -->
-        <div class="mb-6" *ngIf="order.type === 'DINE_IN'">
+        <!-- <div class="mb-6" *ngIf="order.type === 'DINE_IN'">
           <label class="text-text-primary text-sm font-medium mb-2 block"> Mesa </label>
 
           <input
@@ -89,7 +89,7 @@
             class="w-full bg-overlay border border-border rounded-lg px-4 py-3 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-all"
             placeholder="Ex: Mesa 5"
           />
-        </div>
+        </div> -->
 
         <!-- Endereço -->
         <div class="mb-6" *ngIf="order.type === 'DELIVERY'">

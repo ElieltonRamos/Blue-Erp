@@ -11,6 +11,7 @@ import {
   ChangeDetectorRef,
   ViewChild,
   inject,
+  HostListener,
 } from '@angular/core';
 import { Order } from '../../types/order';
 import { Company } from '../../../company/types/company';
@@ -48,6 +49,17 @@ export class ModalOrderNote implements OnInit, AfterViewInit, OnChanges, OnDestr
     maxWidth: '90vw',
     maxHeight: '90vh',
   });
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.print();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      this.close();
+    }
+  }
 
   ngOnInit(): void {
     this.loadCompanyData();
