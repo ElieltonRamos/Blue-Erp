@@ -193,13 +193,30 @@
             <!-- Discount and Service Charge -->
             <div class="grid grid-cols-2 gap-2">
               <div>
-                <label class="text-text-primary text-[10px] block mb-1">Desconto</label>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="text-text-primary text-[10px]">Desconto</label>
+                  <button
+                    type="button"
+                    (click)="toggleDiscountMode()"
+                    class="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-surface-alt border border-border text-text-secondary hover:bg-overlay transition-colors"
+                    [title]="
+                      discountMode === 'valor'
+                        ? 'Alternar para percentual'
+                        : 'Alternar para valor (R$)'
+                    "
+                  >
+                    {{ discountMode === 'valor' ? 'R$' : '%' }}
+                  </button>
+                </div>
                 <input
+                  #discountInput
                   type="number"
-                  [(ngModel)]="discount"
-                  (ngModelChange)="updateDiscount()"
-                  step="1"
+                  [(ngModel)]="discountInputValue"
+                  (ngModelChange)="onDiscountInputChange()"
+                  (keydown.enter)="onDiscountEnter($event)"
+                  [step]="discountMode === 'percentual' ? 0.5 : 1"
                   min="0"
+                  [attr.max]="discountMode === 'percentual' ? 100 : null"
                   class="w-full bg-surface border border-border rounded-lg px-2 py-1.5 text-text-primary text-center font-bold text-lg focus:outline-none focus:border-accent"
                 />
               </div>
@@ -267,15 +284,24 @@
             <!-- Payment Methods Selection -->
             <div>
               <p class="text-text-primary text-[10px] font-semibold mb-2">Método de Pagamento:</p>
-              <div class="grid grid-cols-5 gap-1.5">
+              <div
+                class="grid grid-cols-5 gap-1.5"
+                role="radiogroup"
+                aria-label="Método de pagamento"
+              >
                 <button
-                  *ngFor="let m of paymentMethods"
+                  #methodBtn
+                  *ngFor="let m of paymentMethods; let i = index"
                   (click)="selectNewMethod(m.id)"
+                  (keydown)="onMethodKeydown($event, i)"
                   [class.bg-accent]="newPaymentMethod === m.id"
                   [class.bg-surface-alt]="newPaymentMethod !== m.id"
                   [disabled]="isPaymentMethodDisabled(m.id)"
                   [class.opacity-40]="isPaymentMethodDisabled(m.id)"
-                  class="flex flex-col items-center justify-center p-1.5 rounded border border-border hover:bg-overlay transition-colors disabled:cursor-not-allowed"
+                  [attr.tabindex]="isPaymentMethodDisabled(m.id) ? -1 : 0"
+                  role="radio"
+                  [attr.aria-checked]="newPaymentMethod === m.id"
+                  class="flex flex-col items-center justify-center p-1.5 rounded border border-border hover:bg-overlay transition-colors disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-accent"
                   [title]="getPaymentMethodTooltip(m)"
                 >
                   <span class="text-lg">{{ m.icon }}</span>
@@ -288,8 +314,10 @@
               <div>
                 <label class="text-text-primary text-[10px] block mb-1">Valor:</label>
                 <input
+                  #amountInput
                   type="number"
                   [(ngModel)]="newPaymentAmount"
+                  (keydown.enter)="onAmountEnter($event)"
                   step="1"
                   min="0"
                   class="w-full bg-surface border border-border rounded-lg px-2 py-1.5 text-text-primary text-center font-bold focus:outline-none focus:border-accent"
@@ -359,9 +387,10 @@
             Cancelar Venda
           </button>
           <button
+            #finishBtn
             (click)="finishOrder()"
             [disabled]="!isValidPayment || isFinishing"
-            class="bg-accent hover:bg-accent-hover text-btn-text px-8 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            class="bg-accent hover:bg-accent-hover text-btn-text px-8 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-accent"
             [title]="getFinishButtonTooltip()"
           >
             <svg

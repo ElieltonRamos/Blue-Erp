@@ -3,6 +3,10 @@ import {
   OnInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  ElementRef,
+  QueryList,
+  ViewChild,
+  ViewChildren,
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -24,6 +28,8 @@ export type PaymentMethod =
   | 'PIX'
   | 'CREDITO_LOJA';
 
+export type DiscountMode = 'valor' | 'percentual';
+
 export interface PaymentEntry {
   method: PaymentMethod;
   amount: number;
@@ -35,6 +41,8 @@ interface PaymentMethodConfig {
   name: string;
   icon: string;
 }
+
+const FOCUS_DELAY_MS = 0;
 
 @Component({
   selector: 'app-close-order',
@@ -51,6 +59,11 @@ export class CloseOrder implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
 
+  @ViewChild('discountInput') discountInputRef?: ElementRef<HTMLInputElement>;
+  @ViewChild('amountInput') amountInputRef?: ElementRef<HTMLInputElement>;
+  @ViewChild('finishBtn') finishButtonRef?: ElementRef<HTMLButtonElement>;
+  @ViewChildren('methodBtn') methodButtons?: QueryList<ElementRef<HTMLButtonElement>>;
+
   order: Order | null = null;
   orderId = 0;
   isLoading = false;
@@ -58,7 +71,12 @@ export class CloseOrder implements OnInit {
   sellerName = 'Vendedor';
 
   subtotal = 0;
+  /** Valor de desconto em R$, sempre o dado enviado ao backend */
   discount = 0;
+  /** Modo de exibição do campo de desconto (não afeta o valor enviado) */
+  discountMode: DiscountMode = 'valor';
+  /** Valor exibido no input de desconto, de acordo com discountMode */
+  discountInputValue = 0;
   total = 0;
 
   payments: PaymentEntry[] = [];
@@ -109,7 +127,8 @@ export class CloseOrder implements OnInit {
         this.order = order;
         this.calculateTotals();
         this.isLoading = false;
-        this.cdr.markForCheck();
+        this.cdr.detectChanges();
+        this.discountInputRef?.nativeElement.focus();
       },
       error: () => {
         this.notification.error('Erro ao carregar pedido');
@@ -123,11 +142,121 @@ export class CloseOrder implements OnInit {
     if (!this.order) return;
     this.subtotal = this.order.items.reduce((sum, item) => sum + item.total, 0);
     this.total = this.subtotal - this.discount;
+    this.syncDiscountInputValue();
     this.cdr.markForCheck();
   }
 
-  updateDiscount(): void {
-    this.calculateTotals();
+  toggleDiscountMode(): void {
+    this.discountMode = this.discountMode === 'valor' ? 'percentual' : 'valor';
+    this.syncDiscountInputValue();
+    this.cdr.markForCheck();
+  }
+
+  /** Recalcula o valor exibido no input a partir do discount real (R$) */
+  private syncDiscountInputValue(): void {
+    if (this.discountMode === 'percentual') {
+      this.discountInputValue =
+        this.subtotal > 0 ? this.roundMoney((this.discount / this.subtotal) * 100) : 0;
+    } else {
+      this.discountInputValue = this.discount;
+    }
+  }
+
+  /** Chamado pelo (ngModelChange) do input de desconto */
+  onDiscountInputChange(): void {
+    const rawValue = Math.max(0, this.discountInputValue || 0);
+
+    if (this.discountMode === 'percentual') {
+      const pct = Math.min(100, rawValue);
+      this.discountInputValue = pct;
+      this.discount = this.roundMoney((this.subtotal * pct) / 100);
+    } else {
+      this.discount = rawValue;
+    }
+
+    this.total = this.subtotal - this.discount;
+    this.cdr.markForCheck();
+  }
+
+  private roundMoney(value: number): number {
+    return Math.round(value * 100) / 100;
+  }
+
+  onDiscountEnter(event: Event): void {
+    event.preventDefault();
+    this.focusFirstEnabledMethod();
+  }
+
+  onMethodKeydown(event: KeyboardEvent, index: number): void {
+    switch (event.key) {
+      case 'ArrowRight':
+        event.preventDefault();
+        this.focusAdjacentMethod(index, 1);
+        break;
+      case 'ArrowLeft':
+        event.preventDefault();
+        this.focusAdjacentMethod(index, -1);
+        break;
+      case 'Enter':
+        event.preventDefault();
+        this.confirmMethodSelection(index);
+        break;
+    }
+  }
+
+  private confirmMethodSelection(index: number): void {
+    const method = this.paymentMethods[index]?.id;
+    if (!method || this.isPaymentMethodDisabled(method)) return;
+
+    this.selectNewMethod(method);
+    this.focusElement(this.amountInputRef);
+  }
+
+  private focusFirstEnabledMethod(): void {
+    const index = this.paymentMethods.findIndex((m) => !this.isPaymentMethodDisabled(m.id));
+    this.focusMethodAt(index);
+  }
+
+  private focusAdjacentMethod(fromIndex: number, direction: 1 | -1): void {
+    const total = this.paymentMethods.length;
+    if (total === 0) return;
+
+    for (let step = 1; step <= total; step++) {
+      const nextIndex = (fromIndex + direction * step + total) % total;
+      if (!this.isPaymentMethodDisabled(this.paymentMethods[nextIndex].id)) {
+        this.focusMethodAt(nextIndex);
+        return;
+      }
+    }
+  }
+
+  private focusMethodAt(index: number): void {
+    if (index < 0) return;
+    const button = this.methodButtons?.toArray()[index];
+    button?.nativeElement.focus();
+  }
+
+  onAmountEnter(event: Event): void {
+    event.preventDefault();
+    if (!this.isValidNewPayment) return;
+
+    this.addPayment();
+
+    this.focusElement(
+      this.isValidPayment ? this.finishButtonRef : undefined,
+      !this.isValidPayment ? () => this.focusFirstEnabledMethod() : undefined,
+    );
+  }
+
+  /** Foca um elemento (ou executa um fallback) no próximo ciclo de detecção */
+  private focusElement(ref?: ElementRef<HTMLElement>, fallback?: () => void): void {
+    setTimeout(() => {
+      if (ref?.nativeElement) {
+        ref.nativeElement.focus();
+      } else {
+        fallback?.();
+      }
+    }, FOCUS_DELAY_MS);
   }
 
   get totalPaid(): number {
@@ -211,7 +340,7 @@ export class CloseOrder implements OnInit {
   addPayment(): void {
     if (!this.isValidNewPayment) return;
 
-    // NOVO: Bloquear pagamento maior que restante (exceto DINHEIRO)
+    // Bloquear pagamento maior que restante (exceto DINHEIRO)
     if (this.newPaymentMethod !== 'DINHEIRO' && this.newPaymentAmount > this.remaining) {
       this.notification.error(
         `${this.getMethodLabel(this.newPaymentMethod!)} não pode exceder R$ ${this.remaining.toFixed(2)}`,
@@ -247,6 +376,15 @@ export class CloseOrder implements OnInit {
 
   getMethodIcon(method: PaymentMethod): string {
     return this.paymentMethods.find((m) => m.id === method)?.icon ?? '';
+  }
+
+  getMaxPaymentAmount(): number {
+    // DINHEIRO pode pagar mais (gera troco)
+    if (this.newPaymentMethod === 'DINHEIRO') {
+      return Number.MAX_SAFE_INTEGER;
+    }
+    // Outros métodos: máximo é o restante
+    return this.remaining;
   }
 
   trackByClientId(_: number, client: Client): number {
@@ -397,15 +535,6 @@ export class CloseOrder implements OnInit {
     if (confirmed) {
       this.router.navigate(['/comandas']);
     }
-  }
-
-  getMaxPaymentAmount(): number {
-    // DINHEIRO pode pagar mais (gera troco)
-    if (this.newPaymentMethod === 'DINHEIRO') {
-      return Number.MAX_SAFE_INTEGER;
-    }
-    // Outros métodos: máximo é o restante
-    return this.remaining;
   }
 
   goToMenu(): void {

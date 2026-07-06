@@ -342,7 +342,7 @@
                 </svg>
               </button>
               <button
-                *ngIf="order.status === 'OPEN'"
+                *ngIf="order.status === 'OPEN' || order.status === 'CLOSED'"
                 (click)="cancelOrder(order.id)"
                 title="Cancelar"
                 class="bg-danger hover:bg-danger/80 text-btn-text p-2 rounded-lg transition-colors"

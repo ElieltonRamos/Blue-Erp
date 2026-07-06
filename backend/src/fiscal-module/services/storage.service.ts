@@ -56,7 +56,7 @@ export class StorageService {
     try {
       await fs.promises.writeFile(xmlPath, xmlContent, 'utf8');
       this.logger.log(`XML saved: ${xmlPath}`);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Error saving XML: ${error.message}`, error.stack);
       throw new Error(`Failed to save XML at ${xmlPath}: ${error.message}`);
     }

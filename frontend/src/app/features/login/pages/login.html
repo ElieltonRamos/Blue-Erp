@@ -20,18 +20,22 @@
         Bem Vindo ao Blue ERP
       </h1>
       <input
+        #usernameInput
         type="text"
         placeholder="Usuário"
         formControlName="username"
+        (keydown.enter)="focusPassword()"
         class="bg-surface-alt border border-border text-text-primary placeholder:text-text-muted rounded-sm w-full h-12 mt-2 pl-2 focus:outline-none focus:border-accent"
       />
       @if (form.get('username')?.touched && form.get('username')?.invalid) {
         <p class="text-sm text-danger mt-1 self-start">O usuário é inválido</p>
       }
       <input
+        #passwordInput
         type="password"
         placeholder="Senha"
         formControlName="password"
+        (keydown.enter)="onSubmit()"
         class="bg-surface-alt border border-border text-text-primary placeholder:text-text-muted rounded-sm w-full h-12 mt-2 pl-2 focus:outline-none focus:border-accent"
       />
       @if (form.get('password')?.touched && form.get('password')?.invalid) {

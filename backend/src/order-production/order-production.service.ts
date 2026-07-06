@@ -9,6 +9,7 @@ import { ProductionStatus, ProductType } from 'generated/prisma/client';
 import { Decimal } from '@prisma/client/runtime/client';
 import { resolveLogicalDateTime } from '../common/date-utils';
 import { Cron } from '@nestjs/schedule';
+import { SingleInstance } from 'src/common/decorators/single-instance.decorator';
 
 @Injectable()
 export class ProductionService {
@@ -489,6 +490,7 @@ export class ProductionService {
     name: 'complete-forgotten-productions',
     timeZone: 'America/Sao_Paulo',
   })
+  @SingleInstance()
   async completeAndDeliverForgotten() {
     const productions = await this.prisma.client.orderProduction.findMany({
       where: {

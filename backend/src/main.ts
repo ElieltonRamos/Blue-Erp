@@ -6,6 +6,8 @@ import { AppModule } from './app.module.js';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableShutdownHooks();
+
   app.enableCors();
 
   app.useGlobalPipes(
@@ -28,12 +30,16 @@ async function bootstrap() {
     'JWT_SECRET',
     'LICENSE_PUBLIC_KEY',
     'LICENSING_SERVER',
+    'TELEGRAM_BOT_TOKEN',
+    'TELEGRAM_CHAT_ID',
+    'PRINTER_BAR',
+    'PRINTER_COZINHA_DOM_JUAN',
   ];
 
   console.log('=== Environment Variables ===');
   appEnvKeys.forEach((key) => {
     const value = process.env[key];
-    const isSensitive = ['PASSWORD', 'SECRET', 'KEY', 'URL'].some((s) =>
+    const isSensitive = ['PASSWORD', 'SECRET', 'TOKEN', 'KEY'].some((s) =>
       key.includes(s),
     );
     console.log(
@@ -41,6 +47,10 @@ async function bootstrap() {
       value ? (isSensitive ? '***' : value) : 'nao-identificado',
     );
   });
+  console.log(
+    'PM2 instance:',
+    process.env.NODE_APP_INSTANCE ?? 'nao-identificado',
+  );
   console.log('=============================');
 
   if (process.env.NODE_ENV !== 'production') {

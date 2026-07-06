@@ -184,3 +184,42 @@ Após seguir este guia:
 ---
 
 📌 Guia válido para MySQL 8+ no Windows 10/11.
+
+
+# Prompts Importantes
+
+Refatore os logs do arquivo [NOME_DO_ARQUIVO] seguindo esta lógica:
+
+PRINCÍPIO: logar transições de estado e decisões, não passos internos. Se o log não responde "o que aconteceu e por quê" pra alguém lendo sem contexto, é ruído — remova.
+
+SEMPRE logar (nível `log`):
+- Início e fim de processo assíncrono relevante (cron, job, fila, operação de longa duração)
+- Duração de execução quando o processo tiver custo perceptível (queries múltiplas, chamadas externas)
+
+SEMPRE logar (nível `warn`):
+- Falha recuperável que dispara retry ou fallback
+- Resultado anormal de uma decisão com múltiplos caminhos (ex: fallback ativado, lista vazia onde se esperava dados, divergência detectada)
+
+SEMPRE logar (nível `error`):
+- Falha definitiva, sem retry possível, que aborta o processo
+- Sempre incluir contexto que identifique a execução (ex: ID, data, parâmetro de entrada), nunca só "erro genérico"
+
+NUNCA logar:
+- Cada query individual do Prisma/ORM (já tem log próprio se configurado)
+- Valores intermediários de cálculo dentro de métodos privados
+- Sucesso de cada etapa dentro de uma função auxiliar
+- Objetos de erro brutos de libs externas (axios, etc) — sempre extrair só código/status/mensagem antes de logar, nunca o objeto inteiro (evita poluir o log com stack trace de socket/TLS)
+
+REGRAS DE FORMATO:
+- Use o Logger nativo do NestJS já presente na classe (não trocar por outra lib)
+- Mensagens em português, direto ao ponto, sem emoji
+- Não adicionar logs em métodos privados puramente de cálculo/transformação de dados
+- Não adicionar comentários explicando o log
+- Não gerar documentação, README ou changelog — só o código refatorado
+
+Antes de aplicar, analise o arquivo e me diga:
+1. Quais pontos já estão adequados (não tocar)
+2. Quais situações estão sem log e por quê são relevantes
+3. Quais logs existentes estão no nível errado ou são ruído
+
+Só aplique a refatoração depois da minha confirmação.

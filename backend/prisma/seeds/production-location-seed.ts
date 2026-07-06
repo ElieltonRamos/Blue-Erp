@@ -1,30 +1,30 @@
 import { PrismaClient } from 'generated/prisma/client';
 
 export async function seedProductionLocations(prisma: PrismaClient) {
-  const bar = await prisma.productionLocation.upsert({
-    where: { code: 'BAR' },
+  const cozinha = await prisma.productionLocation.upsert({
+    where: { code: 'COZINHA' },
     update: {},
     create: {
-      code: 'BAR',
-      name: 'BAR',
-      description: 'Preparo de Bebidas e drinks',
-      active: true,
-      order: 2,
-    },
-  });
-
-  const domJuan = await prisma.productionLocation.upsert({
-    where: { code: 'COZINHA_DOM_JUAN' },
-    update: {},
-    create: {
-      code: 'COZINHA_DOM_JUAN',
-      name: 'DOM JUAN',
-      description: 'Preparo de Pratos especiais',
+      code: 'COZINHA',
+      name: 'Cozinha',
+      description: 'Preparo de pratos quentes, carnes, massas e frutos do mar',
       active: true,
       order: 1,
     },
   });
 
+  const bar = await prisma.productionLocation.upsert({
+    where: { code: 'BAR' },
+    update: {},
+    create: {
+      code: 'BAR',
+      name: 'Bar',
+      description: 'Preparo de bebidas, drinks e sobremesas',
+      active: true,
+      order: 2,
+    },
+  });
+
   console.log('✓ Production Locations seed');
-  return { bar, domJuan };
+  return { cozinha, bar };
 }
