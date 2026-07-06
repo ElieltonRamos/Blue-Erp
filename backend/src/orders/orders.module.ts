@@ -1,8 +1,14 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { OrdersService } from './orders.service';
+import { OrderStatusService } from './order-status.service';
+import { OrderItemsService } from './order-items.service';
+import { OrderProductionService } from './order-production.service';
+import { OrderStockService } from './order-stock.service';
+import { OrderTableService } from './order-table.service';
+import { OrderPrintService } from './order-print.service';
 import { OrdersController } from './orders.controller';
-import { PrinterModule } from 'src/printer/printer.module';
+import { PrinterModule } from '../printer/printer.module';
 
 @Module({
   imports: [
@@ -13,6 +19,15 @@ import { PrinterModule } from 'src/printer/printer.module';
     }),
   ],
   controllers: [OrdersController],
-  providers: [OrdersService],
+  providers: [
+    OrdersService,
+    OrderStatusService,
+    OrderItemsService,
+    OrderProductionService,
+    OrderStockService,
+    OrderTableService,
+    OrderPrintService,
+  ],
+  exports: [OrdersService, OrderStatusService],
 })
 export class OrdersModule {}

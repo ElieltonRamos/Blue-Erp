@@ -21,6 +21,7 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
+import { OrderStatusService } from './order-status.service';
 import { OrderEntity } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -37,7 +38,10 @@ import { ReprintOrderDto } from './dto/reprint-order.dto';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private readonly orderStatusService: OrderStatusService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -157,7 +161,7 @@ export class OrdersController {
     description: 'Apenas pedidos abertos podem ser cancelados',
   })
   cancel(@Param('id', ParseIntPipe) id: number): Promise<OrderEntity> {
-    return this.ordersService.cancel(id);
+    return this.orderStatusService.cancel(id);
   }
 
   @Post(':id/reopen')
@@ -178,7 +182,7 @@ export class OrdersController {
     description: 'Pedido não encontrado',
   })
   reopen(@Param('id', ParseIntPipe) id: number): Promise<OrderEntity> {
-    return this.ordersService.reopen(id);
+    return this.orderStatusService.reopen(id);
   }
 
   @Post(':id/reprint')
