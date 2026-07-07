@@ -56,14 +56,10 @@ export class OrderCleanupService {
   }
 
   async findAutoClosed(): Promise<AutoClosedOrderDto[]> {
-    const since = new Date();
-    since.setDate(since.getDate() - 7);
-
     const orders = await this.prisma.client.order.findMany({
       where: {
         closedByOperatorId: SYSTEM_OPERATOR_ID,
         status: 'CLOSED',
-        updatedAt: { gte: since },
       },
       select: {
         id: true,

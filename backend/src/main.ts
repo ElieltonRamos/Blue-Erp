@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
+import { version } from '../package.json';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -17,6 +18,8 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  const packageVersion = version;
 
   const appEnvKeys = [
     'PORT',
@@ -51,6 +54,7 @@ async function bootstrap() {
     'PM2 instance:',
     process.env.NODE_APP_INSTANCE ?? 'nao-identificado',
   );
+  console.log(`VERSAO SERVIDOR = ${packageVersion}`);
   console.log('=============================');
 
   if (process.env.NODE_ENV !== 'production') {
