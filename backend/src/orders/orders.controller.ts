@@ -20,7 +20,7 @@ import {
   ApiQuery,
   ApiBody,
 } from '@nestjs/swagger';
-import { OrdersService } from './orders.service';
+import { OrdersService } from './order.service';
 import { OrderStatusService } from './order-status.service';
 import { OrderEntity } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -33,6 +33,8 @@ import { JwtAuthGuard, JwtPayload } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ReprintOrderDto } from './dto/reprint-order.dto';
+import { OrderCleanupService } from './order-cleanup.service';
+import { AutoClosedOrderDto } from './dto/auto-closed-order.dto';
 
 @ApiTags('Orders')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -41,6 +43,7 @@ export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,
     private readonly orderStatusService: OrderStatusService,
+    private readonly orderCleanupService: OrderCleanupService,
   ) {}
 
   @Post()
@@ -89,6 +92,32 @@ export class OrdersController {
     @Query() filters: OrderFiltersDto,
   ): Promise<OrderPaginatedResponseDto> {
     return this.ordersService.findAll(filters);
+  }
+
+  @Get('auto-closed')
+  @ApiOperation({
+    summary: 'Listar pedidos fechados automaticamente pelo job de limpeza',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de pedidos fechados pelo sistema nas últimas 24h',
+    type: [AutoClosedOrderDto],
+  })
+  getAutoClosedOrders(): Promise<AutoClosedOrderDto[]> {
+    return this.orderCleanupService.findAutoClosed();
+  }
+
+  @Get('closed-without-payment')
+  @ApiOperation({
+    summary: 'Listar pedidos fechados sem pagamento nos últimos 7 dias',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de pedidos CLOSED sem Sale vinculada',
+    type: [AutoClosedOrderDto],
+  })
+  getClosedWithoutPayment(): Promise<AutoClosedOrderDto[]> {
+    return this.orderCleanupService.findClosedWithoutPayment();
   }
 
   @Get(':id')

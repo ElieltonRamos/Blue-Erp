@@ -23,6 +23,17 @@ import { CategoryProductModule } from './category-product/category-product.modul
 import { PrinterModule } from './printer/printer.module';
 import { TelegramModule } from './telegram/telegram.module';
 
+// ScheduleModule.forRoot(): registra o scheduler global do NestJS (@nestjs/schedule).
+// Só pode existir 1x na aplicação — habilita o decorator @Cron nos providers
+// de qualquer módulo importado aqui (não precisa repetir em cada módulo).
+//
+// Cron jobs agendados (ver @Cron nos respectivos services):
+// 05:00 scheduled-backup (BackupService)
+// 05:30 complete-forgotten-productions (timeZone: America/Sao_Paulo) — resolve produções órfãs antes do cleanup
+// 05:45 order-cleanup (OrderCleanupService) — fecha comandas fantasmas, depende do job anterior já ter rodado
+// 06:00 daily-report (DailyReportService/Telegram)
+// @SingleInstance() nos métodos: evita execução duplicada quando PM2 roda em cluster mode (só instância 0 executa)
+
 @Module({
   imports: [
     ScheduleModule.forRoot(),
