@@ -6,6 +6,9 @@
 /out-tsc
 /bazel-out
 /installer
+nginx-installer-win/dist
+nginx-installer-win/*.exe
+!nginx-installer-win/nssm.exe
 
 # Node
 /node_modules
