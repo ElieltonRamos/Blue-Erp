@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import {
   Injectable,
   NotFoundException,
@@ -55,7 +56,10 @@ export class OrdersService {
     operatorId: number,
   ): Promise<OrderEntity> {
     const start = Date.now();
-    this.logger.log('Criando novo pedido');
+
+    this.logger.log(
+      `[Pedido novo] operador=${operatorId} | criando com ${createOrderDto.items.length} item(ns)`,
+    );
 
     const { items, ...orderData } = createOrderDto;
 
@@ -108,6 +112,13 @@ export class OrdersService {
         },
         include: ORDER_INCLUDE_FULL,
       });
+
+      this.logger.log(
+        `[Pedido ${order.id}] operador=${operatorId} | persistido com ${order.items.length} item(ns): ` +
+          order.items
+            .map((i) => `${i.id}:${i.name}(x${i.quantity})`)
+            .join(', '),
+      );
 
       const resaleItems = order.items.filter(
         (item) => item.product.productType === ProductType.RESALE,
@@ -166,6 +177,16 @@ export class OrdersService {
         });
       }
 
+      this.logger.log(
+        `[Pedido ${order.id}] operador=${operatorId} | despachando impressão para ${printBuilder.map.size} local(is): ` +
+          [...printBuilder.map.entries()]
+            .map(
+              ([loc, job]) =>
+                `${loc}[${job.items.map((i: any) => `${i.name} x${i.quantity}`).join(', ')}]`,
+            )
+            .join(' | '),
+      );
+
       this.printService.dispatchAsync(order.id, printBuilder.map);
 
       if (orderData.table) {
@@ -181,7 +202,7 @@ export class OrdersService {
           if (tableRecord) {
             if (tableRecord.status === 'OCCUPIED') {
               this.logger.warn(
-                `Mesa ${tableNumber} já ocupada ao criar pedido ${order.id}`,
+                `[Pedido ${order.id}] operador=${operatorId} | mesa ${tableNumber} já ocupada`,
               );
               throw new BadRequestException(
                 `Mesa ${tableNumber} já está ocupada`,
@@ -198,13 +219,15 @@ export class OrdersService {
         }
       }
 
-      this.logger.log(`Pedido ${order.id} criado em ${Date.now() - start}ms`);
+      this.logger.log(
+        `[Pedido ${order.id}] operador=${operatorId} | criado em ${Date.now() - start}ms`,
+      );
 
       return mapOrderToEntity(order);
     } catch (error: unknown) {
       if ((error as any).code === 'P2003') {
         this.logger.error(
-          `Erro de chave estrangeira ao criar pedido: ${(error as any).message}`,
+          `[Pedido novo] operador=${operatorId} | erro de chave estrangeira: ${(error as any).message}`,
         );
         throw new BadRequestException(
           'Erro de chave estrangeira: Verifique se os dados relacionados existem',
@@ -294,7 +317,18 @@ export class OrdersService {
     operatorId: number,
   ): Promise<OrderEntity> {
     const start = Date.now();
-    this.logger.log(`Atualizando pedido ${id}`);
+    const tag = `Pedido ${id}`;
+
+    this.logger.log(
+      `[${tag}] operador=${operatorId} role=${userRole} | atualizando | itens recebidos: ` +
+        JSON.stringify(
+          updateOrderDto.items?.map((i) => ({
+            id: i.id ?? null,
+            productId: i.productId,
+            quantity: i.quantity,
+          })) ?? [],
+        ),
+    );
 
     const existingOrder = await this.prisma.client.order.findUnique({
       where: { id },
@@ -322,7 +356,9 @@ export class OrdersService {
     }
 
     if (existingOrder.status === OrderStatus.PAID) {
-      this.logger.warn(`Tentativa de alterar pedido ${id} já pago`);
+      this.logger.warn(
+        `[${tag}] operador=${operatorId} | bloqueado: pedido já pago`,
+      );
       throw new BadRequestException(
         'Pedido já foi pago e não pode ser alterado',
       );
@@ -343,7 +379,7 @@ export class OrdersService {
       });
 
       this.logger.log(
-        `Pedido ${id} atualizado (cancelado -> ${status}) em ${Date.now() - start}ms`,
+        `[${tag}] operador=${operatorId} | status alterado: cancelado -> ${status} | ${Date.now() - start}ms`,
       );
 
       return mapOrderToEntity(updatedOrder);
@@ -387,6 +423,19 @@ export class OrdersService {
       } else {
         const incomingIds = items.filter((i) => i.id).map((i) => i.id!);
 
+        const removed = existingOrder.items.filter(
+          (i) => !incomingIds.includes(i.id),
+        );
+
+        if (removed.length > 0) {
+          this.logger.warn(
+            `[${tag}] operador=${operatorId} role=${userRole} | removendo ${removed.length} item(ns): ` +
+              removed
+                .map((i) => `${i.id}:${i.name}(x${i.quantity})`)
+                .join(', '),
+          );
+        }
+
         await this.itemsService.handleRemovedItems(
           tx,
           existingOrder.items,
@@ -402,6 +451,16 @@ export class OrdersService {
         );
 
         const newItems = items.filter((i) => !i.id);
+
+        if (newItems.length > 0) {
+          this.logger.log(
+            `[${tag}] operador=${operatorId} | adicionando ${newItems.length} item(ns) novo(s): ` +
+              newItems
+                .map((i) => `produto ${i.productId} x${i.quantity}`)
+                .join(', '),
+          );
+        }
+
         const newItemsTotal = await this.itemsService.handleNewItems(
           tx,
           newItems,
@@ -428,6 +487,16 @@ export class OrdersService {
       }
     });
 
+    this.logger.log(
+      `[${tag}] operador=${operatorId} | transação concluída, despachando impressão para ${printBuilder.map.size} local(is): ` +
+        [...printBuilder.map.entries()]
+          .map(
+            ([loc, job]) =>
+              `${loc}[${job.items.map((i: any) => `${i.name} x${i.quantity}`).join(', ')}]`,
+          )
+          .join(' | '),
+    );
+
     this.printService.dispatchAsync(id, printBuilder.map);
 
     const updated = await this.prisma.client.order.findUnique({
@@ -435,15 +504,14 @@ export class OrdersService {
       include: ORDER_INCLUDE_BASIC,
     });
 
-    this.logger.log(`Pedido ${id} atualizado em ${Date.now() - start}ms`);
+    this.logger.log(
+      `[${tag}] operador=${operatorId} | atualizado em ${Date.now() - start}ms | itens finais: ` +
+        updated?.items
+          .map((i) => `${i.id}:${i.name}(x${i.quantity})`)
+          .join(', '),
+    );
 
     return mapOrderToEntity(updated!);
-  }
-
-  async remove(id: number): Promise<void> {
-    await this.findOne(id);
-    await this.prisma.client.order.delete({ where: { id } });
-    this.logger.log(`Pedido ${id} removido`);
   }
 
   async reprint(
@@ -452,7 +520,17 @@ export class OrdersService {
     operatorId: number,
   ): Promise<void> {
     const start = Date.now();
-    this.logger.log(`Reimprimindo pedido ${id}`);
+    const tag = `Pedido ${id}`;
+
+    this.logger.log(
+      `[${tag}] operador=${operatorId} | reimprimindo | itens: ` +
+        JSON.stringify(
+          dto.items.map((i) => ({
+            productId: i.productId,
+            quantity: i.quantity,
+          })),
+        ),
+    );
 
     const order = await this.prisma.client.order.findUnique({
       where: { id },
@@ -508,13 +586,15 @@ export class OrdersService {
 
     if (printBuilder.map.size === 0) {
       this.logger.warn(
-        `Nenhum item imprimível para reimpressão do pedido ${id}`,
+        `[${tag}] operador=${operatorId} | nenhum item imprimível para reimpressão`,
       );
       throw new BadRequestException('Nenhum item imprimível');
     }
 
     await this.printService.dispatchSync(id, printBuilder.map);
 
-    this.logger.log(`Pedido ${id} reimpresso em ${Date.now() - start}ms`);
+    this.logger.log(
+      `[${tag}] operador=${operatorId} | reimpresso em ${Date.now() - start}ms`,
+    );
   }
 }

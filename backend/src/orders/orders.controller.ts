@@ -5,7 +5,6 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   Query,
   HttpCode,
   HttpStatus,
@@ -100,7 +99,7 @@ export class OrdersController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Lista de pedidos fechados pelo sistema nas últimas 24h',
+    description: 'Lista de pedidos fechados pelo sistema',
     type: [AutoClosedOrderDto],
   })
   getAutoClosedOrders(): Promise<AutoClosedOrderDto[]> {
@@ -109,7 +108,7 @@ export class OrdersController {
 
   @Get('closed-without-payment')
   @ApiOperation({
-    summary: 'Listar pedidos fechados sem pagamento nos últimos 7 dias',
+    summary: 'Listar pedidos fechados sem pagamento',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -159,22 +158,6 @@ export class OrdersController {
       user.role,
       user.userId,
     );
-  }
-
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Deletar pedido' })
-  @ApiParam({ name: 'id', type: Number, description: 'ID do pedido' })
-  @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
-    description: 'Pedido deletado com sucesso',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Pedido não encontrado',
-  })
-  remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.ordersService.remove(id);
   }
 
   @Patch(':id/cancel')

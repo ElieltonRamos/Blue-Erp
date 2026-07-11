@@ -28,13 +28,20 @@ export class TablesService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateTableDto): Promise<TableResponseDto> {
+    const start = Date.now();
+    const tag = `Mesa ${dto.number}/loc ${dto.locationId}`;
+
+    this.logger.log(
+      `[${tag}] | iniciando criação | capacidade=${dto.capacity}`,
+    );
+
     const location = await this.prisma.client.productionLocation.findUnique({
       where: { id: dto.locationId },
     });
 
     if (!location) {
       this.logger.error(
-        `Criação de mesa falhou: localização ${dto.locationId} não encontrada`,
+        `[${tag}] | criação falhou: localização ${dto.locationId} não encontrada`,
       );
       throw new NotFoundException('Localização não encontrada');
     }
@@ -50,7 +57,7 @@ export class TablesService {
 
     if (existing) {
       this.logger.error(
-        `Criação de mesa falhou: mesa ${dto.number} já existe na localização ${dto.locationId}`,
+        `[${tag}] | criação falhou: mesa ${dto.number} já existe na localização ${dto.locationId}`,
       );
       throw new ConflictException(
         `Já existe mesa ${dto.number} nesta localização`,
@@ -67,7 +74,7 @@ export class TablesService {
     });
 
     this.logger.log(
-      `Mesa ${table.number} criada na localização ${dto.locationId} (id ${table.id})`,
+      `[Mesa ${table.id}] | criada em ${Date.now() - start}ms | número=${table.number} localização=${dto.locationId}`,
     );
 
     return new TableResponseDto(table);
@@ -110,7 +117,7 @@ export class TablesService {
     });
 
     if (!table) {
-      this.logger.error(`Mesa ${id} não encontrada`);
+      this.logger.error(`[Mesa ${id}] | não encontrada`);
       throw new NotFoundException('Mesa não encontrada');
     }
 
@@ -118,15 +125,20 @@ export class TablesService {
   }
 
   async update(id: number, dto: UpdateTableDto): Promise<TableResponseDto> {
+    const start = Date.now();
+    const tag = `Mesa ${id}`;
+
+    this.logger.log(
+      `[${tag}] | iniciando atualização | campos=${Object.keys(dto).join(', ')}`,
+    );
+
     const table = await this.prisma.client.table.findUnique({
       where: { id },
       include: { order: true },
     });
 
     if (!table) {
-      this.logger.error(
-        `Atualização de mesa falhou: mesa ${id} não encontrada`,
-      );
+      this.logger.error(`[${tag}] | atualização falhou: mesa não encontrada`);
       throw new NotFoundException('Mesa não encontrada');
     }
 
@@ -137,7 +149,7 @@ export class TablesService {
 
       if (!location) {
         this.logger.error(
-          `Atualização de mesa ${id} falhou: localização ${dto.locationId} não encontrada`,
+          `[${tag}] | atualização falhou: localização ${dto.locationId} não encontrada`,
         );
         throw new NotFoundException('Localização não encontrada');
       }
@@ -154,7 +166,7 @@ export class TablesService {
 
       if (existing) {
         this.logger.error(
-          `Atualização de mesa ${id} falhou: mesa ${numberToCheck} já existe na localização ${dto.locationId}`,
+          `[${tag}] | atualização falhou: mesa ${numberToCheck} já existe na localização ${dto.locationId}`,
         );
         throw new ConflictException(
           `Já existe mesa ${numberToCheck} nesta localização`,
@@ -175,7 +187,7 @@ export class TablesService {
 
       if (existing) {
         this.logger.error(
-          `Atualização de mesa ${id} falhou: mesa ${dto.number} já existe na localização ${locationToCheck}`,
+          `[${tag}] | atualização falhou: mesa ${dto.number} já existe na localização ${locationToCheck}`,
         );
         throw new ConflictException(
           `Já existe mesa ${dto.number} nesta localização`,
@@ -219,29 +231,36 @@ export class TablesService {
       return updatedTable;
     });
 
-    this.logger.log(`Mesa ${id} atualizada: ${Object.keys(dto).join(', ')}`);
+    this.logger.log(
+      `[${tag}] | atualizada em ${Date.now() - start}ms | campos=${Object.keys(dto).join(', ')}`,
+    );
 
     return new TableResponseDto(updated);
   }
 
   async remove(id: number): Promise<{ message: string }> {
+    const start = Date.now();
+    const tag = `Mesa ${id}`;
+
+    this.logger.log(`[${tag}] | iniciando exclusão`);
+
     const table = await this.prisma.client.table.findUnique({ where: { id } });
 
     if (!table) {
-      this.logger.error(`Exclusão de mesa falhou: mesa ${id} não encontrada`);
+      this.logger.error(`[${tag}] | exclusão falhou: mesa não encontrada`);
       throw new NotFoundException('Mesa não encontrada');
     }
 
     if (table.status !== 'AVAILABLE') {
       this.logger.warn(
-        `Exclusão de mesa ${id} bloqueada: status atual é ${table.status}`,
+        `[${tag}] | exclusão bloqueada: status atual é ${table.status}`,
       );
       throw new BadRequestException('Só é possível excluir mesas disponíveis');
     }
 
     await this.prisma.client.table.delete({ where: { id } });
 
-    this.logger.log(`Mesa ${id} excluída`);
+    this.logger.log(`[${tag}] | excluída em ${Date.now() - start}ms`);
 
     return { message: 'Mesa excluída com sucesso' };
   }
@@ -251,18 +270,29 @@ export class TablesService {
     dto: OccupyTableDto,
     operatorId: number,
   ): Promise<TableResponseDto> {
+    const start = Date.now();
+    const tag = `Mesa ${id}`;
+
+    this.logger.log(
+      `[${tag}] operador=${operatorId} | iniciando ocupação | cliente=${dto.customer}`,
+    );
+
     const table = await this.prisma.client.table.findUnique({
       where: { id },
       include: { location: true },
     });
 
     if (!table) {
-      this.logger.error(`Ocupação de mesa falhou: mesa ${id} não encontrada`);
+      this.logger.error(
+        `[${tag}] operador=${operatorId} | ocupação falhou: mesa não encontrada`,
+      );
       throw new NotFoundException('Mesa não encontrada');
     }
 
     if (table.status === 'OCCUPIED') {
-      this.logger.warn(`Ocupação de mesa ${id} bloqueada: mesa já ocupada`);
+      this.logger.warn(
+        `[${tag}] operador=${operatorId} | ocupação bloqueada: mesa já ocupada`,
+      );
       throw new BadRequestException('Mesa já está ocupada');
     }
 
@@ -297,7 +327,7 @@ export class TablesService {
         });
 
         this.logger.log(
-          `Mesa ${id} ocupada por ${dto.customer} (comanda #${order.id})`,
+          `[${tag}] operador=${operatorId} | ocupada em ${Date.now() - start}ms | cliente=${dto.customer} comanda=#${order.id}`,
         );
 
         return new TableResponseDto(result);
@@ -306,24 +336,29 @@ export class TablesService {
   }
 
   async release(id: number): Promise<TableResponseDto> {
+    const start = Date.now();
+    const tag = `Mesa ${id}`;
+
+    this.logger.log(`[${tag}] | iniciando liberação`);
+
     const table = await this.prisma.client.table.findUnique({
       where: { id },
       include: { order: { include: { items: true } } },
     });
 
     if (!table) {
-      this.logger.error(`Liberação de mesa falhou: mesa ${id} não encontrada`);
+      this.logger.error(`[${tag}] | liberação falhou: mesa não encontrada`);
       throw new NotFoundException('Mesa não encontrada');
     }
 
     if (table.status === 'AVAILABLE') {
-      this.logger.warn(`Liberação de mesa ${id} bloqueada: mesa já disponível`);
+      this.logger.warn(`[${tag}] | liberação bloqueada: mesa já disponível`);
       throw new BadRequestException('Mesa já está disponível');
     }
 
     if (table.order?.items && table.order.items.length > 0) {
       this.logger.warn(
-        `Liberação de mesa ${id} bloqueada: comanda #${table.orderId} possui itens pendentes`,
+        `[${tag}] | liberação bloqueada: comanda #${table.orderId} possui itens pendentes`,
       );
       throw new BadRequestException(
         'Finalize a comanda antes de liberar a mesa',
@@ -350,7 +385,7 @@ export class TablesService {
           include: { location: true },
         });
 
-        this.logger.log(`Mesa ${id} liberada`);
+        this.logger.log(`[${tag}] | liberada em ${Date.now() - start}ms`);
 
         return new TableResponseDto(result);
       },
@@ -358,15 +393,22 @@ export class TablesService {
   }
 
   async reserve(id: number, dto: ReserveTableDto): Promise<TableResponseDto> {
+    const start = Date.now();
+    const tag = `Mesa ${id}`;
+
+    this.logger.log(
+      `[${tag}] | iniciando reserva | cliente=${dto.customer} horário=${dto.time}`,
+    );
+
     const table = await this.prisma.client.table.findUnique({ where: { id } });
 
     if (!table) {
-      this.logger.error(`Reserva de mesa falhou: mesa ${id} não encontrada`);
+      this.logger.error(`[${tag}] | reserva falhou: mesa não encontrada`);
       throw new NotFoundException('Mesa não encontrada');
     }
 
     if (table.status === 'OCCUPIED') {
-      this.logger.warn(`Reserva de mesa ${id} bloqueada: mesa está ocupada`);
+      this.logger.warn(`[${tag}] | reserva bloqueada: mesa está ocupada`);
       throw new BadRequestException('Mesa está ocupada');
     }
 
@@ -376,7 +418,9 @@ export class TablesService {
       include: { location: true },
     });
 
-    this.logger.log(`Mesa ${id} reservada para ${dto.customer} às ${dto.time}`);
+    this.logger.log(
+      `[${tag}] | reservada em ${Date.now() - start}ms | cliente=${dto.customer} horário=${dto.time}`,
+    );
 
     return new TableResponseDto(updated);
   }
@@ -386,6 +430,16 @@ export class TablesService {
     operatorId: number,
     dto: CloseTabDto,
   ): Promise<CloseTabResponseDto> {
+    const start = Date.now();
+    const tag = `Mesa ${id}`;
+
+    this.logger.log(
+      `[${tag}] operador=${operatorId} | iniciando fechamento de comanda | ` +
+        `serviceCharge=${dto.serviceCharge ?? 0} itens=${
+          dto.items?.map((i) => `${i.id}:${i.serviceCharge}`).join(', ') ?? ''
+        }`,
+    );
+
     const table = await this.prisma.client.table.findUnique({
       where: { id },
       include: { order: { include: { items: true } } },
@@ -393,19 +447,19 @@ export class TablesService {
 
     if (!table) {
       this.logger.error(
-        `Fechamento de comanda falhou: mesa ${id} não encontrada`,
+        `[${tag}] operador=${operatorId} | fechamento falhou: mesa não encontrada`,
       );
       throw new NotFoundException('Mesa não encontrada');
     }
     if (!table.order || table.status !== 'OCCUPIED') {
       this.logger.warn(
-        `Fechamento de comanda bloqueado: mesa ${id} não possui comanda ativa`,
+        `[${tag}] operador=${operatorId} | fechamento bloqueado: mesa não possui comanda ativa`,
       );
       throw new BadRequestException('Mesa não possui comanda ativa');
     }
     if (!table.order.items || table.order.items.length === 0) {
       this.logger.warn(
-        `Fechamento de comanda bloqueado: comanda #${table.orderId} sem produtos`,
+        `[${tag}] operador=${operatorId} | fechamento bloqueado: comanda #${table.orderId} sem produtos`,
       );
       throw new BadRequestException('Não há produtos na comanda');
     }
@@ -455,7 +509,7 @@ export class TablesService {
     });
 
     this.logger.log(
-      `Comanda #${result.orderId} fechada (mesa ${table.number}, total ${result.total})`,
+      `[${tag}] operador=${operatorId} | fechada em ${Date.now() - start}ms | comanda=#${result.orderId} total=${result.total} serviceCharge=${result.serviceCharge}`,
     );
 
     return new CloseTabResponseDto(result);
@@ -467,8 +521,10 @@ export class TablesService {
     targetLocationCode: string,
   ): Promise<{ message: string }> {
     const startedAt = Date.now();
+    const tag = `Comanda ${originOrderId}`;
+
     this.logger.log(
-      `Transferência iniciada: comanda #${originOrderId} -> mesa ${targetTableNumber} (${targetLocationCode})`,
+      `[${tag}] | iniciando transferência -> mesa ${targetTableNumber} (${targetLocationCode})`,
     );
 
     const originOrder = await this.prisma.client.order.findUnique({
@@ -478,13 +534,13 @@ export class TablesService {
 
     if (!originOrder) {
       this.logger.error(
-        `Transferência falhou: comanda #${originOrderId} não encontrada`,
+        `[${tag}] | transferência falhou: comanda não encontrada`,
       );
       throw new NotFoundException(`Pedido ${originOrderId} não encontrado`);
     }
     if (originOrder.status !== OrderStatus.OPEN) {
       this.logger.warn(
-        `Transferência bloqueada: comanda #${originOrderId} não está aberta (status ${originOrder.status})`,
+        `[${tag}] | transferência bloqueada: comanda não está aberta (status ${originOrder.status})`,
       );
       throw new BadRequestException(
         'Apenas pedidos abertos podem ser transferidos',
@@ -492,7 +548,7 @@ export class TablesService {
     }
     if (!originOrder.table) {
       this.logger.warn(
-        `Transferência bloqueada: comanda #${originOrderId} não está associada a uma mesa`,
+        `[${tag}] | transferência bloqueada: comanda não está associada a uma mesa`,
       );
       throw new BadRequestException(
         'Este pedido não está associado a uma mesa',
@@ -505,7 +561,7 @@ export class TablesService {
     );
     if (isNaN(originTableNumber)) {
       this.logger.warn(
-        `Transferência bloqueada: número de mesa inválido "${originOrder.table}" na comanda #${originOrderId}`,
+        `[${tag}] | transferência bloqueada: número de mesa inválido "${originOrder.table}"`,
       );
       throw new BadRequestException(
         `Número de mesa inválido: ${originOrder.table}`,
@@ -516,7 +572,7 @@ export class TablesService {
       originOrder.locationId === targetLocationCode
     ) {
       this.logger.warn(
-        `Transferência bloqueada: mesa de destino (${targetTableNumber}/${targetLocationCode}) é a mesma que a de origem`,
+        `[${tag}] | transferência bloqueada: mesa de destino (${targetTableNumber}/${targetLocationCode}) é a mesma que a de origem`,
       );
       throw new BadRequestException(
         'A mesa de destino é a mesma que a de origem',
@@ -534,7 +590,7 @@ export class TablesService {
 
     if (!originLocation) {
       this.logger.error(
-        `Transferência falhou: local de origem ${originOrder.locationId} não encontrado`,
+        `[${tag}] | transferência falhou: local de origem ${originOrder.locationId} não encontrado`,
       );
       throw new NotFoundException(
         `Local de origem ${originOrder.locationId} não encontrado`,
@@ -542,7 +598,7 @@ export class TablesService {
     }
     if (!targetLocation) {
       this.logger.error(
-        `Transferência falhou: local de destino ${targetLocationCode} não encontrado`,
+        `[${tag}] | transferência falhou: local de destino ${targetLocationCode} não encontrado`,
       );
       throw new NotFoundException(
         `Local de destino ${targetLocationCode} não encontrado`,
@@ -570,7 +626,7 @@ export class TablesService {
 
     if (!originTableRecord) {
       this.logger.error(
-        `Transferência falhou: mesa ${originTableNumber} não encontrada no local ${originOrder.locationId}`,
+        `[${tag}] | transferência falhou: mesa ${originTableNumber} não encontrada no local ${originOrder.locationId}`,
       );
       throw new NotFoundException(
         `Mesa ${originTableNumber} não encontrada no local ${originOrder.locationId}`,
@@ -578,7 +634,7 @@ export class TablesService {
     }
     if (!targetTableRecord) {
       this.logger.error(
-        `Transferência falhou: mesa ${targetTableNumber} não encontrada no local ${targetLocationCode}`,
+        `[${tag}] | transferência falhou: mesa ${targetTableNumber} não encontrada no local ${targetLocationCode}`,
       );
       throw new NotFoundException(
         `Mesa ${targetTableNumber} não encontrada no local ${targetLocationCode}`,
@@ -594,7 +650,7 @@ export class TablesService {
 
     if (targetOpenOrder && targetOpenOrder.status === OrderStatus.OPEN) {
       this.logger.log(
-        `Transferência: mesclando comanda #${originOrderId} com comanda #${targetOpenOrder.id} na mesa ${targetTableNumber}`,
+        `[${tag}] | mesclando com comanda #${targetOpenOrder.id} na mesa ${targetTableNumber}`,
       );
       const result = await this.mergeOrders({
         originOrder,
@@ -604,14 +660,14 @@ export class TablesService {
         targetTableNumber,
       });
       this.logger.log(
-        `Transferência concluída em ${Date.now() - startedAt}ms (mesclagem)`,
+        `[${tag}] | transferência concluída em ${Date.now() - startedAt}ms (mesclagem)`,
       );
       return result;
     }
 
     if (targetTableRecord.status === TableStatus.OCCUPIED) {
       this.logger.warn(
-        `Transferência bloqueada: mesa ${targetTableNumber} já está ocupada`,
+        `[${tag}] | transferência bloqueada: mesa ${targetTableNumber} já está ocupada`,
       );
       throw new BadRequestException(
         `Mesa ${targetTableNumber} já está ocupada`,
@@ -619,7 +675,7 @@ export class TablesService {
     }
 
     this.logger.log(
-      `Transferência: movendo comanda #${originOrderId} para mesa ${targetTableNumber} (livre)`,
+      `[${tag}] | movendo para mesa ${targetTableNumber} (livre)`,
     );
     const result = await this.moveOrder({
       originOrderId,
@@ -630,7 +686,7 @@ export class TablesService {
       targetLocationCode,
     });
     this.logger.log(
-      `Transferência concluída em ${Date.now() - startedAt}ms (movimentação)`,
+      `[${tag}] | transferência concluída em ${Date.now() - startedAt}ms (movimentação)`,
     );
     return result;
   }

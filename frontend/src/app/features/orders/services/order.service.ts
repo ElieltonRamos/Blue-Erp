@@ -55,10 +55,6 @@ export class OrderService {
     return this.client.patch<Order>(`${this.apiUrl}/${id}`, dto);
   }
 
-  deleteOrder(id: number): Observable<void> {
-    return this.client.delete<void>(`${this.apiUrl}/${id}`);
-  }
-
   reopenOrder(id: number): Observable<Order> {
     return this.client.post<Order>(`${this.apiUrl}/${id}/reopen`, {});
   }
