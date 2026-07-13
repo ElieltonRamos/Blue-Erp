@@ -15,7 +15,7 @@
 ; ==================== CONFIGURAÇÕES GERAIS ====================
 Name "${APP_NAME} ${APP_VERSION}"
 OutFile "App-Blue-Erp-Setup-${APP_VERSION}.exe"
-InstallDir "$PROGRAMFILES64\${APP_NAME}"
+InstallDir "C:\blue-erp-app"
 InstallDirRegKey HKLM "Software\${APP_NAME}" "InstallDir"
 RequestExecutionLevel admin
 Unicode True
@@ -41,7 +41,7 @@ Unicode True
 Function .onInit
     ${If} ${RunningX64}
         SetRegView 64
-        StrCpy $INSTDIR "$PROGRAMFILES64\${APP_NAME}"
+        StrCpy $INSTDIR "C:\blue-erp-app"
     ${Else}
         MessageBox MB_OK|MB_ICONSTOP "Este instalador requer Windows 64-bit."
         Abort
