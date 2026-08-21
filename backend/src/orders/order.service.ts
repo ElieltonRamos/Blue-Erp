@@ -436,6 +436,30 @@ export class OrdersService {
           );
         }
 
+        const decreased = items
+          .filter((i) => i.id)
+          .map((incoming) => {
+            const existing = existingOrder.items.find(
+              (e) => e.id === incoming.id,
+            );
+            if (!existing) return null;
+            const diff = Number(incoming.quantity) - Number(existing.quantity);
+            return diff < 0 ? { existing, incoming, diff } : null;
+          })
+          .filter((x): x is NonNullable<typeof x> => x !== null);
+
+        if (decreased.length > 0) {
+          this.logger.warn(
+            `[${tag}] operador=${operatorId} role=${userRole} | reduzindo quantidade de ${decreased.length} item(ns): ` +
+              decreased
+                .map(
+                  (d) =>
+                    `${d.existing.id}:${d.existing.name}(${d.existing.quantity}→${d.incoming.quantity})`,
+                )
+                .join(', '),
+          );
+        }
+
         await this.itemsService.handleRemovedItems(
           tx,
           existingOrder.items,

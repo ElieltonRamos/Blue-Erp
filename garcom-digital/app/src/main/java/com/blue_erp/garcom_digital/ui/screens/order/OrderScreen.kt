@@ -232,8 +232,6 @@ fun OrderScreenContent(
                 onDismiss = onCloseTabSummaryDialog,
                 serviceChargeEnabled = uiState.serviceChargeEnabled,
                 serviceChargeAmount = uiState.serviceChargeAmount,
-                onToggleServiceCharge = onToggleServiceCharge,
-                onServiceChargeAmountChange = onServiceChargeAmountChange,
             )
         }
     }

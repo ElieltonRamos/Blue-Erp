@@ -3,22 +3,12 @@ package com.blue_erp.garcom_digital.ui.screens.order.components
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.blue_erp.garcom_digital.data.model.TableOrder
@@ -32,30 +22,14 @@ fun TabSummaryDialog(
     isClosingTab: Boolean,
     serviceChargeEnabled: Boolean,
     serviceChargeAmount: Double,
-    onToggleServiceCharge: () -> Unit,
-    onServiceChargeAmountChange: (Double) -> Unit,
     onConfirm: (serviceCharge: Double) -> Unit,
     onDismiss: () -> Unit
 ) {
     val currencyFormat = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
     val grandTotal = order.total + if (serviceChargeEnabled) serviceChargeAmount else 0.0
 
-    var localServiceChargeValue by remember { mutableStateOf(serviceChargeAmount.toString()) }
-
-    LaunchedEffect(serviceChargeAmount) {
-        val parsed = localServiceChargeValue.toDoubleOrNull()
-        if (parsed != serviceChargeAmount) {
-            localServiceChargeValue = serviceChargeAmount.toString()
-        }
-    }
-
     AlertDialog(
-        onDismissRequest = {
-            localServiceChargeValue.toDoubleOrNull()?.let {
-                if (it != serviceChargeAmount) onServiceChargeAmountChange(it)
-            }
-            onDismiss()
-        },
+        onDismissRequest = onDismiss,
         title = { Text("Resumo da Comanda") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -100,62 +74,12 @@ fun TabSummaryDialog(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
-                                Text("Taxa de Serviço", fontWeight = FontWeight.Medium)
-                                if (serviceChargeEnabled) {
-                                    Text(
-                                        text = currencyFormat.format(serviceChargeAmount),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                            Switch(
-                                checked = serviceChargeEnabled,
-                                onCheckedChange = { onToggleServiceCharge() }
-                            )
-                        }
-                    }
-                    if (serviceChargeEnabled) {
-                        item {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
+                            Text("Taxa de Serviço", fontWeight = FontWeight.Medium)
+                            if (serviceChargeEnabled) {
                                 Text(
-                                    text = "Valor da taxa",
+                                    text = currencyFormat.format(serviceChargeAmount),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                OutlinedTextField(
-                                    value = localServiceChargeValue,
-                                    onValueChange = { localServiceChargeValue = it },
-                                    modifier = Modifier
-                                        .width(120.dp)
-                                        .onFocusChanged { focus ->
-                                            if (!focus.isFocused) {
-                                                localServiceChargeValue.toDoubleOrNull()
-                                                    ?.let { onServiceChargeAmountChange(it) }
-                                                    ?: run { localServiceChargeValue = serviceChargeAmount.toString() }
-                                            }
-                                        },
-                                    singleLine = true,
-                                    textStyle = MaterialTheme.typography.bodySmall,
-                                    keyboardOptions = KeyboardOptions(
-                                        keyboardType = KeyboardType.Decimal,
-                                        imeAction = ImeAction.Done
-                                    ),
-                                    keyboardActions = KeyboardActions(
-                                        onDone = {
-                                            localServiceChargeValue.toDoubleOrNull()
-                                                ?.let { onServiceChargeAmountChange(it) }
-                                                ?: run { localServiceChargeValue = serviceChargeAmount.toString() }
-                                        }
-                                    ),
-                                    prefix = { Text("R$", style = MaterialTheme.typography.bodySmall) }
                                 )
                             }
                         }
@@ -206,10 +130,7 @@ fun TabSummaryDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    val finalCharge = if (serviceChargeEnabled)
-                        localServiceChargeValue.toDoubleOrNull() ?: serviceChargeAmount
-                    else 0.0
-                    if (serviceChargeEnabled) onServiceChargeAmountChange(finalCharge)
+                    val finalCharge = if (serviceChargeEnabled) serviceChargeAmount else 0.0
                     onConfirm(finalCharge)
                 },
                 enabled = !isClosingTab,
@@ -227,12 +148,7 @@ fun TabSummaryDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = {
-                localServiceChargeValue.toDoubleOrNull()?.let {
-                    if (it != serviceChargeAmount) onServiceChargeAmountChange(it)
-                }
-                onDismiss()
-            }) { Text("Cancelar") }
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
         },
     )
 }
@@ -279,9 +195,7 @@ fun TabSummaryDialogPreview() {
             onConfirm = {},
             onDismiss = {},
             serviceChargeAmount = 0.0,
-            onToggleServiceCharge = {},
-            serviceChargeEnabled = false,
-            onServiceChargeAmountChange = {}
+            serviceChargeEnabled = false
         )
     }
 }
