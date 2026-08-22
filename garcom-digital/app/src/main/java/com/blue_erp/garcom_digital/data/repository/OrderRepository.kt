@@ -40,6 +40,39 @@ class OrderRepository @Inject constructor(
         }
     }
 
+    suspend fun addItems(orderId: Int, request: AddOrderItemsRequest): Resource<TableOrder> {
+        return try {
+            val response = apiService.addOrderItems(orderId, request)
+            if (response.isSuccessful) {
+                response.body()?.let { Resource.Success(it) } ?: Resource.Error("Erro ao adicionar item")
+            } else Resource.Error(parseError(response, "Erro ao adicionar item"))
+        } catch (e: Exception) {
+            Resource.Error(parseNetworkError(e))
+        }
+    }
+
+    suspend fun removeItems(orderId: Int, request: RemoveOrderItemsRequest): Resource<TableOrder> {
+        return try {
+            val response = apiService.removeOrderItems(orderId, request)
+            if (response.isSuccessful) {
+                response.body()?.let { Resource.Success(it) } ?: Resource.Error("Erro ao remover item")
+            } else Resource.Error(parseError(response, "Erro ao remover item"))
+        } catch (e: Exception) {
+            Resource.Error(parseNetworkError(e))
+        }
+    }
+
+    suspend fun updateServiceCharge(orderId: Int, request: UpdateServiceChargeRequest): Resource<TableOrder> {
+        return try {
+            val response = apiService.updateServiceCharge(orderId, request)
+            if (response.isSuccessful) {
+                response.body()?.let { Resource.Success(it) } ?: Resource.Error("Erro ao atualizar taxa de serviço")
+            } else Resource.Error(parseError(response, "Erro ao atualizar taxa de serviço"))
+        } catch (e: Exception) {
+            Resource.Error(parseNetworkError(e))
+        }
+    }
+
     suspend fun getOrder(orderId: Int): Resource<TableOrder> {
         return try {
             val response = apiService.getOrder(orderId)

@@ -24,7 +24,6 @@ data class OrderUiState(
     val error: String? = null,
     val success: String? = null,
     val editedItems: List<TableOrderItem> = emptyList(),
-    val hasUnsavedChanges: Boolean = false,
     val showProductSearch: Boolean = false,
     val productQuery: String = "",
     val products: List<ProductResponse> = emptyList(),
@@ -90,62 +89,103 @@ class OrderViewModel @Inject constructor(
         }
     }
 
+    // ── Itens ──────────────────────────────────────────────────────────────────
+
     fun addProduct(product: ProductResponse, observation: String = "", quantity: Int = 1) {
-        val previousTotal = _uiState.value.editedItems.sumOf { it.total }
-        val existing = _uiState.value.editedItems.find { it.productId == product.id }
-        if (existing != null) {
-            if (observation.isBlank() || observation.trim().length < 2) {
-                _uiState.update { it.copy(error = "Informe uma observação para o item") }
-                return
-            }
-            _uiState.update { state ->
-                val updated = state.editedItems.map { item ->
-                    if (item.productId == product.id)
-                        item.copy(
-                            quantity = item.quantity + quantity.toDouble(),
-                            total = (item.quantity + quantity.toDouble()) * item.unitPrice,
-                            observation = observation
-                        )
-                    else item
-                }
-                state.copy(
-                    editedItems = updated,
-                    hasUnsavedChanges = true,
-                    showProductDetailSheet = false,
-                    selectedProduct = null,
-                    showProductSearch = false,
+        if (observation.isBlank() || observation.trim().length < 2) {
+            _uiState.update { it.copy(error = "Informe uma observação para o item") }
+            return
+        }
+
+        val orderId = _uiState.value.order?.id ?: return
+
+        _uiState.update {
+            it.copy(showProductDetailSheet = false, selectedProduct = null, showProductSearch = false)
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true, error = null) }
+
+            val request = AddOrderItemsRequest(
+                items = listOf(
+                    AddOrderItemRequest(
+                        productId = product.id,
+                        code = product.code,
+                        name = product.name,
+                        quantity = quantity.toDouble(),
+                        unitPrice = product.price,
+                        observation = observation,
+                    )
                 )
-            }
-            recalculateServiceChargeAfterItemChange(previousTotal)
-            saveChanges(successMessage = "Quantidade de ${product.name} atualizada")
-        } else {
-            if (observation.isBlank() || observation.trim().length < 2) {
-                _uiState.update { it.copy(error = "Informe uma observação para o item") }
-                return
-            }
-            val newItem = TableOrderItem(
-                id = -(_uiState.value.editedItems.size + 1),
-                code = product.code,
-                name = product.name,
-                quantity = quantity.toDouble(),
-                unitPrice = product.price,
-                total = product.price * quantity.toDouble(),
-                productId = product.id,
-                productionLocation = "",
-                observation = observation,
-                serviceCharge = 0.0,
             )
-            _uiState.update {
-                it.copy(
-                    editedItems = it.editedItems + newItem,
-                    hasUnsavedChanges = true,
-                    showProductDetailSheet = false,
-                    selectedProduct = null,
-                    showProductSearch = false,
-                )
+
+            when (val result = orderRepository.addItems(orderId, request)) {
+                is Resource.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            order = result.data,
+                            editedItems = result.data.items.toList(),
+                            isSaving = false,
+                            success = "${product.name} adicionado à comanda"
+                        )
+                    }
+                    syncServiceChargeIfEnabled()
+                }
+                is Resource.Error -> _uiState.update { it.copy(isSaving = false, error = result.message) }
+                is Resource.Loading -> {}
             }
-            recalculateServiceChargeAfterItemChange(previousTotal)
-            saveChanges(successMessage = "${product.name} adicionado à comanda")
+        }
+    }
+
+    fun incrementItem(itemId: Int) {
+        val item = _uiState.value.editedItems.find { it.id == itemId } ?: return
+        val product = ProductResponse(
+            id = item.productId,
+            name = item.name,
+            code = item.code,
+            price = item.unitPrice,
+            unit = "",
+            active = true,
+            categoryId = null
+        )
+        openProductDetail(product)
+    }
+
+    fun decrementItem(itemId: Int) {
+        val item = _uiState.value.editedItems.find { it.id == itemId } ?: return
+        removeItemQuantity(item, 1.0, "Quantidade atualizada")
+    }
+
+    fun removeItem(itemId: Int) {
+        val item = _uiState.value.editedItems.find { it.id == itemId } ?: return
+        removeItemQuantity(item, item.quantity, "Item removido")
+    }
+
+    private fun removeItemQuantity(item: TableOrderItem, quantity: Double, successMessage: String) {
+        val orderId = _uiState.value.order?.id ?: return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true, error = null) }
+
+            val request = RemoveOrderItemsRequest(
+                items = listOf(RemoveOrderItemRequest(id = item.id, quantity = quantity))
+            )
+
+            when (val result = orderRepository.removeItems(orderId, request)) {
+                is Resource.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            order = result.data,
+                            editedItems = result.data.items.toList(),
+                            isSaving = false,
+                            success = successMessage
+                        )
+                    }
+                    syncServiceChargeIfEnabled()
+                }
+                is Resource.Error -> _uiState.update { it.copy(isSaving = false, error = result.message) }
+                is Resource.Loading -> {}
+            }
         }
     }
 
@@ -154,6 +194,7 @@ class OrderViewModel @Inject constructor(
         viewModelScope.launch { searchProducts(_uiState.value.productQuery, categoryId) }
     }
 
+    // ── Fechamento de comanda ─────────────────────────────────────────────────
 
     fun closeTabSummaryDialog() {
         _uiState.update { it.copy(showTabSummaryDialog = false, tabSummaryOrder = null) }
@@ -181,34 +222,6 @@ class OrderViewModel @Inject constructor(
 
     fun closeTab(serviceCharge: Double) {
         viewModelScope.launch {
-            val orderId = _uiState.value.order?.id ?: return@launch
-
-            // salva itens com serviceCharge distribuído
-            val items = _uiState.value.editedItems.map { item ->
-                UpdateOrderItemRequest(
-                    id = if (item.id > 0) item.id else null,
-                    productId = item.productId,
-                    code = item.code,
-                    name = item.name,
-                    quantity = item.quantity,
-                    unitPrice = item.unitPrice,
-                    total = item.total,
-                    observation = item.observation,
-                    serviceCharge = item.serviceCharge,
-                )
-            }
-
-            val request = UpdateOrderRequest(
-                items = items,
-                total = items.sumOf { it.total },
-                serviceCharge = serviceCharge
-            )
-
-            Log.d("OrderViewModel", "closeTab → serviceCharge: $serviceCharge")
-            Log.d("OrderViewModel", "closeTab → items: ${items.map { "${it.name} serviceCharge=${it.serviceCharge}" }}")
-
-            orderRepository.updateOrder(orderId, request)
-
             _uiState.update { it.copy(isClosingTab = true, showTabSummaryDialog = false, error = null) }
             when (val result = tableRepository.closeTab(tableId, serviceCharge)) {
                 is Resource.Success -> _uiState.update {
@@ -234,7 +247,6 @@ class OrderViewModel @Inject constructor(
                             order = order,
                             editedItems = order?.items?.toList() ?: emptyList(),
                             isLoading = false,
-                            hasUnsavedChanges = false
                         )
                     }
                     order?.let { initServiceCharge(it) }
@@ -250,196 +262,51 @@ class OrderViewModel @Inject constructor(
     // ── Gorjeta ────────────────────────────────────────────────────────────────
 
     private fun initServiceCharge(order: TableOrder) {
-        val total = order.items.sumOf { it.total }
-        val enabled = order.serviceCharge > 0.0
-        val amount = if (enabled) order.serviceCharge else round2(total * 0.10)
-        _uiState.update { it.copy(serviceChargeEnabled = enabled, serviceChargeAmount = amount) }
+        _uiState.update {
+            it.copy(
+                serviceChargeEnabled = order.serviceCharge > 0.0,
+                serviceChargeAmount = order.serviceCharge
+            )
+        }
     }
 
     fun toggleServiceCharge() {
-        val state = _uiState.value
-        val nowEnabled = !state.serviceChargeEnabled
-        if (!nowEnabled) {
-            val zeroed = state.editedItems.map { it.copy(serviceCharge = 0.0) }
-            _uiState.update {
-                it.copy(serviceChargeEnabled = false, serviceChargeAmount = 0.0, editedItems = zeroed, hasUnsavedChanges = true)
-            }
-        } else {
-            val default = round2(state.editedItems.sumOf { it.total } * 0.10)
-            _uiState.update { it.copy(serviceChargeEnabled = true, serviceChargeAmount = default) }
-            distributeServiceCharge()
-        }
+        val nowEnabled = !_uiState.value.serviceChargeEnabled
+        pushServiceCharge(nowEnabled)
     }
 
-    fun onServiceChargeAmountChange(value: Double) {
-        val normalized = if (value <= 0.0) 0.0 else value
-        _uiState.update {
-            it.copy(serviceChargeAmount = normalized, serviceChargeEnabled = normalized > 0.0)
-        }
-        if (normalized > 0.0) distributeServiceCharge()
+    private fun syncServiceChargeIfEnabled() {
+        if (_uiState.value.serviceChargeEnabled) pushServiceCharge(enabled = true)
     }
 
-    private fun isDefaultServiceCharge(): Boolean {
-        val state = _uiState.value
-        val default = round2(state.editedItems.sumOf { it.total } * 0.10)
-        return round2(state.serviceChargeAmount) == default
-    }
-
-    private fun distributeServiceCharge() {
-        val state = _uiState.value
-        Log.d("OrderViewModel", "distribute → amount=${state.serviceChargeAmount} isDefault=${isDefaultServiceCharge()}")
-
-        if (!state.serviceChargeEnabled || state.serviceChargeAmount == 0.0) {
-            val zeroed = state.editedItems.map { it.copy(serviceCharge = 0.0) }
-            _uiState.update { it.copy(editedItems = zeroed, hasUnsavedChanges = true) }
-            return
-        }
-
-        val updated = if (isDefaultServiceCharge()) {
-            state.editedItems.map { item ->
-                item.copy(serviceCharge = round2(item.total * 0.10))
-            }
-        } else {
-            val perItem = round2(state.serviceChargeAmount / state.editedItems.size)
-            state.editedItems.map { it.copy(serviceCharge = perItem) }
-        }
-
-        val totalServiceCharge = round2(updated.sumOf { it.serviceCharge })
-
-        _uiState.update {
-            it.copy(
-                editedItems = updated,
-//                serviceChargeAmount = totalServiceCharge,
-                hasUnsavedChanges = true
-            )
-        }
-    }
-
-    private fun recalculateServiceChargeAfterItemChange(previousTotal: Double) {
-        val state = _uiState.value
-
-        if (!state.serviceChargeEnabled && state.editedItems.size == 1) {
-            val default = round2(state.editedItems.sumOf { it.total } * 0.10)
-            _uiState.update {
-                it.copy(serviceChargeEnabled = true, serviceChargeAmount = default)
-            }
-            distributeServiceCharge()
-            return
-        }
-
-        if (!state.serviceChargeEnabled) return
-
-        val wasDefault = round2(state.serviceChargeAmount) == round2(previousTotal * 0.10)
-        if (wasDefault) {
-            val newDefault = round2(state.editedItems.sumOf { it.total } * 0.10)
-            _uiState.update { it.copy(serviceChargeAmount = newDefault) }
-        }
-
-        distributeServiceCharge()
-    }
-
-    private fun round2(value: Double): Double =
-        value.toBigDecimal().setScale(2, RoundingMode.HALF_UP).toDouble()
-
-
-    fun incrementItem(itemId: Int) {
-        val item = _uiState.value.editedItems.find { it.id == itemId } ?: return
-        val product = ProductResponse(
-            id = item.productId,
-            name = item.name,
-            code = item.code,
-            price = item.unitPrice,
-            unit = "",
-            active = true,
-            categoryId = null
-        )
-        openProductDetail(product)
-    }
-
-    fun decrementItem(itemId: Int) {
-        val item = _uiState.value.editedItems.find { it.id == itemId } ?: return
-        if (item.quantity <= 1.0) removeItem(itemId)
-        else updateItemQuantity(itemId) { it - 1.0 }
-    }
-
-    fun removeItem(itemId: Int) {
-        val previousTotal = _uiState.value.editedItems.sumOf { it.total }
-        _uiState.update {
-            it.copy(
-                editedItems = it.editedItems.filter { item -> item.id != itemId },
-                hasUnsavedChanges = true
-            )
-        }
-        recalculateServiceChargeAfterItemChange(previousTotal)
-    }
-
-    private fun updateItemQuantity(itemId: Int, transform: (Double) -> Double) {
-        val previousTotal = _uiState.value.editedItems.sumOf { it.total }
-        _uiState.update { state ->
-            val updated = state.editedItems.map { item ->
-                if (item.id == itemId) {
-                    val newQty = transform(item.quantity)
-                    item.copy(quantity = newQty, total = newQty * item.unitPrice)
-                } else item
-            }
-            state.copy(editedItems = updated, hasUnsavedChanges = true)
-        }
-        recalculateServiceChargeAfterItemChange(previousTotal)
-    }
-
-    fun saveChanges(successMessage: String = "Alterações Enviadas") {
+    private fun pushServiceCharge(enabled: Boolean) {
         val orderId = _uiState.value.order?.id ?: return
+        val amount = if (enabled) round2(_uiState.value.editedItems.sumOf { it.total } * 0.10) else 0.0
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true, error = null) }
+            val request = UpdateServiceChargeRequest(enabled = enabled, amount = amount)
 
-            val items = _uiState.value.editedItems.map { item ->
-                UpdateOrderItemRequest(
-                    id = if (item.id > 0) item.id else null,
-                    productId = item.productId,
-                    code = item.code,
-                    name = item.name,
-                    quantity = item.quantity,
-                    unitPrice = item.unitPrice,
-                    total = item.total,
-                    observation = item.observation,
-                    serviceCharge = item.serviceCharge,
-                )
-            }
+            Log.d("OrderViewModel", "pushServiceCharge → enabled=$enabled amount=$amount")
 
-            val total = items.sumOf { it.total }
-            val serviceCharge = if (_uiState.value.serviceChargeEnabled)
-                _uiState.value.serviceChargeAmount else 0.0
-
-            val request = UpdateOrderRequest(
-                items = items,
-                total = total,
-                serviceCharge = serviceCharge
-            )
-
-            Log.d("OrderViewModel", "saveChanges → request: $request")
-            Log.d("OrderViewModel", "saveChanges → request items: ${items.map { "${it.name} obs=${it.observation}" }}")
-
-            when (val result = orderRepository.updateOrder(orderId, request)) {
+            when (val result = orderRepository.updateServiceCharge(orderId, request)) {
                 is Resource.Success -> {
-                    Log.d("OrderViewModel", "saveChanges → success: ${result.data}")
                     _uiState.update {
                         it.copy(
                             order = result.data,
                             editedItems = result.data.items.toList(),
-                            isSaving = false,
-                            hasUnsavedChanges = false,
-                            success = successMessage
+                            serviceChargeEnabled = result.data.serviceCharge > 0.0,
+                            serviceChargeAmount = result.data.serviceCharge,
                         )
                     }
                 }
-                is Resource.Error -> {
-                    Log.e("OrderViewModel", "saveChanges → error: ${result.message}")
-                    _uiState.update { it.copy(isSaving = false, error = result.message) }
-                }
+                is Resource.Error -> _uiState.update { it.copy(error = result.message) }
                 is Resource.Loading -> {}
             }
         }
     }
+
+    private fun round2(value: Double): Double =
+        value.toBigDecimal().setScale(2, RoundingMode.HALF_UP).toDouble()
 
     // ── Busca de produtos ──────────────────────────────────────────────────────
 

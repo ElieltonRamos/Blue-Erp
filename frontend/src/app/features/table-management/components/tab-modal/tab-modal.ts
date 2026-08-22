@@ -4,6 +4,25 @@ import { FormsModule } from '@angular/forms';
 import { Table } from '../../types/table';
 import { OrderItem } from '../../../orders/types/order';
 
+// TODO: lógica de cálculo de serviceCharge está correta mas desatualizada.
+// Recalcula localmente (onServiceChargeInput, distributeServiceCharge) e só
+// emite no finish, igual ao padrão antigo do edit-order-modal/table-product-modal
+// antes da migração para requisição imediata (addItems/removeItems/updateServiceCharge).
+// Deveria: confiar no serviceCharge já persistido pelos outros modais e, se for
+// pra manter edição manual aqui, persistir via updateServiceCharge também —
+// e não recalcular tudo de novo no fechamento da comanda.
+//
+// Backend relevante:
+// - OrderItemsService.addItems      → adiciona item (delta), não mexe em serviceCharge
+// - OrderItemsService.removeItems   → remove/reduz item (delta), não mexe em serviceCharge
+// - OrderItemsService.updateServiceCharge → único lugar que calcula/distribui a taxa
+//   por item hoje (padrão 10% vs. customizado dividido igualmente); é o que os outros
+//   modais chamam a cada alteração
+// - TablesService.closeTab (PATCH tables/:id/close-tab) → ao fechar, SOBRESCREVE
+//   order.serviceCharge com dto.serviceCharge e, se dto.items vier preenchido,
+//   sobrescreve serviceCharge por item também — é aqui que esse componente
+//   deveria só repassar o valor já persistido, não recalcular
+
 @Component({
   selector: 'app-tab-modal',
   imports: [CommonModule, FormsModule],

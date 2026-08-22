@@ -56,6 +56,15 @@ interface ApiService {
     @PATCH("orders/{id}")
     suspend fun updateOrder(@Path("id") id: Int, @Body request: UpdateOrderRequest): Response<TableOrder>
 
+    @POST("orders/{id}/items")
+    suspend fun addOrderItems(@Path("id") id: Int, @Body request: AddOrderItemsRequest): Response<TableOrder>
+
+    @PATCH("orders/{id}/items/decrement")
+    suspend fun removeOrderItems(@Path("id") id: Int, @Body request: RemoveOrderItemsRequest): Response<TableOrder>
+
+    @PATCH("orders/{id}/service-charge")
+    suspend fun updateServiceCharge(@Path("id") id: Int, @Body request: UpdateServiceChargeRequest): Response<TableOrder>
+
     @POST("orders/{id}/send-to-kitchen")
     suspend fun sendToKitchen(@Path("id") id: Int): Response<Unit>
 

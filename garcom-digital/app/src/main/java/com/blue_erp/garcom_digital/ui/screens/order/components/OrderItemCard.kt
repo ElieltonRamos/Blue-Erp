@@ -39,6 +39,7 @@ fun OrderItemCard(
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
     onRemove: () -> Unit,
+    showDecrementButton: Boolean = false,
 ) {
 
     Card(
@@ -67,8 +68,14 @@ fun OrderItemCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                IconButton(onClick = onDecrement, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Default.Remove, contentDescription = "Diminuir", tint = MaterialTheme.colorScheme.primary)
+                if (showDecrementButton) {
+                    IconButton(onClick = onDecrement, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            Icons.Default.Remove,
+                            contentDescription = "Diminuir",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
                 Text(
                     text = if (item.quantity % 1.0 == 0.0) item.quantity.toInt().toString()

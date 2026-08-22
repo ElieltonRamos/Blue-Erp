@@ -54,7 +54,6 @@ fun OrderScreen(
     OrderScreenContent(
         uiState = uiState,
         onBack = onBack,
-        onSave = viewModel::saveChanges,
         onIncrement = viewModel::incrementItem,
         onDecrement = viewModel::decrementItem,
         onRemove = viewModel::removeItem,
@@ -64,8 +63,6 @@ fun OrderScreen(
         onCloseTab = viewModel::closeTab,
         onCategorySelect = viewModel::selectCategory,
         onCloseTabSummaryDialog = viewModel::closeTabSummaryDialog,
-        onToggleServiceCharge = viewModel::toggleServiceCharge,
-        onServiceChargeAmountChange = viewModel::onServiceChargeAmountChange,
         onOpenProductDetail = viewModel::openProductDetail,
         onCloseProductDetail = viewModel::closeProductDetail,
         onAddProduct = viewModel::addProduct,
@@ -78,7 +75,6 @@ fun OrderScreen(
 fun OrderScreenContent(
     uiState: OrderUiState,
     onBack: () -> Unit,
-    onSave: () -> Unit,
     onIncrement: (Int) -> Unit,
     onDecrement: (Int) -> Unit,
     onRemove: (Int) -> Unit,
@@ -92,8 +88,6 @@ fun OrderScreenContent(
     onCloseTab: (serviceCharge: Double) -> Unit,
     onCategorySelect: (Int?) -> Unit,
     onCloseTabSummaryDialog: () -> Unit,
-    onToggleServiceCharge: () -> Unit,
-    onServiceChargeAmountChange: (Double) -> Unit,
 ) {
     val table = uiState.table
     val order = uiState.order
@@ -143,10 +137,7 @@ fun OrderScreenContent(
         bottomBar = {
             OrderBottomBar(
                 total = grandTotal,
-                hasUnsavedChanges = uiState.hasUnsavedChanges,
-                isSaving = uiState.isSaving,
                 isClosingTab = uiState.isClosingTab,
-                onSave = onSave,
                 onCloseTab = onOpenTabSummary
             )
         }

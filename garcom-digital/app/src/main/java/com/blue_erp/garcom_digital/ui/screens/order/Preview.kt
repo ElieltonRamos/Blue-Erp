@@ -25,12 +25,11 @@ private fun OrderScreenPreview() {
     GarcomDigitalTheme {
         OrderScreenContent(
             uiState = OrderUiState(order = previewOrder, editedItems = previewItems),
-            onBack = {}, onSave = {},
+            onBack = {},
             onIncrement = {}, onDecrement = {}, onRemove = {},
             onOpenProductSearch = {}, onCloseProductSearch = {},
             onProductQueryChange = {}, onCategorySelect = {},
             onCloseTab = {}, onOpenTabSummary = {}, onCloseTabSummaryDialog = {},
-            onServiceChargeAmountChange = {}, onToggleServiceCharge = {},
             onAddProduct = { _, _, _-> }, onOpenProductDetail = {}, onCloseProductDetail = {}
         )
     }
@@ -42,12 +41,11 @@ private fun OrderScreenEmptyPreview() {
     GarcomDigitalTheme {
         OrderScreenContent(
             uiState = OrderUiState(order = previewOrder, editedItems = emptyList()),
-            onBack = {}, onSave = {},
+            onBack = {},
             onIncrement = {}, onDecrement = {}, onRemove = {},
             onOpenProductSearch = {}, onCloseProductSearch = {},
             onProductQueryChange = {}, onCategorySelect = {},
             onCloseTab = {}, onOpenTabSummary = {}, onCloseTabSummaryDialog = {},
-            onServiceChargeAmountChange = {}, onToggleServiceCharge = {},
             onAddProduct = { _, _, _-> }, onOpenProductDetail = {}, onCloseProductDetail = {}
         )
     }
@@ -59,12 +57,11 @@ private fun OrderScreenLoadingPreview() {
     GarcomDigitalTheme {
         OrderScreenContent(
             uiState = OrderUiState(isLoading = true),
-            onBack = {}, onSave = {},
+            onBack = {},
             onIncrement = {}, onDecrement = {}, onRemove = {},
             onOpenProductSearch = {}, onCloseProductSearch = {},
             onProductQueryChange = {}, onCategorySelect = {},
             onCloseTab = {}, onOpenTabSummary = {}, onCloseTabSummaryDialog = {},
-            onServiceChargeAmountChange = {}, onToggleServiceCharge = {},
             onAddProduct = { _, _, _-> }, onOpenProductDetail = {}, onCloseProductDetail = {}
         )
     }
