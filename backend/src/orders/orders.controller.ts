@@ -20,10 +20,12 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { OrdersService } from './order.service';
+import { OrderItemsService } from './order-items.service';
 import { OrderStatusService } from './order-status.service';
 import { OrderEntity } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { RemoveOrderItemsDto } from './dto/remove-order-items.dto';
 import {
   OrderFiltersDto,
   OrderPaginatedResponseDto,
@@ -34,6 +36,8 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ReprintOrderDto } from './dto/reprint-order.dto';
 import { OrderCleanupService } from './order-cleanup.service';
 import { AutoClosedOrderDto } from './dto/auto-closed-order.dto';
+import { AddOrderItemsDto } from './dto/add-order-itens.dto';
+import { UpdateServiceChargeDto } from './dto/update-service-charge.dto';
 
 @ApiTags('Orders')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -41,6 +45,7 @@ import { AutoClosedOrderDto } from './dto/auto-closed-order.dto';
 export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,
+    private readonly orderItemsService: OrderItemsService,
     private readonly orderStatusService: OrderStatusService,
     private readonly orderCleanupService: OrderCleanupService,
   ) {}
@@ -136,28 +141,39 @@ export class OrdersController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Atualizar pedido' })
-  @ApiParam({ name: 'id', type: Number, description: 'ID do pedido' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Pedido atualizado com sucesso',
-    type: OrderEntity,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Pedido não encontrado',
-  })
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateOrderDto: UpdateOrderDto,
+    @Body() dto: UpdateOrderDto,
     @CurrentUser() user: JwtPayload,
   ): Promise<OrderEntity> {
-    return this.ordersService.update(
-      id,
-      updateOrderDto,
-      user.role,
-      user.userId,
-    );
+    return this.ordersService.update(id, dto, user.role, user.userId);
+  }
+
+  @Post(':id/items')
+  async addItems(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: AddOrderItemsDto,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<OrderEntity> {
+    return this.orderItemsService.addItems(id, dto, user.userId);
+  }
+
+  @Patch(':id/items/decrement')
+  async removeItems(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: RemoveOrderItemsDto,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<OrderEntity> {
+    return this.orderItemsService.removeItems(id, dto, user.role, user.userId);
+  }
+
+  @Patch(':id/service-charge')
+  async updateServiceCharge(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateServiceChargeDto,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<OrderEntity> {
+    return this.orderItemsService.updateServiceCharge(id, dto, user.userId);
   }
 
   @Patch(':id/cancel')

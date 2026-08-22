@@ -76,9 +76,6 @@ export interface UpdateOrderDto {
   table?: string;
   address?: string;
   status?: OrderStatus;
-  items?: OrderItem[];
-  serviceCharge?: number;
-  total?: number;
 }
 
 export interface OrderFilters {
@@ -133,4 +130,34 @@ export interface SearchProductDto {
   code?: string;
   name?: string;
   limit?: number;
+}
+
+export interface AddOrderItemDto {
+  id?: number;
+  productId: number;
+  observation?: string;
+  code?: string;
+  name?: string;
+  quantity?: number;
+  unitPrice?: number;
+  total?: number;
+  serviceCharge?: number;
+}
+
+export interface AddOrderItemsDto {
+  items: AddOrderItemDto[];
+}
+
+export interface RemoveOrderItemDto {
+  id: number;
+  quantity: number;
+}
+
+export interface RemoveOrderItemsDto {
+  items: RemoveOrderItemDto[];
+}
+
+export interface UpdateServiceChargeDto {
+  enabled: boolean;
+  amount: number;
 }

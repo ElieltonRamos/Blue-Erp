@@ -87,6 +87,62 @@
         }
       </div>
 
+      @if (pendingItem) {
+        <div class="mb-6 bg-surface-alt border border-accent rounded-lg p-4">
+          <div class="flex justify-between items-center mb-3">
+            <span class="text-text-primary text-sm font-medium">
+              {{ pendingItem.code }} - {{ pendingItem.name }}
+            </span>
+            <span class="text-text-secondary text-xs">
+              R$ {{ pendingItem.unitPrice.toFixed(2) }} / un
+            </span>
+          </div>
+
+          <div class="grid grid-cols-12 gap-3 items-end">
+            <div class="col-span-2">
+              <label class="text-text-secondary text-xs mb-1 block">Qtd</label>
+              <input
+                type="number"
+                [(ngModel)]="pendingItem.quantity"
+                name="pendingQuantity"
+                min="1"
+                class="w-full bg-overlay border border-border rounded px-2 py-2 text-text-primary text-sm text-center focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </div>
+
+            <div class="col-span-7">
+              <label class="text-text-secondary text-xs mb-1 block">Observação (obrigatória)</label>
+              <input
+                type="text"
+                [(ngModel)]="pendingItem.observation"
+                name="pendingObservation"
+                placeholder="Ex: 2 copos, sem cebola..."
+                class="w-full bg-overlay border border-border rounded px-3 py-2 text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </div>
+
+            <div class="col-span-3 flex gap-2">
+              <button
+                type="button"
+                (click)="confirmPendingItem()"
+                [disabled]="isSavingItem"
+                class="flex-1 bg-accent hover:bg-accent-hover text-btn-text py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                {{ isSavingItem ? '...' : 'Confirmar' }}
+              </button>
+              <button
+                type="button"
+                (click)="cancelPendingItem()"
+                [disabled]="isSavingItem"
+                class="flex-1 bg-surface-alt hover:bg-overlay border border-border text-text-primary py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
       <div class="space-y-3">
         @if (items.length === 0) {
           <div class="text-center py-8 text-text-muted">Nenhum produto adicionado ainda</div>
@@ -102,7 +158,8 @@
               </div>
               <button
                 (click)="removeItem(item)"
-                class="p-1 hover:bg-danger rounded transition-colors ml-2 shrink-0 group"
+                [disabled]="isSavingItem"
+                class="p-1 hover:bg-danger rounded transition-colors ml-2 shrink-0 group disabled:opacity-50"
               >
                 <svg
                   class="w-4 h-4 text-danger group-hover:text-white"
@@ -121,22 +178,20 @@
             </div>
 
             <div class="mb-2">
-              <input
-                type="text"
-                [value]="item.observation ?? ''"
-                (blur)="item.observation = $any($event.target).value"
-                placeholder="Observação (obrigatório)"
-                class="w-full bg-overlay border rounded px-2 py-1.5 text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-accent"
-                [class.border-danger]="!item.observation || item.observation.trim().length < 2"
-                [class.border-border]="item.observation && item.observation.trim().length >= 2"
-              />
+              <div
+                class="w-full bg-overlay border border-border rounded px-2 py-1.5 text-text-secondary text-xs truncate"
+                [title]="item.observation"
+              >
+                {{ item.observation || '—' }}
+              </div>
             </div>
 
             <div class="flex justify-between items-center">
               <div class="flex items-center gap-2">
                 <button
-                  (click)="updateQuantity(item, -1)"
-                  class="p-1 bg-overlay hover:bg-border rounded transition-colors"
+                  (click)="decreaseQuantity(item)"
+                  [disabled]="isSavingItem"
+                  class="p-1 bg-overlay hover:bg-border rounded transition-colors disabled:opacity-50"
                 >
                   <svg
                     class="w-4 h-4 text-text-primary"
@@ -156,8 +211,9 @@
                   item.quantity
                 }}</span>
                 <button
-                  (click)="updateQuantity(item, 1)"
-                  class="p-1 bg-overlay hover:bg-border rounded transition-colors"
+                  (click)="openPendingIncrease(item)"
+                  [disabled]="isSavingItem"
+                  class="p-1 bg-overlay hover:bg-border rounded transition-colors disabled:opacity-50"
                 >
                   <svg
                     class="w-4 h-4 text-text-primary"
@@ -195,7 +251,7 @@
         (click)="onClose()"
         class="w-full px-4 py-2 bg-surface-alt hover:bg-overlay text-text-primary border border-border-subtle rounded-md text-sm font-medium transition-colors"
       >
-        Salvar e Fechar
+        Fechar
       </button>
     </div>
   </div>

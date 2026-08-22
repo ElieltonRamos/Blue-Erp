@@ -5,6 +5,15 @@ import { Table, OrderItem } from '../../types/table';
 import { OrderService } from '../../../orders/services/order.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 
+interface PendingItem {
+  productId: number;
+  code: string;
+  name: string;
+  unitPrice: number;
+  quantity: number;
+  observation: string;
+}
+
 @Component({
   selector: 'app-table-product-modal',
   templateUrl: './table-product-modal.html',
@@ -25,8 +34,10 @@ export class TableProductModal {
   searchCode = '';
   searchName = '';
   isSearching = false;
-  isSaving = false;
   searchResults: any[] = [];
+
+  pendingItem: PendingItem | null = null;
+  isSavingItem = false;
 
   get items(): OrderItem[] {
     return this.table.order?.items || [];
@@ -36,9 +47,7 @@ export class TableProductModal {
     return this.items.reduce((sum, item) => sum + item.total, 0);
   }
 
-  get hasInvalidObservations(): boolean {
-    return this.items.some((item) => !item.observation || item.observation.trim().length < 2);
-  }
+  // ---------- Product search ----------
 
   searchByCode(): void {
     if (!this.searchCode.trim()) return;
@@ -46,7 +55,7 @@ export class TableProductModal {
     this.isSearching = true;
     this.orderService.getByCode(this.searchCode).subscribe({
       next: (product) => {
-        this.addProduct(product.id, product.code, product.name, Number(product.price));
+        this.openPendingItem(product.id, product.code, product.name, Number(product.price));
         this.searchCode = '';
         this.isSearching = false;
         this.cdr.markForCheck();
@@ -87,131 +96,147 @@ export class TableProductModal {
     if (isNaN(index) || index < 0) return;
 
     const product = this.searchResults[index];
-    this.addProduct(product.id, product.code, product.name, Number(product.price));
+    this.openPendingItem(product.id, product.code, product.name, Number(product.price));
     this.searchResults = [];
     this.searchName = '';
     select.selectedIndex = 0;
   }
 
-  private addProduct(productId: number, code: string, name: string, unitPrice: number): void {
-    if (!this.table.order) return;
+  // ---------- Pending item (new product or quantity increase) ----------
 
-    const existingItem = this.table.order.items.find((i) => i.productId === productId);
-
-    if (existingItem) {
-      existingItem.quantity += 1;
-      existingItem.total = existingItem.quantity * existingItem.unitPrice;
-      this.notification.success('Quantidade atualizada');
-    } else {
-      this.table.order.items.push({
-        id: 0,
-        productId,
-        code,
-        name,
-        quantity: 1,
-        unitPrice,
-        total: unitPrice,
-        observation: '',
-      });
-      this.notification.success('Produto adicionado');
-    }
-
-    this.table.order.total = this.orderTotal;
-    this.cdr.markForCheck();
+  private openPendingItem(productId: number, code: string, name: string, unitPrice: number): void {
+    this.pendingItem = { productId, code, name, unitPrice, quantity: 1, observation: '' };
   }
 
-  updateQuantity(item: OrderItem, change: number): void {
-    const newQuantity = item.quantity + change;
-    if (newQuantity <= 0) {
-      this.removeItem(item);
+  openPendingIncrease(item: OrderItem): void {
+    this.pendingItem = {
+      productId: item.productId,
+      code: item.code,
+      name: item.name,
+      unitPrice: item.unitPrice,
+      quantity: 1,
+      observation: '',
+    };
+  }
+
+  cancelPendingItem(): void {
+    this.pendingItem = null;
+  }
+
+  confirmPendingItem(): void {
+    if (!this.table.order || !this.pendingItem || this.isSavingItem) return;
+
+    if (!this.pendingItem.observation || this.pendingItem.observation.trim().length < 2) {
+      this.notification.error('Observação obrigatória (mínimo 2 caracteres)');
       return;
     }
 
-    item.quantity = newQuantity;
-    item.total = item.quantity * item.unitPrice;
-    if (this.table.order) {
-      this.table.order.total = this.orderTotal;
-    }
-    this.cdr.markForCheck();
+    this.isSavingItem = true;
+
+    const dto = {
+      items: [
+        {
+          productId: this.pendingItem.productId,
+          code: this.pendingItem.code,
+          name: this.pendingItem.name,
+          quantity: this.pendingItem.quantity,
+          unitPrice: this.pendingItem.unitPrice,
+          observation: this.pendingItem.observation,
+        },
+      ],
+    };
+
+    this.orderService.addItems(this.table.order.id, dto).subscribe({
+      next: (updatedOrder) => this.onItemsMutated(updatedOrder, 'Produto adicionado'),
+      error: (error) => this.onItemMutationError(error),
+    });
+  }
+
+  // ---------- Quantity decrease / remove ----------
+
+  decreaseQuantity(item: OrderItem): void {
+    if (!this.table.order || this.isSavingItem) return;
+    this.isSavingItem = true;
+
+    const dto = { items: [{ id: item.id, quantity: 1 }] };
+
+    this.orderService.removeItems(this.table.order.id, dto).subscribe({
+      next: (updatedOrder) => this.onItemsMutated(updatedOrder, 'Item atualizado'),
+      error: (error) => this.onItemMutationError(error),
+    });
   }
 
   removeItem(item: OrderItem): void {
-    if (!this.table.order) return;
-    this.table.order.items = this.table.order.items.filter((i) => i !== item);
-    this.table.order.total = this.orderTotal;
+    if (!this.table.order || this.isSavingItem) return;
+    this.isSavingItem = true;
+
+    const dto = { items: [{ id: item.id, quantity: item.quantity }] };
+
+    this.orderService.removeItems(this.table.order.id, dto).subscribe({
+      next: (updatedOrder) => this.onItemsMutated(updatedOrder, 'Item removido'),
+      error: (error) => this.onItemMutationError(error),
+    });
+  }
+
+  private onItemsMutated(updatedOrder: any, successMsg: string): void {
+    if (this.table.order) {
+      this.table.order.items = updatedOrder.items.map((i: any) => ({
+        id: Number(i.id),
+        productId: i.productId,
+        code: i.code,
+        name: i.name,
+        quantity: Number(i.quantity),
+        unitPrice: Number(i.unitPrice),
+        total: Number(i.total),
+        observation: i.observation ?? '',
+      }));
+      this.table.order.total = Number(updatedOrder.total);
+    }
+
+    this.pendingItem = null;
+    this.isSavingItem = false;
+    this.notification.success(successMsg);
+
+    this.pushServiceCharge();
+
+    this.updated.emit();
     this.cdr.markForCheck();
   }
 
-  onClose(): void {
-    if (this.hasInvalidObservations) {
-      this.notification.error('Preencha a observação de todos os itens (mínimo 2 caracteres)');
+  private onItemMutationError(error: any): void {
+    this.isSavingItem = false;
+    this.notification.error(`Erro: ${error.error?.message || error.message}`);
+    this.cdr.markForCheck();
+  }
+
+  // ---------- Service charge (automático, sem toggle neste modal) ----------
+
+  private pushServiceCharge(): void {
+    if (!this.table.order) return;
+
+    const currentCharge = this.table.order.serviceCharge ?? 0;
+    if (currentCharge === 0) {
       return;
     }
 
-    if (!this.table.order) {
-      this.close.emit();
-      return;
-    }
+    const dto = { enabled: true, amount: parseFloat((this.orderTotal * 0.1).toFixed(2)) };
 
-    this.isSaving = true;
-
-    const orderId = this.table.order.id;
-
-    const isFirstSave = !this.table.order.items.some((item) => item.id > 0);
-    const serviceCharge = isFirstSave
-      ? this.orderTotal * 0.1
-      : this.table.order.serviceCharge === 0
-        ? 0
-        : this.orderTotal * 0.1;
-
-    const updateDto = {
-      items: this.table.order.items.map((item) => ({
-        ...(item.id && item.id > 0 ? { id: item.id } : {}),
-        productId: item.productId,
-        code: item.code,
-        name: item.name,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        total: item.total,
-        observation: item.observation,
-      })),
-      total: this.orderTotal,
-      serviceCharge,
-    };
-
-    this.orderService.updateOrder(orderId, updateDto).subscribe({
+    this.orderService.updateServiceCharge(this.table.order.id, dto).subscribe({
       next: (updatedOrder) => {
         if (this.table.order) {
-          this.table.order.items = updatedOrder.items.map((i) => ({
-            id: Number(i.id),
-            productId: i.productId,
-            code: i.code,
-            name: i.name,
-            quantity: Number(i.quantity),
-            unitPrice: Number(i.unitPrice),
-            total: Number(i.total),
-            observation: i.observation ?? '',
-          }));
-          this.table.order.total = Number(updatedOrder.total);
           this.table.order.serviceCharge = Number(updatedOrder.serviceCharge ?? 0);
+          this.table.order.total = Number(updatedOrder.total);
         }
-
-        this.isSaving = false;
-        this.searchCode = '';
-        this.searchName = '';
-        this.searchResults = [];
-
-        this.updated.emit();
-        this.close.emit();
         this.cdr.markForCheck();
-
-        this.notification.success('Atualizado!');
       },
       error: (error) => {
-        this.notification.error(`Erro ao salvar: ${error.error?.message || error.message}`);
-        this.isSaving = false;
+        this.notification.error(`Erro ao atualizar taxa: ${error.error?.message || error.message}`);
         this.cdr.markForCheck();
       },
     });
+  }
+
+  onClose(): void {
+    this.close.emit();
   }
 }

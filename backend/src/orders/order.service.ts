@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import {
   Injectable,
   NotFoundException,
@@ -17,26 +16,11 @@ import { OrderProductionService } from './order-production.service';
 import { OrderStockService } from './order-stock.service';
 import { OrderTableService } from './order-table.service';
 import { OrderPrintService } from './order-print.service';
-import { mapOrderToEntity } from './order.mapper';
-import { OrderItemsService } from './order-items.service';
-
-const ORDER_INCLUDE_FULL = {
-  items: {
-    include: {
-      product: {
-        select: { id: true, productionLocation: true, productType: true },
-      },
-    },
-  },
-  operator: { select: { id: true, username: true, role: true } },
-  closedByOperator: { select: { id: true, username: true, role: true } },
-};
-
-const ORDER_INCLUDE_BASIC = {
-  items: true,
-  operator: { select: { id: true, username: true, role: true } },
-  closedByOperator: { select: { id: true, username: true, role: true } },
-};
+import {
+  mapOrderToEntity,
+  ORDER_INCLUDE_BASIC,
+  ORDER_INCLUDE_FULL,
+} from './order.mapper';
 
 @Injectable()
 export class OrdersService {
@@ -48,7 +32,6 @@ export class OrdersService {
     private readonly stockService: OrderStockService,
     private readonly tableService: OrderTableService,
     private readonly printService: OrderPrintService,
-    private readonly itemsService: OrderItemsService,
   ) {}
 
   async create(
@@ -89,70 +72,112 @@ export class OrdersService {
       );
     }
 
+    const tableNumber = orderData.table
+      ? this.tableService.parseTableNumber(orderData.table)
+      : null;
+
     try {
-      const order = await this.prisma.client.order.create({
-        data: {
-          ...orderData,
-          createdAt: resolveLogicalDateTime(),
-          ...(operatorId && { operatorId }),
-          status: OrderStatus.OPEN,
-          items: {
-            create: items.map((item) => ({
-              productId: item.productId,
-              code: item.code,
-              name: item.name,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              total: item.total,
-              serviceCharge: item.serviceCharge ?? 0,
-              operatorId,
-              observation: item.observation ?? null,
-            })),
-          },
-        },
-        include: ORDER_INCLUDE_FULL,
-      });
+      // Tudo dentro de UMA transação: se a mesa estiver ocupada, nada é
+      // persistido (nem pedido, nem baixa de estoque, nem produção) e a
+      // impressão nunca é despachada. Antes, a checagem de mesa vinha
+      // depois de tudo isso já ter sido commitado em transações separadas.
+      const order = await this.prisma.client.$transaction(async (tx) => {
+        let tableRecord: Awaited<
+          ReturnType<typeof this.tableService.findTableRecord>
+        > = null;
 
-      this.logger.log(
-        `[Pedido ${order.id}] operador=${operatorId} | persistido com ${order.items.length} item(ns): ` +
-          order.items
-            .map((i) => `${i.id}:${i.name}(x${i.quantity})`)
-            .join(', '),
-      );
+        if (orderData.table && tableNumber !== null) {
+          // NOTE: assume que findTableRecord/occupy aceitam o client de
+          // transação (tx) além do PrismaClient — mesmo padrão já usado
+          // por stockService/productionService. Confirmar assinatura.
+          tableRecord = await this.tableService.findTableRecord(
+            tx,
+            orderData.table,
+            orderData.locationId,
+          );
 
-      const resaleItems = order.items.filter(
-        (item) => item.product.productType === ProductType.RESALE,
-      );
-
-      if (resaleItems.length > 0) {
-        await this.prisma.client.$transaction(async (tx) => {
-          for (const item of resaleItems) {
-            await this.stockService.decrement(
-              tx,
-              item.productId,
-              item.quantity,
+          if (tableRecord?.status === 'OCCUPIED') {
+            this.logger.warn(
+              `[Pedido novo] operador=${operatorId} | mesa ${tableNumber} já ocupada`,
+            );
+            throw new BadRequestException(
+              `Mesa ${tableNumber} já está ocupada`,
             );
           }
-        });
-      }
+        }
 
+        const createdOrder = await tx.order.create({
+          data: {
+            ...orderData,
+            createdAt: resolveLogicalDateTime(),
+            ...(operatorId && { operatorId }),
+            status: OrderStatus.OPEN,
+            items: {
+              create: items.map((item) => ({
+                productId: item.productId,
+                code: item.code,
+                name: item.name,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                total: item.total,
+                serviceCharge: item.serviceCharge ?? 0,
+                operatorId,
+                observation: item.observation ?? null,
+              })),
+            },
+          },
+          include: ORDER_INCLUDE_FULL,
+        });
+
+        this.logger.log(
+          `[Pedido ${createdOrder.id}] operador=${operatorId} | persistido com ${createdOrder.items.length} item(ns): ` +
+            createdOrder.items
+              .map((i) => `${i.id}:${i.name}(x${Number(i.quantity)})`)
+              .join(', '),
+        );
+
+        const resaleItems = createdOrder.items.filter(
+          (item) => item.product.productType === ProductType.RESALE,
+        );
+
+        for (const item of resaleItems) {
+          await this.stockService.decrement(tx, item.productId, item.quantity);
+        }
+
+        const producedItems = createdOrder.items.filter((item) =>
+          this.productionService.isProduced(item.product.productType),
+        );
+
+        for (const item of producedItems) {
+          await this.productionService.create(tx, {
+            orderItemId: item.id,
+            productionLocation: item.product.productionLocation,
+            quantityRequested: item.quantity,
+            observation: item.observation,
+            pendingAt: resolveLogicalDateTime(),
+          });
+        }
+
+        if (tableRecord) {
+          await this.tableService.occupy(
+            tx,
+            tableRecord.id,
+            createdOrder.id,
+            orderData.customerName,
+          );
+        }
+
+        return createdOrder;
+      });
+
+      // Impressão só é despachada depois que a transação inteira foi
+      // commitada com sucesso.
       const producedItems = order.items.filter((item) =>
         this.productionService.isProduced(item.product.productType),
       );
-
-      if (producedItems.length > 0) {
-        await this.prisma.client.$transaction(async (tx) => {
-          for (const item of producedItems) {
-            await this.productionService.create(tx, {
-              orderItemId: item.id,
-              productionLocation: item.product.productionLocation,
-              quantityRequested: item.quantity,
-              observation: item.observation,
-              pendingAt: resolveLogicalDateTime(),
-            });
-          }
-        });
-      }
+      const resaleItems = order.items.filter(
+        (item) => item.product.productType === ProductType.RESALE,
+      );
 
       const printBuilder = this.printService.createBuilder({
         orderId: order.id,
@@ -188,36 +213,6 @@ export class OrdersService {
       );
 
       this.printService.dispatchAsync(order.id, printBuilder.map);
-
-      if (orderData.table) {
-        const tableNumber = this.tableService.parseTableNumber(orderData.table);
-
-        if (tableNumber !== null) {
-          const tableRecord = await this.tableService.findTableRecord(
-            this.prisma.client,
-            orderData.table,
-            orderData.locationId,
-          );
-
-          if (tableRecord) {
-            if (tableRecord.status === 'OCCUPIED') {
-              this.logger.warn(
-                `[Pedido ${order.id}] operador=${operatorId} | mesa ${tableNumber} já ocupada`,
-              );
-              throw new BadRequestException(
-                `Mesa ${tableNumber} já está ocupada`,
-              );
-            }
-
-            await this.tableService.occupy(
-              this.prisma.client,
-              tableRecord.id,
-              order.id,
-              orderData.customerName,
-            );
-          }
-        }
-      }
 
       this.logger.log(
         `[Pedido ${order.id}] operador=${operatorId} | criado em ${Date.now() - start}ms`,
@@ -310,6 +305,10 @@ export class OrdersService {
     return mapOrderToEntity(order);
   }
 
+  /**
+   * Só campos do pedido (status, customerName, table, serviceCharge,
+   * fechamento). Itens são tratados em OrderItemsService (addItems/removeItems).
+   */
   async update(
     id: number,
     updateOrderDto: UpdateOrderDto,
@@ -320,35 +319,16 @@ export class OrdersService {
     const tag = `Pedido ${id}`;
 
     this.logger.log(
-      `[${tag}] operador=${operatorId} role=${userRole} | atualizando | itens recebidos: ` +
-        JSON.stringify(
-          updateOrderDto.items?.map((i) => ({
-            id: i.id ?? null,
-            productId: i.productId,
-            quantity: i.quantity,
-          })) ?? [],
-        ),
+      `[${tag}] operador=${operatorId} role=${userRole} | atualizando campos do pedido`,
     );
 
     const existingOrder = await this.prisma.client.order.findUnique({
       where: { id },
       include: {
-        items: {
-          include: {
-            productions: true,
-            product: {
-              select: { id: true, productType: true, productionLocation: true },
-            },
-          },
-        },
+        items: true,
         operator: { select: { id: true, username: true, role: true } },
         closedByOperator: { select: { id: true, username: true, role: true } },
       },
-    });
-
-    const currentOperator = await this.prisma.client.user.findUnique({
-      where: { id: operatorId },
-      select: { username: true },
     });
 
     if (!existingOrder) {
@@ -385,7 +365,7 @@ export class OrdersService {
       return mapOrderToEntity(updatedOrder);
     }
 
-    const { items, serviceCharge, ...orderData } = updateOrderDto;
+    const { serviceCharge, ...orderData } = updateOrderDto;
     const isClosing = orderData.status === OrderStatus.CLOSED;
 
     const closingData = isClosing
@@ -400,128 +380,24 @@ export class OrdersService {
     const serviceChargeData =
       serviceCharge !== undefined ? { serviceCharge } : {};
 
-    const printBuilder = this.printService.createBuilder({
-      orderId: id,
-      table: existingOrder.table,
-      customerName: existingOrder.customerName,
-      operatorName: currentOperator?.username,
-    });
-
     await this.prisma.client.$transaction(async (tx) => {
       const table = await this.tableService.findByOrderId(tx, id);
 
-      if (!items) {
-        await tx.order.update({
-          where: { id },
-          data: {
-            ...orderData,
-            total: Number(existingOrder.total),
-            ...closingData,
-            ...serviceChargeData,
-          },
-        });
-      } else {
-        const incomingIds = items.filter((i) => i.id).map((i) => i.id!);
-
-        const removed = existingOrder.items.filter(
-          (i) => !incomingIds.includes(i.id),
-        );
-
-        if (removed.length > 0) {
-          this.logger.warn(
-            `[${tag}] operador=${operatorId} role=${userRole} | removendo ${removed.length} item(ns): ` +
-              removed
-                .map((i) => `${i.id}:${i.name}(x${i.quantity})`)
-                .join(', '),
-          );
-        }
-
-        const decreased = items
-          .filter((i) => i.id)
-          .map((incoming) => {
-            const existing = existingOrder.items.find(
-              (e) => e.id === incoming.id,
-            );
-            if (!existing) return null;
-            const diff = Number(incoming.quantity) - Number(existing.quantity);
-            return diff < 0 ? { existing, incoming, diff } : null;
-          })
-          .filter((x): x is NonNullable<typeof x> => x !== null);
-
-        if (decreased.length > 0) {
-          this.logger.warn(
-            `[${tag}] operador=${operatorId} role=${userRole} | reduzindo quantidade de ${decreased.length} item(ns): ` +
-              decreased
-                .map(
-                  (d) =>
-                    `${d.existing.id}:${d.existing.name}(${d.existing.quantity}→${d.incoming.quantity})`,
-                )
-                .join(', '),
-          );
-        }
-
-        await this.itemsService.handleRemovedItems(
-          tx,
-          existingOrder.items,
-          incomingIds,
-          userRole,
-        );
-
-        const updatedTotal = await this.itemsService.handleUpdatedItems(
-          tx,
-          items,
-          existingOrder.items,
-          printBuilder,
-        );
-
-        const newItems = items.filter((i) => !i.id);
-
-        if (newItems.length > 0) {
-          this.logger.log(
-            `[${tag}] operador=${operatorId} | adicionando ${newItems.length} item(ns) novo(s): ` +
-              newItems
-                .map((i) => `produto ${i.productId} x${i.quantity}`)
-                .join(', '),
-          );
-        }
-
-        const newItemsTotal = await this.itemsService.handleNewItems(
-          tx,
-          newItems,
-          id,
-          operatorId,
-          printBuilder,
-        );
-
-        const totalPedido = updatedTotal + newItemsTotal;
-
-        await tx.order.update({
-          where: { id },
-          data: {
-            ...orderData,
-            total: totalPedido,
-            ...closingData,
-            ...serviceChargeData,
-          },
-        });
-      }
+      // Removido: `total: Number(existingOrder.total)` — era um no-op,
+      // já que este método não altera itens (ver OrderItemsService).
+      await tx.order.update({
+        where: { id },
+        data: {
+          ...orderData,
+          ...closingData,
+          ...serviceChargeData,
+        },
+      });
 
       if (isClosing && table) {
         await this.tableService.release(tx, table.id);
       }
     });
-
-    this.logger.log(
-      `[${tag}] operador=${operatorId} | transação concluída, despachando impressão para ${printBuilder.map.size} local(is): ` +
-        [...printBuilder.map.entries()]
-          .map(
-            ([loc, job]) =>
-              `${loc}[${job.items.map((i: any) => `${i.name} x${i.quantity}`).join(', ')}]`,
-          )
-          .join(' | '),
-    );
-
-    this.printService.dispatchAsync(id, printBuilder.map);
 
     const updated = await this.prisma.client.order.findUnique({
       where: { id },
@@ -529,10 +405,7 @@ export class OrdersService {
     });
 
     this.logger.log(
-      `[${tag}] operador=${operatorId} | atualizado em ${Date.now() - start}ms | itens finais: ` +
-        updated?.items
-          .map((i) => `${i.id}:${i.name}(x${i.quantity})`)
-          .join(', '),
+      `[${tag}] operador=${operatorId} | atualizado em ${Date.now() - start}ms`,
     );
 
     return mapOrderToEntity(updated!);

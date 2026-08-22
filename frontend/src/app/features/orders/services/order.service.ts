@@ -9,6 +9,9 @@ import {
   OrderFilters,
   OrderPaginatedResponse,
   ReprintOrderDto,
+  AddOrderItemsDto,
+  RemoveOrderItemsDto,
+  UpdateServiceChargeDto,
 } from '../types/order';
 import { FilterProductParams, Product } from '../../products/types/product';
 import { PaginatedResponse } from '../../../core/guards/types/paginator';
@@ -53,6 +56,18 @@ export class OrderService {
 
   updateOrder(id: number, dto: UpdateOrderDto): Observable<Order> {
     return this.client.patch<Order>(`${this.apiUrl}/${id}`, dto);
+  }
+
+  addItems(orderId: number, dto: AddOrderItemsDto): Observable<Order> {
+    return this.client.post<Order>(`${this.apiUrl}/${orderId}/items`, dto);
+  }
+
+  removeItems(orderId: number, dto: RemoveOrderItemsDto): Observable<Order> {
+    return this.client.patch<Order>(`${this.apiUrl}/${orderId}/items/decrement`, dto);
+  }
+
+  updateServiceCharge(orderId: number, dto: UpdateServiceChargeDto): Observable<Order> {
+    return this.client.patch<Order>(`${this.apiUrl}/${orderId}/service-charge`, dto);
   }
 
   reopenOrder(id: number): Observable<Order> {
