@@ -3,11 +3,11 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import * as jwt from 'jsonwebtoken';
+import axios from 'axios';
 import {
   LicenseStatus,
   LicenseTokenPayload,
 } from './entities/license-system.entity';
-import axios from 'axios';
 
 @Injectable()
 export class LicenseSystemService {
@@ -43,7 +43,13 @@ export class LicenseSystemService {
       }
 
       return { success: false, serverRejected: true };
-    } catch {
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        // Servidor respondeu (400, 401, 404, 500...) = rejeição explícita
+        return { success: false, serverRejected: true };
+      }
+      // Sem resposta (timeout, DNS, rede fora) = falha de rede, não rejeição
+      console.log(error, 'erro');
       return { success: false, serverRejected: false };
     }
   }
@@ -164,16 +170,16 @@ export class LicenseSystemService {
       return this.checkToken(result.token);
     }
 
-    // Servidor rejeitou - licença inválida
+    // Servidor rejeitou explicitamente - limpa token e invalida
     if (result.serverRejected) {
       await this.prisma.client.company.update({
         where: { id: company.id },
-        data: { licenseToken: undefined },
+        data: { licenseToken: '' },
       });
       return { isValid: false, plan: 'none', mode: 'expired' };
     }
 
-    // Sem conexão - tenta usar token em cache
+    // Falha de rede - mantém token atual e cai no cache (respeita maxOfflineDays)
     if (!licenseToken) {
       return { isValid: false, plan: 'none', mode: 'expired' };
     }

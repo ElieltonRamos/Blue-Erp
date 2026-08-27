@@ -330,7 +330,14 @@ export class AppService {
       const dbHost = '127.0.0.1'; // Forçar 127.0.0.1 para Docker
       const dbPort = process.env.DATABASE_PORT || '3306';
 
-      const command = `mysqldump -h ${dbHost} -P ${dbPort} -u ${dbUser} -p${dbPassword} ${dbName} > "${backupFile}"`;
+      const mysqldumpPath = process.env.MYSQLDUMP_PATH;
+
+      if (!mysqldumpPath) {
+        console.log('❌ Variável de ambiente MYSQLDUMP_PATH não definida');
+        return;
+      }
+
+      const command = `"${mysqldumpPath}" -h ${dbHost} -P ${dbPort} -u ${dbUser} -p${dbPassword} ${dbName} > "${backupFile}"`;
 
       await execAsync(command);
 

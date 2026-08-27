@@ -37,6 +37,7 @@ async function bootstrap() {
     'TELEGRAM_CHAT_ID',
     'PRINTER_BAR',
     'PRINTER_COZINHA_DOM_JUAN',
+    'MYSQLDUMP_PATH',
   ];
 
   console.log('=== Environment Variables ===');
@@ -57,7 +58,7 @@ async function bootstrap() {
   console.log(`VERSAO SERVIDOR = ${packageVersion}`);
   console.log('=============================');
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.ENVIRONMENT !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('Blue-ERP API')
       .setDescription('API do sistema Blue-ERP para gestão')
