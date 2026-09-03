@@ -13,20 +13,20 @@ export const WEBSERVICES: Record<
       cancellation: '/nfce/services/NFeRecepcaoEvento4',
     },
   },
-  BA: {
-    staging: {
-      authorization: '/webservices/NFeAutorizacao4/NFeAutorizacao4.asmx',
-      status: '/webservices/NFeStatusServico4/NFeStatusServico4.asmx',
-      query: '/webservices/NFeConsultaProtocolo4/NFeConsultaProtocolo4.asmx',
-      cancellation: '/webservices/NFeRecepcaoEvento4/NFeRecepcaoEvento4.asmx',
-    },
-  },
+  // BA não possui webservice próprio para NFC-e (mod. 65) — autorização
+  // é feita via SEFAZ Virtual SVRS. Ver bloco SVRS abaixo e SVRS_STATES.
   SVRS: {
     staging: {
       authorization: '/ws/NfeAutorizacao/NFeAutorizacao4.asmx',
       status: '/ws/NfeStatusServico/NFeStatusServico4.asmx',
-      query: '/ws/NfeConsulta/NFeConsulta4.asmx',
-      cancellation: '/ws/NfeRecepcaoEvento/NFeRecepcaoEvento4.asmx',
+      query: '/ws/NfeConsulta/NfeConsulta4.asmx',
+      cancellation: '/ws/recepcaoevento/recepcaoevento4.asmx',
+    },
+    production: {
+      authorization: '/ws/NfeAutorizacao/NFeAutorizacao4.asmx',
+      status: '/ws/NfeStatusServico/NFeStatusServico4.asmx',
+      query: '/ws/NfeConsulta/NfeConsulta4.asmx',
+      cancellation: '/ws/recepcaoevento/recepcaoevento4.asmx',
     },
   },
 };
@@ -36,10 +36,8 @@ export const HOSTS: Record<string, Record<string, string>> = {
     staging: 'hnfce.fazenda.mg.gov.br',
   },
   SVRS: {
-    staging: 'nfe-homologacao.svrs.rs.gov.br',
-  },
-  BA: {
-    staging: 'hnfe.sefaz.ba.gov.br',
+    staging: 'nfce-homologacao.svrs.rs.gov.br',
+    production: 'nfce.svrs.rs.gov.br',
   },
 };
 
@@ -48,10 +46,21 @@ export const HOSTS: Record<string, Record<string, string>> = {
 
 export const baseUrl = 'http://nfe.sefaz.ba.gov.br/servicos/nfce/qrcode.aspx';
 
+export const CHAVE_CONSULTA_URLS: Record<
+  string,
+  Record<EnvironmentType, string>
+> = {
+  BA: {
+    production: 'http://www.sefaz.ba.gov.br/nfce/consulta',
+    staging: 'http://hinternet.sefaz.ba.gov.br/nfce/consulta',
+  },
+};
+
 export const SVRS_STATES = [
   'AC',
   'AL',
   'AP',
+  'BA',
   'DF',
   'ES',
   'PB',

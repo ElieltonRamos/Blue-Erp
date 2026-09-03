@@ -15,8 +15,8 @@ import {
   WEBSERVICES,
   SVRS_STATES,
   UF_CODES,
-  PORTAL_URLS,
   ServiceType,
+  CHAVE_CONSULTA_URLS,
 } from './nfe-endpoints.config';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
@@ -69,12 +69,13 @@ export class NfeSender {
         tpAmb: nfeData.ide.tpAmb,
         idCSC: nfeData.csc.idCSC,
         csc: nfeData.csc.csc,
+        uf: this.config.state,
       });
 
       const isProd = nfeData.ide.tpAmb === '1';
       const uf = this.config.state.toUpperCase();
       const urlChaveConsulta =
-        PORTAL_URLS[uf]?.[isProd ? 'production' : 'staging'];
+        CHAVE_CONSULTA_URLS[uf]?.[isProd ? 'production' : 'staging'];
 
       const infNFeSupl =
         `<infNFeSupl>` +
@@ -93,6 +94,10 @@ export class NfeSender {
       const batchXml = this.buildBatch(finalXml, batchId);
 
       const { host, path } = this.getEndpoint('authorization');
+      this.logger.log(
+        `Enviando autorização ${accessKey} para ${host}${path} (state=${this.config.state}, env=${this.config.environment})`,
+      );
+
       const soapEnvelope = this.http.buildSoapEnvelope(
         'nfeAutorizacaoLote',
         batchXml,
@@ -104,7 +109,14 @@ export class NfeSender {
         'nfeAutorizacaoLote',
       );
 
+      this.logger.debug(`SEFAZ raw response (${accessKey}): ${responseXml}`);
+
       const result = await this.parser.extractAndParse(responseXml);
+
+      this.logger.log(
+        `Autorização ${accessKey}: success=${result.success} statusCode=${result.statusCode} message=${result.message}`,
+      );
+
       return { ...result, signedXml: finalXml };
     } catch (error) {
       const err = error as Error;
@@ -138,6 +150,8 @@ export class NfeSender {
 </consSitNFe>`;
 
       const { host, path } = this.getEndpoint('query');
+      this.logger.debug(`Consultando ${accessKey} em ${host}${path}`);
+
       const soapEnvelope = this.http.buildSoapEnvelope(
         'nfeConsultaNF',
         content,
@@ -149,9 +163,14 @@ export class NfeSender {
         'nfeConsultaNF',
       );
 
+      this.logger.debug(
+        `SEFAZ raw response (consulta ${accessKey}): ${responseXml}`,
+      );
+
       return this.parser.extractAndParse(responseXml);
     } catch (error) {
       const err = error as Error;
+      this.logger.error(`Erro ao consultar ${accessKey}: ${err.message}`);
       return {
         success: false,
         message: `Error querying NF-e: ${err.message}`,
@@ -248,6 +267,8 @@ export class NfeSender {
         `</envEvento>`;
 
       const { host, path } = this.getEndpoint('cancellation');
+      this.logger.log(`Enviando cancelamento ${accessKey} para ${host}${path}`);
+
       const soapEnvelope = this.http.buildSoapEnvelope(
         'nfeRecepcaoEvento',
         content,
@@ -259,9 +280,20 @@ export class NfeSender {
         'nfeRecepcaoEvento',
       );
 
-      return this.parser.extractAndParseCancellation(responseXml);
+      this.logger.debug(
+        `SEFAZ raw response (cancelamento ${accessKey}): ${responseXml}`,
+      );
+
+      const result = await this.parser.extractAndParseCancellation(responseXml);
+
+      this.logger.log(
+        `Cancelamento ${accessKey}: success=${result.success} statusCode=${result.statusCode} message=${result.message}`,
+      );
+
+      return result;
     } catch (error) {
       const err = error as Error;
+      this.logger.error(`Erro ao cancelar: ${err.message}`);
       return {
         success: false,
         message: err.message,
@@ -277,15 +309,12 @@ export class NfeSender {
   }
 
   private buildBatch(xml: string, batchId: string): string {
-    return `<enviNFe xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
-  <idLote>${batchId}</idLote>
-  <indSinc>1</indSinc>
-  ${xml}
-</enviNFe>`;
+    return `<enviNFe xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00"><idLote>${batchId}</idLote><indSinc>1</indSinc>${xml}</enviNFe>`;
   }
 
   private getEndpoint(service: ServiceType): { host: string; path: string } {
-    let uf = this.config.state.toUpperCase();
+    const originalUf = this.config.state.toUpperCase();
+    let uf = originalUf;
 
     if (SVRS_STATES.includes(uf)) {
       uf = 'SVRS';
@@ -296,7 +325,14 @@ export class NfeSender {
     const host = HOSTS[uf]?.[env];
     const path = WEBSERVICES[uf]?.[env]?.[service];
 
+    this.logger.debug(
+      `getEndpoint(${service}): state=${originalUf} -> uf=${uf} env=${env} host=${host} path=${path}`,
+    );
+
     if (!host || !path) {
+      this.logger.error(
+        `Webservice não configurado: state=${originalUf} uf=${uf} env=${env} service=${service}`,
+      );
       throw new Error(
         `Webservice not configured for state: ${this.config.state}`,
       );

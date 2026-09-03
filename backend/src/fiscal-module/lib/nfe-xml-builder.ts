@@ -1,7 +1,7 @@
 import { create } from 'xmlbuilder2';
 import { NFeOptions, NFeProduct } from '../entities/fiscal-module.entity';
 import { createHash } from 'crypto';
-import { baseUrl } from './nfe-endpoints.config';
+import { PORTAL_URLS } from './nfe-endpoints.config';
 
 function calculateCheckDigit(key43: string): string {
   const multipliers = [2, 3, 4, 5, 6, 7, 8, 9];
@@ -171,12 +171,13 @@ export function buildQrCodeUrl(params: {
   tpAmb: string;
   idCSC: string;
   csc: string;
+  uf: string;
   offline?: boolean;
   dhEmi?: string;
   vNF?: string;
   digVal?: string;
 }): string {
-  const { accessKey, tpAmb, idCSC, csc } = params;
+  const { accessKey, tpAmb, idCSC, csc, uf } = params;
 
   let payload: string;
 
@@ -193,7 +194,13 @@ export function buildQrCodeUrl(params: {
     .digest('hex')
     .toUpperCase();
 
-  return `${baseUrl}?p=${payload}|${hash}`;
+  const qrBaseUrl =
+    PORTAL_URLS[uf.toUpperCase()]?.[tpAmb === '1' ? 'production' : 'staging'];
+  if (!qrBaseUrl) {
+    throw new Error(`QR-Code base URL not configured for state: ${uf}`);
+  }
+
+  return `${qrBaseUrl}?p=${payload}|${hash}`;
 }
 
 function buildDetPag(data: NFeOptions) {
