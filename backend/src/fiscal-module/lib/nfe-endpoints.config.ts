@@ -13,6 +13,14 @@ export const WEBSERVICES: Record<
       cancellation: '/nfce/services/NFeRecepcaoEvento4',
     },
   },
+  BA: {
+    staging: {
+      authorization: '/webservices/NFeAutorizacao4/NFeAutorizacao4.asmx',
+      status: '/webservices/NFeStatusServico4/NFeStatusServico4.asmx',
+      query: '/webservices/NFeConsultaProtocolo4/NFeConsultaProtocolo4.asmx',
+      cancellation: '/webservices/NFeRecepcaoEvento4/NFeRecepcaoEvento4.asmx',
+    },
+  },
   SVRS: {
     staging: {
       authorization: '/ws/NfeAutorizacao/NFeAutorizacao4.asmx',
@@ -30,10 +38,15 @@ export const HOSTS: Record<string, Record<string, string>> = {
   SVRS: {
     staging: 'nfe-homologacao.svrs.rs.gov.br',
   },
+  BA: {
+    staging: 'hnfe.sefaz.ba.gov.br',
+  },
 };
 
-export const baseUrl =
-  'https://portalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml';
+// export const baseUrl =
+//   'https://portalsped.fazenda.mg.gov.br/portalnfce/sistema/qrcode.xhtml';
+
+export const baseUrl = 'http://nfe.sefaz.ba.gov.br/servicos/nfce/qrcode.aspx';
 
 export const SVRS_STATES = [
   'AC',
@@ -91,7 +104,13 @@ export const SOAP_NAMESPACES: Record<string, string> = {
     'http://www.portalfiscal.inf.br/nfe/wsdl/NFeRecepcaoEvento4',
 };
 
-export const PORTAL_URLS: Record<EnvironmentType, string> = {
-  production: 'https://portalsped.fazenda.mg.gov.br/portalnfce',
-  staging: 'https://hportalsped.fazenda.mg.gov.br/portalnfce',
+export const PORTAL_URLS: Record<string, Record<EnvironmentType, string>> = {
+  MG: {
+    production: 'https://portalsped.fazenda.mg.gov.br/portalnfce',
+    staging: 'https://hportalsped.fazenda.mg.gov.br/portalnfce',
+  },
+  BA: {
+    production: 'http://nfe.sefaz.ba.gov.br/servicos/nfce/qrcode.aspx',
+    staging: 'http://hnfe.sefaz.ba.gov.br/servicos/nfce/qrcode.aspx',
+  },
 };

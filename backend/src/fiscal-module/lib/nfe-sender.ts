@@ -40,7 +40,10 @@ export class NfeSender {
         : Buffer.from(certificate.pfxBuffer),
     };
     this.signer = new NfeSigner(this.certificate);
-    this.http = new NfeHttpClient(this.certificate);
+    this.http = new NfeHttpClient({
+      key: this.signer.getKeyPem(),
+      cert: this.signer.getCertPem(),
+    });
     this.parser = new NfeResponseParser();
   }
 
@@ -69,9 +72,9 @@ export class NfeSender {
       });
 
       const isProd = nfeData.ide.tpAmb === '1';
-      const urlChaveConsulta = isProd
-        ? PORTAL_URLS.production
-        : PORTAL_URLS.staging;
+      const uf = this.config.state.toUpperCase();
+      const urlChaveConsulta =
+        PORTAL_URLS[uf]?.[isProd ? 'production' : 'staging'];
 
       const infNFeSupl =
         `<infNFeSupl>` +

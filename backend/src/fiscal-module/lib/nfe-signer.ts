@@ -13,6 +13,15 @@ export class NfeSigner {
     this.loadCertificate();
   }
 
+  // nfe-signer.ts — adicionar getters
+  public getKeyPem(): string {
+    return this.privateKeyPem;
+  }
+
+  public getCertPem(): string {
+    return this.publicCertPem;
+  }
+
   private loadCertificate(): void {
     try {
       const p12Der = forge.util.decode64(

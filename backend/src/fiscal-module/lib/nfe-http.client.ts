@@ -1,9 +1,8 @@
 import * as https from 'https';
-import { DigitalCertificate } from '../entities/fiscal-module.entity';
 import { SOAP_NAMESPACES } from './nfe-endpoints.config';
 
 export class NfeHttpClient {
-  constructor(private readonly certificate: DigitalCertificate) {}
+  constructor(private readonly credentials: { key: string; cert: string }) {}
 
   buildSoapEnvelope(action: string, content: string): string {
     const namespace =
@@ -30,8 +29,8 @@ export class NfeHttpClient {
         port: 443,
         path,
         method: 'POST',
-        pfx: this.certificate.pfxBuffer,
-        passphrase: this.certificate.password,
+        key: this.credentials.key,
+        cert: this.credentials.cert,
         rejectUnauthorized: false,
         headers: {
           'Content-Type': 'application/soap+xml; charset=utf-8',
