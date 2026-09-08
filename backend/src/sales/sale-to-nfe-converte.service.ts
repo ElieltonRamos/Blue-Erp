@@ -15,7 +15,7 @@ import {
 } from './entities/sale-converter-nfe';
 import { nowBrasilia, toSefazDateTime } from 'src/common/date-utils';
 
-const CARD_PAYMENT_METHODS = ['CARTAO_CREDITO', 'CARTAO_DEBITO'];
+const CARD_PAYMENT_METHODS = ['CARTAO_CREDITO', 'CARTAO_DEBITO', 'PIX'];
 
 @Injectable()
 export class SaleToNfeConverterService {
@@ -32,21 +32,9 @@ export class SaleToNfeConverterService {
     const cscConfig = await this.companyService.getCscConfig();
     const items = this.normalizeItems(sale);
     const taxes = this.calculateTaxes(items);
-    const taxText = this.buildTaxText(taxes, company.ibptVersion);
+    const infoText = this.buildTaxText(taxes, company.ibptVersion);
 
     const cNF = String(Math.floor(Math.random() * 100000000)).padStart(8, '0');
-    const operatorName =
-      sale.operator?.username || sale.userOperator || 'Sistema';
-    const discount = this.toNumber(sale.discount, 2);
-    const serviceCharge = this.toNumber(sale.serviceCharge ?? 0, 2);
-    const totalWithServiceCharge = this.toNumber(sale.total, 2) + serviceCharge;
-
-    const infoText = `${taxText} | Venda ID: ${saleId} | Operador: ${operatorName} | Desc: R$ ${discount.toFixed(2)} | Taxa de Serviço: R$ ${serviceCharge.toFixed(2)}`;
-
-    const primaryPayment = sale.payments.reduce((prev, curr) =>
-      Number(curr.amount) > Number(prev.amount) ? curr : prev,
-    );
-    const paymentMethod = primaryPayment?.method ?? 'DINHEIRO';
 
     return {
       ide: {
@@ -109,23 +97,25 @@ export class SaleToNfeConverterService {
       },
       produtos: items,
       pag: {
-        indPag: sale.isPaid ? '0' : '1',
-        tPag: PAYMENT_MAP[paymentMethod] || '99',
-        xPag: paymentMethod === 'CREDITO_LOJA' ? 'Crédito Loja' : undefined,
-        vPag: totalWithServiceCharge,
-        ...(CARD_PAYMENT_METHODS.includes(paymentMethod) && {
-          card: {
-            tpIntegra: '2',
-            tBand: '99',
-            cAut: '000000',
-          },
-        }),
+        detPag: sale.payments.map((p) => ({
+          indPag: sale.isPaid ? '0' : '1',
+          tPag: PAYMENT_MAP[p.method] || '99',
+          xPag: p.method === 'CREDITO_LOJA' ? 'Crédito Loja' : undefined,
+          vPag: this.toNumber(p.amount, 2),
+          ...(CARD_PAYMENT_METHODS.includes(p.method) && {
+            card:
+              p.method === 'PIX'
+                ? { tpIntegra: '2' }
+                : { tpIntegra: '2', tBand: '99', cAut: '000000' },
+          }),
+        })),
       },
       infAdic: infoText,
       fonteIBPT: company.ibptVersion,
       csc: { csc: cscConfig.nfceCsc, idCSC: cscConfig.nfceCscId },
     };
   }
+
   private async findSaleWithRelations(saleId: number) {
     const sale = await this.prisma.client.sale.findUnique({
       where: { id: saleId },
@@ -150,8 +140,9 @@ export class SaleToNfeConverterService {
   private normalizeItems(sale: {
     items: Array<{ product: any; [key: string]: any }>;
     cfop: string;
+    discount: unknown;
   }): NFeProduct[] {
-    return sale.items.map((item: any, index: number) => {
+    const rawItems = sale.items.map((item: any, index: number) => {
       const product = item.product;
       const qCom = this.toNumber(item.quantity, 4);
       const vUnCom = this.toNumber(item.unitPrice, 4);
@@ -198,8 +189,42 @@ export class SaleToNfeConverterService {
         cofinsCst: product.cstCofins || '49',
         iiValor: this.toNumber(item.importTaxValue ?? 0, 2),
         iofValor: this.toNumber(item.iofValue ?? 0, 2),
+        vOutro: this.toNumber(item.serviceCharge ?? 0, 2),
       };
     });
+
+    return this.distributeDiscount(rawItems, this.toNumber(sale.discount, 2));
+  }
+
+  private distributeDiscount(
+    items: Omit<NFeProduct, 'vDesc'>[],
+    totalDiscount: number,
+  ): NFeProduct[] {
+    if (totalDiscount <= 0 || items.length === 0) {
+      return items.map((item) => ({ ...item, vDesc: 0 }));
+    }
+
+    const totalProd = items.reduce((sum, i) => sum + i.qCom * i.vUnCom, 0);
+
+    if (totalProd <= 0) {
+      return items.map((item) => ({ ...item, vDesc: 0 }));
+    }
+
+    let allocated = 0;
+    const result = items.map((item, index) => {
+      const itemProd = item.qCom * item.vUnCom;
+      const isLast = index === items.length - 1;
+
+      const vDesc = isLast
+        ? this.toNumber(totalDiscount - allocated, 2)
+        : this.toNumber((itemProd / totalProd) * totalDiscount, 2);
+
+      allocated += vDesc;
+
+      return { ...item, vDesc };
+    });
+
+    return result;
   }
 
   private resolveCfop(

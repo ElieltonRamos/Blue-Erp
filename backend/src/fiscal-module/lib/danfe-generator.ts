@@ -136,22 +136,23 @@ export class DanfeGenerator {
     data: NFeOptions,
     totals: DanfeTotals,
   ): void {
+    const totalAcrescimo = data.produtos.reduce((sum, p) => sum + p.vOutro, 0);
+
     ctx.y -= 4;
     this.drawLeft(ctx, `Qtd. total de itens: ${data.produtos.length}`, 8);
     this.drawLeft(ctx, `Valor total R$: ${totals.productValue.toFixed(2)}`, 8);
     this.drawLeft(ctx, `Descontos R$: ${totals.discountValue.toFixed(2)}`, 8);
+    this.drawLeft(ctx, `Acréscimo R$: ${totalAcrescimo.toFixed(2)}`, 8);
     this.drawLeft(ctx, `Valor a Pagar R$: ${totals.totalValue.toFixed(2)}`, 9);
     ctx.y -= 8;
   }
 
   private drawPayment(ctx: DrawContext, data: NFeOptions): void {
     this.drawLeft(ctx, 'FORMA DE PAGAMENTO', 9);
-    const label = PAYMENT_LABELS[data.pag.tPag] || 'Outros';
-    this.drawLeft(
-      ctx,
-      `${label} ............ R$ ${data.pag.vPag.toFixed(2)}`,
-      8,
-    );
+    for (const det of data.pag.detPag) {
+      const label = PAYMENT_LABELS[det.tPag] || 'Outros';
+      this.drawLeft(ctx, `${label} ............ R$ ${det.vPag.toFixed(2)}`, 8);
+    }
     ctx.y -= 8;
   }
 
@@ -341,6 +342,7 @@ export class DanfeGenerator {
         uTrib: s(item.prod.uTrib || item.prod.uCom),
         qTrib: parseFloat(s(item.prod.qTrib || item.prod.qCom)),
         vUnTrib: parseFloat(s(item.prod.vUnTrib || item.prod.vUnCom)),
+        vOutro: parseFloat(s(item.prod.vOutro || '0')),
         csosn: s(item.imposto?.ICMS?.ICMSSN102?.CSOSN || '102'),
         origem: parseInt(s(item.imposto?.ICMS?.ICMSSN102?.orig || '0')),
         aliqFederal: 0,
@@ -354,6 +356,16 @@ export class DanfeGenerator {
       }),
     );
 
+    const detPagRaw = inf.pag?.detPag;
+    const detPagArray = Array.isArray(detPagRaw) ? detPagRaw : [detPagRaw];
+
+    const detPag = detPagArray.map((d: any) => ({
+      indPag: s(d?.indPag),
+      tPag: s(d?.tPag),
+      vPag: parseFloat(s(d?.vPag || '0')),
+      xPag: d?.xPag ? s(d.xPag) : undefined,
+    }));
+
     return {
       nfeData: {
         ide: inf.ide,
@@ -366,9 +378,7 @@ export class DanfeGenerator {
         },
         produtos,
         pag: {
-          indPag: s(inf.pag?.detPag?.indPag),
-          tPag: s(inf.pag?.detPag?.tPag),
-          vPag: parseFloat(s(inf.pag?.detPag?.vPag || '0')),
+          detPag,
         },
         infAdic: inf.infAdic?.infCpl ? s(inf.infAdic.infCpl) : undefined,
         csc: {

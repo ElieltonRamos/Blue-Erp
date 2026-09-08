@@ -321,8 +321,11 @@ export class EmissionService {
     if (!nfeData.produtos || nfeData.produtos.length === 0) {
       throw new FiscalException('NFC-e deve conter ao menos um produto');
     }
-    if (!nfeData.pag?.tPag || !nfeData.pag?.vPag) {
+    if (!nfeData.pag?.detPag || nfeData.pag.detPag.length === 0) {
       throw new FiscalException('Informações de pagamento são obrigatórias');
+    }
+    if (nfeData.pag.detPag.some((d) => !d.vPag || d.vPag <= 0)) {
+      throw new FiscalException('Valor de pagamento inválido');
     }
     if (!nfeData.ide?.nNF || !nfeData.ide?.serie) {
       throw new FiscalException('Número da nota e série são obrigatórios');

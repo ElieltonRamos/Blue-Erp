@@ -204,21 +204,13 @@ export function buildQrCodeUrl(params: {
 }
 
 function buildDetPag(data: NFeOptions) {
-  const detPag: Record<string, any> = {
-    tPag: data.pag.tPag,
-    ...(data.pag.tPag === '99' && data.pag.xPag ? { xPag: data.pag.xPag } : {}),
-    vPag: data.pag.vPag.toFixed(2),
-  };
-
-  if (data.pag.card) {
-    detPag.card = {
-      tpIntegra: data.pag.card.tpIntegra,
-      tBand: data.pag.card.tBand,
-      cAut: data.pag.card.cAut,
-    };
-  }
-
-  return detPag;
+  return data.pag.detPag.map((p) => ({
+    indPag: p.indPag,
+    tPag: p.tPag,
+    ...(p.tPag === '99' && p.xPag ? { xPag: p.xPag } : {}),
+    vPag: p.vPag.toFixed(2),
+    ...(p.card ? { card: p.card } : {}),
+  }));
 }
 
 export function generateNFeXML(data: NFeOptions): string {
@@ -232,6 +224,9 @@ export function generateNFeXML(data: NFeOptions): string {
     (sum, p) => sum + p.qCom * p.vUnCom,
     0,
   );
+
+  const totalVOutro = data.produtos.reduce((sum, p) => sum + p.vOutro, 0);
+  const totalVDesc = data.produtos.reduce((sum, p) => sum + p.vDesc, 0); // <- adicionar aqui
 
   const totalTax = taxPerItem.reduce((sum, t) => sum + Number(t.vTotTrib), 0);
 
@@ -295,6 +290,8 @@ export function generateNFeXML(data: NFeOptions): string {
             uTrib: p.uTrib,
             qTrib: p.qTrib.toFixed(4),
             vUnTrib: p.vUnTrib.toFixed(5),
+            vDesc: p.vDesc.toFixed(2),
+            vOutro: p.vOutro.toFixed(2),
             indTot: p.indTot.toString(),
           },
           imposto: taxPerItem[index],
@@ -312,14 +309,14 @@ export function generateNFeXML(data: NFeOptions): string {
             vProd: totalProducts.toFixed(2),
             vFrete: '0.00',
             vSeg: '0.00',
-            vDesc: '0.00',
+            vDesc: totalVDesc.toFixed(2),
             vII: '0.00',
             vIPI: '0.00',
             vIPIDevol: '0.00',
             vPIS: '0.00',
             vCOFINS: '0.00',
-            vOutro: '0.00',
-            vNF: totalProducts.toFixed(2),
+            vOutro: totalVOutro.toFixed(2),
+            vNF: (totalProducts - totalVDesc + totalVOutro).toFixed(2), // era totalProducts + totalVOutro
             vTotTrib: totalTax.toFixed(2),
           },
         },

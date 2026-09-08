@@ -59,15 +59,18 @@ export interface NFeOptions {
   };
   produtos: NFeProduct[];
   pag: {
-    indPag: string;
-    tPag: string;
-    vPag: number;
-    xPag?: string;
-    card?: {
-      tpIntegra: string;
-      tBand: string;
-      cAut: string;
-    };
+    detPag: Array<{
+      indPag: string;
+      tPag: string;
+      vPag: number;
+      xPag?: string;
+      card?: {
+        tpIntegra: string;
+        tBand?: string;
+        cAut?: string;
+      };
+    }>;
+    vTroco?: number;
   };
   infAdic?: string;
   fonteIBPT?: string;
@@ -99,7 +102,9 @@ export interface NFeProduct {
   pisCst: string;
   cofinsCst: string;
   iiValor: number;
+  vOutro: number;
   iofValor: number;
+  vDesc: number;
 }
 
 export interface DigitalCertificate {
