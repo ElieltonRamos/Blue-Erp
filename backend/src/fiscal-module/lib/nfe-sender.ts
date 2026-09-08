@@ -190,11 +190,7 @@ export class NfeSender {
       const ufCode = UF_CODES[this.config.state.toUpperCase()] || '31';
       const environment = this.config.environment === 'production' ? '1' : '2';
 
-      const content = `<consStatServ xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
-  <tpAmb>${environment}</tpAmb>
-  <cUF>${ufCode}</cUF>
-  <xServ>STATUS</xServ>
-</consStatServ>`;
+      const content = `<consStatServ xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00"><tpAmb>${environment}</tpAmb><cUF>${ufCode}</cUF><xServ>STATUS</xServ></consStatServ>`;
 
       const { host, path } = this.getEndpoint('status');
       const soapEnvelope = this.http.buildSoapEnvelope(
@@ -208,6 +204,8 @@ export class NfeSender {
         'nfeStatusServicoNF',
       );
 
+      this.logger.debug(`SEFAZ raw response (status): ${responseXml}`);
+
       const { cStat, xMotivo } =
         await this.parser.parseStatusResponse(responseXml);
 
@@ -218,6 +216,10 @@ export class NfeSender {
       };
     } catch (error) {
       const err = error as Error;
+      this.logger.error(
+        `Erro ao consultar status SEFAZ: ${err.message}`,
+        err.stack,
+      );
       return {
         online: false,
         message: `Error querying status: ${err.message}`,

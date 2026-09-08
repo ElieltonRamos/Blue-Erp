@@ -24,6 +24,11 @@ export class NfeHttpClient {
     action: string,
   ): Promise<string> {
     return new Promise((resolve, reject) => {
+      const namespace =
+        SOAP_NAMESPACES[action] ||
+        'http://www.portalfiscal.inf.br/nfe/wsdl/NFeAutorizacao4';
+      const soapAction = `${namespace}/${action}`;
+
       const options: https.RequestOptions = {
         hostname: host,
         port: 443,
@@ -33,9 +38,8 @@ export class NfeHttpClient {
         cert: this.credentials.cert,
         rejectUnauthorized: false,
         headers: {
-          'Content-Type': 'application/soap+xml; charset=utf-8',
+          'Content-Type': `application/soap+xml; charset=utf-8; action="${soapAction}"`,
           'Content-Length': Buffer.byteLength(body, 'utf-8'),
-          SOAPAction: action,
         },
       };
 
