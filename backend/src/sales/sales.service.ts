@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service.js';
 import {
@@ -22,6 +23,8 @@ import { resolveLogicalDateTime } from '../common/date-utils.js';
 
 @Injectable()
 export class SalesService {
+  private readonly logger = new Logger(SalesService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   private getStartOfDayBrasilia(dateString: string): Date {
@@ -91,8 +94,14 @@ export class SalesService {
     userId: number,
     username: string,
   ): Promise<SaleResponseDto> {
+    const start = Date.now();
+
     const { items, payments, ...saleData } = createSaleDto;
     const clientId = saleData.clientId ?? 1;
+
+    this.logger.log(
+      `[Venda nova] operador=${userId} | criando venda para pedido ${saleData.orderId} com ${items.length} item(ns)`,
+    );
 
     const order = await this.prisma.client.order.findUnique({
       where: { id: saleData.orderId },
@@ -103,6 +112,9 @@ export class SalesService {
     }
 
     if (order.status !== OrderStatus.CLOSED) {
+      this.logger.warn(
+        `[Venda nova] operador=${userId} | bloqueado: pedido ${saleData.orderId} não está fechado (status=${order.status})`,
+      );
       throw new BadRequestException(
         'Apenas pedidos fechados podem gerar uma venda',
       );
@@ -113,6 +125,9 @@ export class SalesService {
     });
 
     if (existingSale) {
+      this.logger.warn(
+        `[Venda nova] operador=${userId} | bloqueado: pedido ${saleData.orderId} já possui venda ${existingSale.id}`,
+      );
       throw new BadRequestException(
         `Pedido ${saleData.orderId} já possui uma venda associada (sale ${existingSale.id})`,
       );
@@ -194,29 +209,52 @@ export class SalesService {
 
     this.validatePayments(payments, total);
 
-    const sale = await this.prisma.client.sale.create({
-      data: {
-        clientId,
-        userOperator: username,
-        operatorId: userId,
-        orderId: saleData.orderId,
-        serviceCharge: orderServiceCharge,
-        date: resolveLogicalDateTime(),
-        totalProductsWithoutDiscount,
-        discount,
-        total,
-        profitSale: profitSale.minus(discount),
-        isPaid: clientId === 1,
-        cfop,
-        fiscalStatus: FiscalStatus.PENDENTE,
-        createdAt: resolveLogicalDateTime(),
-        items: { create: itemsData },
-        payments: { create: this.buildPaymentsData(payments) },
-      },
-      include: this.saleInclude(),
-    });
+    try {
+      const sale = await this.prisma.client.sale.create({
+        data: {
+          clientId,
+          userOperator: username,
+          operatorId: userId,
+          orderId: saleData.orderId,
+          serviceCharge: orderServiceCharge,
+          date: resolveLogicalDateTime(),
+          totalProductsWithoutDiscount,
+          discount,
+          total,
+          profitSale: profitSale.minus(discount),
+          isPaid: clientId === 1,
+          cfop,
+          fiscalStatus: FiscalStatus.PENDENTE,
+          createdAt: resolveLogicalDateTime(),
+          items: { create: itemsData },
+          payments: { create: this.buildPaymentsData(payments) },
+        },
+        include: this.saleInclude(),
+      });
 
-    return new SaleResponseDto(sale);
+      this.logger.log(
+        `[Venda ${sale.id}] operador=${userId} | persistida com ${sale.items.length} item(ns): ` +
+          sale.items
+            .map((i) => `${i.id}:${i.xProd}(x${Number(i.quantity)})`)
+            .join(', '),
+      );
+
+      this.logger.log(
+        `[Venda ${sale.id}] operador=${userId} | criada em ${Date.now() - start}ms`,
+      );
+
+      return new SaleResponseDto(sale);
+    } catch (error: unknown) {
+      if ((error as any).code === 'P2003') {
+        this.logger.error(
+          `[Venda nova] operador=${userId} | erro de chave estrangeira: ${(error as any).message}`,
+        );
+        throw new BadRequestException(
+          'Erro de chave estrangeira: Verifique se os dados relacionados existem',
+        );
+      }
+      throw error;
+    }
   }
 
   async findAll(filters: SaleFiltersDto): Promise<PaginatedSalesResponseDto> {
@@ -321,7 +359,15 @@ export class SalesService {
   async update(
     id: number,
     updateSaleDto: UpdateSaleDto,
+    operatorId: number,
   ): Promise<SaleResponseDto> {
+    const start = Date.now();
+    const tag = `Venda ${id}`;
+
+    this.logger.log(
+      `[${tag}] operador=${operatorId} | atualizando campos da venda`,
+    );
+
     const existingSale = await this.prisma.client.sale.findUnique({
       where: { id },
       include: { items: true, payments: true },
@@ -332,12 +378,18 @@ export class SalesService {
     }
 
     if (existingSale.fiscalStatus === FiscalStatus.EMITIDA) {
+      this.logger.warn(
+        `[${tag}] operador=${operatorId} | bloqueado: nota fiscal já emitida`,
+      );
       throw new BadRequestException(
         'Venda com nota fiscal emitida não pode ser alterada',
       );
     }
 
     if (existingSale.fiscalStatus === FiscalStatus.CANCELADA) {
+      this.logger.warn(
+        `[${tag}] operador=${operatorId} | bloqueado: venda cancelada`,
+      );
       throw new BadRequestException('Venda cancelada não pode ser alterada');
     }
 
@@ -599,6 +651,10 @@ export class SalesService {
       });
     });
 
+    this.logger.log(
+      `[${tag}] operador=${operatorId} | atualizada em ${Date.now() - start}ms`,
+    );
+
     return new SaleResponseDto(updatedSale);
   }
 
@@ -708,7 +764,10 @@ export class SalesService {
     }
   }
 
-  async remove(id: number): Promise<{ message: string }> {
+  async remove(id: number, operatorId: number): Promise<{ message: string }> {
+    const start = Date.now();
+    const tag = `Venda ${id}`;
+
     const sale = await this.prisma.client.sale.findUnique({ where: { id } });
 
     if (!sale) {
@@ -716,12 +775,19 @@ export class SalesService {
     }
 
     if (sale.fiscalStatus === FiscalStatus.EMITIDA) {
+      this.logger.warn(
+        `[${tag}] operador=${operatorId} | bloqueado: nota fiscal já emitida, não pode ser deletada`,
+      );
       throw new BadRequestException(
         'Venda com nota fiscal emitida não pode ser deletada',
       );
     }
 
     await this.prisma.client.sale.delete({ where: { id } });
+
+    this.logger.log(
+      `[${tag}] operador=${operatorId} | removida em ${Date.now() - start}ms`,
+    );
 
     return { message: 'Venda excluída com sucesso' };
   }
@@ -732,6 +798,12 @@ export class SalesService {
     userId: number,
     username: string,
   ): Promise<SaleResponseDto> {
+    const start = Date.now();
+
+    this.logger.log(
+      `[Venda nova] operador=${userId} | convertendo pedido ${orderId} em venda`,
+    );
+
     const order = await this.prisma.client.order.findUnique({
       where: { id: orderId },
       include: {
@@ -758,6 +830,9 @@ export class SalesService {
     }
 
     if (order.status !== OrderStatus.CLOSED) {
+      this.logger.warn(
+        `[Venda nova] operador=${userId} | bloqueado: pedido ${orderId} não está fechado (status=${order.status})`,
+      );
       throw new BadRequestException(
         'Apenas pedidos fechados podem ser convertidos em venda',
       );
@@ -790,74 +865,109 @@ export class SalesService {
     });
 
     if (existingSale) {
+      this.logger.warn(
+        `[Venda nova] operador=${userId} | bloqueado: pedido ${orderId} já possui venda ${existingSale.id}`,
+      );
       throw new BadRequestException(
         `Pedido ${orderId} já possui uma venda associada (sale ${existingSale.id})`,
       );
     }
 
-    const sale = await this.prisma.client.$transaction(async (tx) => {
-      const createdSale = await tx.sale.create({
-        data: {
-          clientId,
-          userOperator: username,
-          operatorId: userId,
-          date: resolveLogicalDateTime(),
-          totalProductsWithoutDiscount,
-          discount,
-          total,
-          profitSale: profitSale.minus(discount),
-          isPaid: clientId === 1,
-          cfop: dto.cfop || '5102',
-          fiscalStatus: FiscalStatus.PENDENTE,
-          serviceCharge: order.serviceCharge ?? new Decimal(0),
-          orderId: orderId,
-          createdAt: resolveLogicalDateTime(),
-          items: {
-            create: order.items.map((item, index) => ({
-              itemNumber: index + 1,
-              productId: item.productId,
-              xProd: item.product.name,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              totalPrice: item.total,
-              taxUnit: item.product.unit,
-              taxQuantity: item.quantity,
-              taxUnitPrice: item.unitPrice,
-              composesTotal: 1,
-              cfop:
-                item.product.csosn === '500'
-                  ? '5405'
-                  : item.product.productType === 'MANUFACTURED'
-                    ? '5101'
-                    : dto.cfop || '5102',
-              totalTaxValue: null,
-              importTaxValue: new Decimal(0),
-              iofValue: new Decimal(0),
-              serviceCharge: item.serviceCharge ?? new Decimal(0),
-            })),
+    try {
+      const sale = await this.prisma.client.$transaction(async (tx) => {
+        const createdSale = await tx.sale.create({
+          data: {
+            clientId,
+            userOperator: username,
+            operatorId: userId,
+            date: resolveLogicalDateTime(),
+            totalProductsWithoutDiscount,
+            discount,
+            total,
+            profitSale: profitSale.minus(discount),
+            isPaid: clientId === 1,
+            cfop: dto.cfop || '5102',
+            fiscalStatus: FiscalStatus.PENDENTE,
+            serviceCharge: order.serviceCharge ?? new Decimal(0),
+            orderId: orderId,
+            createdAt: resolveLogicalDateTime(),
+            items: {
+              create: order.items.map((item, index) => ({
+                itemNumber: index + 1,
+                productId: item.productId,
+                xProd: item.product.name,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                totalPrice: item.total,
+                taxUnit: item.product.unit,
+                taxQuantity: item.quantity,
+                taxUnitPrice: item.unitPrice,
+                composesTotal: 1,
+                cfop:
+                  item.product.csosn === '500'
+                    ? '5405'
+                    : item.product.productType === 'MANUFACTURED'
+                      ? '5101'
+                      : dto.cfop || '5102',
+                totalTaxValue: null,
+                importTaxValue: new Decimal(0),
+                iofValue: new Decimal(0),
+                serviceCharge: item.serviceCharge ?? new Decimal(0),
+              })),
+            },
+            payments: { create: this.buildPaymentsData(dto.payments) },
           },
-          payments: { create: this.buildPaymentsData(dto.payments) },
-        },
-        include: this.saleInclude(),
+          include: this.saleInclude(),
+        });
+
+        await tx.order.update({
+          where: { id: orderId },
+          data: { status: OrderStatus.PAID },
+        });
+
+        return createdSale;
       });
 
-      await tx.order.update({
-        where: { id: orderId },
-        data: { status: OrderStatus.PAID },
-      });
+      this.logger.log(
+        `[Venda ${sale.id}] operador=${userId} | persistida com ${sale.items.length} item(ns): ` +
+          sale.items
+            .map((i) => `${i.id}:${i.xProd}(x${Number(i.quantity)})`)
+            .join(', '),
+      );
 
-      return createdSale;
-    });
+      this.logger.log(
+        `[Venda ${sale.id}] operador=${userId} | convertida em ${Date.now() - start}ms`,
+      );
 
-    return new SaleResponseDto(sale);
+      return new SaleResponseDto(sale);
+    } catch (error: unknown) {
+      if ((error as any).code === 'P2003') {
+        this.logger.error(
+          `[Venda nova] operador=${userId} | erro de chave estrangeira: ${(error as any).message}`,
+        );
+        throw new BadRequestException(
+          'Erro de chave estrangeira: Verifique se os dados relacionados existem',
+        );
+      }
+      throw error;
+    }
   }
 
-  async markAsReceived(salesIds: number[]): Promise<{ message: string }> {
+  async markAsReceived(
+    salesIds: number[],
+    operatorId: number,
+  ): Promise<{ message: string }> {
+    const start = Date.now();
+
     if (!salesIds || !Array.isArray(salesIds) || salesIds.length === 0) {
       throw new BadRequestException(
         'É necessário enviar uma lista de IDs das vendas a serem recebidas',
       );
     }
+
+    this.logger.log(
+      `[Vendas] operador=${operatorId} | marcando ${salesIds.length} venda(s) como recebida(s): ids=${JSON.stringify(salesIds)}`,
+    );
 
     const result = await this.prisma.client.sale.updateMany({
       where: { id: { in: salesIds }, isPaid: false },
@@ -865,10 +975,17 @@ export class SalesService {
     });
 
     if (result.count === 0) {
+      this.logger.warn(
+        `[Vendas] operador=${operatorId} | nenhuma venda pendente encontrada para dar baixa: ids=${JSON.stringify(salesIds)}`,
+      );
       throw new NotFoundException(
         'Nenhuma venda pendente encontrada para dar baixa',
       );
     }
+
+    this.logger.log(
+      `[Vendas] operador=${operatorId} | ${result.count} venda(s) marcada(s) como recebida(s) em ${Date.now() - start}ms`,
+    );
 
     return {
       message: `${result.count} venda(s) marcada(s) como recebida(s) com sucesso`,

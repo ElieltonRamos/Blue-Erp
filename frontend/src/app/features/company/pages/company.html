@@ -499,19 +499,14 @@
           >
             Série NFC-e <span [style.color]="'var(--color-danger)'">*</span>
           </label>
-          <input
-            type="text"
-            formControlName="nfceSeries"
-            placeholder="1"
-            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+          <p
+            class="w-full px-4 py-3 rounded-lg border-2"
             [style.background-color]="'var(--color-surface-alt)'"
             [style.color]="'var(--color-text-primary)'"
-            [style.border-color]="
-              companyForm.get('nfceSeries')?.invalid && companyForm.get('nfceSeries')?.touched
-                ? 'var(--color-danger)'
-                : 'var(--color-border)'
-            "
-          />
+            [style.border-color]="'var(--color-border)'"
+          >
+            {{ companyForm.get('nfceSeries')?.value }}
+          </p>
         </div>
 
         <!-- Número Atual NFC-e -->
@@ -522,20 +517,14 @@
           >
             Número Atual NFC-e <span [style.color]="'var(--color-danger)'">*</span>
           </label>
-          <input
-            type="number"
-            formControlName="nfceCurrentNumber"
-            placeholder="0"
-            class="w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 outline-none"
+          <p
+            class="w-full px-4 py-3 rounded-lg border-2"
             [style.background-color]="'var(--color-surface-alt)'"
             [style.color]="'var(--color-text-primary)'"
-            [style.border-color]="
-              companyForm.get('nfceCurrentNumber')?.invalid &&
-              companyForm.get('nfceCurrentNumber')?.touched
-                ? 'var(--color-danger)'
-                : 'var(--color-border)'
-            "
-          />
+            [style.border-color]="'var(--color-border)'"
+          >
+            {{ companyForm.get('nfceCurrentNumber')?.value }}
+          </p>
         </div>
 
         <!-- Ambiente NFC-e -->

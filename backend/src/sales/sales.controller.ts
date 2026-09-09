@@ -63,8 +63,11 @@ export class SalesController {
     status: HttpStatus.NOT_FOUND,
     description: 'Nenhuma venda pendente encontrada',
   })
-  markAsReceived(@Body() dto: MarkAsReceivedDto) {
-    return this.salesService.markAsReceived(dto.salesIds);
+  markAsReceived(
+    @Body() dto: MarkAsReceivedDto,
+    @CurrentUser('userId') userId: number,
+  ) {
+    return this.salesService.markAsReceived(dto.salesIds, userId);
   }
 
   @Post()
@@ -133,8 +136,9 @@ export class SalesController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateSaleDto: UpdateSaleDto,
+    @CurrentUser('userId') userId: number,
   ) {
-    return this.salesService.update(id, updateSaleDto);
+    return this.salesService.update(id, updateSaleDto, userId);
   }
 
   @Delete(':id')
@@ -154,8 +158,11 @@ export class SalesController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Venda com nota emitida não pode ser deletada',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.salesService.remove(id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('userId') userId: number,
+  ) {
+    return this.salesService.remove(id, userId);
   }
 
   @Post('convert/:orderId')
