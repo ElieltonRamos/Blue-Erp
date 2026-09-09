@@ -154,11 +154,14 @@ function buildItemTax(item: NFeProduct) {
 function buildDest(data: NFeOptions) {
   const cpf = data.dest.CPF?.replace(/\D/g, '');
   const hasCpf = cpf && cpf.length === 11 && cpf !== '00000000000';
+  const isHomolog = data.ide.tpAmb === '2';
 
   if (hasCpf) {
     return {
       CPF: cpf,
-      xNome: data.dest.xNome,
+      xNome: isHomolog
+        ? 'NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL'
+        : data.dest.xNome,
       indIEDest: '9',
     };
   }
@@ -290,8 +293,8 @@ export function generateNFeXML(data: NFeOptions): string {
             uTrib: p.uTrib,
             qTrib: p.qTrib.toFixed(4),
             vUnTrib: p.vUnTrib.toFixed(5),
-            vDesc: p.vDesc.toFixed(2),
-            vOutro: p.vOutro.toFixed(2),
+            ...(p.vDesc > 0 ? { vDesc: p.vDesc.toFixed(2) } : {}),
+            ...(p.vOutro > 0 ? { vOutro: p.vOutro.toFixed(2) } : {}),
             indTot: p.indTot.toString(),
           },
           imposto: taxPerItem[index],
