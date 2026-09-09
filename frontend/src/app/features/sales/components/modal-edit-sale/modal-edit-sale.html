@@ -1,0 +1,222 @@
+<div
+  class="fixed inset-0 flex justify-center items-center z-50"
+  style="background-color: rgba(0, 0, 0, 0.8)"
+>
+  <div
+    class="bg-surface rounded-2xl shadow-lg border border-border-subtle w-full max-w-3xl max-h-[90vh] flex flex-col"
+  >
+    <div class="p-6 border-b border-border-subtle">
+      <h2 class="text-2xl font-bold text-text-primary">Editar Venda #{{ saleData.id }}</h2>
+    </div>
+
+    <div class="p-6 overflow-y-auto grow space-y-6">
+      <!-- CLIENTE -->
+      <div>
+        <label class="text-sm text-text-secondary mb-1 block">Cliente</label>
+        <div class="relative">
+          <input
+            type="text"
+            class="w-full bg-overlay text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none"
+            [(ngModel)]="clientSearch"
+            (ngModelChange)="searchClients()"
+            placeholder="Buscar cliente..."
+          />
+          @if (showClientResults && clientResults.length > 0) {
+            <ul
+              class="absolute z-10 w-full bg-surface border border-border rounded shadow mt-1 max-h-48 overflow-y-auto"
+            >
+              @for (client of clientResults; track client.id) {
+                <li
+                  (click)="selectClient(client)"
+                  class="px-3 py-2 hover:bg-overlay cursor-pointer text-text-primary"
+                >
+                  {{ client.name }}
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </div>
+
+      <!-- ITENS -->
+      <div>
+        <label class="text-sm text-text-secondary mb-1 block">Itens</label>
+        <div class="relative mb-3">
+          <input
+            type="text"
+            class="w-full bg-overlay text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none"
+            [(ngModel)]="productSearch"
+            (ngModelChange)="searchProducts()"
+            placeholder="Buscar produto para adicionar..."
+          />
+          @if (showProductResults && productResults.length > 0) {
+            <ul
+              class="absolute z-10 w-full bg-surface border border-border rounded shadow mt-1 max-h-48 overflow-y-auto"
+            >
+              @for (product of productResults; track product.id) {
+                <li
+                  (click)="selectProduct(product)"
+                  class="px-3 py-2 hover:bg-overlay cursor-pointer text-text-primary flex justify-between"
+                >
+                  <span>{{ product.name }}</span>
+                  <span class="text-text-secondary">R$ {{ product.price.toFixed(2) }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <table class="min-w-full text-text-primary text-left text-sm">
+          <thead class="bg-surface-alt text-accent uppercase text-xs">
+            <tr>
+              <th class="py-2 px-3">Produto</th>
+              <th class="py-2 px-3 w-24">Qtd</th>
+              <th class="py-2 px-3 w-32">Preço Un.</th>
+              <th class="py-2 px-3 w-32">Total</th>
+              <th class="py-2 px-3 w-16"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border-subtle">
+            @for (item of items; track $index) {
+              <tr>
+                <td class="py-2 px-3">{{ item.xProd }}</td>
+                <td class="py-2 px-3">
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="1"
+                    class="w-full bg-overlay border border-border px-2 py-1 rounded"
+                    [(ngModel)]="item.quantity"
+                    (ngModelChange)="recalcItemTotal(item)"
+                  />
+                </td>
+                <td class="py-2 px-3">
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    class="w-full bg-overlay border border-border px-2 py-1 rounded"
+                    [(ngModel)]="item.unitPrice"
+                    (ngModelChange)="recalcItemTotal(item)"
+                  />
+                </td>
+                <td class="py-2 px-3 font-medium">R$ {{ item.totalPrice.toFixed(2) }}</td>
+                <td class="py-2 px-3">
+                  <button (click)="removeItem($index)" class="text-danger hover:opacity-70">
+                    Remover
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="text-center py-4 text-text-muted">Nenhum item</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGAMENTOS -->
+      <div>
+        <div class="flex justify-between items-center mb-1">
+          <label class="text-sm text-text-secondary">Pagamentos</label>
+          <button (click)="addPayment()" class="text-accent text-sm hover:underline">
+            + Adicionar pagamento
+          </button>
+        </div>
+
+        @for (payment of payments; track $index) {
+          <div class="flex gap-2 mb-2 items-center">
+            <select
+              class="bg-overlay text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none flex-1"
+              [(ngModel)]="payment.method"
+            >
+              @for (method of paymentMethods; track method) {
+                <option [value]="method">{{ method }}</option>
+              }
+            </select>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              class="w-32 bg-overlay text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none"
+              [(ngModel)]="payment.amount"
+            />
+            <button (click)="removePayment($index)" class="text-danger hover:opacity-70">
+              Remover
+            </button>
+          </div>
+        }
+      </div>
+
+      <!-- DESCONTO / STATUS -->
+      <div class="flex flex-wrap gap-4 items-end">
+        <div class="flex flex-col w-40">
+          <label class="text-sm text-text-secondary mb-1">Gorjeta (R$)</label>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            class="bg-overlay text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none"
+            [(ngModel)]="serviceCharge"
+          />
+        </div>
+        <div class="flex flex-col w-40">
+          <label class="text-sm text-text-secondary mb-1">Desconto (R$)</label>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            class="bg-overlay text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none"
+            [(ngModel)]="discount"
+          />
+        </div>
+
+        <div class="flex flex-col w-40">
+          <label class="text-sm text-text-secondary mb-1">CFOP</label>
+          <input
+            type="text"
+            class="bg-overlay text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none"
+            [(ngModel)]="cfop"
+          />
+        </div>
+
+        <div class="flex items-center gap-2 pb-2">
+          <input type="checkbox" [(ngModel)]="isPaid" id="isPaid" />
+          <label for="isPaid" class="text-text-primary">Pago</label>
+        </div>
+      </div>
+
+      <!-- TOTAIS -->
+      <div class="bg-surface-alt rounded-xl p-4 border border-border-subtle text-text-primary">
+        <p>Subtotal itens: R$ {{ itemsTotal.toFixed(2) }}</p>
+        @if (serviceCharge > 0) {
+          <p>Taxa de Serviço: R$ {{ serviceCharge.toFixed(2) }}</p>
+        }
+        <p>Total após desconto: R$ {{ totalAfterDiscount.toFixed(2) }}</p>
+        <p>Total pagamentos: R$ {{ paymentsTotal.toFixed(2) }}</p>
+        @if (paymentsMismatch) {
+          <p class="text-warning text-sm mt-1">
+            Atenção: total de pagamentos difere do total da venda.
+          </p>
+        }
+      </div>
+    </div>
+
+    <div class="p-6 border-t border-border-subtle flex justify-end gap-2">
+      <button
+        (click)="close()"
+        class="bg-surface-alt text-text-primary border border-border px-4 py-2 rounded hover:bg-overlay transition"
+      >
+        Cancelar
+      </button>
+      <button
+        (click)="save()"
+        [disabled]="saving"
+        class="bg-accent text-btn-text px-4 py-2 rounded hover:bg-accent-hover transition disabled:opacity-60"
+      >
+        {{ saving ? 'Salvando...' : 'Salvar' }}
+      </button>
+    </div>
+  </div>
+</div>

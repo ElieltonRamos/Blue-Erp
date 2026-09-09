@@ -9,7 +9,7 @@ import {
   FiscalStatus,
   OrderStatus,
 } from '../../generated/prisma/client.js';
-import { Decimal } from '@prisma/client/runtime/client';
+import { Decimal, DecimalJsLike } from '@prisma/client/runtime/client';
 import { CreateSaleDto, CreateSalePaymentDto } from './dto/create-sale.dto.js';
 import { UpdateSaleDto } from './dto/update-sale.dto.js';
 import {
@@ -143,11 +143,12 @@ export class SalesService {
 
     const discount = new Decimal(saleData.discount || 0);
     const cfop = saleData.cfop || '5102';
+    const orderServiceCharge = new Decimal(order.serviceCharge ?? 0);
 
     let totalProductsWithoutDiscount = new Decimal(0);
     let profitSale = new Decimal(0);
 
-    const itemsData = items.map((item, index) => {
+    let itemsData = items.map((item, index) => {
       const product = products.find((p) => p.id === item.productId)!;
       const totalPrice = new Decimal(item.quantity).times(
         new Decimal(item.unitPrice),
@@ -178,6 +179,17 @@ export class SalesService {
       };
     });
 
+    if (orderServiceCharge.greaterThan(0)) {
+      const shares = this.distributeServiceCharge(
+        itemsData,
+        orderServiceCharge,
+      );
+      itemsData = itemsData.map((item, index) => ({
+        ...item,
+        serviceCharge: shares[index],
+      }));
+    }
+
     const total = totalProductsWithoutDiscount.minus(discount);
 
     this.validatePayments(payments, total);
@@ -188,7 +200,7 @@ export class SalesService {
         userOperator: username,
         operatorId: userId,
         orderId: saleData.orderId,
-        serviceCharge: order.serviceCharge ?? new Decimal(0),
+        serviceCharge: orderServiceCharge,
         date: resolveLogicalDateTime(),
         totalProductsWithoutDiscount,
         discount,
@@ -277,6 +289,35 @@ export class SalesService {
     return new SaleResponseDto(sale);
   }
 
+  private distributeServiceCharge<
+    T extends {
+      totalPrice: Decimal | DecimalJsLike | string | number;
+    },
+  >(items: T[], serviceCharge: Decimal): Decimal[] {
+    if (items.length === 0) return [];
+
+    const cents = serviceCharge.times(100).toDecimalPlaces(0);
+    const baseCents = cents.dividedToIntegerBy(items.length);
+    const remainderCents = cents.minus(baseCents.times(items.length));
+
+    const shares = items.map(() => baseCents);
+
+    const totalPrices = items.map(
+      (item) => item.totalPrice as unknown as Decimal,
+    );
+
+    let maxIndex = 0;
+    totalPrices.forEach((value, index) => {
+      if (value.greaterThan(totalPrices[maxIndex])) {
+        maxIndex = index;
+      }
+    });
+
+    shares[maxIndex] = shares[maxIndex].plus(remainderCents);
+
+    return shares.map((c) => c.dividedBy(100));
+  }
+
   async update(
     id: number,
     updateSaleDto: UpdateSaleDto,
@@ -300,24 +341,217 @@ export class SalesService {
       throw new BadRequestException('Venda cancelada não pode ser alterada');
     }
 
-    let recalculatedTotal = new Decimal(
-      existingSale.totalProductsWithoutDiscount,
-    );
-    let recalculatedProfit = new Decimal(existingSale.profitSale);
+    if (updateSaleDto.clientId !== undefined) {
+      const client = await this.prisma.client.client.findUnique({
+        where: { id: updateSaleDto.clientId },
+      });
+      if (!client) {
+        throw new BadRequestException(
+          `Cliente ${updateSaleDto.clientId} não encontrado`,
+        );
+      }
+    }
 
-    if (updateSaleDto.discount !== undefined) {
-      const newDiscount = new Decimal(updateSaleDto.discount);
-      recalculatedTotal = recalculatedTotal.minus(newDiscount);
-      recalculatedProfit = recalculatedProfit.minus(
+    let saleItemsCreateData: Prisma.SaleItemCreateManySaleInput[] | null = null;
+    let orderItemsCreateData: Prisma.OrderItemCreateManyOrderInput[] | null =
+      null;
+    let totalProductsWithoutDiscount: Decimal;
+    let recalculatedProfit: Decimal;
+
+    const newDiscount =
+      updateSaleDto.discount !== undefined
+        ? new Decimal(updateSaleDto.discount)
+        : new Decimal(existingSale.discount);
+
+    const newServiceCharge =
+      updateSaleDto.serviceCharge !== undefined
+        ? new Decimal(updateSaleDto.serviceCharge)
+        : new Decimal(existingSale.serviceCharge);
+
+    const serviceChargeChanged =
+      updateSaleDto.serviceCharge !== undefined &&
+      !newServiceCharge.equals(new Decimal(existingSale.serviceCharge));
+
+    if (updateSaleDto.items) {
+      const productIds = updateSaleDto.items.map((item) => item.productId);
+      const products = await this.prisma.client.product.findMany({
+        where: { id: { in: productIds } },
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          costPrice: true,
+          unit: true,
+        },
+      });
+
+      const foundIds = products.map((p) => p.id);
+      const missingIds = productIds.filter((pid) => !foundIds.includes(pid));
+
+      if (missingIds.length > 0) {
+        throw new BadRequestException(
+          `Produtos não encontrados: ${missingIds.join(', ')}`,
+        );
+      }
+
+      const cfop = updateSaleDto.cfop || existingSale.cfop;
+
+      totalProductsWithoutDiscount = new Decimal(0);
+      let rawProfit = new Decimal(0);
+
+      saleItemsCreateData = updateSaleDto.items.map((item, index) => {
+        const product = products.find((p) => p.id === item.productId)!;
+        const totalPrice = new Decimal(item.quantity).times(
+          new Decimal(item.unitPrice),
+        );
+        const itemCost = new Decimal(product.costPrice).times(
+          new Decimal(item.quantity),
+        );
+
+        totalProductsWithoutDiscount =
+          totalProductsWithoutDiscount.plus(totalPrice);
+        rawProfit = rawProfit.plus(totalPrice.minus(itemCost));
+
+        return {
+          itemNumber: index + 1,
+          productId: item.productId,
+          xProd: product.name,
+          quantity: new Decimal(item.quantity),
+          unitPrice: new Decimal(item.unitPrice),
+          totalPrice,
+          taxUnit: product.unit,
+          taxQuantity: new Decimal(item.quantity),
+          taxUnitPrice: new Decimal(item.unitPrice),
+          composesTotal: 1,
+          cfop,
+          totalTaxValue: null,
+          importTaxValue: new Decimal(0),
+          iofValue: new Decimal(0),
+        };
+      });
+
+      if (serviceChargeChanged) {
+        const shares = this.distributeServiceCharge(
+          saleItemsCreateData,
+          newServiceCharge,
+        );
+        saleItemsCreateData = saleItemsCreateData.map((item, index) => ({
+          ...item,
+          serviceCharge: shares[index],
+        }));
+      } else {
+        const oldByProduct = new Map(
+          existingSale.items.map((i) => [
+            i.productId,
+            new Decimal(i.serviceCharge),
+          ]),
+        );
+        const newProductIds = new Set(
+          saleItemsCreateData.map((i) => i.productId),
+        );
+
+        let removedServiceCharge = new Decimal(0);
+        for (const oldItem of existingSale.items) {
+          if (!newProductIds.has(oldItem.productId)) {
+            removedServiceCharge = removedServiceCharge.plus(
+              new Decimal(oldItem.serviceCharge),
+            );
+          }
+        }
+
+        saleItemsCreateData = saleItemsCreateData.map((item) => ({
+          ...item,
+          serviceCharge: oldByProduct.get(item.productId) ?? new Decimal(0),
+        }));
+
+        if (
+          removedServiceCharge.greaterThan(0) &&
+          saleItemsCreateData.length > 0
+        ) {
+          const shares = this.distributeServiceCharge(
+            saleItemsCreateData,
+            removedServiceCharge,
+          );
+          saleItemsCreateData = saleItemsCreateData.map((item, index) => ({
+            ...item,
+            serviceCharge: (item.serviceCharge as unknown as Decimal).plus(
+              shares[index],
+            ),
+          }));
+        }
+      }
+
+      orderItemsCreateData = updateSaleDto.items.map((item) => {
+        const product = products.find((p) => p.id === item.productId)!;
+        const total = new Decimal(item.quantity).times(
+          new Decimal(item.unitPrice),
+        );
+        return {
+          code: product.code,
+          name: product.name,
+          productId: item.productId,
+          quantity: new Decimal(item.quantity),
+          unitPrice: new Decimal(item.unitPrice),
+          total,
+        };
+      });
+
+      recalculatedProfit = rawProfit.minus(newDiscount);
+    } else {
+      totalProductsWithoutDiscount = new Decimal(
+        existingSale.totalProductsWithoutDiscount,
+      );
+      recalculatedProfit = new Decimal(existingSale.profitSale).minus(
         newDiscount.minus(new Decimal(existingSale.discount)),
       );
     }
 
-    if (updateSaleDto.payments) {
-      this.validatePayments(updateSaleDto.payments, recalculatedTotal);
-    }
+    const recalculatedTotal = totalProductsWithoutDiscount
+      .minus(newDiscount)
+      .plus(newServiceCharge);
+
+    // valida SEMPRE: pagamentos novos, se enviados; senão os existentes
+    const paymentsToValidate =
+      updateSaleDto.payments ??
+      existingSale.payments.map((p) => ({
+        method: p.method,
+        amount: Number(p.amount),
+        change: Number(p.change),
+      }));
+
+    this.validatePayments(paymentsToValidate, recalculatedTotal);
+
+    const shouldUpdateTotals =
+      updateSaleDto.items !== undefined ||
+      updateSaleDto.discount !== undefined ||
+      updateSaleDto.serviceCharge !== undefined;
 
     const updatedSale = await this.prisma.client.$transaction(async (tx) => {
+      if (saleItemsCreateData) {
+        await tx.saleItem.deleteMany({ where: { saleId: id } });
+        await tx.saleItem.createMany({
+          data: saleItemsCreateData.map((item) => ({ ...item, saleId: id })),
+        });
+      }
+
+      if (serviceChargeChanged && !saleItemsCreateData) {
+        const shares = this.distributeServiceCharge(
+          existingSale.items.map((i) => ({
+            totalPrice: new Decimal(i.totalPrice),
+          })),
+          newServiceCharge,
+        );
+
+        await Promise.all(
+          existingSale.items.map((item, index) =>
+            tx.saleItem.update({
+              where: { id: item.id },
+              data: { serviceCharge: shares[index] },
+            }),
+          ),
+        );
+      }
+
       if (updateSaleDto.payments) {
         await tx.salePayment.deleteMany({ where: { saleId: id } });
         await tx.salePayment.createMany({
@@ -328,11 +562,28 @@ export class SalesService {
         });
       }
 
+      if (existingSale.orderId) {
+        await this.syncOrderFromSale(tx, existingSale.orderId, {
+          serviceCharge: updateSaleDto.serviceCharge,
+          serviceChargeChanged,
+          total:
+            updateSaleDto.items !== undefined
+              ? totalProductsWithoutDiscount
+              : undefined,
+          orderItems: orderItemsCreateData,
+        });
+      }
+
       return tx.sale.update({
         where: { id },
         data: {
-          ...(updateSaleDto.discount !== undefined && {
-            discount: new Decimal(updateSaleDto.discount),
+          ...(updateSaleDto.clientId !== undefined && {
+            clientId: updateSaleDto.clientId,
+          }),
+          ...(shouldUpdateTotals && {
+            totalProductsWithoutDiscount,
+            discount: newDiscount,
+            serviceCharge: newServiceCharge,
             total: recalculatedTotal,
             profitSale: recalculatedProfit,
           }),
@@ -349,6 +600,112 @@ export class SalesService {
     });
 
     return new SaleResponseDto(updatedSale);
+  }
+
+  private async syncOrderFromSale(
+    tx: Prisma.TransactionClient,
+    orderId: number,
+    data: {
+      serviceCharge?: number;
+      serviceChargeChanged: boolean;
+      total?: Decimal;
+      orderItems: Prisma.OrderItemCreateManyOrderInput[] | null;
+    },
+  ): Promise<void> {
+    if (data.orderItems) {
+      let finalOrderItems = data.orderItems;
+
+      if (data.serviceChargeChanged && data.serviceCharge !== undefined) {
+        const shares = this.distributeServiceCharge(
+          data.orderItems.map((i) => ({ totalPrice: i.total })),
+          new Decimal(data.serviceCharge),
+        );
+        finalOrderItems = data.orderItems.map((item, index) => ({
+          ...item,
+          serviceCharge: shares[index],
+        }));
+      } else {
+        const existingOrderItems = await tx.orderItem.findMany({
+          where: { orderId },
+          select: { productId: true, serviceCharge: true },
+        });
+
+        const oldByProduct = new Map(
+          existingOrderItems.map((i) => [
+            i.productId,
+            new Decimal(i.serviceCharge),
+          ]),
+        );
+        const newProductIds = new Set(data.orderItems.map((i) => i.productId));
+
+        let removedServiceCharge = new Decimal(0);
+        for (const oldItem of existingOrderItems) {
+          if (!newProductIds.has(oldItem.productId)) {
+            removedServiceCharge = removedServiceCharge.plus(
+              new Decimal(oldItem.serviceCharge),
+            );
+          }
+        }
+
+        finalOrderItems = data.orderItems.map((item) => ({
+          ...item,
+          serviceCharge: oldByProduct.get(item.productId) ?? new Decimal(0),
+        }));
+
+        if (removedServiceCharge.greaterThan(0) && finalOrderItems.length > 0) {
+          const shares = this.distributeServiceCharge(
+            finalOrderItems.map((i) => ({ totalPrice: i.total })),
+            removedServiceCharge,
+          );
+          finalOrderItems = finalOrderItems.map((item, index) => ({
+            ...item,
+            serviceCharge: (item.serviceCharge as unknown as Decimal).plus(
+              shares[index],
+            ),
+          }));
+        }
+      }
+
+      await tx.orderItem.deleteMany({ where: { orderId } });
+      await tx.orderItem.createMany({
+        data: finalOrderItems.map((item) => ({ ...item, orderId })),
+      });
+    } else if (data.serviceChargeChanged && data.serviceCharge !== undefined) {
+      const existingOrderItems = await tx.orderItem.findMany({
+        where: { orderId },
+        select: { id: true, total: true },
+      });
+
+      const shares = this.distributeServiceCharge(
+        existingOrderItems.map((i) => ({ totalPrice: i.total })),
+        new Decimal(data.serviceCharge),
+      );
+
+      await Promise.all(
+        existingOrderItems.map((item, index) =>
+          tx.orderItem.update({
+            where: { id: item.id },
+            data: { serviceCharge: shares[index] },
+          }),
+        ),
+      );
+    }
+
+    const updateData: Prisma.OrderUpdateInput = {};
+
+    if (data.serviceCharge !== undefined) {
+      updateData.serviceCharge = new Decimal(data.serviceCharge);
+    }
+    if (data.total !== undefined) {
+      updateData.total = data.total;
+    }
+
+    if (Object.keys(updateData).length > 0 || data.orderItems) {
+      await tx.order.update({
+        where: { id: orderId },
+        data: updateData,
+      });
+    }
   }
 
   async remove(id: number): Promise<{ message: string }> {

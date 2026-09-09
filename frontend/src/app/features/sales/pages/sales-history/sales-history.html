@@ -176,6 +176,18 @@
                 >
                   Ver Detalhes
                 </button>
+                <button
+                  (click)="openEditModal(sale)"
+                  [disabled]="sale.fiscalStatus === fiscalStatusEnum.EMITIDA"
+                  [title]="
+                    sale.fiscalStatus === fiscalStatusEnum.EMITIDA
+                      ? 'Venda com nota fiscal emitida não pode ser editada'
+                      : ''
+                  "
+                  class="bg-surface-alt text-text-primary border border-border py-2 px-4 rounded hover:bg-overlay transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Editar
+                </button>
               </td>
             </tr>
           } @empty {
@@ -200,5 +212,13 @@
 
   @if (showSaleModal) {
     <app-modal-sales-note [saleData]="saleSelected!" (closeModal)="closeSaleModal()" />
+  }
+
+  @if (showEditModal && saleToEdit) {
+    <app-modal-edit-sale
+      [saleData]="saleToEdit"
+      (closeModal)="closeEditModal()"
+      (saved)="onSaleUpdated()"
+    />
   }
 </div>

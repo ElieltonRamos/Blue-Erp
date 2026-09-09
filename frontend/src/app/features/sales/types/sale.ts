@@ -35,6 +35,24 @@ export interface SaleItem {
   updatedAt: Date;
 }
 
+export interface UpdateSaleItemDto {
+  id?: number; // presente = item existente, ausente = item novo
+  productId: number;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface UpdateSaleDto {
+  clientId?: number;
+  payments?: SalePaymentDto[];
+  items?: UpdateSaleItemDto[];
+  discount?: number;
+  serviceCharge?: number;
+  isPaid?: boolean;
+  fiscalStatus?: FiscalStatus;
+  cfop?: string;
+}
+
 export interface SaleClient {
   id: number;
   name: string;
@@ -93,14 +111,6 @@ export interface CreateSaleDto {
   payments: SalePaymentDto[];
   items: CreateSaleItemDto[];
   discount?: number;
-  cfop?: string;
-}
-
-export interface UpdateSaleDto {
-  payments?: SalePaymentDto[];
-  discount?: number;
-  isPaid?: boolean;
-  fiscalStatus?: FiscalStatus;
   cfop?: string;
 }
 
