@@ -7,6 +7,8 @@ import {
   OnInit,
   ChangeDetectorRef,
   HostListener,
+  ViewChild,
+  ElementRef,
 } from '@angular/core';
 import { FiscalStatus, Sale, SaleItem } from '../../types/sale';
 import { LicenseService } from '../../../../core/services/license.service';
@@ -14,15 +16,19 @@ import { EmissionResult, NfceService } from '../../services/nfce.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { CompanyService } from '../../../company/services/company.service';
 import { Company } from '../../../company/types/company';
+import { SafePipe } from '../../../../shared/pipes/safe.pipe';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-modal-sales-note',
-  imports: [],
+  imports: [SafePipe, NgClass],
   templateUrl: './modal-sales-note.html',
 })
 export class ModalSalesNote implements OnInit {
   @Input() saleData!: Sale;
   @Output() closeModal = new EventEmitter();
+
+  @ViewChild('pdfFrame') pdfFrame?: ElementRef<HTMLIFrameElement>;
 
   private licenseService = inject(LicenseService);
   private nfceService = inject(NfceService);
@@ -33,6 +39,7 @@ export class ModalSalesNote implements OnInit {
   isRequestingNfce = false;
   nfceData: EmissionResult | null = null;
   companyData: Company | null = null;
+  isPdfPreviewUrl: string | null = null;
 
   canEmitNfce = this.licenseService.getCurrentPlan() === 'pro';
 
@@ -46,7 +53,7 @@ export class ModalSalesNote implements OnInit {
       this.close();
     }
   }
-  
+
   ngOnInit() {
     this.loadCompanyData();
   }
@@ -102,7 +109,15 @@ export class ModalSalesNote implements OnInit {
   }
 
   close() {
+    this.backToSummary();
     this.closeModal.emit();
+  }
+
+  backToSummary() {
+    if (this.isPdfPreviewUrl) {
+      window.URL.revokeObjectURL(this.isPdfPreviewUrl);
+      this.isPdfPreviewUrl = null;
+    }
   }
 
   hasNfce(): boolean {
@@ -171,11 +186,15 @@ export class ModalSalesNote implements OnInit {
     this.nfceService.downloadPdf(accessKey).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
+
+        this.isPdfPreviewUrl = url;
+        this.cdr.detectChanges();
+
         const link = document.createElement('a');
         link.href = url;
         link.download = `${accessKey}.pdf`;
         link.click();
-        window.URL.revokeObjectURL(url);
+
         this.notification.success('DANFE baixado com sucesso!');
       },
       error: (error) => {
@@ -186,6 +205,24 @@ export class ModalSalesNote implements OnInit {
   }
 
   print() {
+    if (this.isPdfPreviewUrl) {
+      this.printPdf();
+      return;
+    }
+    this.printCupom();
+  }
+
+  printPdf() {
+    const iframeEl = this.pdfFrame?.nativeElement;
+    if (!iframeEl?.contentWindow) {
+      console.error('Iframe do PDF não encontrado.');
+      return;
+    }
+    iframeEl.contentWindow.focus();
+    iframeEl.contentWindow.print();
+  }
+
+  printCupom() {
     const content = document.getElementById('invoiceContent')?.innerHTML;
     if (!content) {
       console.error('Conteúdo da nota fiscal não encontrado.');

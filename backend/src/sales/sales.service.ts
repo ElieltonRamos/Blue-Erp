@@ -35,6 +35,10 @@ export class SalesService {
     return new Date(`${dateString}T23:59:59-03:00`);
   }
 
+  private computeIsPaid(payments: CreateSalePaymentDto[]): boolean {
+    return !payments.some((p) => p.method === 'CREDITO_LOJA');
+  }
+
   private validatePayments(
     payments: CreateSalePaymentDto[],
     total: Decimal,
@@ -222,7 +226,7 @@ export class SalesService {
           discount,
           total,
           profitSale: profitSale.minus(discount),
-          isPaid: clientId === 1,
+          isPaid: this.computeIsPaid(payments),
           cfop,
           fiscalStatus: FiscalStatus.PENDENTE,
           createdAt: resolveLogicalDateTime(),
@@ -885,7 +889,7 @@ export class SalesService {
             discount,
             total,
             profitSale: profitSale.minus(discount),
-            isPaid: clientId === 1,
+            isPaid: this.computeIsPaid(dto.payments),
             cfop: dto.cfop || '5102',
             fiscalStatus: FiscalStatus.PENDENTE,
             serviceCharge: order.serviceCharge ?? new Decimal(0),
