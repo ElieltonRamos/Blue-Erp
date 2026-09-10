@@ -44,6 +44,8 @@ export async function seedCompany(prisma: PrismaClient) {
         '/financeiro',
         '/empresa',
         '/fiscal',
+        '/veiculos',
+        '/servicos',
       ],
     },
   });

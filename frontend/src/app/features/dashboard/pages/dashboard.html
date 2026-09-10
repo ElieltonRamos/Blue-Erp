@@ -81,10 +81,26 @@
     }
     @if (isEnabled('/produtos')) {
       <app-card-menu
-        [title]="'Cadastro de Produto'"
+        [title]="'Produtos'"
         [icon]="'🏷️'"
         [path]="'/produtos'"
         [isActive]="canAccess('/produtos')"
+      />
+    }
+    @if (isEnabled('/servicos')) {
+      <app-card-menu
+        [title]="'Serviços'"
+        [icon]="'🛠️'"
+        [path]="'/servicos'"
+        [isActive]="canAccess('/servicos')"
+      />
+    }
+    @if (isEnabled('/veiculos')) {
+      <app-card-menu
+        [title]="'Veiculos'"
+        [icon]="'🚗'"
+        [path]="'/veiculos'"
+        [isActive]="canAccess('/veiculos')"
       />
     }
     @if (isEnabled('/usuarios')) {

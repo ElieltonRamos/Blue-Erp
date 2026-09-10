@@ -23,6 +23,8 @@ const PERMISSIONS: Record<string, Role[]> = {
   '/historico-vendas': ['admin', 'caixa'],
   '/relatorios': ['admin', 'caixa'],
   '/financeiro': ['admin', 'caixa'],
+  '/servicos': ['admin', 'caixa'],
+  '/veiculos': ['admin'],
   '/empresa': ['admin'],
   '/fiscal': ['admin'],
 };

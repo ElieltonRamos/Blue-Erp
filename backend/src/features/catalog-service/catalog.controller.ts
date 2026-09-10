@@ -4,7 +4,9 @@ import {
   Post,
   Body,
   Patch,
+  Delete,
   Param,
+  Query,
   ParseIntPipe,
   HttpCode,
   HttpStatus,
@@ -21,6 +23,8 @@ import {
   JwtAuthGuard,
   JwtPayload,
 } from '../../common/guards/jwt-auth.guard.js';
+import { FindAllServicesDto } from './dto/find-all-services.dto.js';
+import { PaginatedResponseDto } from './dto/paginated-response.dto.js';
 
 @ApiTags('Services')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -48,14 +52,18 @@ export class CatalogController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar serviços' })
+  @ApiOperation({
+    summary: 'Listar serviços (paginado, com busca e filtro por ativo)',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Lista de serviços',
-    type: [ServiceResponseDto],
+    description: 'Lista paginada de serviços',
+    type: PaginatedResponseDto,
   })
-  findAll(): Promise<ServiceResponseDto[]> {
-    return this.catalogService.findAll();
+  findAll(
+    @Query() query: FindAllServicesDto,
+  ): Promise<PaginatedResponseDto<ServiceResponseDto>> {
+    return this.catalogService.findAll(query);
   }
 
   @Get(':id')
@@ -92,5 +100,24 @@ export class CatalogController {
     @CurrentUser() user: JwtPayload,
   ): Promise<ServiceResponseDto> {
     return this.catalogService.update(id, dto, user.username);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Desativar serviço (soft delete)' })
+  @ApiParam({ name: 'id', type: Number, description: 'ID do serviço' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Serviço desativado com sucesso',
+    type: ServiceResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Serviço não encontrado',
+  })
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<ServiceResponseDto> {
+    return this.catalogService.remove(id, user.username);
   }
 }

@@ -110,7 +110,7 @@
 
   .action-btn {
     @apply inline-flex items-center justify-center gap-1
-          w-full max-w-[140px]
+          w-full max-w-35
           px-2 py-1
           text-xs font-medium
           rounded

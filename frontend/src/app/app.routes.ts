@@ -17,6 +17,8 @@ import { NfeManager } from './features/nfe-manager/pages/nfe-manager';
 import { offlineGuard } from './core/guards/offline.guard';
 import { OfflineComponent } from './features/offline/pages/offline.component';
 import { NotFound } from './features/offline/pages/not-found';
+import { CatalogServices } from './features/catalog-services/pages/catalog-services';
+import { Vehicles } from './features/assets/pages/vehicles';
 
 export const routes: Routes = [
   {
@@ -42,6 +44,16 @@ export const routes: Routes = [
   {
     path: 'produtos',
     component: Products,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'servicos',
+    component: CatalogServices,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'veiculos',
+    component: Vehicles,
     canActivate: [authGuard],
   },
   {

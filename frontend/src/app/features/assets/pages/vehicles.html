@@ -1,0 +1,368 @@
+<div class="min-h-screen flex flex-col items-center justify-start bg-base px-4 py-6">
+  <!-- Botão -->
+  <button
+    (click)="goToMenu()"
+    class="self-center mb-6 bg-accent hover:bg-accent-hover text-btn-text px-6 py-2 rounded-lg shadow-md transition-all"
+  >
+    Voltar para menu
+  </button>
+
+  <div class="w-full max-w-5xl space-y-6">
+    <!-- Formulário de Criação -->
+    <div class="bg-surface border border-border rounded-xl shadow-lg p-6">
+      <h2 class="text-text-primary font-semibold text-lg mb-1">Cadastrar Veículo</h2>
+      <p class="text-text-secondary text-sm mb-4">
+        Busque o cliente dono do veículo, informe a placa e, se quiser, complete com marca, modelo,
+        ano e quilometragem.
+      </p>
+
+      <form (ngSubmit)="createAsset()" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Busca de cliente -->
+        <div class="md:col-span-2 relative">
+          <label class="block text-text-secondary font-medium mb-2 text-sm">
+            Cliente (dono do veículo)
+          </label>
+
+          <input
+            type="text"
+            placeholder="Digite o nome do cliente..."
+            class="w-full p-3 rounded-lg bg-surface-alt text-text-primary placeholder:text-text-muted border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all duration-200"
+            [(ngModel)]="newClientTerm"
+            name="newClientTerm"
+            (ngModelChange)="onNewClientTermChange()"
+          />
+
+          @if (newClientSelected) {
+            <p class="text-success text-xs mt-1">
+              ✓ Cliente selecionado: {{ newClientSelected.name }}
+            </p>
+          } @else {
+            <p class="text-text-muted text-xs mt-1">
+              Comece a digitar o nome e escolha o cliente na lista.
+            </p>
+          }
+
+          @if (newClientResults.length > 0) {
+            <div
+              class="absolute z-10 w-full mt-1 bg-surface-alt border border-border rounded-lg shadow-lg max-h-56 overflow-y-auto"
+            >
+              @for (client of newClientResults; track client.id) {
+                <button
+                  type="button"
+                  (click)="selectNewClient(client)"
+                  class="w-full text-left px-4 py-2 text-text-primary hover:bg-overlay transition-colors text-sm"
+                >
+                  {{ client.name }}
+                  @if (client.phone) {
+                    <span class="text-text-muted"> — {{ client.phone }}</span>
+                  }
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <div>
+          <label class="block text-text-secondary font-medium mb-2 text-sm"> Placa </label>
+
+          <input
+            type="text"
+            placeholder="Ex: ABC-1234"
+            class="w-full p-3 rounded-lg bg-surface-alt text-text-primary placeholder:text-text-muted border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all duration-200 uppercase"
+            [(ngModel)]="newAssetLabel"
+            name="newAssetLabel"
+            required
+          />
+        </div>
+
+        <div>
+          <label class="block text-text-secondary font-medium mb-2 text-sm"> Marca </label>
+
+          <input
+            type="text"
+            placeholder="Ex: Fiat"
+            class="w-full p-3 rounded-lg bg-surface-alt text-text-primary placeholder:text-text-muted border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all duration-200"
+            [(ngModel)]="newAssetBrand"
+            name="newAssetBrand"
+          />
+        </div>
+
+        <div>
+          <label class="block text-text-secondary font-medium mb-2 text-sm"> Modelo </label>
+
+          <input
+            type="text"
+            placeholder="Ex: Uno"
+            class="w-full p-3 rounded-lg bg-surface-alt text-text-primary placeholder:text-text-muted border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all duration-200"
+            [(ngModel)]="newAssetModel"
+            name="newAssetModel"
+          />
+        </div>
+
+        <div>
+          <label class="block text-text-secondary font-medium mb-2 text-sm"> Ano </label>
+
+          <input
+            type="text"
+            placeholder="Ex: 2015"
+            class="w-full p-3 rounded-lg bg-surface-alt text-text-primary placeholder:text-text-muted border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all duration-200"
+            [(ngModel)]="newAssetYear"
+            name="newAssetYear"
+          />
+        </div>
+
+        <div>
+          <label class="block text-text-secondary font-medium mb-2 text-sm"> Km atual </label>
+
+          <input
+            type="text"
+            placeholder="Ex: 85000"
+            class="w-full p-3 rounded-lg bg-surface-alt text-text-primary placeholder:text-text-muted border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all duration-200"
+            [(ngModel)]="newAssetKm"
+            name="newAssetKm"
+          />
+        </div>
+
+        <div class="md:col-span-4 flex justify-end">
+          <button
+            type="submit"
+            [disabled]="creating"
+            class="inline-flex items-center gap-2 px-6 py-2.5 bg-accent hover:bg-accent-hover text-btn-text rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cadastrar Veículo
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Barra de Filtros e Busca -->
+    <div class="bg-surface border border-border rounded-xl shadow-lg p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+        <!-- Busca por placa -->
+        <div>
+          <label class="block text-text-secondary font-medium mb-2 text-sm">
+            Buscar por Placa
+          </label>
+
+          <div class="relative">
+            <input
+              type="text"
+              placeholder="Digite a placa do veículo..."
+              class="w-full pl-10 pr-10 py-3 rounded-lg bg-surface-alt text-text-primary placeholder:text-text-muted border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all duration-200"
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="onSearchChange()"
+            />
+
+            <svg
+              class="w-5 h-5 text-text-muted absolute left-3 top-1/2 -translate-y-1/2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Filtro por cliente -->
+        <div class="relative">
+          <label class="block text-text-secondary font-medium mb-2 text-sm">
+            Filtrar por Cliente
+          </label>
+
+          <div class="relative">
+            <input
+              type="text"
+              placeholder="Digite o nome do cliente..."
+              class="w-full pl-3 pr-10 py-3 rounded-lg bg-surface-alt text-text-primary placeholder:text-text-muted border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all duration-200"
+              [(ngModel)]="filterClientTerm"
+              (ngModelChange)="onFilterClientTermChange()"
+            />
+
+            @if (filterClientTerm) {
+              <button
+                (click)="clearFilterClient()"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            }
+          </div>
+
+          @if (filterClientResults.length > 0) {
+            <div
+              class="absolute z-10 w-full mt-1 bg-surface-alt border border-border rounded-lg shadow-lg max-h-56 overflow-y-auto"
+            >
+              @for (client of filterClientResults; track client.id) {
+                <button
+                  type="button"
+                  (click)="selectFilterClient(client)"
+                  class="w-full text-left px-4 py-2 text-text-primary hover:bg-overlay transition-colors text-sm"
+                >
+                  {{ client.name }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Rodapé -->
+      <div class="flex justify-between items-center mt-4 pt-4 border-t border-border">
+        <div class="text-text-secondary text-sm">
+          Mostrando
+          <span class="font-bold text-text-primary">{{ listAssets.length }}</span>
+          de
+          <span class="font-bold text-text-primary">{{ totalItems }}</span>
+          veículos
+        </div>
+
+        <app-paginator
+          [totalItems]="totalItems"
+          [itemsPerPage]="limit"
+          [totalPages]="totalPages"
+          [page]="page"
+          (pageChanged)="onPageChange($event)"
+        />
+      </div>
+    </div>
+
+    <!-- Listagem agrupada por cliente -->
+    <div class="bg-surface border border-border rounded-xl shadow-lg overflow-hidden">
+      <div class="px-6 py-4 border-b border-border">
+        <p class="text-text-secondary text-sm">
+          Os veículos estão agrupados por cliente. Clique no nome do cliente para abrir ou fechar a
+          lista dos veículos dele.
+        </p>
+      </div>
+
+      @if (groupedAssets.length === 0) {
+        <div class="py-12 text-center">
+          <div class="flex flex-col items-center gap-3">
+            <svg
+              class="w-16 h-16 text-text-muted"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+
+            <p class="text-text-secondary text-lg font-medium">Nenhum veículo encontrado</p>
+
+            <p class="text-text-muted text-sm">
+              Cadastre o primeiro veículo usando o formulário acima
+            </p>
+          </div>
+        </div>
+      }
+
+      <div class="divide-y divide-border">
+        @for (group of groupedAssets; track group.clientId) {
+          <div>
+            <!-- Cabeçalho do cliente -->
+            <button
+              type="button"
+              (click)="toggleClientGroup(group.clientId)"
+              class="w-full flex items-center justify-between px-6 py-4 hover:bg-overlay transition-colors text-left"
+            >
+              <div class="flex items-center gap-3">
+                <svg
+                  class="w-5 h-5 text-text-muted transition-transform duration-200"
+                  [class.rotate-90]="isClientExpanded(group.clientId)"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+
+                <span class="font-semibold text-text-primary">{{ group.clientName }}</span>
+              </div>
+
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info/20 text-info border border-info/40"
+              >
+                {{ group.assets.length }} veículo{{ group.assets.length > 1 ? 's' : '' }}
+              </span>
+            </button>
+
+            <!-- Veículos do cliente -->
+            @if (isClientExpanded(group.clientId)) {
+              <div class="bg-base/40 px-6 pb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  @for (asset of group.assets; track asset.id) {
+                    <div
+                      class="bg-surface-alt border border-border rounded-lg p-4 flex flex-col gap-2"
+                    >
+                      <div class="flex items-center justify-between">
+                        <span
+                          class="font-mono font-bold text-text-primary bg-overlay px-2 py-1 rounded"
+                        >
+                          {{ asset.label }}
+                        </span>
+
+                        <button
+                          (click)="openEditModal(asset)"
+                          class="action-btn bg-info text-white hover:opacity-90 w-auto px-3"
+                        >
+                          <span>Editar</span>
+                        </button>
+                      </div>
+
+                      @if (asset.attributes.length > 0) {
+                        <div class="flex flex-wrap gap-1.5 mt-1">
+                          @for (attr of asset.attributes; track attr.key) {
+                            <span
+                              class="text-xs text-text-secondary bg-overlay px-2 py-0.5 rounded"
+                            >
+                              {{ getAttributeLabel(attr.key) }}: {{ attr.value }}
+                            </span>
+                          }
+                        </div>
+                      } @else {
+                        <p class="text-xs text-text-muted">Sem marca/modelo/ano cadastrados</p>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Edição -->
+  <app-modal-edit-entity
+    [show]="showEditModal"
+    [title]="'Editar Veículo'"
+    [entity]="editEntity"
+    [fields]="editFields"
+    (close)="closeEditModal()"
+    (save)="onEditSave($event)"
+  ></app-modal-edit-entity>
+</div>
