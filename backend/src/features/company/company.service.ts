@@ -5,12 +5,12 @@ import {
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../database/prisma.service.js';
 import { CreateCompanyDto } from './dto/create-company.dto.js';
 import { UpdateCompanyDto } from './dto/update-company.dto.js';
 import { CompanyResponseDto } from './dto/company-response.dto.js';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { PrismaService } from '../../database/prisma.service.js';
 
 interface UploadedFile {
   originalname: string;

@@ -16,8 +16,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { CompanyService } from './company.service.js';
 import { CreateCompanyDto } from './dto/create-company.dto.js';
 import { UpdateCompanyDto } from './dto/update-company.dto.js';
-import { RolesGuard } from '../common/guards/roles.guard.js';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../../common/guards/roles.guard.js';
 
 @ApiTags('company')
 @UseGuards(JwtAuthGuard, RolesGuard)

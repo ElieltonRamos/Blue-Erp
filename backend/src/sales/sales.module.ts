@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { SalesService } from './sales.service';
 import { SalesController } from './sales.controller';
 import { SaleToNfeConverterService } from './sale-to-nfe-converte.service';
-import { CompanyModule } from '../company/company.module';
+import { CompanyModule } from 'src/features/company/company.module';
 
 @Module({
   imports: [CompanyModule],

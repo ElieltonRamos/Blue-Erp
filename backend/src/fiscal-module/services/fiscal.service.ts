@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CompanyService } from '../../company/company.service';
 import { StorageService } from './storage.service';
 import { EmissionService } from './emission.service';
 import { CancellationService } from './cancellation.service';
@@ -18,6 +17,7 @@ import {
   NfceNotFoundException,
 } from '../fiscal.exception';
 import { NfeSender } from '../lib/nfe-sender';
+import { CompanyService } from 'src/features/company/company.service';
 
 @Injectable()
 export class FiscalService {

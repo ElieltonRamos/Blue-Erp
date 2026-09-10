@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CompanyService } from '../../company/company.service';
-import { CompanyResponseDto } from '../../company/dto/company-response.dto';
+import { CompanyService } from '../../features/company/company.service';
 import { IbptService } from '../../ibpt/ibpt.service';
 import { StorageService } from './storage.service';
 import { SaleToNfeConverterService } from '../../sales/sale-to-nfe-converte.service';
@@ -33,6 +32,7 @@ import {
 } from 'fs';
 import { join } from 'path';
 import { nowBrasilia } from 'src/common/date-utils';
+import { CompanyResponseDto } from 'src/features/company/dto/company-response.dto';
 
 const DEBUG_RETENTION_DAYS = 7;
 

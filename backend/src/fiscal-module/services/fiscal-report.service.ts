@@ -1,12 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
-import { CompanyService } from '../../company/company.service';
 import { StorageService } from './storage.service';
 import { DanfeGenerator } from '../lib/danfe-generator';
 import { NfceNotFoundException } from '../fiscal.exception';
 import { ListNfceDto } from '../dto/list-nfce.dto';
 import { RevenueReportQueryDto } from '../dto/revenue-report-query.dto';
+import { CompanyService } from 'src/features/company/company.service';
 
 const CFOP_DESCRIPTIONS: Record<string, string> = {
   '5101': 'Venda de produção própria',

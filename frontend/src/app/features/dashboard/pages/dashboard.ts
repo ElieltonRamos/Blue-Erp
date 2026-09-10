@@ -8,6 +8,7 @@ import { ThemeService } from '../../../core/services/theme.service';
 import { DashboardService } from '../services/dashboard.service';
 import { AutoClosedOrder } from '../types/auto-closed-order';
 import { LicenseService } from '../../../core/services/license.service';
+import { CompanyService } from '../../company/services/company.service';
 
 type Role = 'admin' | 'caixa' | 'garcom' | 'cozinheiro';
 const PRO_ONLY_ROUTES = ['/fiscal'];
@@ -37,6 +38,10 @@ export class Dashboard implements OnInit {
   private notification = inject(NotificationService);
   private dashboardService = inject(DashboardService);
   private licenseService = inject(LicenseService);
+  private companyService = inject(CompanyService);
+
+  enabledMenus = signal<string[] | null>(null);
+  companyLoaded = signal(false);
   themeService = inject(ThemeService);
 
   userName: string = '';
@@ -69,6 +74,17 @@ export class Dashboard implements OnInit {
 
     this.userName = payload.username;
     this.role = (payload.role as Role) || 'garcom';
+
+    this.companyService.getCompanyInfo().subscribe({
+      next: (company) => {
+        this.enabledMenus.set(company.enabledMenus);
+        this.companyLoaded.set(true);
+      },
+      error: () => {
+        this.enabledMenus.set(null);
+        this.companyLoaded.set(true);
+      },
+    });
 
     if (this.canAccess('/financeiro')) {
       this.dashboardService.getAutoClosedOrders().subscribe({
@@ -106,6 +122,11 @@ export class Dashboard implements OnInit {
     localStorage.removeItem('token');
     this.notification.info('Logout realizado');
     this.router.navigate(['/']);
+  }
+
+  isEnabled(path: string): boolean {
+    if (!this.companyLoaded()) return false;
+    return !!this.enabledMenus()?.includes(path);
   }
 
   canAccess(path: string): boolean {

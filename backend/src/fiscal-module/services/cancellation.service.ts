@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CompanyService } from '../../company/company.service';
 import {
   DigitalCertificate,
   NFeConfiguration,
@@ -9,6 +8,7 @@ import { CancelNfceDto } from '../dto/cancel-nfce.dto';
 import { FiscalException, NfceNotFoundException } from '../fiscal.exception';
 import { NfeSender } from '../lib/nfe-sender';
 import { Sale } from 'generated/prisma/client';
+import { CompanyService } from 'src/features/company/company.service';
 
 const CANCELLATION_DEADLINE_MINUTES = 30;
 

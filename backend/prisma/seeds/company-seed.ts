@@ -31,6 +31,20 @@ export async function seedCompany(prisma: PrismaClient) {
       ibptVersion: '4.0',
       licenseKey: 'COMPLETO-22222222000122-a7c3e14d8b224a21',
       licenseToken: 'TOKEN-HOMOLOG-BLUE-456',
+      businessType: 'VAREJO',
+      enabledMenus: [
+        '/clientes',
+        '/comandas',
+        '/cozinha',
+        '/mesas',
+        '/produtos',
+        '/usuarios',
+        '/historico-vendas',
+        '/relatorios',
+        '/financeiro',
+        '/empresa',
+        '/fiscal',
+      ],
     },
   });
 

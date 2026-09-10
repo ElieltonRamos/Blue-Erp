@@ -1,3 +1,5 @@
+import { BusinessType } from 'generated/prisma/enums';
+
 // src/company/entities/company.entity.ts
 export class Company {
   id?: number; // ID único da empresa
@@ -27,6 +29,8 @@ export class Company {
   ibptVersion: string; // Versão da tabela IBPT
   licenseKey: string;
   licenseToken: string;
+  businessType: BusinessType; // Tipo de negócio (RESTAURANTE, OFICINA, VAREJO, PDV)
+  enabledMenus?: any; // Paths liberados no menu do frontend
 
   constructor(partial: Partial<Company>) {
     Object.assign(this, partial);

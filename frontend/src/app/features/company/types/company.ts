@@ -23,6 +23,8 @@ export interface Company {
   licenseKey: string;
   licenseToken: string;
   certificateExpirationDate?: Date;
+  businessType: 'RESTAURANTE' | 'OFICINA' | 'VAREJO' | 'PDV';
+  enabledMenus: string[] | null;
 
   // Campos sensíveis não retornados pela API
   nfceCscConfigured: boolean;

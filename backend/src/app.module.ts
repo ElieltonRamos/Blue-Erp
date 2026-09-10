@@ -4,7 +4,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { PrismaModule } from './database/prisma.module';
-import { CompanyModule } from './company/company.module';
 import { ClientsModule } from './clients/clients.module';
 import { IbptModule } from './ibpt/ibpt.module';
 import { ExpensesModule } from './expenses/expenses.module';
@@ -22,6 +21,8 @@ import { FiscalModule } from './fiscal-module/fiscal.module';
 import { CategoryProductModule } from './category-product/category-product.module';
 import { PrinterModule } from './printer/printer.module';
 import { TelegramModule } from './telegram/telegram.module';
+import { CompanyModule } from './features/company/company.module';
+import { CatalogServiceModule } from './features/catalog-service/catalog.module';
 
 // ScheduleModule.forRoot(): registra o scheduler global do NestJS (@nestjs/schedule).
 // Só pode existir 1x na aplicação — habilita o decorator @Cron nos providers
@@ -56,6 +57,7 @@ import { TelegramModule } from './telegram/telegram.module';
     CategoryProductModule,
     PrinterModule,
     TelegramModule,
+    CatalogServiceModule,
   ],
   controllers: [AppController],
   providers: [AppService, LicenseSystemService],

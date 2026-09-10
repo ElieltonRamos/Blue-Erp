@@ -12,7 +12,8 @@ import {
   Min,
   Matches,
 } from 'class-validator';
-import { ValidationMessages } from '../../common/validation-messages.js';
+import { BusinessType } from 'generated/prisma/enums';
+import { ValidationMessages } from 'src/common/validation-messages';
 
 export class CreateCompanyDto {
   @ApiProperty({ example: '12345678000190' }) // SEM formatação
@@ -21,6 +22,19 @@ export class CreateCompanyDto {
   @Matches(/^\d{14}$/, { message: 'CNPJ deve conter apenas 14 números' })
   @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('CNPJ') })
   cnpj: string;
+
+  @ApiProperty({
+    enum: BusinessType,
+    required: false,
+    example: BusinessType.RESTAURANTE,
+  })
+  @IsEnum(BusinessType, { message: 'businessType inválido' })
+  @IsOptional()
+  businessType?: BusinessType;
+
+  @ApiProperty({ required: false, example: { comandas: true, cozinha: true } })
+  @IsOptional()
+  enabledMenus?: any;
 
   @ApiProperty({ example: 'Blue Restaurante Ltda' })
   @IsString({ message: ValidationMessages.IS_STRING('Razão social') })

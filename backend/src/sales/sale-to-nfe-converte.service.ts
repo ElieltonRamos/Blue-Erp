@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Injectable, Logger } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/client';
-import { CompanyService } from 'src/company/company.service';
 import { PrismaService } from 'src/database/prisma.service';
 import {
   NFeOptions,
@@ -14,6 +13,7 @@ import {
   UF_CODES,
 } from './entities/sale-converter-nfe';
 import { nowBrasilia, toSefazDateTime } from 'src/common/date-utils';
+import { CompanyService } from 'src/features/company/company.service';
 
 const CARD_PAYMENT_METHODS = ['CARTAO_CREDITO', 'CARTAO_DEBITO', 'PIX'];
 

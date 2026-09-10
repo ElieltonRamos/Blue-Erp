@@ -4,10 +4,10 @@ import { FiscalService } from './services/fiscal.service';
 import { EmissionService } from './services/emission.service';
 import { CancellationService } from './services/cancellation.service';
 import { StorageService } from './services/storage.service';
-import { CompanyModule } from '../company/company.module';
 import { SalesModule } from '../sales/sales.module';
 import { IbptModule } from '../ibpt/ibpt.module';
 import { FiscalReportsService } from './services/fiscal-report.service';
+import { CompanyModule } from 'src/features/company/company.module';
 
 @Module({
   imports: [CompanyModule, SalesModule, IbptModule],

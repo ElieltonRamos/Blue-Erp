@@ -1,4 +1,5 @@
 import { Exclude } from 'class-transformer';
+import { BusinessType } from 'generated/prisma/enums';
 
 export class CompanyResponseDto {
   id: number;
@@ -23,6 +24,8 @@ export class CompanyResponseDto {
   ibptVersion: string;
   licenseKey: string | null;
   licenseToken: string | null;
+  businessType: BusinessType;
+  enabledMenus: any;
   certificateExpirationDate: Date | null;
 
   @Exclude()
