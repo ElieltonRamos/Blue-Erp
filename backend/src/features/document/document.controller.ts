@@ -26,12 +26,35 @@ import {
   JwtPayload,
 } from '../../common/guards/jwt-auth.guard.js';
 import { PaginatedResponseDto } from '../catalog-service/dto/paginated-response.dto.js';
+import { UpdateDocumentItemDto } from './dto/update-document-item.dto.js';
 
 @ApiTags('Documents')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('documents')
 export class DocumentController {
   constructor(private readonly documentService: DocumentService) {}
+
+  @Patch(':id/items/:itemId')
+  @ApiOperation({ summary: 'Atualizar quantidade/preço de um item' })
+  @ApiParam({ name: 'id', type: Number, description: 'ID do documento' })
+  @ApiParam({ name: 'itemId', type: Number, description: 'ID do item' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Item atualizado com sucesso',
+    type: DocumentResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Item ou documento não encontrado',
+  })
+  updateItem(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('itemId', ParseIntPipe) itemId: number,
+    @Body() dto: UpdateDocumentItemDto,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<DocumentResponseDto> {
+    return this.documentService.updateItem(id, itemId, dto, user.username);
+  }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)

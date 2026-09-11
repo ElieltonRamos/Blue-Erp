@@ -12,8 +12,17 @@ import { FindAllDocumentsDto } from './dto/find-all-documents.dto.js';
 import { AddDocumentItemDto } from './dto/add-document-item.dto.js';
 import { UpdateDocumentStatusDto } from './dto/update-document-status.dto.js';
 import { DocumentStatus } from '../../../generated/prisma/enums.js';
+import { UpdateDocumentItemDto } from './dto/update-document-item.dto.js';
 
-const DOCUMENT_INCLUDE = { client: true, items: true } as const;
+const DOCUMENT_INCLUDE = {
+  client: true,
+  items: {
+    include: {
+      product: { select: { name: true } },
+      service: { select: { name: true } },
+    },
+  },
+} as const;
 
 @Injectable()
 export class DocumentService {
@@ -61,15 +70,89 @@ export class DocumentService {
     return new DocumentResponseDto(document);
   }
 
+  async updateItem(
+    documentId: number,
+    itemId: number,
+    dto: UpdateDocumentItemDto,
+    username: string,
+  ): Promise<DocumentResponseDto> {
+    await this.getEditableDocument(documentId);
+
+    const item = await this.prisma.client.documentItem.findUnique({
+      where: { id: itemId },
+    });
+    if (!item || item.documentId !== documentId) {
+      throw new NotFoundException('Item não encontrado neste documento');
+    }
+
+    const quantity = dto.quantity ?? Number(item.quantity);
+    const unitPrice = dto.unitPrice ?? Number(item.unitPrice);
+    const total = quantity * unitPrice;
+
+    const document = await this.prisma.client.$transaction(async (tx) => {
+      await tx.documentItem.update({
+        where: { id: itemId },
+        data: { quantity, unitPrice, total },
+      });
+
+      const aggregate = await tx.documentItem.aggregate({
+        where: { documentId },
+        _sum: { total: true },
+      });
+
+      return tx.document.update({
+        where: { id: documentId },
+        data: { total: aggregate._sum.total ?? 0 },
+        include: DOCUMENT_INCLUDE,
+      });
+    });
+
+    this.logger.log(
+      `[Document ${documentId}] usuario=${username} | item ${itemId} atualizado (quantity=${quantity}, unitPrice=${unitPrice})`,
+    );
+
+    return new DocumentResponseDto(document);
+  }
+
   async findAll(
     query: FindAllDocumentsDto,
   ): Promise<PaginatedResponseDto<DocumentResponseDto>> {
-    const { page = 1, limit = 10, type, status, clientId } = query;
+    const {
+      page = 1,
+      limit = 10,
+      type,
+      status,
+      clientId,
+      assetId,
+      mechanicId,
+      startDate,
+      endDate,
+      minTotal,
+      maxTotal,
+    } = query;
 
     const where: any = {};
+
     if (type) where.type = type;
     if (status) where.status = status;
     if (clientId) where.clientId = clientId;
+    if (assetId) where.assetId = assetId;
+
+    if (mechanicId) {
+      where.items = { some: { mechanicId } };
+    }
+
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(`${startDate}T00:00:00`);
+      if (endDate) where.createdAt.lte = new Date(`${endDate}T23:59:59`);
+    }
+
+    if (minTotal !== undefined || maxTotal !== undefined) {
+      where.total = {};
+      if (minTotal !== undefined) where.total.gte = minTotal;
+      if (maxTotal !== undefined) where.total.lte = maxTotal;
+    }
 
     const [documents, total] = await this.prisma.client.$transaction([
       this.prisma.client.document.findMany({

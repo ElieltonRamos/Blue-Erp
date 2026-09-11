@@ -1,0 +1,254 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div
+    class="bg-surface border border-border rounded-xl shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6"
+  >
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-text-primary font-semibold text-lg">
+        #{{ document.id }} — {{ document.clientName }}
+      </h3>
+      <button (click)="close()" class="text-text-muted hover:text-text-primary">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <div class="flex items-center gap-3 mb-4">
+      <span
+        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info/20 text-info border border-info/40"
+      >
+        {{ statusLabels[document.status] }}
+      </span>
+      <span class="text-text-secondary text-sm">
+        {{ document.type === 'QUOTE' ? 'Orçamento' : 'Ordem de Serviço' }}
+      </span>
+    </div>
+
+    <!-- Itens -->
+    <div class="border border-border rounded-lg overflow-hidden mb-4">
+      <table class="w-full text-sm">
+        <thead class="bg-surface-alt text-text-secondary">
+          <tr>
+            <th class="text-left px-3 py-2">Item</th>
+            <th class="text-left px-3 py-2">Qtd</th>
+            <th class="text-left px-3 py-2">Unit.</th>
+            <th class="text-left px-3 py-2">Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          @for (item of document.items; track item.id) {
+            <tr>
+              @if (editingItemId === item.id) {
+                <td class="px-3 py-2 text-text-primary">
+                  {{ item.type === 'PRODUCT' ? item.productName : item.serviceName }}
+                </td>
+                <td class="px-3 py-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    [(ngModel)]="editQuantity"
+                    class="w-20 p-1.5 rounded bg-surface-alt text-text-primary border border-border focus:border-accent outline-none"
+                  />
+                </td>
+                <td class="px-3 py-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    [(ngModel)]="editUnitPrice"
+                    class="w-24 p-1.5 rounded bg-surface-alt text-text-primary border border-border focus:border-accent outline-none"
+                  />
+                </td>
+                <td class="px-3 py-2 text-text-primary">
+                  R$ {{ editQuantity * editUnitPrice | number: '1.2-2' }}
+                </td>
+                <td class="px-3 py-2 text-right whitespace-nowrap">
+                  <button
+                    (click)="saveEditItem(item.id)"
+                    [disabled]="savingEdit"
+                    class="text-success hover:opacity-80 text-xs mr-2"
+                  >
+                    Salvar
+                  </button>
+                  <button
+                    (click)="cancelEditItem()"
+                    class="text-text-muted hover:text-text-primary text-xs"
+                  >
+                    Cancelar
+                  </button>
+                </td>
+              } @else {
+                <td class="px-3 py-2 text-text-primary">
+                  {{ item.type === 'PRODUCT' ? item.productName : item.serviceName }}
+                </td>
+                <td class="px-3 py-2 text-text-primary">{{ item.quantity }}</td>
+                <td class="px-3 py-2 text-text-primary">
+                  R$ {{ item.unitPrice | number: '1.2-2' }}
+                </td>
+                <td class="px-3 py-2 text-text-primary">R$ {{ item.total | number: '1.2-2' }}</td>
+                <td class="px-3 py-2 text-right whitespace-nowrap">
+                  @if (canAddItem()) {
+                    <button
+                      (click)="startEditItem(item)"
+                      class="text-info hover:opacity-80 text-xs mr-2"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      (click)="removeItem(item.id)"
+                      class="text-danger hover:opacity-80 text-xs"
+                    >
+                      Remover
+                    </button>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="text-right text-text-primary font-semibold mb-4">
+      Total: R$ {{ document.total | number: '1.2-2' }}
+    </div>
+
+    <!-- Adicionar item -->
+    @if (canAddItem()) {
+      <div class="bg-surface-alt border border-border rounded-lg p-4 mb-4">
+        <div class="flex gap-4 mb-3">
+          <label class="flex items-center gap-2 text-text-primary text-sm">
+            <input type="radio" name="itemType" value="PRODUCT" [(ngModel)]="itemType" />
+            Peça
+          </label>
+          <label class="flex items-center gap-2 text-text-primary text-sm">
+            <input type="radio" name="itemType" value="SERVICE" [(ngModel)]="itemType" />
+            Serviço
+          </label>
+        </div>
+
+        @if (itemType === 'PRODUCT') {
+          <div class="relative mb-3">
+            <input
+              type="text"
+              placeholder="Buscar peça..."
+              class="w-full p-3 rounded-lg bg-surface text-text-primary placeholder:text-text-muted border border-border focus:border-accent outline-none"
+              [(ngModel)]="productTerm"
+              (ngModelChange)="onProductTermChange()"
+            />
+            @if (productResults.length > 0) {
+              <div
+                class="absolute z-10 w-full mt-1 bg-surface border border-border rounded-lg shadow-lg max-h-56 overflow-y-auto"
+              >
+                @for (product of productResults; track product.id) {
+                  <button
+                    type="button"
+                    (click)="selectProduct(product)"
+                    class="w-full text-left px-4 py-2 text-text-primary hover:bg-overlay transition-colors text-sm"
+                  >
+                    {{ product.name }} — R$ {{ product.price | number: '1.2-2' }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="relative mb-3">
+            <input
+              type="text"
+              placeholder="Buscar serviço..."
+              class="w-full p-3 rounded-lg bg-surface text-text-primary placeholder:text-text-muted border border-border focus:border-accent outline-none"
+              [(ngModel)]="serviceTerm"
+              (ngModelChange)="onServiceTermChange()"
+            />
+            @if (serviceResults.length > 0) {
+              <div
+                class="absolute z-10 w-full mt-1 bg-surface border border-border rounded-lg shadow-lg max-h-56 overflow-y-auto"
+              >
+                @for (service of serviceResults; track service.id) {
+                  <button
+                    type="button"
+                    (click)="selectService(service)"
+                    class="w-full text-left px-4 py-2 text-text-primary hover:bg-overlay transition-colors text-sm"
+                  >
+                    {{ service.name }} — R$ {{ service.price | number: '1.2-2' }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
+
+          <select
+            [(ngModel)]="mechanicId"
+            class="w-full p-3 rounded-lg bg-surface text-text-primary border border-border focus:border-accent outline-none mb-3"
+          >
+            <option [ngValue]="null">Sem mecânico definido</option>
+            @for (mechanic of mechanics; track mechanic.id) {
+              <option [ngValue]="mechanic.id">{{ mechanic.username }}</option>
+            }
+          </select>
+        }
+
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="block text-text-secondary text-sm mb-1">Quantidade</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              [(ngModel)]="itemQuantity"
+              class="w-full p-3 rounded-lg bg-surface text-text-primary border border-border focus:border-accent outline-none"
+            />
+          </div>
+          <div>
+            <label class="block text-text-secondary text-sm mb-1">Preço unitário</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              [(ngModel)]="itemUnitPrice"
+              class="w-full p-3 rounded-lg bg-surface text-text-primary border border-border focus:border-accent outline-none"
+            />
+          </div>
+        </div>
+
+        <button
+          (click)="addItem()"
+          [disabled]="addingItem"
+          class="w-full py-2.5 bg-accent hover:bg-accent-hover text-btn-text rounded-lg font-medium disabled:opacity-50"
+        >
+          Adicionar item
+        </button>
+      </div>
+    }
+
+    <!-- Ações de status -->
+    <div class="flex flex-wrap gap-3">
+      @if (canApprove()) {
+        <button (click)="approve()" class="action-btn bg-success text-white hover:opacity-90">
+          Aprovar
+        </button>
+      }
+      @if (canAdvance()) {
+        <button
+          (click)="advanceToInProgress()"
+          class="action-btn bg-info text-white hover:opacity-90"
+        >
+          Iniciar execução
+        </button>
+      }
+      @if (canCancel()) {
+        <button (click)="cancel()" class="action-btn bg-danger text-white hover:opacity-90">
+          Cancelar
+        </button>
+      }
+    </div>
+  </div>
+</div>

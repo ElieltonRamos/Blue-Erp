@@ -12,8 +12,14 @@ export class DocumentItemResponseDto {
   @ApiProperty({ example: 1, required: false })
   productId: number | null;
 
+  @ApiProperty({ example: 'Filtro de óleo', required: false })
+  productName?: string;
+
   @ApiProperty({ example: 1, required: false })
   serviceId: number | null;
+
+  @ApiProperty({ example: 'Troca de óleo', required: false })
+  serviceName?: string;
 
   @ApiProperty({ example: 1, required: false })
   mechanicId: number | null;
@@ -32,4 +38,16 @@ export class DocumentItemResponseDto {
 
   @ApiProperty()
   updatedAt: Date;
+
+  constructor(
+    partial: Partial<DocumentItemResponseDto> & {
+      product?: { name: string } | null;
+      service?: { name: string } | null;
+    },
+  ) {
+    const { product, service, ...rest } = partial as any;
+    Object.assign(this, rest);
+    if (product?.name) this.productName = product.name;
+    if (service?.name) this.serviceName = service.name;
+  }
 }

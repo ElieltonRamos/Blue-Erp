@@ -49,10 +49,13 @@ export class DocumentResponseDto {
   constructor(
     partial: Partial<DocumentResponseDto> & { client?: { name: string } },
   ) {
-    const { client, ...rest } = partial as any;
+    const { client, items, ...rest } = partial as any;
     Object.assign(this, rest);
     if (client?.name) {
       this.clientName = client.name;
+    }
+    if (items) {
+      this.items = items.map((i: any) => new DocumentItemResponseDto(i));
     }
   }
 }

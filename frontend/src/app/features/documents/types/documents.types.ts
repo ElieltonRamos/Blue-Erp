@@ -8,7 +8,9 @@ export interface DocumentItem {
   id: number;
   type: DocumentItemType;
   productId: number | null;
+  productName?: string;
   serviceId: number | null;
+  serviceName?: string;
   mechanicId: number | null;
   quantity: number;
   unitPrice: number;
@@ -57,6 +59,25 @@ export interface FilterDocumentParams {
   type?: DocumentType;
   status?: DocumentStatus;
   clientId?: number;
+  assetId?: number;
+  mechanicId?: number;
+  startDate?: string;
+  endDate?: string;
+  minTotal?: number;
+  maxTotal?: number;
 }
 
 export type DocumentPaginatedResponse = PaginatedResponse<OSDocument>;
+
+export interface UpdateDocumentItemDTO {
+  quantity?: number;
+  unitPrice?: number;
+}
+
+export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
+  DRAFT: 'Rascunho',
+  APPROVED: 'Aprovado',
+  IN_PROGRESS: 'Em andamento',
+  COMPLETED: 'Concluído',
+  CANCELED: 'Cancelado',
+};
