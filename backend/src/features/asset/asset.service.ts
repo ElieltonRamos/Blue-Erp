@@ -38,7 +38,7 @@ export class AssetService {
           ? { create: attributes.map((a) => ({ key: a.key, value: a.value })) }
           : undefined,
       },
-      include: { attributes: true },
+      include: { attributes: true, client: { select: { name: true } } },
     });
 
     this.logger.log(
@@ -81,7 +81,7 @@ export class AssetService {
         orderBy: { [sortKey]: sortOrder },
         skip: (page - 1) * limit,
         take: limit,
-        include: { attributes: true },
+        include: { attributes: true, client: { select: { name: true } } },
       }),
       this.prisma.client.asset.count({ where }),
     ]);
@@ -97,7 +97,7 @@ export class AssetService {
   async findOne(id: number): Promise<AssetResponseDto> {
     const asset = await this.prisma.client.asset.findUnique({
       where: { id },
-      include: { attributes: true },
+      include: { attributes: true, client: { select: { name: true } } },
     });
 
     if (!asset) {
@@ -145,7 +145,7 @@ export class AssetService {
                 }
               : undefined,
         },
-        include: { attributes: true },
+        include: { attributes: true, client: { select: { name: true } } },
       });
     });
 

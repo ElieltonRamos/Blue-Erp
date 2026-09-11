@@ -63,6 +63,14 @@
         [isActive]="canAccess('/comandas')"
       />
     }
+    @if (isEnabled('/ordem-servico')) {
+      <app-card-menu
+        [title]="'Ordem de Servico'"
+        [icon]="'🛒📄'"
+        [path]="'/ordem-servico'"
+        [isActive]="canAccess('/ordem-servico')"
+      />
+    }
     @if (isEnabled('/cozinha')) {
       <app-card-menu
         [title]="'Cozinha'"

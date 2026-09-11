@@ -24,6 +24,7 @@ import { TelegramModule } from './telegram/telegram.module';
 import { CompanyModule } from './features/company/company.module';
 import { CatalogServiceModule } from './features/catalog-service/catalog.module';
 import { AssetModule } from './features/asset/asset.module';
+import { DocumentModule } from './features/document/document.module';
 
 // ScheduleModule.forRoot(): registra o scheduler global do NestJS (@nestjs/schedule).
 // Só pode existir 1x na aplicação — habilita o decorator @Cron nos providers
@@ -60,6 +61,7 @@ import { AssetModule } from './features/asset/asset.module';
     TelegramModule,
     CatalogServiceModule,
     AssetModule,
+    DocumentModule,
   ],
   controllers: [AppController],
   providers: [AppService, LicenseSystemService],
