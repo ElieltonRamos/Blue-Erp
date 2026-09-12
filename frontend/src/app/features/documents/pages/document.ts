@@ -5,26 +5,34 @@ import { Router } from '@angular/router';
 import { PaginatorComponent } from '../../../shared/paginator/paginator.component';
 import { NotificationService } from '../../../shared/toastr/notification.service';
 import { DocumentService } from '../services/document.service';
-
+import {
+  OSDocument,
+  DocumentType,
+  DocumentStatus,
+  CreateDocumentDTO,
+  FilterDocumentParams,
+  DOCUMENT_STATUS_LABELS,
+} from '../types/documents.types';
 import { ClientService } from '../../clients/services/client.service';
 import Client from '../../clients/types/clients';
 import { AssetService } from '../../assets/services/asset.service';
 import { Asset } from '../../assets/types/asset.type';
+import { VehicleCreateFormComponent } from '../../assets/components/vehicle-create-form.component';
 import { UserService } from '../../users/services/user.service';
 import User from '../../users/types/user';
-import { DocumentDetailComponent } from '../components/document-detail.component';
-import {
-  CreateDocumentDTO,
-  DOCUMENT_STATUS_LABELS,
-  DocumentStatus,
-  DocumentType,
-  FilterDocumentParams,
-  OSDocument,
-} from '../types/documents.types';
+import { CreateClient } from '../../clients/components/create-client/create-client';
+import { DocumentDetailComponent } from '../components/document-detail/document-detail.component';
 
 @Component({
   selector: 'app-documents',
-  imports: [CommonModule, FormsModule, PaginatorComponent, DocumentDetailComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    PaginatorComponent,
+    DocumentDetailComponent,
+    CreateClient,
+    VehicleCreateFormComponent,
+  ],
   templateUrl: './document.html',
 })
 export class Documents {
@@ -59,9 +67,6 @@ export class Documents {
   filterAsset: Asset | null = null;
   private filterAssetTimer: ReturnType<typeof setTimeout> | null = null;
 
-  allUsers: User[] = [];
-  newResponsibleId: number | null = null;
-
   private today(): string {
     return new Date().toISOString().slice(0, 10);
   }
@@ -87,6 +92,13 @@ export class Documents {
 
   newAssetOptions: Asset[] = [];
   newAssetSelected: Asset | null = null;
+
+  allUsers: User[] = [];
+  newResponsibleId: number | null = null;
+
+  // --- Atalhos de cadastro rápido ---
+  showClientCreateForm = false;
+  showVehicleCreateForm = false;
 
   // --- Detalhe ---
   selectedDocument: OSDocument | null = null;
@@ -263,6 +275,8 @@ export class Documents {
     this.newAssetOptions = [];
     this.newAssetSelected = null;
     this.newResponsibleId = null;
+    this.showClientCreateForm = false;
+    this.showVehicleCreateForm = false;
   }
 
   onNewClientTermChange() {
@@ -337,6 +351,34 @@ export class Documents {
         this.notification.error(`Erro ao criar documento: ${e.error?.message || e.message}`);
       },
     });
+  }
+
+  // --- Atalhos de cadastro rápido ---
+  openClientCreateForm() {
+    this.showClientCreateForm = true;
+  }
+
+  closeClientCreateForm() {
+    this.showClientCreateForm = false;
+  }
+
+  onClientCreated(client: Client) {
+    this.showClientCreateForm = false;
+    this.selectNewClient(client);
+  }
+
+  openVehicleCreateForm() {
+    this.showVehicleCreateForm = true;
+  }
+
+  closeVehicleCreateForm() {
+    this.showVehicleCreateForm = false;
+  }
+
+  onVehicleCreatedInForm(asset: Asset) {
+    this.showVehicleCreateForm = false;
+    this.newAssetOptions = [...this.newAssetOptions, asset];
+    this.newAssetSelected = asset;
   }
 
   // --- Detalhe ---

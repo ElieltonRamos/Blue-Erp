@@ -5,11 +5,11 @@ import { Router } from '@angular/router';
 import { PaginatorComponent } from '../../../shared/paginator/paginator.component';
 import { NotificationService } from '../../../shared/toastr/notification.service';
 import { AssetService } from '../services/asset.service';
-import { Asset, CreateAssetDTO, FilterAssetParams } from '../types/asset.type';
-import { alertConfirm } from '../../../shared/alerts/custom-alerts';
+import { Asset, FilterAssetParams } from '../types/asset.type';
 import { ModalEditEntity, FormField } from '../../../shared/modal-edit-entity/modal-edit-entity';
 import { ClientService } from '../../clients/services/client.service';
 import Client from '../../clients/types/clients';
+import { VehicleCreateFormComponent } from '../components/vehicle-create-form.component';
 
 interface ClientGroup {
   clientId: number;
@@ -26,7 +26,13 @@ const ATTRIBUTE_LABELS: Record<string, string> = {
 
 @Component({
   selector: 'app-vehicles',
-  imports: [CommonModule, FormsModule, PaginatorComponent, ModalEditEntity],
+  imports: [
+    CommonModule,
+    FormsModule,
+    PaginatorComponent,
+    ModalEditEntity,
+    VehicleCreateFormComponent,
+  ],
   templateUrl: './vehicles.html',
 })
 export class Vehicles {
@@ -55,14 +61,7 @@ export class Vehicles {
   filterClientSearching: boolean = false;
   private filterClientTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // --- Formulário de criação ---
-  newAssetLabel: string = '';
-  newAssetBrand: string = '';
-  newAssetModel: string = '';
-  newAssetYear: string = '';
-  newAssetKm: string = '';
-  creating: boolean = false;
-
+  // --- Seleção de cliente (form de criação de veículo) ---
   newClientTerm: string = '';
   newClientResults: Client[] = [];
   newClientSelected: Client | null = null;
@@ -244,54 +243,13 @@ export class Vehicles {
   }
 
   // --- Criação ---
-  createAsset() {
-    if (!this.newClientSelected) {
-      this.notification.error('Selecione o cliente dono do veículo.');
-      return;
-    }
-
-    if (!this.newAssetLabel.trim()) {
-      this.notification.error('Informe a placa do veículo.');
-      return;
-    }
-
-    const attributes = [
-      { key: 'marca', value: this.newAssetBrand.trim() },
-      { key: 'modelo', value: this.newAssetModel.trim() },
-      { key: 'ano', value: this.newAssetYear.trim() },
-      { key: 'km', value: this.newAssetKm.trim() },
-    ].filter((a) => a.value !== '');
-
-    const dto: CreateAssetDTO = {
-      type: 'VEHICLE',
-      label: this.newAssetLabel.trim(),
-      clientId: this.newClientSelected.id!,
-      attributes: attributes.length ? attributes : undefined,
-    };
-
-    this.creating = true;
-
-    this.assetService.create(dto).subscribe({
-      next: () => {
-        this.notification.success('Veículo cadastrado com sucesso!');
-        this.resetCreateForm();
-        this.creating = false;
-        this.page = 1;
-        this.loadAssets();
-      },
-      error: (e) => {
-        this.creating = false;
-        this.notification.error(`Erro ao cadastrar veículo: ${e.error?.message || e.message}`);
-      },
-    });
+  onVehicleCreated(asset: Asset) {
+    this.resetClientSelection();
+    this.page = 1;
+    this.loadAssets();
   }
 
-  private resetCreateForm() {
-    this.newAssetLabel = '';
-    this.newAssetBrand = '';
-    this.newAssetModel = '';
-    this.newAssetYear = '';
-    this.newAssetKm = '';
+  resetClientSelection() {
     this.newClientTerm = '';
     this.newClientSelected = null;
     this.newClientResults = [];

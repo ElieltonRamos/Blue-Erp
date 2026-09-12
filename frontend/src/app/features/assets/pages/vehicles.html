@@ -16,123 +16,59 @@
         ano e quilometragem.
       </p>
 
-      <form (ngSubmit)="createAsset()" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <!-- Busca de cliente -->
-        <div class="md:col-span-2 relative">
-          <label class="block text-text-secondary font-medium mb-2 text-sm">
-            Cliente (dono do veículo)
-          </label>
+      <!-- Busca de cliente (fica no componente pai) -->
+      <div class="relative mb-4">
+        <label class="block text-text-secondary font-medium mb-2 text-sm">
+          Cliente (dono do veículo)
+        </label>
 
-          <input
-            type="text"
-            placeholder="Digite o nome do cliente..."
-            class="w-full p-3 rounded-lg bg-surface-alt text-text-primary placeholder:text-text-muted border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all duration-200"
-            [(ngModel)]="newClientTerm"
-            name="newClientTerm"
-            (ngModelChange)="onNewClientTermChange()"
-          />
+        <input
+          type="text"
+          placeholder="Digite o nome do cliente..."
+          class="w-full p-3 rounded-lg bg-surface-alt text-text-primary placeholder:text-text-muted border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all duration-200"
+          [(ngModel)]="newClientTerm"
+          name="newClientTerm"
+          (ngModelChange)="onNewClientTermChange()"
+        />
 
-          @if (newClientSelected) {
-            <p class="text-success text-xs mt-1">
-              ✓ Cliente selecionado: {{ newClientSelected.name }}
-            </p>
-          } @else {
-            <p class="text-text-muted text-xs mt-1">
-              Comece a digitar o nome e escolha o cliente na lista.
-            </p>
-          }
+        @if (newClientSelected) {
+          <p class="text-success text-xs mt-1">
+            ✓ Cliente selecionado: {{ newClientSelected.name }}
+          </p>
+        } @else {
+          <p class="text-text-muted text-xs mt-1">
+            Comece a digitar o nome e escolha o cliente na lista.
+          </p>
+        }
 
-          @if (newClientResults.length > 0) {
-            <div
-              class="absolute z-10 w-full mt-1 bg-surface-alt border border-border rounded-lg shadow-lg max-h-56 overflow-y-auto"
-            >
-              @for (client of newClientResults; track client.id) {
-                <button
-                  type="button"
-                  (click)="selectNewClient(client)"
-                  class="w-full text-left px-4 py-2 text-text-primary hover:bg-overlay transition-colors text-sm"
-                >
-                  {{ client.name }}
-                  @if (client.phone) {
-                    <span class="text-text-muted"> — {{ client.phone }}</span>
-                  }
-                </button>
-              }
-            </div>
-          }
-        </div>
-
-        <div>
-          <label class="block text-text-secondary font-medium mb-2 text-sm"> Placa </label>
-
-          <input
-            type="text"
-            placeholder="Ex: ABC-1234"
-            class="w-full p-3 rounded-lg bg-surface-alt text-text-primary placeholder:text-text-muted border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all duration-200 uppercase"
-            [(ngModel)]="newAssetLabel"
-            name="newAssetLabel"
-            required
-          />
-        </div>
-
-        <div>
-          <label class="block text-text-secondary font-medium mb-2 text-sm"> Marca </label>
-
-          <input
-            type="text"
-            placeholder="Ex: Fiat"
-            class="w-full p-3 rounded-lg bg-surface-alt text-text-primary placeholder:text-text-muted border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all duration-200"
-            [(ngModel)]="newAssetBrand"
-            name="newAssetBrand"
-          />
-        </div>
-
-        <div>
-          <label class="block text-text-secondary font-medium mb-2 text-sm"> Modelo </label>
-
-          <input
-            type="text"
-            placeholder="Ex: Uno"
-            class="w-full p-3 rounded-lg bg-surface-alt text-text-primary placeholder:text-text-muted border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all duration-200"
-            [(ngModel)]="newAssetModel"
-            name="newAssetModel"
-          />
-        </div>
-
-        <div>
-          <label class="block text-text-secondary font-medium mb-2 text-sm"> Ano </label>
-
-          <input
-            type="text"
-            placeholder="Ex: 2015"
-            class="w-full p-3 rounded-lg bg-surface-alt text-text-primary placeholder:text-text-muted border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all duration-200"
-            [(ngModel)]="newAssetYear"
-            name="newAssetYear"
-          />
-        </div>
-
-        <div>
-          <label class="block text-text-secondary font-medium mb-2 text-sm"> Km atual </label>
-
-          <input
-            type="text"
-            placeholder="Ex: 85000"
-            class="w-full p-3 rounded-lg bg-surface-alt text-text-primary placeholder:text-text-muted border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all duration-200"
-            [(ngModel)]="newAssetKm"
-            name="newAssetKm"
-          />
-        </div>
-
-        <div class="md:col-span-4 flex justify-end">
-          <button
-            type="submit"
-            [disabled]="creating"
-            class="inline-flex items-center gap-2 px-6 py-2.5 bg-accent hover:bg-accent-hover text-btn-text rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        @if (newClientResults.length > 0) {
+          <div
+            class="absolute z-10 w-full mt-1 bg-surface-alt border border-border rounded-lg shadow-lg max-h-56 overflow-y-auto"
           >
-            Cadastrar Veículo
-          </button>
-        </div>
-      </form>
+            @for (client of newClientResults; track client.id) {
+              <button
+                type="button"
+                (click)="selectNewClient(client)"
+                class="w-full text-left px-4 py-2 text-text-primary hover:bg-overlay transition-colors text-sm"
+              >
+                {{ client.name }}
+                @if (client.phone) {
+                  <span class="text-text-muted"> — {{ client.phone }}</span>
+                }
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Form de veículo, só habilita depois do cliente selecionado -->
+      @if (newClientSelected) {
+        <app-vehicle-create-form
+          [clientId]="newClientSelected.id!"
+          (created)="onVehicleCreated($event)"
+          (cancelled)="resetClientSelection()"
+        />
+      }
     </div>
 
     <!-- Barra de Filtros e Busca -->

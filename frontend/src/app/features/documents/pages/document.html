@@ -218,19 +218,6 @@
             </select>
           </div>
 
-          <div>
-            <label class="block text-text-secondary font-medium mb-2 text-sm">Responsável</label>
-            <select
-              [(ngModel)]="newResponsibleId"
-              class="w-full p-3 rounded-lg bg-surface-alt text-text-primary border border-border focus:border-accent outline-none"
-            >
-              <option [ngValue]="null">Nenhum</option>
-              @for (u of allUsers; track u.id) {
-                <option [ngValue]="u.id">{{ u.username }}</option>
-              }
-            </select>
-          </div>
-
           <div class="relative">
             <label class="block text-text-secondary font-medium mb-2 text-sm">Cliente</label>
             <input
@@ -255,6 +242,16 @@
                 }
               </div>
             }
+
+            @if (!newClientSelected && !showClientCreateForm) {
+              <button
+                type="button"
+                (click)="openClientCreateForm()"
+                class="text-info hover:opacity-80 text-xs mt-1"
+              >
+                + Cadastrar novo cliente
+              </button>
+            }
           </div>
 
           <div>
@@ -271,8 +268,52 @@
                 <option [ngValue]="asset">{{ asset.label }}</option>
               }
             </select>
+
+            @if (newClientSelected && !showVehicleCreateForm) {
+              <button
+                type="button"
+                (click)="openVehicleCreateForm()"
+                class="text-info hover:opacity-80 text-xs mt-1"
+              >
+                + Cadastrar veículo
+              </button>
+            }
+          </div>
+
+          <div>
+            <label class="block text-text-secondary font-medium mb-2 text-sm"
+              >Responsável (opcional)</label
+            >
+            <select
+              [(ngModel)]="newResponsibleId"
+              class="w-full p-3 rounded-lg bg-surface-alt text-text-primary border border-border focus:border-accent outline-none"
+            >
+              <option [ngValue]="null">Nenhum</option>
+              @for (u of allUsers; track u.id) {
+                <option [ngValue]="u.id">{{ u.username }}</option>
+              }
+            </select>
           </div>
         </div>
+
+        @if (showClientCreateForm) {
+          <div class="mt-4">
+            <app-create-client
+              (created)="onClientCreated($event)"
+              (cancelled)="closeClientCreateForm()"
+            />
+          </div>
+        }
+
+        @if (showVehicleCreateForm && newClientSelected) {
+          <div class="mt-4">
+            <app-vehicle-create-form
+              [clientId]="newClientSelected.id!"
+              (created)="onVehicleCreatedInForm($event)"
+              (cancelled)="closeVehicleCreateForm()"
+            />
+          </div>
+        }
 
         <div class="flex justify-end gap-3 mt-4">
           <button

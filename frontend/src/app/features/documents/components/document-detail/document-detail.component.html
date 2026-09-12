@@ -289,7 +289,7 @@
     <!-- Ações de status -->
     <div class="flex flex-wrap gap-3">
       <button
-        (click)="print()"
+        (click)="openPrintModal()"
         class="action-btn bg-surface-alt text-text-primary border border-border hover:bg-overlay"
       >
         Imprimir
@@ -320,3 +320,9 @@
     </div>
   </div>
 </div>
+
+<app-modal-document-note
+  [documentData]="document"
+  [isOpen]="showPrintModal"
+  (closeModal)="closePrintModal()"
+/>

@@ -7,20 +7,21 @@ import {
   DocumentItemType,
   OSDocument,
   UpdateDocumentItemDTO,
-} from '../types/documents.types';
-import { NotificationService } from '../../../shared/toastr/notification.service';
-import { DocumentService } from '../services/document.service';
-import { ProductService } from '../../products/services/product.service';
-import { CatalogService } from '../../catalog-services/services/catalog.service';
-import { UserService } from '../../users/services/user.service';
-import { Product } from '../../products/types/product';
-import { Service } from '../../catalog-services/types/catalog-types';
-import User from '../../users/types/user';
-import { alertConfirm } from '../../../shared/alerts/custom-alerts';
+} from '../../types/documents.types';
+import { NotificationService } from '../../../../shared/toastr/notification.service';
+import { DocumentService } from '../../services/document.service';
+import { ProductService } from '../../../products/services/product.service';
+import { CatalogService } from '../../../catalog-services/services/catalog.service';
+import { UserService } from '../../../users/services/user.service';
+import { Product } from '../../../products/types/product';
+import { Service } from '../../../catalog-services/types/catalog-types';
+import User from '../../../users/types/user';
+import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
+import { ModalDocumentNote } from '../modal-document/modal-document-note';
 
 @Component({
   selector: 'app-document-detail',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ModalDocumentNote],
   templateUrl: './document-detail.component.html',
 })
 export class DocumentDetailComponent {
@@ -31,6 +32,7 @@ export class DocumentDetailComponent {
   editingResponsible = false;
   editResponsibleId: number | null = null;
   savingResponsible = false;
+  showPrintModal = false;
 
   @Output() closed = new EventEmitter<void>();
   @Output() changed = new EventEmitter<OSDocument>();
@@ -75,6 +77,14 @@ export class DocumentDetailComponent {
 
   close() {
     this.closed.emit();
+  }
+
+  openPrintModal() {
+    this.showPrintModal = true;
+  }
+
+  closePrintModal() {
+    this.showPrintModal = false;
   }
 
   private loadMechanics() {
@@ -379,63 +389,5 @@ export class DocumentDetailComponent {
         this.notification.error(`Erro ao reabrir: ${e.error?.message || e.message}`);
       },
     });
-  }
-
-  print() {
-    const rows = this.document.items
-      .map(
-        (item) => `
-      <tr>
-        <td>${item.type === 'PRODUCT' ? item.productName : item.serviceName}</td>
-        <td>${item.quantity}</td>
-        <td>R$ ${Number(item.unitPrice).toFixed(2)}</td>
-        <td>R$ ${Number(item.total).toFixed(2)}</td>
-      </tr>`,
-      )
-      .join('');
-
-    const html = `
-    <html>
-      <head>
-        <title>Documento #${this.document.id}</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 24px; color: #000; }
-          h1 { font-size: 18px; margin-bottom: 4px; }
-          p { margin: 2px 0; }
-          table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-          th, td { border: 1px solid #999; padding: 6px 8px; text-align: left; font-size: 13px; }
-          th { background: #eee; }
-          .total { text-align: right; font-weight: bold; margin-top: 12px; font-size: 14px; }
-        </style>
-      </head>
-      <body>
-        <h1>${this.document.type === 'QUOTE' ? 'Orçamento' : 'Ordem de Serviço'} #${this.document.id}</h1>
-        <p>Cliente: ${this.document.clientName}</p>
-        <p>Status: ${this.statusLabels[this.document.status]}</p>
-        <table>
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Qtd</th>
-              <th>Unit.</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-        <p class="total">Total: R$ ${Number(this.document.total).toFixed(2)}</p>
-      </body>
-    </html>
-  `;
-
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      this.notification.error('Não foi possível abrir a janela de impressão.');
-      return;
-    }
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
   }
 }

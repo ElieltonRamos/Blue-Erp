@@ -11,7 +11,10 @@ import { DocumentResponseDto } from './dto/document-response.dto.js';
 import { FindAllDocumentsDto } from './dto/find-all-documents.dto.js';
 import { AddDocumentItemDto } from './dto/add-document-item.dto.js';
 import { UpdateDocumentStatusDto } from './dto/update-document-status.dto.js';
-import { DocumentStatus } from '../../../generated/prisma/enums.js';
+import {
+  DocumentStatus,
+  DocumentType,
+} from '../../../generated/prisma/enums.js';
 import {
   UpdateDocumentItemDto,
   UpdateDocumentResponsibleDto,
@@ -378,15 +381,20 @@ export class DocumentService {
 
     const updated = await this.prisma.client.document.update({
       where: { id },
-      data: { status: DocumentStatus.APPROVED, approvedAt: new Date() },
+      data: {
+        status: DocumentStatus.APPROVED,
+        approvedAt: new Date(),
+        type: DocumentType.SERVICE_ORDER,
+      },
       include: DOCUMENT_INCLUDE,
     });
 
-    this.logger.log(`[Document ${id}] usuario=${username} | aprovado`);
+    this.logger.log(
+      `[Document ${id}] usuario=${username} | aprovado (type ${document.type} -> SERVICE_ORDER)`,
+    );
 
     return new DocumentResponseDto(updated);
   }
-
   async updateStatus(
     id: number,
     dto: UpdateDocumentStatusDto,
