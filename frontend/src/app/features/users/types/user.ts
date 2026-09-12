@@ -5,6 +5,7 @@ export default interface User {
   workplace: string;
   role?: string;
   active?: boolean;
+  commissionRate?: number | null;
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date | null;

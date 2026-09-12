@@ -36,13 +36,13 @@
 
   <div class="text-text-primary font-bold">
     <label class="block mb-2">Tipo de Usuário: </label>
-    <div class="flex gap-8">
-      @for (role of ['caixa', 'garcom', 'cozinheiro', 'admin']; track role) {
+    <div class="flex gap-8 flex-wrap">
+      @for (role of ['caixa', 'garcom', 'cozinheiro', 'admin', 'MECHANIC']; track role) {
         <label class="flex items-center gap-3 text-base cursor-pointer">
           <input type="radio" [value]="role" formControlName="role" class="w-8 h-8 accent-accent" />
 
           <span class="capitalize text-text-primary font-medium">
-            {{ role }}
+            {{ role === 'MECHANIC' ? 'Mecânico' : role }}
           </span>
         </label>
       }
@@ -51,6 +51,24 @@
       <p class="msg-error">Escolha a função!</p>
     }
   </div>
+
+  @if (isMechanic) {
+    <div>
+      <label for="commissionRate" class="block text-text-primary font-bold mb-2">
+        Percentual de Comissão (%)
+      </label>
+      <input
+        id="commissionRate"
+        formControlName="commissionRate"
+        type="number"
+        min="0"
+        max="100"
+        step="0.01"
+        placeholder="Ex: 40"
+        class="text-xl w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold placeholder-text-muted"
+      />
+    </div>
+  }
 
   <div class="text-text-primary font-bold">
     <label class="block mb-2">Local de Trabalho: </label>

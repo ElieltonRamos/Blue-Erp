@@ -24,6 +24,7 @@ export class CreateUser implements OnInit {
     password: new FormControl('', [Validators.required]),
     role: new FormControl('', [Validators.required]),
     workplace: new FormControl('', [Validators.required]),
+    commissionRate: new FormControl<number | null>(null),
   });
 
   ngOnInit() {
@@ -37,12 +38,16 @@ export class CreateUser implements OnInit {
           code: loc.code,
           name: loc.name,
         }));
-        this.cdr.detectChanges(); 
+        this.cdr.detectChanges();
       },
       error: (e) => {
         this.notification.error(`Erro ao carregar locais: ${e.error?.message || e.message}`);
       },
     });
+  }
+
+  get isMechanic(): boolean {
+    return this.formCreateUser.get('role')?.value === 'MECHANIC';
   }
 
   onSubmit() {
@@ -51,12 +56,13 @@ export class CreateUser implements OnInit {
       return;
     }
 
-    const { password, role, username, workplace } = this.formCreateUser.value;
+    const { password, role, username, workplace, commissionRate } = this.formCreateUser.value;
     const newUser = {
       username: username || '',
       password: password || '',
       role: role || '',
       workplace: workplace || '',
+      ...(role === 'MECHANIC' && commissionRate != null ? { commissionRate } : {}),
     };
 
     this.userService.createUser(newUser).subscribe({

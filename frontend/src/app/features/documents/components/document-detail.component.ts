@@ -1,7 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AddDocumentItemDTO, DOCUMENT_STATUS_LABELS, DocumentItemType, OSDocument, UpdateDocumentItemDTO } from '../types/documents.types';
+import {
+  AddDocumentItemDTO,
+  DOCUMENT_STATUS_LABELS,
+  DocumentItemType,
+  OSDocument,
+  UpdateDocumentItemDTO,
+} from '../types/documents.types';
 import { NotificationService } from '../../../shared/toastr/notification.service';
 import { DocumentService } from '../services/document.service';
 import { ProductService } from '../../products/services/product.service';
@@ -67,6 +73,7 @@ export class DocumentDetailComponent {
   private loadMechanics() {
     this.userService.getUsers({ role: 'MECHANIC' }).subscribe({
       next: (users) => {
+        console.log(users, 'usuarios mecanicos')
         this.mechanics = users;
         this.cdr.detectChanges();
       },
@@ -310,5 +317,80 @@ export class DocumentDetailComponent {
 
   canCancel(): boolean {
     return !['COMPLETED', 'CANCELED'].includes(this.document.status);
+  }
+
+  canReopen(): boolean {
+    return this.document.status === 'CANCELED';
+  }
+
+  reopen() {
+    this.documentService.reopen(this.document.id).subscribe({
+      next: (document) => {
+        this.document = document;
+        this.notification.success('Documento reaberto.');
+        this.changed.emit(document);
+      },
+      error: (e) => {
+        this.notification.error(`Erro ao reabrir: ${e.error?.message || e.message}`);
+      },
+    });
+  }
+
+  print() {
+    const rows = this.document.items
+      .map(
+        (item) => `
+      <tr>
+        <td>${item.type === 'PRODUCT' ? item.productName : item.serviceName}</td>
+        <td>${item.quantity}</td>
+        <td>R$ ${Number(item.unitPrice).toFixed(2)}</td>
+        <td>R$ ${Number(item.total).toFixed(2)}</td>
+      </tr>`,
+      )
+      .join('');
+
+    const html = `
+    <html>
+      <head>
+        <title>Documento #${this.document.id}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 24px; color: #000; }
+          h1 { font-size: 18px; margin-bottom: 4px; }
+          p { margin: 2px 0; }
+          table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+          th, td { border: 1px solid #999; padding: 6px 8px; text-align: left; font-size: 13px; }
+          th { background: #eee; }
+          .total { text-align: right; font-weight: bold; margin-top: 12px; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <h1>${this.document.type === 'QUOTE' ? 'Orçamento' : 'Ordem de Serviço'} #${this.document.id}</h1>
+        <p>Cliente: ${this.document.clientName}</p>
+        <p>Status: ${this.statusLabels[this.document.status]}</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Qtd</th>
+              <th>Unit.</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p class="total">Total: R$ ${Number(this.document.total).toFixed(2)}</p>
+      </body>
+    </html>
+  `;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      this.notification.error('Não foi possível abrir a janela de impressão.');
+      return;
+    }
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
   }
 }

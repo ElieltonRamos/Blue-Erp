@@ -10,10 +10,10 @@ export class UserFiltersDto {
 
   @ApiPropertyOptional({
     example: 'caixa',
-    enum: ['caixa', 'garcom', 'admin'],
+    enum: ['caixa', 'garcom', 'admin', 'MECHANIC'],
   })
   @IsOptional()
-  @IsEnum(['caixa', 'garcom', 'admin'])
+  @IsEnum(['caixa', 'garcom', 'admin', 'MECHANIC'])
   role?: string;
 
   @ApiPropertyOptional({

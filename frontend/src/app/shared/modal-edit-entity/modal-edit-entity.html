@@ -17,67 +17,69 @@
         <ng-content></ng-content>
 
         @for (field of fields; track field.name) {
-          <div>
-            <label class="text-text-primary font-semibold block mb-1">
-              {{ field.label }}
-            </label>
+          @if (isVisible(field)) {
+            <div>
+              <label class="text-text-primary font-semibold block mb-1">
+                {{ field.label }}
+              </label>
 
-            @if (field.type === 'text' || field.type === 'email' || field.type === 'number') {
-              <input
-                [type]="field.type"
-                [(ngModel)]="entity[field.name]"
-                [placeholder]="field.placeholder"
-                class="text-lg w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold placeholder:text-text-muted focus:border-accent outline-hidden"
-              />
-            }
-            @if (field.type === 'password') {
-              <div
-                class="flex items-center rounded-md bg-surface-alt border border-border px-3 py-2 focus-within:border-accent"
-              >
+              @if (field.type === 'text' || field.type === 'email' || field.type === 'number') {
                 <input
-                  [type]="showPassword ? 'text' : 'password'"
+                  [type]="field.type"
                   [(ngModel)]="entity[field.name]"
-                  [placeholder]="field.placeholder || 'Digite a senha'"
-                  class="text-lg w-full bg-transparent text-text-primary font-semibold placeholder:text-text-muted focus:outline-none border-none"
+                  [placeholder]="field.placeholder"
+                  class="text-lg w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold placeholder:text-text-muted focus:border-accent outline-hidden"
                 />
-
-                <button
-                  type="button"
-                  (click)="showPassword = !showPassword"
-                  class="ml-2 text-text-muted hover:text-text-primary focus:outline-none cursor-pointer"
+              }
+              @if (field.type === 'password') {
+                <div
+                  class="flex items-center rounded-md bg-surface-alt border border-border px-3 py-2 focus-within:border-accent"
                 >
-                  <ng-icon
-                    [name]="showPassword ? 'heroEyeSlashSolid' : 'heroEyeSolid'"
-                    class="w-5 h-5"
-                  ></ng-icon>
-                </button>
-              </div>
-            }
-            @if (field.type === 'date') {
-              <input
-                type="date"
-                [(ngModel)]="entity[field.name]"
-                class="text-lg w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold focus:border-accent outline-hidden"
-              />
-            }
-            @if (field.type === 'datetime-local') {
-              <input
-                type="datetime-local"
-                [(ngModel)]="entity[field.name]"
-                class="text-lg w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold focus:border-accent outline-hidden"
-              />
-            }
-            @if (field.type === 'select') {
-              <select
-                [(ngModel)]="entity[field.name]"
-                class="text-lg w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold focus:border-accent outline-hidden"
-              >
-                @for (opt of field.options; track opt) {
-                  <option [value]="opt">{{ opt }}</option>
-                }
-              </select>
-            }
-          </div>
+                  <input
+                    [type]="showPassword ? 'text' : 'password'"
+                    [(ngModel)]="entity[field.name]"
+                    [placeholder]="field.placeholder || 'Digite a senha'"
+                    class="text-lg w-full bg-transparent text-text-primary font-semibold placeholder:text-text-muted focus:outline-none border-none"
+                  />
+
+                  <button
+                    type="button"
+                    (click)="showPassword = !showPassword"
+                    class="ml-2 text-text-muted hover:text-text-primary focus:outline-none cursor-pointer"
+                  >
+                    <ng-icon
+                      [name]="showPassword ? 'heroEyeSlashSolid' : 'heroEyeSolid'"
+                      class="w-5 h-5"
+                    ></ng-icon>
+                  </button>
+                </div>
+              }
+              @if (field.type === 'date') {
+                <input
+                  type="date"
+                  [(ngModel)]="entity[field.name]"
+                  class="text-lg w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold focus:border-accent outline-hidden"
+                />
+              }
+              @if (field.type === 'datetime-local') {
+                <input
+                  type="datetime-local"
+                  [(ngModel)]="entity[field.name]"
+                  class="text-lg w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold focus:border-accent outline-hidden"
+                />
+              }
+              @if (field.type === 'select') {
+                <select
+                  [(ngModel)]="entity[field.name]"
+                  class="text-lg w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold focus:border-accent outline-hidden"
+                >
+                  @for (opt of field.options; track opt) {
+                    <option [value]="opt">{{ opt }}</option>
+                  }
+                </select>
+              }
+            </div>
+          }
         }
       </div>
 

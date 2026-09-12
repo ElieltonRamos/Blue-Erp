@@ -49,6 +49,10 @@ export class DocumentService {
     return this.client.patch<OSDocument>(`${this.apiUrl}/${documentId}/items/${itemId}`, dto);
   }
 
+  reopen(id: number): Observable<OSDocument> {
+    return this.client.patch<OSDocument>(`${this.apiUrl}/${id}/reopen`, {});
+  }
+
   getById(id: number): Observable<OSDocument> {
     return this.client.get<OSDocument>(`${this.apiUrl}/${id}`);
   }

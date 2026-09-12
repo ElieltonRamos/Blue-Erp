@@ -193,6 +193,7 @@ model User {
   updatedAt               DateTime       @updatedAt @map("updated_at")
   deletedAt               DateTime?      @map("deleted_at")
   orderItems              OrderItem[]    @relation("OrderItemOperator")
+  commissionRate          Decimal?       @map("commission_rate") @db.Decimal(5, 2)
 
   @@index([role])
   @@index([active])
@@ -616,26 +617,32 @@ model Document {
 }
 
 model DocumentItem {
-  id         Int              @id @default(autoincrement())
-  type       DocumentItemType
-  documentId Int              @map("document_id")
-  document   Document         @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  productId  Int?             @map("product_id")
-  product    Product?         @relation(fields: [productId], references: [id])
-  serviceId  Int?             @map("service_id")
-  service    Service?         @relation(fields: [serviceId], references: [id])
-  mechanicId Int?             @map("mechanic_id")
-  mechanic   User?            @relation("DocumentItemMechanic", fields: [mechanicId], references: [id])
-  quantity   Decimal          @db.Decimal(10, 3)
-  unitPrice  Decimal          @map("unit_price") @db.Decimal(10, 2)
-  total      Decimal          @db.Decimal(10, 2)
-  createdAt  DateTime         @default(now()) @map("created_at")
-  updatedAt  DateTime         @updatedAt @map("updated_at")
+  id                 Int              @id @default(autoincrement())
+  type               DocumentItemType
+  documentId         Int              @map("document_id")
+  document           Document         @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  productId          Int?             @map("product_id")
+  product            Product?         @relation(fields: [productId], references: [id])
+  serviceId          Int?             @map("service_id")
+  service            Service?         @relation(fields: [serviceId], references: [id])
+  mechanicId         Int?             @map("mechanic_id")
+  mechanic           User?            @relation("DocumentItemMechanic", fields: [mechanicId], references: [id])
+  quantity           Decimal          @db.Decimal(10, 3)
+  unitPrice          Decimal          @map("unit_price") @db.Decimal(10, 2)
+  total              Decimal          @db.Decimal(10, 2)
+  commissionRate     Decimal?         @map("commission_rate") @db.Decimal(5, 2)
+  commissionAmount   Decimal?         @map("commission_amount") @db.Decimal(10, 2)
+  commissionClosedAt DateTime?        @map("commission_closed_at")
+  commissionPaidAt   DateTime?        @map("commission_paid_at")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
 
   @@index([documentId])
   @@index([productId])
   @@index([serviceId])
   @@index([mechanicId])
+  @@index([commissionClosedAt])
+  @@index([commissionPaidAt])
   @@map("document_items")
 }
 

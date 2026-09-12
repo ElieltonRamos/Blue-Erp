@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgIcon } from "@ng-icons/core";
+import { NgIcon } from '@ng-icons/core';
 
 export interface FormField {
   name: string;
@@ -9,6 +9,7 @@ export interface FormField {
   placeholder?: string;
   options?: string[];
   required?: boolean;
+  showIf?: (entity: any) => boolean;
 }
 
 @Component({
@@ -27,6 +28,10 @@ export class ModalEditEntity {
   @Output() save = new EventEmitter<any>();
 
   showPassword = false;
+
+  isVisible(field: FormField): boolean {
+    return field.showIf ? field.showIf(this.entity) : true;
+  }
 
   onClose() {
     this.close.emit();

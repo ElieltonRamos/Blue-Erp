@@ -56,6 +56,25 @@ export class DocumentController {
     return this.documentService.updateItem(id, itemId, dto, user.username);
   }
 
+  @Patch(':id/reopen')
+  @ApiOperation({ summary: 'Reabrir documento cancelado (volta para DRAFT)' })
+  @ApiParam({ name: 'id', type: Number, description: 'ID do documento' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Documento reaberto com sucesso',
+    type: DocumentResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Documento não está cancelado',
+  })
+  reopen(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<DocumentResponseDto> {
+    return this.documentService.reopen(id, user.username);
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Criar novo orçamento/OS' })

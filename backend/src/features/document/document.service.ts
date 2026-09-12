@@ -70,6 +70,32 @@ export class DocumentService {
     return new DocumentResponseDto(document);
   }
 
+  async reopen(id: number, username: string): Promise<DocumentResponseDto> {
+    const document = await this.prisma.client.document.findUnique({
+      where: { id },
+    });
+    if (!document) {
+      throw new NotFoundException('Documento não encontrado');
+    }
+    if (document.status !== DocumentStatus.CANCELED) {
+      throw new BadRequestException(
+        'Apenas documento cancelado pode ser reaberto',
+      );
+    }
+
+    const updated = await this.prisma.client.document.update({
+      where: { id },
+      data: { status: DocumentStatus.DRAFT },
+      include: DOCUMENT_INCLUDE,
+    });
+
+    this.logger.log(
+      `[Document ${id}] usuario=${username} | reaberto (CANCELED -> DRAFT)`,
+    );
+
+    return new DocumentResponseDto(updated);
+  }
+
   async updateItem(
     documentId: number,
     itemId: number,

@@ -35,10 +35,16 @@ export class ListUsers {
       name: 'role',
       label: 'Tipo de usuario',
       type: 'select',
-      options: ['admin', 'caixa', 'garcom'],
+      options: ['admin', 'caixa', 'garcom', 'MECHANIC'],
     },
     { name: 'workplace', label: 'Local de Trabalho', type: 'text' },
     { name: 'active', label: 'Status', type: 'select', options: ['Ativo', 'Inativo'] },
+    {
+      name: 'commissionRate',
+      label: 'Percentual de Comissão (%)',
+      type: 'number',
+      showIf: (entity) => entity.role === 'MECHANIC',
+    },
   ];
 
   ngOnInit() {

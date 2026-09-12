@@ -231,6 +231,12 @@
 
     <!-- Ações de status -->
     <div class="flex flex-wrap gap-3">
+      <button
+        (click)="print()"
+        class="action-btn bg-surface-alt text-text-primary border border-border hover:bg-overlay"
+      >
+        Imprimir
+      </button>
       @if (canApprove()) {
         <button (click)="approve()" class="action-btn bg-success text-white hover:opacity-90">
           Aprovar
@@ -247,6 +253,11 @@
       @if (canCancel()) {
         <button (click)="cancel()" class="action-btn bg-danger text-white hover:opacity-90">
           Cancelar
+        </button>
+      }
+      @if (canReopen()) {
+        <button (click)="reopen()" class="action-btn bg-warning text-white hover:opacity-90">
+          Reabrir
         </button>
       }
     </div>

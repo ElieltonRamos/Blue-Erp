@@ -1,3 +1,5 @@
+import { Decimal } from '@prisma/client/runtime/index-browser';
+
 export class UserResponseDto {
   id: number;
   username: string;
@@ -7,6 +9,7 @@ export class UserResponseDto {
   workplace: string;
   updatedAt: Date;
   deletedAt: Date | null;
+  commissionRate: Decimal | null;
 
   constructor(partial: Partial<UserResponseDto>) {
     Object.assign(this, partial);
