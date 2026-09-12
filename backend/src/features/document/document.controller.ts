@@ -26,7 +26,10 @@ import {
   JwtPayload,
 } from '../../common/guards/jwt-auth.guard.js';
 import { PaginatedResponseDto } from '../catalog-service/dto/paginated-response.dto.js';
-import { UpdateDocumentItemDto } from './dto/update-document-item.dto.js';
+import {
+  UpdateDocumentItemDto,
+  UpdateDocumentResponsibleDto,
+} from './dto/update-document-item.dto.js';
 
 @ApiTags('Documents')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -54,6 +57,26 @@ export class DocumentController {
     @CurrentUser() user: JwtPayload,
   ): Promise<DocumentResponseDto> {
     return this.documentService.updateItem(id, itemId, dto, user.username);
+  }
+
+  @Patch(':id/responsible')
+  @ApiOperation({ summary: 'Atualizar responsável pelo documento' })
+  @ApiParam({ name: 'id', type: Number, description: 'ID do documento' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Responsável atualizado com sucesso',
+    type: DocumentResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Responsável inválido ou documento não editável',
+  })
+  updateResponsible(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateDocumentResponsibleDto,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<DocumentResponseDto> {
+    return this.documentService.updateResponsible(id, dto, user.username);
   }
 
   @Patch(':id/reopen')

@@ -29,12 +29,51 @@
       </span>
     </div>
 
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-text-secondary text-sm">Responsável:</span>
+
+      @if (!editingResponsible) {
+        <span class="text-text-primary text-sm font-medium">
+          {{ document.responsibleName || 'Não definido' }}
+        </span>
+        @if (canAddItem()) {
+          <button (click)="startEditResponsible()" class="text-info hover:opacity-80 text-xs">
+            Editar
+          </button>
+        }
+      } @else {
+        <select
+          [(ngModel)]="editResponsibleId"
+          class="p-1.5 rounded bg-surface-alt text-text-primary border border-border focus:border-accent outline-none text-sm"
+        >
+          <option [ngValue]="null">Selecione</option>
+          @for (u of allUsers; track u.id) {
+            <option [ngValue]="u.id">{{ u.username }}</option>
+          }
+        </select>
+        <button
+          (click)="saveResponsible()"
+          [disabled]="savingResponsible"
+          class="text-success hover:opacity-80 text-xs"
+        >
+          Salvar
+        </button>
+        <button
+          (click)="cancelEditResponsible()"
+          class="text-text-muted hover:text-text-primary text-xs"
+        >
+          Cancelar
+        </button>
+      }
+    </div>
+
     <!-- Itens -->
     <div class="border border-border rounded-lg overflow-hidden mb-4">
       <table class="w-full text-sm">
         <thead class="bg-surface-alt text-text-secondary">
           <tr>
             <th class="text-left px-3 py-2">Item</th>
+            <th class="text-left px-3 py-2">Mecânico</th>
             <th class="text-left px-3 py-2">Qtd</th>
             <th class="text-left px-3 py-2">Unit.</th>
             <th class="text-left px-3 py-2">Total</th>
@@ -47,6 +86,21 @@
               @if (editingItemId === item.id) {
                 <td class="px-3 py-2 text-text-primary">
                   {{ item.type === 'PRODUCT' ? item.productName : item.serviceName }}
+                </td>
+                <td class="px-3 py-2">
+                  @if (item.type === 'SERVICE') {
+                    <select
+                      [(ngModel)]="editMechanicId"
+                      class="p-1.5 rounded bg-surface-alt text-text-primary border border-border focus:border-accent outline-none text-xs"
+                    >
+                      <option [ngValue]="null">Nenhum</option>
+                      @for (mechanic of mechanics; track mechanic.id) {
+                        <option [ngValue]="mechanic.id">{{ mechanic.username }}</option>
+                      }
+                    </select>
+                  } @else {
+                    <span class="text-text-muted text-xs">—</span>
+                  }
                 </td>
                 <td class="px-3 py-2">
                   <input
@@ -87,6 +141,9 @@
               } @else {
                 <td class="px-3 py-2 text-text-primary">
                   {{ item.type === 'PRODUCT' ? item.productName : item.serviceName }}
+                </td>
+                <td class="px-3 py-2 text-text-secondary text-xs">
+                  {{ item.mechanicName || '—' }}
                 </td>
                 <td class="px-3 py-2 text-text-primary">{{ item.quantity }}</td>
                 <td class="px-3 py-2 text-text-primary">

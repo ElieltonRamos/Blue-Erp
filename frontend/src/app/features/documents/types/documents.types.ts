@@ -12,6 +12,7 @@ export interface DocumentItem {
   serviceId: number | null;
   serviceName?: string;
   mechanicId: number | null;
+  mechanicName?: string;
   quantity: number;
   unitPrice: number;
   total: number;
@@ -27,12 +28,23 @@ export interface OSDocument {
   clientName: string;
   assetId: number | null;
   responsibleId: number | null;
+  responsibleName?: string;
   total: number;
   items: DocumentItem[];
   approvedAt: Date | null;
   finishedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface UpdateDocumentItemDTO {
+  quantity?: number;
+  unitPrice?: number;
+  mechanicId?: number;
+}
+
+export interface UpdateDocumentResponsibleDTO {
+  responsibleId: number;
 }
 
 export interface CreateDocumentDTO {
@@ -68,11 +80,6 @@ export interface FilterDocumentParams {
 }
 
 export type DocumentPaginatedResponse = PaginatedResponse<OSDocument>;
-
-export interface UpdateDocumentItemDTO {
-  quantity?: number;
-  unitPrice?: number;
-}
 
 export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
   DRAFT: 'Rascunho',

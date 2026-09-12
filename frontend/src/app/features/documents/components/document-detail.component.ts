@@ -25,6 +25,13 @@ import { alertConfirm } from '../../../shared/alerts/custom-alerts';
 })
 export class DocumentDetailComponent {
   @Input({ required: true }) document!: OSDocument;
+  @Input() allUsers: User[] = [];
+  @Input() mechanics: User[] = [];
+
+  editingResponsible = false;
+  editResponsibleId: number | null = null;
+  savingResponsible = false;
+
   @Output() closed = new EventEmitter<void>();
   @Output() changed = new EventEmitter<OSDocument>();
 
@@ -53,8 +60,8 @@ export class DocumentDetailComponent {
   serviceSelected: Service | null = null;
   private serviceTimer: ReturnType<typeof setTimeout> | null = null;
 
-  mechanics: User[] = [];
   mechanicId: number | null = null;
+  editMechanicId: number | null = null;
 
   // --- Edição de item ---
   editingItemId: number | null = null;
@@ -73,7 +80,7 @@ export class DocumentDetailComponent {
   private loadMechanics() {
     this.userService.getUsers({ role: 'MECHANIC' }).subscribe({
       next: (users) => {
-        console.log(users, 'usuarios mecanicos')
+        console.log(users, 'usuarios mecanicos');
         this.mechanics = users;
         this.cdr.detectChanges();
       },
@@ -81,6 +88,42 @@ export class DocumentDetailComponent {
         this.mechanics = [];
       },
     });
+  }
+
+  startEditResponsible() {
+    this.editingResponsible = true;
+    this.editResponsibleId = this.document.responsibleId;
+  }
+
+  cancelEditResponsible() {
+    this.editingResponsible = false;
+  }
+
+  saveResponsible() {
+    if (!this.editResponsibleId) {
+      this.notification.error('Selecione um responsável.');
+      return;
+    }
+
+    this.savingResponsible = true;
+
+    this.documentService
+      .updateResponsible(this.document.id, { responsibleId: this.editResponsibleId })
+      .subscribe({
+        next: (document) => {
+          this.document = document;
+          this.savingResponsible = false;
+          this.editingResponsible = false;
+          this.notification.success('Responsável atualizado.');
+          this.changed.emit(document);
+        },
+        error: (e) => {
+          this.savingResponsible = false;
+          this.notification.error(
+            `Erro ao atualizar responsável: ${e.error?.message || e.message}`,
+          );
+        },
+      });
   }
 
   // --- Busca produto ---
@@ -220,8 +263,9 @@ export class DocumentDetailComponent {
   // --- Editar item ---
   startEditItem(item: OSDocument['items'][number]) {
     this.editingItemId = item.id;
-    this.editQuantity = item.quantity;
-    this.editUnitPrice = item.unitPrice;
+    this.editQuantity = Number(item.quantity);
+    this.editUnitPrice = Number(item.unitPrice);
+    this.editMechanicId = item.mechanicId;
   }
 
   cancelEditItem() {
@@ -241,6 +285,7 @@ export class DocumentDetailComponent {
     const dto: UpdateDocumentItemDTO = {
       quantity: this.editQuantity,
       unitPrice: this.editUnitPrice,
+      mechanicId: this.editMechanicId ?? undefined,
     };
 
     this.savingEdit = true;

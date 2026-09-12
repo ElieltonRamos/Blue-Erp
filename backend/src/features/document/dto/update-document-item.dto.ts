@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsPositive } from 'class-validator';
+import { IsInt, IsNumber, IsOptional, IsPositive } from 'class-validator';
 
 export class UpdateDocumentItemDto {
   @ApiProperty({ example: 2, required: false })
@@ -13,4 +13,15 @@ export class UpdateDocumentItemDto {
   @IsNumber()
   @IsPositive()
   unitPrice?: number;
+
+  @ApiProperty({ example: 1, required: false })
+  @IsOptional()
+  @IsInt()
+  mechanicId?: number;
+}
+
+export class UpdateDocumentResponsibleDto {
+  @ApiProperty({ example: 1 })
+  @IsInt()
+  responsibleId: number;
 }

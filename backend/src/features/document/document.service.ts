@@ -12,14 +12,19 @@ import { FindAllDocumentsDto } from './dto/find-all-documents.dto.js';
 import { AddDocumentItemDto } from './dto/add-document-item.dto.js';
 import { UpdateDocumentStatusDto } from './dto/update-document-status.dto.js';
 import { DocumentStatus } from '../../../generated/prisma/enums.js';
-import { UpdateDocumentItemDto } from './dto/update-document-item.dto.js';
+import {
+  UpdateDocumentItemDto,
+  UpdateDocumentResponsibleDto,
+} from './dto/update-document-item.dto.js';
 
 const DOCUMENT_INCLUDE = {
   client: true,
+  responsible: { select: { username: true } },
   items: {
     include: {
       product: { select: { name: true } },
       service: { select: { name: true } },
+      mechanic: { select: { username: true } },
     },
   },
 } as const;
@@ -50,6 +55,15 @@ export class DocumentService {
       }
       if (asset.clientId !== dto.clientId) {
         throw new BadRequestException('Veículo não pertence a este cliente');
+      }
+    }
+
+    if (dto.responsibleId) {
+      const responsible = await this.prisma.client.user.findUnique({
+        where: { id: dto.responsibleId },
+      });
+      if (!responsible || !responsible.active) {
+        throw new BadRequestException('Responsável não encontrado ou inativo');
       }
     }
 
@@ -118,7 +132,12 @@ export class DocumentService {
     const document = await this.prisma.client.$transaction(async (tx) => {
       await tx.documentItem.update({
         where: { id: itemId },
-        data: { quantity, unitPrice, total },
+        data: {
+          quantity,
+          unitPrice,
+          total,
+          mechanicId: dto.mechanicId !== undefined ? dto.mechanicId : undefined,
+        },
       });
 
       const aggregate = await tx.documentItem.aggregate({
@@ -134,7 +153,34 @@ export class DocumentService {
     });
 
     this.logger.log(
-      `[Document ${documentId}] usuario=${username} | item ${itemId} atualizado (quantity=${quantity}, unitPrice=${unitPrice})`,
+      `[Document ${documentId}] usuario=${username} | item ${itemId} atualizado (quantity=${quantity}, unitPrice=${unitPrice}${dto.mechanicId !== undefined ? `, mechanicId=${dto.mechanicId}` : ''})`,
+    );
+
+    return new DocumentResponseDto(document);
+  }
+
+  async updateResponsible(
+    id: number,
+    dto: UpdateDocumentResponsibleDto,
+    username: string,
+  ): Promise<DocumentResponseDto> {
+    await this.getEditableDocument(id);
+
+    const responsible = await this.prisma.client.user.findUnique({
+      where: { id: dto.responsibleId },
+    });
+    if (!responsible || !responsible.active) {
+      throw new BadRequestException('Responsável não encontrado ou inativo');
+    }
+
+    const document = await this.prisma.client.document.update({
+      where: { id },
+      data: { responsibleId: dto.responsibleId },
+      include: DOCUMENT_INCLUDE,
+    });
+
+    this.logger.log(
+      `[Document ${id}] usuario=${username} | responsável atualizado (responsibleId=${dto.responsibleId})`,
     );
 
     return new DocumentResponseDto(document);

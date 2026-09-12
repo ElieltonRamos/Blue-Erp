@@ -218,6 +218,19 @@
             </select>
           </div>
 
+          <div>
+            <label class="block text-text-secondary font-medium mb-2 text-sm">Responsável</label>
+            <select
+              [(ngModel)]="newResponsibleId"
+              class="w-full p-3 rounded-lg bg-surface-alt text-text-primary border border-border focus:border-accent outline-none"
+            >
+              <option [ngValue]="null">Nenhum</option>
+              @for (u of allUsers; track u.id) {
+                <option [ngValue]="u.id">{{ u.username }}</option>
+              }
+            </select>
+          </div>
+
           <div class="relative">
             <label class="block text-text-secondary font-medium mb-2 text-sm">Cliente</label>
             <input
@@ -332,6 +345,8 @@
   @if (selectedDocument) {
     <app-document-detail
       [document]="selectedDocument"
+      [allUsers]="allUsers"
+      [mechanics]="mechanics"
       (closed)="closeDocument()"
       (changed)="onDocumentChanged($event)"
     />

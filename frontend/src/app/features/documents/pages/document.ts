@@ -59,6 +59,9 @@ export class Documents {
   filterAsset: Asset | null = null;
   private filterAssetTimer: ReturnType<typeof setTimeout> | null = null;
 
+  allUsers: User[] = [];
+  newResponsibleId: number | null = null;
+
   private today(): string {
     return new Date().toISOString().slice(0, 10);
   }
@@ -91,6 +94,7 @@ export class Documents {
   ngOnInit() {
     this.loadDocuments();
     this.loadMechanics();
+    this.loadAllUsers();
   }
 
   goToMenu() {
@@ -105,6 +109,18 @@ export class Documents {
       },
       error: () => {
         this.mechanics = [];
+      },
+    });
+  }
+
+  private loadAllUsers() {
+    this.userService.getUsers({ active: true }).subscribe({
+      next: (users) => {
+        this.allUsers = users;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.allUsers = [];
       },
     });
   }
@@ -246,6 +262,7 @@ export class Documents {
     this.newClientSelected = null;
     this.newAssetOptions = [];
     this.newAssetSelected = null;
+    this.newResponsibleId = null;
   }
 
   onNewClientTermChange() {
@@ -301,6 +318,7 @@ export class Documents {
       type: this.newDocumentType,
       clientId: this.newClientSelected.id!,
       assetId: this.newAssetSelected?.id,
+      responsibleId: this.newResponsibleId ?? undefined,
     };
 
     this.creating = true;

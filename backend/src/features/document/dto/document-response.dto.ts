@@ -46,16 +46,25 @@ export class DocumentResponseDto {
   @ApiProperty()
   updatedAt: Date;
 
+  @ApiProperty({ example: 'maria.admin', required: false })
+  responsibleName?: string;
+
   constructor(
-    partial: Partial<DocumentResponseDto> & { client?: { name: string } },
+    partial: Partial<DocumentResponseDto> & {
+      client?: { name: string };
+      responsible?: { username: string } | null;
+    },
   ) {
-    const { client, items, ...rest } = partial as any;
+    const { client, responsible, items, ...rest } = partial as any;
     Object.assign(this, rest);
     if (client?.name) {
       this.clientName = client.name;
     }
+    if (responsible?.username) {
+      this.responsibleName = responsible.username;
+    }
     if (items) {
-      this.items = items.map((i: any) => new DocumentItemResponseDto(i));
+      this.items = items.map((i) => new DocumentItemResponseDto(i));
     }
   }
 }

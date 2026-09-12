@@ -9,6 +9,7 @@ import {
   FilterDocumentParams,
   OSDocument,
   UpdateDocumentItemDTO,
+  UpdateDocumentResponsibleDTO,
   UpdateDocumentStatusDTO,
 } from '../types/documents.types';
 
@@ -47,6 +48,10 @@ export class DocumentService {
     dto: UpdateDocumentItemDTO,
   ): Observable<OSDocument> {
     return this.client.patch<OSDocument>(`${this.apiUrl}/${documentId}/items/${itemId}`, dto);
+  }
+
+  updateResponsible(id: number, dto: UpdateDocumentResponsibleDTO): Observable<OSDocument> {
+    return this.client.patch<OSDocument>(`${this.apiUrl}/${id}/responsible`, dto);
   }
 
   reopen(id: number): Observable<OSDocument> {
