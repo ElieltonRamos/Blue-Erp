@@ -27,7 +27,7 @@ import { ModalDocumentNote } from '../modal-document/modal-document-note';
 export class DocumentDetailComponent {
   @Input({ required: true }) document!: OSDocument;
   @Input() allUsers: User[] = [];
-  @Input() mechanics: User[] = [];
+  @Input() users: User[] = [];
 
   editingResponsible = false;
   editResponsibleId: number | null = null;
@@ -62,8 +62,8 @@ export class DocumentDetailComponent {
   serviceSelected: Service | null = null;
   private serviceTimer: ReturnType<typeof setTimeout> | null = null;
 
-  mechanicId: number | null = null;
-  editMechanicId: number | null = null;
+  userId: number | null = null;
+  edituserId: number | null = null;
 
   // --- Edição de item ---
   editingItemId: number | null = null;
@@ -72,7 +72,7 @@ export class DocumentDetailComponent {
   savingEdit = false;
 
   ngOnInit() {
-    this.loadMechanics();
+    this.loadusers();
   }
 
   close() {
@@ -87,15 +87,15 @@ export class DocumentDetailComponent {
     this.showPrintModal = false;
   }
 
-  private loadMechanics() {
-    this.userService.getUsers({ role: 'MECHANIC' }).subscribe({
+  private loadusers() {
+    this.userService.getUsers({ role: 'user' }).subscribe({
       next: (users) => {
         console.log(users, 'usuarios mecanicos');
-        this.mechanics = users;
+        this.users = users;
         this.cdr.detectChanges();
       },
       error: () => {
-        this.mechanics = [];
+        this.users = [];
       },
     });
   }
@@ -210,7 +210,7 @@ export class DocumentDetailComponent {
     this.serviceTerm = '';
     this.serviceResults = [];
     this.serviceSelected = null;
-    this.mechanicId = null;
+    this.userId = null;
   }
 
   addItem() {
@@ -235,7 +235,7 @@ export class DocumentDetailComponent {
       type: this.itemType,
       productId: this.itemType === 'PRODUCT' ? (this.productSelected!.id as number) : undefined,
       serviceId: this.itemType === 'SERVICE' ? (this.serviceSelected!.id as number) : undefined,
-      mechanicId: this.itemType === 'SERVICE' ? (this.mechanicId ?? undefined) : undefined,
+      userId: this.itemType === 'SERVICE' ? (this.userId ?? undefined) : undefined,
       quantity: this.itemQuantity,
       unitPrice: this.itemUnitPrice,
     };
@@ -275,7 +275,7 @@ export class DocumentDetailComponent {
     this.editingItemId = item.id;
     this.editQuantity = Number(item.quantity);
     this.editUnitPrice = Number(item.unitPrice);
-    this.editMechanicId = item.mechanicId;
+    this.edituserId = item.userId;
   }
 
   cancelEditItem() {
@@ -295,7 +295,7 @@ export class DocumentDetailComponent {
     const dto: UpdateDocumentItemDTO = {
       quantity: this.editQuantity,
       unitPrice: this.editUnitPrice,
-      mechanicId: this.editMechanicId ?? undefined,
+      userId: this.edituserId ?? undefined,
     };
 
     this.savingEdit = true;

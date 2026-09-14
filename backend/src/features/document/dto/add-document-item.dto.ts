@@ -26,7 +26,7 @@ export class AddDocumentItemDto {
   @ApiProperty({ example: 1, required: false })
   @IsOptional()
   @IsInt()
-  mechanicId?: number;
+  userId?: number;
 
   @ApiProperty({ example: 1 })
   @IsNumber()

@@ -4,7 +4,7 @@ import { IsDateString, IsInt, IsOptional } from 'class-validator';
 export class PayCommissionDto {
   @ApiProperty({ example: 1 })
   @IsInt()
-  mechanicId: number;
+  userId: number;
 
   @ApiProperty({ example: '2026-09-01', required: false })
   @IsOptional()

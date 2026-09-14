@@ -74,8 +74,8 @@ export class Documents {
   filterStartDate: string = this.today();
   filterEndDate: string = this.today();
 
-  mechanics: User[] = [];
-  filterMechanicId: number | null = null;
+  users: User[] = [];
+  filteruserId: number | null = null;
 
   filterMinTotal: number | null = null;
   filterMaxTotal: number | null = null;
@@ -105,7 +105,7 @@ export class Documents {
 
   ngOnInit() {
     this.loadDocuments();
-    this.loadMechanics();
+    this.loadusers();
     this.loadAllUsers();
   }
 
@@ -113,14 +113,14 @@ export class Documents {
     this.router.navigate(['/dashboard']);
   }
 
-  private loadMechanics() {
-    this.userService.getUsers({ role: 'MECHANIC' }).subscribe({
+  private loadusers() {
+    this.userService.getUsers({ role: 'user' }).subscribe({
       next: (users) => {
-        this.mechanics = users;
+        this.users = users;
         this.cdr.detectChanges();
       },
       error: () => {
-        this.mechanics = [];
+        this.users = [];
       },
     });
   }
@@ -144,7 +144,7 @@ export class Documents {
     if (this.filterType) filters.type = this.filterType;
     if (this.filterClient?.id) filters.clientId = this.filterClient.id;
     if (this.filterAsset?.id) filters.assetId = this.filterAsset.id;
-    if (this.filterMechanicId) filters.mechanicId = this.filterMechanicId;
+    if (this.filteruserId) filters.userId = this.filteruserId;
     if (this.filterStartDate) filters.startDate = this.filterStartDate;
     if (this.filterEndDate) filters.endDate = this.filterEndDate;
     if (this.filterMinTotal !== null) filters.minTotal = this.filterMinTotal;

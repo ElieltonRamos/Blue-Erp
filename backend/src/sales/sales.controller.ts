@@ -22,7 +22,7 @@ import {
 import { SalesService } from './sales.service.js';
 import { CreateSaleDto } from './dto/create-sale.dto.js';
 import { UpdateSaleDto } from './dto/update-sale.dto.js';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
+import { JwtAuthGuard, JwtPayload } from '../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import {
@@ -32,13 +32,50 @@ import {
 import { SaleFiltersDto } from './dto/filters-sale.dto.js';
 import { ConvertOrderToSaleDto } from '../orders/dto/convert-order-to-sale.js';
 import { MarkAsReceivedDto } from './dto/mark-as-received.dto.js';
+import { FinalizeDocumentDto } from './dto/finalize-document.dto.js';
+import { DocumentSaleService } from './document-sale.service.js';
 
 @ApiTags('Sales')
 @Controller('sales')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class SalesController {
-  constructor(private readonly salesService: SalesService) {}
+  constructor(
+    private readonly salesService: SalesService,
+    private documentService: DocumentSaleService,
+  ) {}
+
+  @Post('finalize-document/:documentId')
+  @ApiOperation({
+    summary: 'Finalizar OS e gerar venda (Sale) a partir dos itens PRODUCT',
+  })
+  @ApiParam({
+    name: 'documentId',
+    type: Number,
+    description: 'ID do documento',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Venda gerada com sucesso',
+    type: SaleResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Documento não está IN_PROGRESS, sem itens PRODUCT, ou pagamento inválido',
+  })
+  finalizeDocument(
+    @Param('documentId', ParseIntPipe) documentId: number,
+    @Body() dto: FinalizeDocumentDto,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<SaleResponseDto> {
+    return this.documentService.convertDocumentoToSale(
+      documentId,
+      dto,
+      user.userId,
+      user.username,
+    );
+  }
 
   @Patch('mark-as-received')
   @HttpCode(HttpStatus.OK)

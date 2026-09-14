@@ -17,7 +17,7 @@ export class UpdateDocumentItemDto {
   @ApiProperty({ example: 1, required: false })
   @IsOptional()
   @IsInt()
-  mechanicId?: number;
+  userId?: number;
 }
 
 export class UpdateDocumentResponsibleDto {

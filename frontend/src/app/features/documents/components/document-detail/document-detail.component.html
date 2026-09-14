@@ -90,12 +90,12 @@
                 <td class="px-3 py-2">
                   @if (item.type === 'SERVICE') {
                     <select
-                      [(ngModel)]="editMechanicId"
+                      [(ngModel)]="edituserId"
                       class="p-1.5 rounded bg-surface-alt text-text-primary border border-border focus:border-accent outline-none text-xs"
                     >
                       <option [ngValue]="null">Nenhum</option>
-                      @for (mechanic of mechanics; track mechanic.id) {
-                        <option [ngValue]="mechanic.id">{{ mechanic.username }}</option>
+                      @for (user of users; track user.id) {
+                        <option [ngValue]="user.id">{{ user.username }}</option>
                       }
                     </select>
                   } @else {
@@ -143,7 +143,7 @@
                   {{ item.type === 'PRODUCT' ? item.productName : item.serviceName }}
                 </td>
                 <td class="px-3 py-2 text-text-secondary text-xs">
-                  {{ item.mechanicName || '—' }}
+                  {{ item.userName || '—' }}
                 </td>
                 <td class="px-3 py-2 text-text-primary">{{ item.quantity }}</td>
                 <td class="px-3 py-2 text-text-primary">
@@ -243,12 +243,12 @@
           </div>
 
           <select
-            [(ngModel)]="mechanicId"
+            [(ngModel)]="userId"
             class="w-full p-3 rounded-lg bg-surface text-text-primary border border-border focus:border-accent outline-none mb-3"
           >
             <option [ngValue]="null">Sem mecânico definido</option>
-            @for (mechanic of mechanics; track mechanic.id) {
-              <option [ngValue]="mechanic.id">{{ mechanic.username }}</option>
+            @for (user of users; track user.id) {
+              <option [ngValue]="user.id">{{ user.username }}</option>
             }
           </select>
         }

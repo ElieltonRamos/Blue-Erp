@@ -517,7 +517,7 @@ export class SalesService {
 
         saleItemsCreateData = saleItemsCreateData.map((item) => ({
           ...item,
-          serviceCharge: oldByProduct.get(item.productId) ?? new Decimal(0),
+          serviceCharge: oldByProduct.get(item.productId!) ?? new Decimal(0),
         }));
 
         if (

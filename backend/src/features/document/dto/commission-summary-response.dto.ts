@@ -3,10 +3,10 @@ import { Decimal } from '@prisma/client/runtime/index-browser';
 
 export class CommissionSummaryResponseDto {
   @ApiProperty({ example: 1 })
-  mechanicId: number;
+  userId: number;
 
   @ApiProperty({ example: 'joao.mecanico' })
-  mechanicName: string;
+  userName: string;
 
   @ApiProperty({ example: 12 })
   itemsCount: number;

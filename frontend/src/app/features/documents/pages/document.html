@@ -161,13 +161,13 @@
         <div>
           <label class="block text-text-secondary font-medium mb-2 text-sm">Mecânico</label>
           <select
-            [(ngModel)]="filterMechanicId"
+            [(ngModel)]="filteruserId"
             (ngModelChange)="onFilterChange()"
             class="w-full p-3 rounded-lg bg-surface-alt text-text-primary border border-border focus:border-accent outline-none"
           >
             <option [ngValue]="null">Todos</option>
-            @for (mechanic of mechanics; track mechanic.id) {
-              <option [ngValue]="mechanic.id">{{ mechanic.username }}</option>
+            @for (user of users; track user.id) {
+              <option [ngValue]="user.id">{{ user.username }}</option>
             }
           </select>
         </div>
@@ -387,7 +387,7 @@
     <app-document-detail
       [document]="selectedDocument"
       [allUsers]="allUsers"
-      [mechanics]="mechanics"
+      [users]="users"
       (closed)="closeDocument()"
       (changed)="onDocumentChanged($event)"
     />

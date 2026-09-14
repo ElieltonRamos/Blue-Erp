@@ -27,7 +27,7 @@ const DOCUMENT_INCLUDE = {
     include: {
       product: { select: { name: true } },
       service: { select: { name: true } },
-      mechanic: { select: { username: true } },
+      user: { select: { username: true } },
     },
   },
 } as const;
@@ -139,7 +139,7 @@ export class DocumentService {
           quantity,
           unitPrice,
           total,
-          mechanicId: dto.mechanicId !== undefined ? dto.mechanicId : undefined,
+          userId: dto.userId !== undefined ? dto.userId : undefined,
         },
       });
 
@@ -156,7 +156,7 @@ export class DocumentService {
     });
 
     this.logger.log(
-      `[Document ${documentId}] usuario=${username} | item ${itemId} atualizado (quantity=${quantity}, unitPrice=${unitPrice}${dto.mechanicId !== undefined ? `, mechanicId=${dto.mechanicId}` : ''})`,
+      `[Document ${documentId}] usuario=${username} | item ${itemId} atualizado (quantity=${quantity}, unitPrice=${unitPrice}${dto.userId !== undefined ? `, userId=${dto.userId}` : ''})`,
     );
 
     return new DocumentResponseDto(document);
@@ -199,7 +199,7 @@ export class DocumentService {
       status,
       clientId,
       assetId,
-      mechanicId,
+      userId,
       startDate,
       endDate,
       minTotal,
@@ -213,8 +213,8 @@ export class DocumentService {
     if (clientId) where.clientId = clientId;
     if (assetId) where.assetId = assetId;
 
-    if (mechanicId) {
-      where.items = { some: { mechanicId } };
+    if (userId) {
+      where.items = { some: { userId } };
     }
 
     if (startDate || endDate) {
@@ -304,7 +304,7 @@ export class DocumentService {
           type: dto.type,
           productId: dto.productId,
           serviceId: dto.serviceId,
-          mechanicId: dto.mechanicId,
+          userId: dto.userId,
           quantity: dto.quantity,
           unitPrice: dto.unitPrice,
           total,

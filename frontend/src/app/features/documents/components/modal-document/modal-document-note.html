@@ -57,7 +57,7 @@
               <td class="py-1">
                 {{ item.type === 'PRODUCT' ? item.productName : item.serviceName }}
               </td>
-              <td class="py-1">{{ item.mechanicName || '-' }}</td>
+              <td class="py-1">{{ item.userName || '-' }}</td>
               <td class="py-1 text-center">{{ item.quantity }}</td>
               <td class="py-1 text-right">R$ {{ formatNumber(item.unitPrice) }}</td>
               <td class="py-1 text-right">R$ {{ formatNumber(item.total) }}</td>

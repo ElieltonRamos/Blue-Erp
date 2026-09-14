@@ -35,7 +35,7 @@ export class ListUsers {
       name: 'role',
       label: 'Tipo de usuario',
       type: 'select',
-      options: ['admin', 'caixa', 'garcom', 'MECHANIC'],
+      options: ['admin', 'caixa', 'garcom', 'user'],
     },
     { name: 'workplace', label: 'Local de Trabalho', type: 'text' },
     { name: 'active', label: 'Status', type: 'select', options: ['Ativo', 'Inativo'] },
@@ -43,7 +43,7 @@ export class ListUsers {
       name: 'commissionRate',
       label: 'Percentual de Comissão (%)',
       type: 'number',
-      showIf: (entity) => entity.role === 'MECHANIC',
+      showIf: (entity) => entity.role === 'user',
     },
   ];
 

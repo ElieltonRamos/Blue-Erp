@@ -22,10 +22,10 @@ export class DocumentItemResponseDto {
   serviceName?: string;
 
   @ApiProperty({ example: 1, required: false })
-  mechanicId: number | null;
+  userId: number | null;
 
   @ApiProperty({ example: 'joao.mecanico', required: false })
-  mechanicName?: string;
+  userName?: string;
 
   @ApiProperty({ example: 1 })
   quantity: Decimal;
@@ -46,13 +46,13 @@ export class DocumentItemResponseDto {
     partial: Partial<DocumentItemResponseDto> & {
       product?: { name: string } | null;
       service?: { name: string } | null;
-      mechanic?: { username: string } | null;
+      user?: { username: string } | null;
     },
   ) {
-    const { product, service, mechanic, ...rest } = partial as any;
+    const { product, service, user, ...rest } = partial as any;
     Object.assign(this, rest);
     if (product?.name) this.productName = product.name;
     if (service?.name) this.serviceName = service.name;
-    if (mechanic?.username) this.mechanicName = mechanic.username;
+    if (user?.username) this.userName = user.username;
   }
 }

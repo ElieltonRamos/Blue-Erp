@@ -11,8 +11,8 @@ export interface DocumentItem {
   productName?: string;
   serviceId: number | null;
   serviceName?: string;
-  mechanicId: number | null;
-  mechanicName?: string;
+  userId: number | null;
+  userName?: string;
   quantity: number;
   unitPrice: number;
   total: number;
@@ -40,7 +40,7 @@ export interface OSDocument {
 export interface UpdateDocumentItemDTO {
   quantity?: number;
   unitPrice?: number;
-  mechanicId?: number;
+  userId?: number;
 }
 
 export interface UpdateDocumentResponsibleDTO {
@@ -58,7 +58,7 @@ export interface AddDocumentItemDTO {
   type: DocumentItemType;
   productId?: number;
   serviceId?: number;
-  mechanicId?: number;
+  userId?: number;
   quantity: number;
   unitPrice: number;
 }
@@ -72,7 +72,7 @@ export interface FilterDocumentParams {
   status?: DocumentStatus;
   clientId?: number;
   assetId?: number;
-  mechanicId?: number;
+  userId?: number;
   startDate?: string;
   endDate?: string;
   minTotal?: number;

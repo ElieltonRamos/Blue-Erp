@@ -31,7 +31,7 @@ export class DocumentService {
     if (filters?.status) params = params.set('status', filters.status);
     if (filters?.clientId) params = params.set('clientId', filters.clientId.toString());
     if (filters?.assetId) params = params.set('assetId', filters.assetId.toString());
-    if (filters?.mechanicId) params = params.set('mechanicId', filters.mechanicId.toString());
+    if (filters?.userId) params = params.set('userId', filters.userId.toString());
     if (filters?.startDate) params = params.set('startDate', filters.startDate);
     if (filters?.endDate) params = params.set('endDate', filters.endDate);
     if (filters?.minTotal !== undefined)

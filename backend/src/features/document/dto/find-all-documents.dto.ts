@@ -51,7 +51,7 @@ export class FindAllDocumentsDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  mechanicId?: number;
+  userId?: number;
 
   @ApiProperty({ required: false, example: '2026-09-10' })
   @IsOptional()

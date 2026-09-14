@@ -4,7 +4,7 @@ import { IsDateString, IsInt } from 'class-validator';
 export class CloseCommissionDto {
   @ApiProperty({ example: 1 })
   @IsInt()
-  mechanicId: number;
+  userId: number;
 
   @ApiProperty({ example: '2026-09-01' })
   @IsDateString()

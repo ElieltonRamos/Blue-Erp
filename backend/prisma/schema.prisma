@@ -177,23 +177,24 @@ model BusinessPartner {
 }
 
 model User {
-  id                      Int            @id @default(autoincrement())
-  username                String         @unique
-  password                String
-  role                    String         @default("USER")
-  active                  Boolean        @default(true)
-  workplace               String
-  sales                   Sale[]
-  orders                  Order[]        @relation("OrderOperator")
-  closedOrders            Order[]        @relation("OrderClosedBy")
-  documents               Document[]     @relation("DocumentResponsible")
-  documentItemsAsMechanic DocumentItem[] @relation("DocumentItemMechanic")
-  purchases               Purchase[]     @relation("PurchaseResponsible")
-  createdAt               DateTime       @default(now()) @map("created_at")
-  updatedAt               DateTime       @updatedAt @map("updated_at")
-  deletedAt               DateTime?      @map("deleted_at")
-  orderItems              OrderItem[]    @relation("OrderItemOperator")
-  commissionRate          Decimal?       @map("commission_rate") @db.Decimal(5, 2)
+  id                  Int            @id @default(autoincrement())
+  username            String         @unique
+  password            String
+  role                String         @default("USER")
+  active              Boolean        @default(true)
+  workplace           String
+  sales               Sale[]
+  orders              Order[]        @relation("OrderOperator")
+  closedOrders        Order[]        @relation("OrderClosedBy")
+  documents           Document[]     @relation("DocumentResponsible")
+  documentItemsAsUser DocumentItem[] @relation("DocumentItemUser")
+  saleItemsAsUser     SaleItem[]     @relation("SaleItemUser")
+  purchases           Purchase[]     @relation("PurchaseResponsible")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+  deletedAt           DateTime?      @map("deleted_at")
+  orderItems          OrderItem[]    @relation("OrderItemOperator")
+  commissionRate      Decimal?       @map("commission_rate") @db.Decimal(5, 2)
 
   @@index([role])
   @@index([active])
@@ -442,8 +443,12 @@ model SaleItem {
   itemNumber     Int      @map("item_number")
   saleId         Int      @map("sale_id")
   sale           Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  productId      Int      @map("product_id")
-  product        Product  @relation(fields: [productId], references: [id])
+  productId      Int?     @map("product_id")
+  product        Product? @relation(fields: [productId], references: [id])
+  serviceId      Int?     @map("service_id")
+  service        Service? @relation(fields: [serviceId], references: [id])
+  userId         Int?     @map("user_id")
+  user           User?    @relation("SaleItemUser", fields: [userId], references: [id])
   xProd          String?  @map("x_prod")
   quantity       Decimal  @db.Decimal(10, 3)
   unitPrice      Decimal  @map("unit_price") @db.Decimal(10, 2)
@@ -463,6 +468,8 @@ model SaleItem {
   @@unique([saleId, itemNumber])
   @@index([saleId])
   @@index([productId])
+  @@index([serviceId])
+  @@index([userId])
   @@map("sale_items")
 }
 
@@ -585,6 +592,7 @@ model Service {
   documentItems DocumentItem[]
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
+  saleItems     SaleItem[]
 
   @@index([code])
   @@index([active])
@@ -625,8 +633,8 @@ model DocumentItem {
   product            Product?         @relation(fields: [productId], references: [id])
   serviceId          Int?             @map("service_id")
   service            Service?         @relation(fields: [serviceId], references: [id])
-  mechanicId         Int?             @map("mechanic_id")
-  mechanic           User?            @relation("DocumentItemMechanic", fields: [mechanicId], references: [id])
+  userId             Int?             @map("user_id")
+  user               User?            @relation("DocumentItemUser", fields: [userId], references: [id])
   quantity           Decimal          @db.Decimal(10, 3)
   unitPrice          Decimal          @map("unit_price") @db.Decimal(10, 2)
   total              Decimal          @db.Decimal(10, 2)
@@ -640,7 +648,7 @@ model DocumentItem {
   @@index([documentId])
   @@index([productId])
   @@index([serviceId])
-  @@index([mechanicId])
+  @@index([userId])
   @@index([commissionClosedAt])
   @@index([commissionPaidAt])
   @@map("document_items")

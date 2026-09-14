@@ -21,7 +21,7 @@
       <option value="admin">Admin</option>
       <option value="caixa">Caixa</option>
       <option value="garcom">Garçom</option>
-      <option value="MECHANIC">Mecânico</option>
+      <option value="user">Mecânico</option>
     </select>
   </div>
 
@@ -74,7 +74,7 @@
               [class.bg-dine-in]="user.role === 'caixa'"
               [class.bg-delivery]="user.role === 'cozinheiro'"
               [class.bg-success]="user.role === 'garcom'"
-              [class.bg-info]="user.role === 'MECHANIC'"
+              [class.bg-info]="user.role === 'user'"
             >
               {{ user.role }}
             </span>

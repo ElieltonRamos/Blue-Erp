@@ -19,18 +19,15 @@ export class DocumentCommissionService {
     dto: CloseCommissionDto,
     username: string,
   ): Promise<CommissionSummaryResponseDto> {
-    const mechanic = await this.prisma.client.user.findUnique({
-      where: { id: dto.mechanicId },
+    const user = await this.prisma.client.user.findUnique({
+      where: { id: dto.userId },
     });
 
-    if (!mechanic) {
+    if (!user) {
       throw new BadRequestException('Mecânico não encontrado');
     }
 
-    if (
-      mechanic.commissionRate === null ||
-      mechanic.commissionRate === undefined
-    ) {
+    if (user.commissionRate === null || user.commissionRate === undefined) {
       throw new BadRequestException(
         'Mecânico não possui percentual de comissão definido',
       );
@@ -42,7 +39,7 @@ export class DocumentCommissionService {
     const items = await this.prisma.client.documentItem.findMany({
       where: {
         type: DocumentItemType.SERVICE,
-        mechanicId: dto.mechanicId,
+        userId: dto.userId,
         commissionClosedAt: null,
         document: {
           status: DocumentStatus.COMPLETED,
@@ -57,7 +54,7 @@ export class DocumentCommissionService {
       );
     }
 
-    const rate = Number(mechanic.commissionRate);
+    const rate = Number(user.commissionRate);
     const now = new Date();
 
     await this.prisma.client.$transaction(
@@ -77,12 +74,12 @@ export class DocumentCommissionService {
     const totalCommission = totalLabor * (rate / 100);
 
     this.logger.log(
-      `[Commission] usuario=${username} | fechamento mecanico=${dto.mechanicId} | itens=${items.length} | total=${totalCommission.toFixed(2)}`,
+      `[Commission] usuario=${username} | fechamento mecanico=${dto.userId} | itens=${items.length} | total=${totalCommission.toFixed(2)}`,
     );
 
     return new CommissionSummaryResponseDto({
-      mechanicId: mechanic.id,
-      mechanicName: mechanic.username,
+      userId: user.id,
+      userName: user.username,
       itemsCount: items.length,
       totalLabor,
       commissionRate: rate,
@@ -94,16 +91,16 @@ export class DocumentCommissionService {
     dto: PayCommissionDto,
     username: string,
   ): Promise<CommissionSummaryResponseDto> {
-    const mechanic = await this.prisma.client.user.findUnique({
-      where: { id: dto.mechanicId },
+    const user = await this.prisma.client.user.findUnique({
+      where: { id: dto.userId },
     });
 
-    if (!mechanic) {
+    if (!user) {
       throw new BadRequestException('Mecânico não encontrado');
     }
 
     const where: any = {
-      mechanicId: dto.mechanicId,
+      userId: dto.userId,
       commissionClosedAt: { not: null },
       commissionPaidAt: null,
     };
@@ -141,12 +138,12 @@ export class DocumentCommissionService {
     );
 
     this.logger.log(
-      `[Commission] usuario=${username} | pagamento mecanico=${dto.mechanicId} | itens=${items.length} | total=${totalCommission.toFixed(2)}`,
+      `[Commission] usuario=${username} | pagamento mecanico=${dto.userId} | itens=${items.length} | total=${totalCommission.toFixed(2)}`,
     );
 
     return new CommissionSummaryResponseDto({
-      mechanicId: mechanic.id,
-      mechanicName: mechanic.username,
+      userId: user.id,
+      userName: user.username,
       itemsCount: items.length,
       totalLabor: items.reduce((sum, item) => sum + Number(item.total), 0),
       totalCommission,
@@ -154,10 +151,10 @@ export class DocumentCommissionService {
   }
 
   async findItems(query: FindCommissionItemsDto) {
-    const { mechanicId, status = 'open' } = query;
+    const { userId, status = 'open' } = query;
 
     const where: any = { type: DocumentItemType.SERVICE };
-    if (mechanicId) where.mechanicId = mechanicId;
+    if (userId) where.userId = userId;
 
     if (status === 'open') {
       where.commissionClosedAt = null;
@@ -171,7 +168,7 @@ export class DocumentCommissionService {
     return this.prisma.client.documentItem.findMany({
       where,
       include: {
-        mechanic: { select: { id: true, username: true } },
+        user: { select: { id: true, username: true } },
         service: { select: { name: true } },
         document: { select: { id: true, finishedAt: true } },
       },

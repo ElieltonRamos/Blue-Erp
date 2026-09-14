@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { ProductReportFilterDto } from './dto/create-report-product.dto';
 import { ProductReportResponseDto } from './dto/response-report-product.dto';
@@ -118,6 +122,9 @@ export class ProductReportService {
     let totalRevenue = 0;
 
     for (const item of saleItems) {
+      if (item.product === null) {
+        throw new NotFoundException('Isso nao e um Produto (DEV-MODE)');
+      }
       const qty = Number(item.quantity);
       const price = Number(item.totalPrice);
       const name = item.product.name;
@@ -184,6 +191,9 @@ export class ProductReportService {
 
     for (const saleItem of saleItems) {
       const soldQty = Number(saleItem.quantity);
+      if (saleItem.productId === null) {
+        throw new NotFoundException('Isso nao e um Produto (DEV-MODE)');
+      }
 
       const resolvedMaterials = await this.resolveCompositionMaterials(
         saleItem.productId,

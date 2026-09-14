@@ -7,7 +7,7 @@ export class FindCommissionItemsDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  mechanicId?: number;
+  userId?: number;
 
   @ApiProperty({
     enum: ['open', 'closed', 'paid'],
