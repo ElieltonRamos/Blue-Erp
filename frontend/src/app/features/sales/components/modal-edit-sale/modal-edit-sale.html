@@ -45,21 +45,32 @@
           <input
             type="text"
             class="w-full bg-overlay text-text-primary border border-border px-3 py-2 rounded shadow focus:outline-none"
-            [(ngModel)]="productSearch"
-            (ngModelChange)="searchProducts()"
-            placeholder="Buscar produto para adicionar..."
+            [(ngModel)]="itemSearch"
+            (ngModelChange)="onItemSearchChange()"
+            placeholder="Buscar peça ou serviço para adicionar..."
           />
-          @if (showProductResults && productResults.length > 0) {
+          @if (showItemResults && itemResults.length > 0) {
             <ul
               class="absolute z-10 w-full bg-surface border border-border rounded shadow mt-1 max-h-48 overflow-y-auto"
             >
-              @for (product of productResults; track product.id) {
+              @for (result of itemResults; track result.type + '-' + result.id) {
                 <li
-                  (click)="selectProduct(product)"
-                  class="px-3 py-2 hover:bg-overlay cursor-pointer text-text-primary flex justify-between"
+                  (click)="selectSearchResult(result)"
+                  class="px-3 py-2 hover:bg-overlay cursor-pointer text-text-primary flex justify-between items-center gap-2"
                 >
-                  <span>{{ product.name }}</span>
-                  <span class="text-text-secondary">R$ {{ product.price.toFixed(2) }}</span>
+                  <span class="flex items-center gap-2">
+                    <span
+                      class="text-[10px] px-1.5 py-0.5 rounded uppercase font-semibold"
+                      [class.bg-info-subtle]="result.type === 'PRODUCT'"
+                      [class.text-info]="result.type === 'PRODUCT'"
+                      [class.bg-accent-subtle]="result.type === 'SERVICE'"
+                      [class.text-accent]="result.type === 'SERVICE'"
+                    >
+                      {{ result.type === 'PRODUCT' ? '📦 Peça' : '🔧 Serviço' }}
+                    </span>
+                    <span>{{ result.name }}</span>
+                  </span>
+                  <span class="text-text-secondary">R$ {{ result.price.toFixed(2) }}</span>
                 </li>
               }
             </ul>
@@ -69,17 +80,50 @@
         <table class="min-w-full text-text-primary text-left text-sm">
           <thead class="bg-surface-alt text-accent uppercase text-xs">
             <tr>
-              <th class="py-2 px-3">Produto</th>
-              <th class="py-2 px-3 w-24">Qtd</th>
-              <th class="py-2 px-3 w-32">Preço Un.</th>
-              <th class="py-2 px-3 w-32">Total</th>
-              <th class="py-2 px-3 w-16"></th>
+              <th class="py-2 px-3 min-w-55">Item</th>
+              @if (hasServiceItems) {
+                <th class="py-2 px-3 w-32">Mecânico</th>
+              }
+              <th class="py-2 px-3 w-20">Qtd</th>
+              <th class="py-2 px-3 w-28">Preço Un.</th>
+              <th class="py-2 px-3 w-28">Total</th>
+              <th class="py-2 px-3 w-12"></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-border-subtle">
             @for (item of items; track $index) {
               <tr>
-                <td class="py-2 px-3">{{ item.xProd }}</td>
+                <td class="py-2 px-3 min-w-55">
+                  <span class="flex items-center gap-2">
+                    <span
+                      class="text-[10px] px-1.5 py-0.5 rounded uppercase font-semibold"
+                      [class.bg-info-subtle]="item.type === 'PRODUCT'"
+                      [class.text-info]="item.type === 'PRODUCT'"
+                      [class.bg-accent-subtle]="item.type === 'SERVICE'"
+                      [class.text-accent]="item.type === 'SERVICE'"
+                    >
+                      {{ item.type === 'PRODUCT' ? 'Produto' : 'Serviço' }}
+                    </span>
+                    <span>{{ item.xProd }}</span>
+                  </span>
+                </td>
+                @if (hasServiceItems) {
+                  <td class="py-2 px-3">
+                    @if (item.type === 'SERVICE') {
+                      <select
+                        class="w-full bg-overlay border border-border px-2 py-1 rounded text-xs"
+                        [(ngModel)]="item.userId"
+                      >
+                        <option [ngValue]="null">Sem mecânico</option>
+                        @for (m of mechanics; track m.id) {
+                          <option [ngValue]="m.id">{{ m.username }}</option>
+                        }
+                      </select>
+                    } @else {
+                      <span class="text-text-muted text-xs">—</span>
+                    }
+                  </td>
+                }
                 <td class="py-2 px-3">
                   <input
                     type="number"
@@ -109,7 +153,12 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="5" class="text-center py-4 text-text-muted">Nenhum item</td>
+                <td
+                  [attr.colspan]="hasServiceItems ? 6 : 5"
+                  class="text-center py-4 text-text-muted"
+                >
+                  Nenhum item
+                </td>
               </tr>
             }
           </tbody>

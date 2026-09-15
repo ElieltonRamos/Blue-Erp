@@ -12,13 +12,22 @@ import { Sale, SalePaymentDto, UpdateSaleDto, UpdateSaleItemDto } from '../../ty
 import { SaleService } from '../../services/sales.service';
 import { ClientService } from '../../../clients/services/client.service';
 import { ProductService } from '../../../products/services/product.service';
+import { CatalogService } from '../../../catalog-services/services/catalog.service';
+import { UserService } from '../../../users/services/user.service';
 import Client from '../../../clients/types/clients';
 import { Product } from '../../../products/types/product';
+import { Service } from '../../../catalog-services/types/catalog-types';
+import User from '../../../users/types/user';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
+
+type ItemType = 'PRODUCT' | 'SERVICE';
 
 interface EditableItem {
   id?: number;
-  productId: number;
+  type: ItemType;
+  productId?: number;
+  serviceId?: number;
+  userId?: number | null;
   xProd: string;
   quantity: number;
   unitPrice: number;
@@ -28,6 +37,13 @@ interface EditableItem {
 interface EditablePayment {
   method: string;
   amount: number;
+}
+
+interface SearchResult {
+  type: ItemType;
+  id: number;
+  name: string;
+  price: number;
 }
 
 @Component({
@@ -43,6 +59,8 @@ export class ModalEditSale implements OnInit {
   private saleService = inject(SaleService);
   private clientService = inject(ClientService);
   private productService = inject(ProductService);
+  private catalogService = inject(CatalogService);
+  private userService = inject(UserService);
   private notification = inject(NotificationService);
 
   paymentMethods = ['DINHEIRO', 'CARTAO_CREDITO', 'CARTAO_DEBITO', 'PIX', 'CREDITO_LOJA'];
@@ -52,9 +70,12 @@ export class ModalEditSale implements OnInit {
   clientResults: Client[] = [];
   showClientResults = false;
 
-  productSearch = '';
-  productResults: Product[] = [];
-  showProductResults = false;
+  itemSearch = '';
+  itemResults: SearchResult[] = [];
+  showItemResults = false;
+  private itemSearchTimer: ReturnType<typeof setTimeout> | null = null;
+
+  mechanics: User[] = [];
 
   items: EditableItem[] = [];
   payments: EditablePayment[] = [];
@@ -73,14 +94,17 @@ export class ModalEditSale implements OnInit {
   ngOnInit(): void {
     this.selectedClientId = this.saleData.clientId;
     this.clientSearch = this.saleData.client.name;
-    this.discount = this.saleData.discount;
+    this.discount = Number(this.saleData.discount);
     this.serviceCharge = Number(this.saleData.serviceCharge);
     this.isPaid = this.saleData.isPaid;
     this.cfop = this.saleData.cfop;
 
     this.items = (this.saleData.items ?? []).map((item) => ({
       id: item.id,
-      productId: item.productId!,
+      type: item.serviceId ? 'SERVICE' : 'PRODUCT',
+      productId: item.productId ?? undefined,
+      serviceId: item.serviceId ?? undefined,
+      userId: item.userId ?? null,
       xProd: item.xProd ?? '',
       quantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),
@@ -91,6 +115,19 @@ export class ModalEditSale implements OnInit {
       method: p.method,
       amount: Number(p.amount),
     }));
+
+    this.loadMechanics();
+  }
+
+  private loadMechanics(): void {
+    this.userService.getUsers({ role: 'mechanic' }).subscribe({
+      next: (users) => {
+        this.mechanics = users;
+      },
+      error: () => {
+        this.mechanics = [];
+      },
+    });
   }
 
   searchClients(): void {
@@ -115,41 +152,93 @@ export class ModalEditSale implements OnInit {
     this.showClientResults = false;
   }
 
-  searchProducts(): void {
-    if (this.productSearch.trim().length < 2) {
-      this.productResults = [];
-      this.showProductResults = false;
+  // --- Busca unificada de produto/serviço ---
+  onItemSearchChange(): void {
+    if (this.itemSearchTimer) clearTimeout(this.itemSearchTimer);
+
+    const term = this.itemSearch.trim();
+    if (term.length < 2) {
+      this.itemResults = [];
+      this.showItemResults = false;
       return;
     }
 
-    this.productService.getAll(1, 10, { search: this.productSearch.trim() }).subscribe({
-      next: (response) => {
-        this.productResults = response.data;
-        this.showProductResults = true;
-      },
-      error: () => this.notification.error('Erro ao buscar produtos'),
-    });
+    this.itemSearchTimer = setTimeout(() => {
+      let productResults: SearchResult[] = [];
+      let serviceResults: SearchResult[] = [];
+      let pending = 2;
+
+      const finish = () => {
+        pending -= 1;
+        if (pending === 0) {
+          this.itemResults = [...productResults, ...serviceResults];
+          this.showItemResults = true;
+        }
+      };
+
+      this.productService.getAll(1, 10, { search: term }).subscribe({
+        next: (response) => {
+          productResults = response.data.map(
+            (p): SearchResult => ({
+              type: 'PRODUCT',
+              id: p.id,
+              name: p.name,
+              price: Number(p.price),
+            }),
+          );
+          finish();
+        },
+        error: () => finish(),
+      });
+
+      this.catalogService.getAll(1, 10, { search: term }).subscribe({
+        next: (response) => {
+          serviceResults = response.data.map(
+            (s): SearchResult => ({
+              type: 'SERVICE',
+              id: s.id,
+              name: s.name,
+              price: Number(s.price),
+            }),
+          );
+          finish();
+        },
+        error: () => finish(),
+      });
+    }, 350);
   }
 
-  selectProduct(product: Product): void {
-    const existing = this.items.find((i) => i.productId === product.id);
-
-    if (existing) {
-      existing.quantity += 1;
-      this.recalcItemTotal(existing);
+  selectSearchResult(result: SearchResult): void {
+    if (result.type === 'PRODUCT') {
+      const existing = this.items.find((i) => i.type === 'PRODUCT' && i.productId === result.id);
+      if (existing) {
+        existing.quantity += 1;
+        this.recalcItemTotal(existing);
+      } else {
+        this.items.push({
+          type: 'PRODUCT',
+          productId: result.id,
+          xProd: result.name,
+          quantity: 1,
+          unitPrice: result.price,
+          totalPrice: result.price,
+        });
+      }
     } else {
       this.items.push({
-        productId: product.id,
-        xProd: product.name,
+        type: 'SERVICE',
+        serviceId: result.id,
+        userId: null,
+        xProd: result.name,
         quantity: 1,
-        unitPrice: product.price,
-        totalPrice: product.price,
+        unitPrice: result.price,
+        totalPrice: result.price,
       });
     }
 
-    this.productSearch = '';
-    this.productResults = [];
-    this.showProductResults = false;
+    this.itemSearch = '';
+    this.itemResults = [];
+    this.showItemResults = false;
   }
 
   recalcItemTotal(item: EditableItem): void {
@@ -206,7 +295,10 @@ export class ModalEditSale implements OnInit {
 
     const itemsDto: UpdateSaleItemDto[] = this.items.map((item) => ({
       id: item.id,
+      type: item.type,
       productId: item.productId,
+      serviceId: item.serviceId,
+      userId: item.userId ?? undefined,
       quantity: item.quantity,
       unitPrice: item.unitPrice,
     }));
@@ -245,5 +337,9 @@ export class ModalEditSale implements OnInit {
 
   close(): void {
     this.closeModal.emit();
+  }
+
+  get hasServiceItems(): boolean {
+    return this.items.some((item) => item.type === 'SERVICE');
   }
 }

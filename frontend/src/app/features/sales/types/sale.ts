@@ -39,8 +39,11 @@ export interface SaleItem {
 }
 
 export interface UpdateSaleItemDto {
-  id?: number; // presente = item existente, ausente = item novo
-  productId: number;
+  id?: number;
+  type: 'PRODUCT' | 'SERVICE';
+  productId?: number;
+  serviceId?: number;
+  userId?: number;
   quantity: number;
   unitPrice: number;
 }
