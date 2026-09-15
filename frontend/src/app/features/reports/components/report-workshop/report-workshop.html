@@ -1,0 +1,222 @@
+<div class="w-full max-w-7xl bg-surface rounded-2xl p-6">
+  <div class="mb-4">
+    <h1 class="text-3xl font-bold text-text-primary">Relatório da Oficina</h1>
+    <p class="text-sm text-text-muted mt-1">
+      Uma visão geral simples de como foi o movimento da oficina no período escolhido
+    </p>
+  </div>
+
+  <!-- Dica de uso -->
+  <div class="bg-surface-alt border border-support/40 p-4 rounded-xl mb-6">
+    <h3 class="text-support font-semibold mb-1">💡 Como usar</h3>
+    <p class="text-text-secondary text-sm">
+      Escolha um período abaixo (ou use os atalhos "Hoje", "Esta Semana" ou "Este Mês") e clique em
+      <strong>Gerar Relatório</strong>. Você vai ver quanto a oficina faturou, quantos veículos
+      passaram por aqui e quais voltaram mais vezes.
+    </p>
+  </div>
+
+  <!-- Filtros -->
+  <div class="flex flex-wrap gap-4 mb-6">
+    <div class="flex flex-col">
+      <label class="text-text-secondary text-sm mb-1">Data Início</label>
+      <input
+        type="date"
+        [(ngModel)]="startDate"
+        class="bg-surface-alt text-text-primary px-3 py-2 rounded border border-border focus:outline-none"
+      />
+    </div>
+    <div class="flex flex-col">
+      <label class="text-text-secondary text-sm mb-1">Data Fim</label>
+      <input
+        type="date"
+        [(ngModel)]="endDate"
+        class="bg-surface-alt text-text-primary px-3 py-2 rounded border border-border focus:outline-none"
+      />
+    </div>
+    <div class="flex items-end gap-2">
+      <button
+        (click)="setToday()"
+        class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded transition"
+      >
+        Hoje
+      </button>
+      <button
+        (click)="setThisWeek()"
+        class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded transition"
+      >
+        Esta Semana
+      </button>
+      <button
+        (click)="setThisMonth()"
+        class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded transition"
+      >
+        Este Mês
+      </button>
+      <div class="flex items-end">
+        @if (reportGenerated) {
+          <button
+            (click)="print()"
+            class="bg-transparent text-text-secondary px-6 h-10.5 rounded border border-border hover:bg-surface-alt hover:text-text-primary transition-all font-medium"
+          >
+            🖨️ Imprimir / PDF
+          </button>
+        }
+      </div>
+    </div>
+    <div class="flex items-end">
+      <button
+        (click)="generateReport()"
+        class="bg-success hover:bg-success/80 text-white px-6 py-2 rounded transition"
+      >
+        Gerar Relatório
+      </button>
+    </div>
+  </div>
+
+  @if (reportGenerated) {
+    <div class="text-text-primary mt-4">
+      <h2 class="text-2xl font-bold mb-1">Movimento da Oficina — {{ getFullDate() }}</h2>
+      <p class="text-text-muted text-sm mb-6">
+        Considera todos os orçamentos e ordens de serviço criados no período, de qualquer status.
+      </p>
+
+      <!-- Resumo (KPIs) -->
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+        <div class="bg-surface-alt rounded-xl p-4 text-center">
+          <p class="text-[10px] text-text-muted uppercase tracking-wide mb-1">Orçamentos / OS</p>
+          <p class="text-2xl font-bold text-text-primary">{{ report.summary.totalDocuments }}</p>
+          <p class="text-[10px] text-text-muted mt-1">no período</p>
+        </div>
+        <div class="bg-surface-alt rounded-xl p-4 text-center">
+          <p class="text-[10px] text-text-muted uppercase tracking-wide mb-1">Faturamento</p>
+          <p class="text-xl font-bold text-support">
+            {{ formatCurrency(report.summary.totalRevenue) }}
+          </p>
+          <p class="text-[10px] text-text-muted mt-1">total gerado</p>
+        </div>
+        <div class="bg-surface-alt rounded-xl p-4 text-center">
+          <p class="text-[10px] text-text-muted uppercase tracking-wide mb-1">Ticket Médio</p>
+          <p class="text-xl font-bold text-fiscal">
+            {{ formatCurrency(report.summary.averageTicket) }}
+          </p>
+          <p class="text-[10px] text-text-muted mt-1">por OS/orçamento</p>
+        </div>
+        <div class="bg-surface-alt rounded-xl p-4 text-center">
+          <p class="text-[10px] text-text-muted uppercase tracking-wide mb-1">Veículos Atendidos</p>
+          <p class="text-2xl font-bold text-info">{{ report.summary.vehiclesServed }}</p>
+          <p class="text-[10px] text-text-muted mt-1">veículos diferentes</p>
+        </div>
+        <div class="bg-surface-alt rounded-xl p-4 text-center">
+          <p class="text-[10px] text-text-muted uppercase tracking-wide mb-1">Sem Veículo</p>
+          <p class="text-2xl font-bold text-warning">
+            {{ report.summary.documentsWithoutVehicle }}
+          </p>
+          <p class="text-[10px] text-text-muted mt-1">OS sem veículo vinculado</p>
+        </div>
+      </div>
+
+      <!-- Destaque: veículos que mais vieram -->
+      <div class="bg-surface-alt p-4 rounded-xl mb-6">
+        <h3 class="text-lg font-bold mb-1 text-text-primary">🏆 Veículos que mais vieram</h3>
+        <p class="text-xs text-text-muted mb-4">
+          Os veículos que passaram mais vezes pela oficina no período. Isso pode indicar clientes
+          fiéis ou veículos com manutenção recorrente.
+        </p>
+
+        @if (report.topVehicles.length > 0) {
+          <div class="space-y-2">
+            @for (v of report.topVehicles; track v.assetId; let i = $index) {
+              <div class="flex items-center justify-between bg-white/5 rounded-lg px-4 py-2.5">
+                <div class="flex items-center gap-3">
+                  <span class="text-text-muted font-bold w-5 text-center">{{ i + 1 }}º</span>
+                  <div>
+                    <p class="text-sm font-semibold text-text-primary">{{ v.label }}</p>
+                    <p class="text-xs text-text-muted">{{ v.clientName }}</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <p class="text-sm font-bold text-text-primary">{{ v.visits }}x</p>
+                  <p class="text-xs text-support">{{ formatCurrency(v.totalValue) }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="text-text-muted text-sm">Nenhum veículo atendido nesse período.</p>
+        }
+      </div>
+
+      <!-- Lista de veículos -->
+      <div class="mb-6">
+        <h3 class="text-lg font-bold mb-1 text-text-primary">Veículos Atendidos</h3>
+        <p class="text-xs text-text-muted mb-4">
+          Cada card mostra um veículo diferente que passou pela oficina, quantas vezes ele veio,
+          quanto gastou no total e quando foi a última vez que ele apareceu.
+        </p>
+
+        @if (report.vehicles.length > 0) {
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            @for (v of report.vehicles; track v.assetId) {
+              <div class="bg-surface-alt rounded-xl p-4">
+                <p class="font-semibold text-text-primary">{{ v.label }}</p>
+                <p class="text-xs text-text-muted mb-3">{{ v.clientName }}</p>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p class="text-[10px] text-text-muted uppercase">Visitas</p>
+                    <p class="text-sm font-bold text-text-primary">{{ v.visits }}</p>
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-text-muted uppercase">Total</p>
+                    <p class="text-sm font-bold text-support">{{ formatCurrency(v.totalValue) }}</p>
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-text-muted uppercase">Última visita</p>
+                    <p class="text-sm font-bold text-fiscal">
+                      {{ formatDateDisplay(v.lastVisit) }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="text-text-muted text-sm">Nenhum veículo atendido nesse período.</p>
+        }
+      </div>
+
+      <!-- OS sem veículo -->
+      @if (report.noVehicle.totalDocuments > 0) {
+        <div class="bg-surface-alt border border-warning/40 rounded-xl p-4">
+          <h3 class="text-warning font-semibold mb-1">⚠️ Orçamentos/OS sem veículo</h3>
+          <p class="text-text-secondary text-sm mb-3">
+            Esses orçamentos ou ordens de serviço não têm um veículo cadastrado. Pode ser um serviço
+            avulso ou um cadastro que passou batido.
+          </p>
+          <div class="flex gap-6">
+            <div>
+              <p class="text-[10px] text-text-muted uppercase">Quantidade</p>
+              <p class="text-lg font-bold text-text-primary">
+                {{ report.noVehicle.totalDocuments }}
+              </p>
+            </div>
+            <div>
+              <p class="text-[10px] text-text-muted uppercase">Valor total</p>
+              <p class="text-lg font-bold text-support">
+                {{ formatCurrency(report.noVehicle.totalValue) }}
+              </p>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+@if (isLoading) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+    <div class="text-white text-lg font-semibold animate-pulse text-center px-4">
+      <p>Carregando relatório...</p>
+    </div>
+  </div>
+}

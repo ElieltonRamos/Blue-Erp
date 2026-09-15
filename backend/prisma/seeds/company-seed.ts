@@ -31,12 +31,10 @@ export async function seedCompany(prisma: PrismaClient) {
       ibptVersion: '4.0',
       licenseKey: 'COMPLETO-22222222000122-a7c3e14d8b224a21',
       licenseToken: 'TOKEN-HOMOLOG-BLUE-456',
-      businessType: 'VAREJO',
+      businessType: 'OFICINA',
       enabledMenus: [
+        // --- Geral (comum a qualquer businessType) ---
         '/clientes',
-        '/comandas',
-        '/cozinha',
-        '/mesas',
         '/produtos',
         '/usuarios',
         '/historico-vendas',
@@ -44,8 +42,16 @@ export async function seedCompany(prisma: PrismaClient) {
         '/financeiro',
         '/empresa',
         '/fiscal',
+
+        // --- Oficina ---
         '/veiculos',
         '/servicos',
+        '/ordem-servico',
+
+        // --- Restaurante (comentado) ---
+        // '/comandas',
+        // '/cozinha',
+        // '/mesas',
       ],
     },
   });
