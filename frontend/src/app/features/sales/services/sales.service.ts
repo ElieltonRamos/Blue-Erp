@@ -22,6 +22,10 @@ export class SaleService {
     return this.client.post<Sale>(this.apiUrl, dto);
   }
 
+  getSaleByDocumentId(documentId: number): Observable<Sale> {
+    return this.client.get<Sale>(`${this.apiUrl}/by-document/${documentId}`);
+  }
+
   getSales(filters?: SaleFilters): Observable<SalePaginatedResponse> {
     let params = new HttpParams();
 

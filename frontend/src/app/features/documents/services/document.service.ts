@@ -7,11 +7,13 @@ import {
   AddDocumentItemDTO,
   CreateDocumentDTO,
   FilterDocumentParams,
+  FinalizeDocumentDTO,
   OSDocument,
   UpdateDocumentItemDTO,
   UpdateDocumentResponsibleDTO,
   UpdateDocumentStatusDTO,
 } from '../types/documents.types';
+import { Sale } from '../../sales/types/sale';
 
 @Injectable({
   providedIn: 'root',
@@ -48,6 +50,13 @@ export class DocumentService {
     dto: UpdateDocumentItemDTO,
   ): Observable<OSDocument> {
     return this.client.patch<OSDocument>(`${this.apiUrl}/${documentId}/items/${itemId}`, dto);
+  }
+
+  finalizeDocument(documentId: number, dto: FinalizeDocumentDTO): Observable<Sale> {
+    return this.client.post<Sale>(
+      `${environment.apiUrl}/sales/finalize-document/${documentId}`,
+      dto,
+    );
   }
 
   updateResponsible(id: number, dto: UpdateDocumentResponsibleDTO): Observable<OSDocument> {

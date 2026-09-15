@@ -266,4 +266,30 @@ export class DocumentSaleService {
       throw error;
     }
   }
+
+  async findByDocumentId(documentId: number): Promise<SaleResponseDto> {
+    const sale = await this.prisma.client.sale.findUnique({
+      where: { documentId },
+      include: this.saleInclude(),
+    });
+
+    if (!sale) {
+      throw new NotFoundException(
+        `Nenhuma venda encontrada para o documento ${documentId}`,
+      );
+    }
+
+    return new SaleResponseDto(sale);
+  }
+
+  private saleInclude() {
+    return {
+      items: true,
+      payments: true,
+      client: true,
+      operator: {
+        select: { id: true, username: true, role: true },
+      },
+    };
+  }
 }

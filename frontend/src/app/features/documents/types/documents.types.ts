@@ -1,4 +1,5 @@
 import { PaginatedResponse } from '../../../core/guards/types/paginator';
+import { PaymentMethod } from '../../orders/pages/close-order/close-order';
 
 export type DocumentType = 'QUOTE' | 'SERVICE_ORDER';
 export type DocumentStatus = 'DRAFT' | 'APPROVED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELED';
@@ -88,3 +89,15 @@ export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
   COMPLETED: 'Concluído',
   CANCELED: 'Cancelado',
 };
+
+export interface FinalizeDocumentDTO {
+  discount?: number;
+  cfop?: string;
+  payments: SalePaymentDto[];
+}
+
+export interface SalePaymentDto {
+  method: PaymentMethod;
+  amount: number;
+  change?: number;
+}

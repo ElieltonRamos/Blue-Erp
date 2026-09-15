@@ -19,7 +19,8 @@ import { OfflineComponent } from './features/offline/pages/offline.component';
 import { NotFound } from './features/offline/pages/not-found';
 import { CatalogServices } from './features/catalog-services/pages/catalog-services';
 import { Vehicles } from './features/assets/pages/vehicles';
-import { Documents } from './features/documents/pages/document';
+import { Documents } from './features/documents/pages/documents/document';
+import { ConvertDocumentToSale } from './features/documents/pages/convert-document-to-sale/convert-document-to-sale';
 
 export const routes: Routes = [
   {
@@ -95,6 +96,11 @@ export const routes: Routes = [
   {
     path: 'comandas/:id',
     component: CloseOrder,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'ordem-servico/:id/finalizar',
+    component: ConvertDocumentToSale,
     canActivate: [authGuard],
   },
   {

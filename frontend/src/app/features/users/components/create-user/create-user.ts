@@ -46,8 +46,8 @@ export class CreateUser implements OnInit {
     });
   }
 
-  get isuser(): boolean {
-    return this.formCreateUser.get('role')?.value === 'user';
+  get isMechanic(): boolean {
+    return this.formCreateUser.get('role')?.value === 'mechanic';
   }
 
   onSubmit() {
@@ -62,7 +62,7 @@ export class CreateUser implements OnInit {
       password: password || '',
       role: role || '',
       workplace: workplace || '',
-      ...(role === 'user' && commissionRate != null ? { commissionRate } : {}),
+      ...(role === 'mechanic' && commissionRate != null ? { commissionRate } : {}),
     };
 
     this.userService.createUser(newUser).subscribe({

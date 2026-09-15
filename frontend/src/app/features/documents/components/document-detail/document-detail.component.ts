@@ -18,17 +18,27 @@ import { Service } from '../../../catalog-services/types/catalog-types';
 import User from '../../../users/types/user';
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 import { ModalDocumentNote } from '../modal-document/modal-document-note';
+import { Router } from '@angular/router';
+import { SaleService } from '../../../sales/services/sales.service';
+import { Sale } from '../../../sales/types/sale';
+import { ModalSalesNote } from '../../../sales/components/modal-sales-note/modal-sales-note';
 
 @Component({
   selector: 'app-document-detail',
-  imports: [CommonModule, FormsModule, ModalDocumentNote],
+  imports: [CommonModule, FormsModule, ModalDocumentNote, ModalSalesNote],
   templateUrl: './document-detail.component.html',
 })
 export class DocumentDetailComponent {
+  private router = inject(Router);
   @Input({ required: true }) document!: OSDocument;
   @Input() allUsers: User[] = [];
   @Input() users: User[] = [];
 
+  private saleService = inject(SaleService);
+
+  showSalePrintModal = false;
+  saleData: Sale | null = null;
+  loadingSale = false;
   editingResponsible = false;
   editResponsibleId: number | null = null;
   savingResponsible = false;
@@ -87,8 +97,42 @@ export class DocumentDetailComponent {
     this.showPrintModal = false;
   }
 
+  canPrintSale(): boolean {
+    return this.document.status === 'COMPLETED';
+  }
+
+  openSalePrintModal(): void {
+    this.loadingSale = true;
+    this.saleService.getSaleByDocumentId(this.document.id).subscribe({
+      next: (sale) => {
+        this.saleData = sale;
+        this.showSalePrintModal = true;
+        this.loadingSale = false;
+        this.cdr.detectChanges();
+      },
+      error: (e) => {
+        this.notification.error(`Erro ao carregar venda: ${e.error?.message || e.message}`);
+        this.loadingSale = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  closeSalePrintModal(): void {
+    this.showSalePrintModal = false;
+    this.saleData = null;
+  }
+
+  finalizeToSale(): void {
+    this.router.navigate(['/ordem-servico', this.document.id, 'finalizar']);
+  }
+
+  canFinalize(): boolean {
+    return this.document.status === 'IN_PROGRESS';
+  }
+
   private loadusers() {
-    this.userService.getUsers({ role: 'user' }).subscribe({
+    this.userService.getUsers({ role: 'mechanic' }).subscribe({
       next: (users) => {
         console.log(users, 'usuarios mecanicos');
         this.users = users;

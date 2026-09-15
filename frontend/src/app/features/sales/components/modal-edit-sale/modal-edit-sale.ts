@@ -80,7 +80,7 @@ export class ModalEditSale implements OnInit {
 
     this.items = (this.saleData.items ?? []).map((item) => ({
       id: item.id,
-      productId: item.productId,
+      productId: item.productId!,
       xProd: item.xProd ?? '',
       quantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),

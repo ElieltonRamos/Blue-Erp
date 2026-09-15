@@ -2,9 +2,9 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { PaginatorComponent } from '../../../shared/paginator/paginator.component';
-import { NotificationService } from '../../../shared/toastr/notification.service';
-import { DocumentService } from '../services/document.service';
+import { PaginatorComponent } from '../../../../shared/paginator/paginator.component';
+import { NotificationService } from '../../../../shared/toastr/notification.service';
+import { DocumentService } from '../../services/document.service';
 import {
   OSDocument,
   DocumentType,
@@ -12,16 +12,16 @@ import {
   CreateDocumentDTO,
   FilterDocumentParams,
   DOCUMENT_STATUS_LABELS,
-} from '../types/documents.types';
-import { ClientService } from '../../clients/services/client.service';
-import Client from '../../clients/types/clients';
-import { AssetService } from '../../assets/services/asset.service';
-import { Asset } from '../../assets/types/asset.type';
-import { VehicleCreateFormComponent } from '../../assets/components/vehicle-create-form.component';
-import { UserService } from '../../users/services/user.service';
-import User from '../../users/types/user';
-import { CreateClient } from '../../clients/components/create-client/create-client';
-import { DocumentDetailComponent } from '../components/document-detail/document-detail.component';
+} from '../../types/documents.types';
+import { ClientService } from '../../../clients/services/client.service';
+import Client from '../../../clients/types/clients';
+import { AssetService } from '../../../assets/services/asset.service';
+import { Asset } from '../../../assets/types/asset.type';
+import { VehicleCreateFormComponent } from '../../../assets/components/vehicle-create-form.component';
+import { UserService } from '../../../users/services/user.service';
+import User from '../../../users/types/user';
+import { CreateClient } from '../../../clients/components/create-client/create-client';
+import { DocumentDetailComponent } from '../../components/document-detail/document-detail.component';
 
 @Component({
   selector: 'app-documents',
@@ -68,7 +68,11 @@ export class Documents {
   private filterAssetTimer: ReturnType<typeof setTimeout> | null = null;
 
   private today(): string {
-    return new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   filterStartDate: string = this.today();
@@ -114,7 +118,7 @@ export class Documents {
   }
 
   private loadusers() {
-    this.userService.getUsers({ role: 'user' }).subscribe({
+    this.userService.getUsers({ role: 'mechanic' }).subscribe({
       next: (users) => {
         this.users = users;
         this.cdr.detectChanges();

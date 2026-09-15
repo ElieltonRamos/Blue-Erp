@@ -18,7 +18,9 @@ export interface SaleItem {
   id: number;
   itemNumber: number;
   saleId: number;
-  productId: number;
+  productId: number | null;
+  serviceId: number | null;
+  userId: number | null;
   xProd: string | null;
   quantity: number;
   unitPrice: number;
@@ -31,6 +33,7 @@ export interface SaleItem {
   totalTaxValue: number | null;
   importTaxValue: number | null;
   iofValue: number | null;
+  serviceCharge: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -91,6 +94,8 @@ export interface Sale {
   createdAt: Date;
   updatedAt: Date;
   serviceCharge: number;
+  orderId: number | null;
+  documentId: number | null;
   items?: SaleItem[];
 }
 

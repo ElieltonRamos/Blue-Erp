@@ -299,6 +299,25 @@
           Aprovar
         </button>
       }
+
+      @if (canPrintSale()) {
+        <button
+          (click)="openSalePrintModal()"
+          [disabled]="loadingSale"
+          class="action-btn bg-info text-white hover:opacity-90"
+        >
+          Imprimir venda
+        </button>
+      }
+
+      @if (canFinalize()) {
+        <button
+          (click)="finalizeToSale()"
+          class="action-btn bg-success text-white hover:opacity-90"
+        >
+          Finalizar e faturar
+        </button>
+      }
       @if (canAdvance()) {
         <button
           (click)="advanceToInProgress()"
@@ -326,3 +345,7 @@
   [isOpen]="showPrintModal"
   (closeModal)="closePrintModal()"
 />
+
+@if (showSalePrintModal && saleData) {
+  <app-modal-sales-note [saleData]="saleData" (closeModal)="closeSalePrintModal()" />
+}

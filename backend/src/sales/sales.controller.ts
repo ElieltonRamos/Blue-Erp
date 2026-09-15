@@ -45,6 +45,22 @@ export class SalesController {
     private documentService: DocumentSaleService,
   ) {}
 
+  @Get('by-document/:documentId')
+  @ApiOperation({ summary: 'Buscar venda pelo ID do documento de origem' })
+  @ApiParam({ name: 'documentId', type: Number })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Venda encontrada',
+    type: SaleResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Nenhuma venda associada a esse documento',
+  })
+  findByDocumentId(@Param('documentId', ParseIntPipe) documentId: number) {
+    return this.documentService.findByDocumentId(documentId);
+  }
+
   @Post('finalize-document/:documentId')
   @ApiOperation({
     summary: 'Finalizar OS e gerar venda (Sale) a partir dos itens PRODUCT',

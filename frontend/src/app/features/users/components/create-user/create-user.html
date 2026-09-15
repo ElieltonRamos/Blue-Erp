@@ -37,12 +37,12 @@
   <div class="text-text-primary font-bold">
     <label class="block mb-2">Tipo de Usuário: </label>
     <div class="flex gap-8 flex-wrap">
-      @for (role of ['caixa', 'garcom', 'cozinheiro', 'admin', 'user']; track role) {
+      @for (role of ['caixa', 'garcom', 'cozinheiro', 'admin', 'mechanic']; track role) {
         <label class="flex items-center gap-3 text-base cursor-pointer">
           <input type="radio" [value]="role" formControlName="role" class="w-8 h-8 accent-accent" />
 
           <span class="capitalize text-text-primary font-medium">
-            {{ role === 'user' ? 'Mecânico' : role }}
+            {{ role === 'mechanic' ? 'Mecânico' : role }}
           </span>
         </label>
       }
@@ -52,7 +52,7 @@
     }
   </div>
 
-  @if (isuser) {
+  @if (isMechanic) {
     <div>
       <label for="commissionRate" class="block text-text-primary font-bold mb-2">
         Percentual de Comissão (%)
@@ -63,7 +63,7 @@
         type="number"
         min="0"
         max="100"
-        step="0.01"
+        step="1"
         placeholder="Ex: 40"
         class="text-xl w-full p-2 rounded-md bg-surface-alt border border-border text-text-primary font-semibold placeholder-text-muted"
       />
