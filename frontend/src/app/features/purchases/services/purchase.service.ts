@@ -1,6 +1,6 @@
 // services/purchase.service.ts
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../core/services/environment';
 import { PaginatedResponse } from '../../../core/guards/types/paginator';
@@ -34,16 +34,17 @@ export class PurchaseService {
     limit: number,
     filters: PurchaseFilters = {},
   ): Observable<PaginatedResponse<Purchase>> {
-    const params: any = {
-      page,
-      limit,
-      status: filters.status || undefined,
-      supplier: filters.supplier || undefined,
-    };
+    let params = new HttpParams().set('page', page).set('limit', limit);
+
+    if (filters.status) {
+      params = params.set('status', filters.status);
+    }
+    if (filters.supplier) {
+      params = params.set('supplier', filters.supplier);
+    }
 
     return this.client.get<PaginatedResponse<Purchase>>(`${this.apiUrl}/purchases`, { params });
   }
-
   getPurchase(id: number): Observable<Purchase> {
     return this.client.get<Purchase>(`${this.apiUrl}/purchases/${id}`);
   }

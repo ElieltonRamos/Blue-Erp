@@ -14,6 +14,8 @@ export class NfeXmlParserService {
   private readonly parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: '@_',
+    parseTagValue: false, // não converte texto de tag pra number/boolean automaticamente
+    parseAttributeValue: false, // idem pra atributos
   });
 
   parse(xmlBuffer: Buffer): ParsedNfeDto {

@@ -14,7 +14,7 @@ import {
   providedIn: 'root',
 })
 export class BusinessPartnerService {
-  private apiUrl = `${environment.apiUrl}/business-partners`;
+  private apiUrl = `${environment.apiUrl}/purchases/business-partners`;
   private client = inject(HttpClient);
 
   getAll(filters?: BusinessPartnerFilters): Observable<BusinessPartner[]> {

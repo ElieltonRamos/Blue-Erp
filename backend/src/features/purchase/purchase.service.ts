@@ -187,7 +187,7 @@ export class PurchaseService {
         where,
         skip,
         take: limit,
-        include: { supplier: true },
+        include: { supplier: true, items: true, expenses: true },
         orderBy,
       }),
       this.prisma.client.purchase.count({ where }),

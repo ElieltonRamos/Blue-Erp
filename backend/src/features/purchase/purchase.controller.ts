@@ -3,6 +3,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -13,17 +15,20 @@ import {
   HttpCode,
   HttpStatus,
   BadRequestException,
-  Patch,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { PurchaseService } from './purchase.service';
+import { BusinessPartnerService } from './business-partner.service';
 import { CreatePurchaseFromXmlDto } from './dto/create-purchase-from-xml.dto';
-import { PurchaseStatus } from 'generated/prisma/client';
-import { JwtAuthGuard, JwtPayload } from 'src/common/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
+import { CreateBusinessPartnerDto } from './dto/create-business-partner.dto';
+import { UpdateBusinessPartnerDto } from './dto/update-business-partner.dto';
+import { FindAllPurchaseQueryDto } from './dto/find-all-purchase-query.dto';
+import { JwtAuthGuard, JwtPayload } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
 import { NfeXmlParserService } from './nfe-xml-parser.service';
-import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { PartnerType } from 'generated/prisma/client';
 
 interface UploadedXmlFile {
   originalname: string;
@@ -39,7 +44,52 @@ export class PurchaseController {
   constructor(
     private readonly purchaseService: PurchaseService,
     private readonly nfeXmlParserService: NfeXmlParserService,
+    private readonly businessPartnerService: BusinessPartnerService,
   ) {}
+
+  // --- Business Partners (fornecedores) — precisa vir antes de ':id' ---
+
+  @Get('business-partners')
+  @ApiOperation({ summary: 'Listar fornecedores' })
+  findAllPartners(
+    @Query('type') type?: PartnerType,
+    @Query('active') active?: string,
+  ) {
+    return this.businessPartnerService.findAll({
+      type,
+      active: active !== undefined ? active === 'true' : undefined,
+    });
+  }
+
+  @Get('business-partners/:id')
+  @ApiOperation({ summary: 'Buscar fornecedor por ID' })
+  findOnePartner(@Param('id', ParseIntPipe) id: number) {
+    return this.businessPartnerService.findOne(id);
+  }
+
+  @Post('business-partners')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Cadastrar fornecedor' })
+  createPartner(@Body() dto: CreateBusinessPartnerDto) {
+    return this.businessPartnerService.create(dto);
+  }
+
+  @Patch('business-partners/:id')
+  @ApiOperation({ summary: 'Atualizar fornecedor' })
+  updatePartner(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateBusinessPartnerDto,
+  ) {
+    return this.businessPartnerService.update(id, dto);
+  }
+
+  @Delete('business-partners/:id')
+  @ApiOperation({ summary: 'Inativar fornecedor' })
+  removePartner(@Param('id', ParseIntPipe) id: number) {
+    return this.businessPartnerService.remove(id);
+  }
+
+  // --- Purchases ---
 
   @Patch(':id/cancel')
   @HttpCode(HttpStatus.OK)
@@ -92,22 +142,8 @@ export class PurchaseController {
 
   @Get()
   @ApiOperation({ summary: 'Listar compras' })
-  findAll(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @Query('status') status?: PurchaseStatus,
-    @Query('supplier') supplier?: string,
-    @Query('sortBy') sortBy?: string,
-    @Query('sortOrder') sortOrder?: 'asc' | 'desc',
-  ) {
-    return this.purchaseService.findAll({
-      page,
-      limit,
-      status,
-      supplier,
-      sortBy,
-      sortOrder,
-    });
+  findAll(@Query() query: FindAllPurchaseQueryDto) {
+    return this.purchaseService.findAll(query);
   }
 
   @Get(':id')

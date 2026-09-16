@@ -21,6 +21,7 @@ import { CatalogServices } from './features/catalog-services/pages/catalog-servi
 import { Vehicles } from './features/assets/pages/vehicles';
 import { Documents } from './features/documents/pages/documents/document';
 import { ConvertDocumentToSale } from './features/documents/pages/convert-document-to-sale/convert-document-to-sale';
+import { Purchase } from './features/purchases/pages/purchases';
 
 export const routes: Routes = [
   {
@@ -85,7 +86,7 @@ export const routes: Routes = [
   },
   {
     path: 'compras',
-    component: Financial,
+    component: Purchase,
     canActivate: [authGuard],
   },
   {

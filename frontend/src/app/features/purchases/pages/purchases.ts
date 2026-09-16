@@ -5,11 +5,11 @@ import { PurchaseList } from '../components/purchase-list/purchase-list';
 import { BusinessPartners } from '../components/business-partners/business-partners';
 
 @Component({
-  selector: 'app-purchase-module',
+  selector: 'app-purchase',
   imports: [PurchaseList, BusinessPartners],
   templateUrl: './purchases.html',
 })
-export class PurchaseModuleComponent {
+export class Purchase {
   private router = inject(Router);
   menuContext = 'listPurchases';
 
