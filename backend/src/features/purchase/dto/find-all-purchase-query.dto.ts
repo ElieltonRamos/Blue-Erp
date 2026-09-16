@@ -1,4 +1,4 @@
-// find-all-purchase-query.dto.ts
+// find-all-purchase-query.dto.ts — com os novos filtros
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
@@ -37,6 +37,26 @@ export class FindAllPurchaseQueryDto {
   @IsOptional()
   @IsString({ message: 'Fornecedor deve ser um texto' })
   supplier?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString({ message: 'Número da nota deve ser um texto' })
+  invoiceNumber?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString({ message: 'Chave de acesso deve ser um texto' })
+  fiscalKey?: string;
+
+  @ApiPropertyOptional({ description: 'Data inicial (YYYY-MM-DD)' })
+  @IsOptional()
+  @IsString({ message: 'Data inicial deve ser um texto' })
+  startDate?: string;
+
+  @ApiPropertyOptional({ description: 'Data final (YYYY-MM-DD)' })
+  @IsOptional()
+  @IsString({ message: 'Data final deve ser um texto' })
+  endDate?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

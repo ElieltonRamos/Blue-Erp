@@ -22,6 +22,11 @@ export class ReconciledPurchaseItemDto {
   @IsNotEmpty({ message: 'Descrição é obrigatória' })
   description: string;
 
+  @ApiProperty({ example: '60019200' })
+  @IsString({ message: 'NCM deve ser texto' })
+  @IsNotEmpty({ message: 'NCM é obrigatório' })
+  ncm: string;
+
   @ApiProperty({ example: 981.8 })
   @IsNumber({}, { message: 'Quantidade deve ser um número' })
   @Min(0.001, { message: 'Quantidade deve ser maior que zero' })

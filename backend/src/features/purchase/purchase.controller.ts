@@ -151,4 +151,12 @@ export class PurchaseController {
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.purchaseService.findOne(id);
   }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Excluir compra cancelada' })
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.purchaseService.remove(id);
+    return { message: 'Compra excluída com sucesso' };
+  }
 }

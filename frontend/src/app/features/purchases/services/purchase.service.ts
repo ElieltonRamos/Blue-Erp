@@ -34,22 +34,27 @@ export class PurchaseService {
     limit: number,
     filters: PurchaseFilters = {},
   ): Observable<PaginatedResponse<Purchase>> {
-    let params = new HttpParams().set('page', page).set('limit', limit);
+    let params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
-    if (filters.status) {
-      params = params.set('status', filters.status);
-    }
-    if (filters.supplier) {
-      params = params.set('supplier', filters.supplier);
-    }
+    if (filters.status) params = params.set('status', filters.status);
+    if (filters.supplier) params = params.set('supplier', filters.supplier);
+    if (filters.invoiceNumber) params = params.set('invoiceNumber', filters.invoiceNumber);
+    if (filters.fiscalKey) params = params.set('fiscalKey', filters.fiscalKey);
+    if (filters.startDate) params = params.set('startDate', filters.startDate);
+    if (filters.endDate) params = params.set('endDate', filters.endDate);
 
     return this.client.get<PaginatedResponse<Purchase>>(`${this.apiUrl}/purchases`, { params });
   }
+  
   getPurchase(id: number): Observable<Purchase> {
     return this.client.get<Purchase>(`${this.apiUrl}/purchases/${id}`);
   }
 
   cancelPurchase(id: number): Observable<{ message: string }> {
     return this.client.patch<{ message: string }>(`${this.apiUrl}/purchases/${id}/cancel`, {});
+  }
+
+  removePurchase(id: number): Observable<{ message: string }> {
+    return this.client.delete<{ message: string }>(`${this.apiUrl}/purchases/${id}`);
   }
 }

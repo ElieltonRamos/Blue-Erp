@@ -35,6 +35,7 @@ export interface ReconciledPurchaseItem {
   quantity: number;
   unitCost: number;
   total: number;
+  ncm: string;
   productId?: number;
   materialId?: number;
 }
@@ -104,4 +105,8 @@ export interface Expense {
 export interface PurchaseFilters {
   status?: PurchaseStatus | '';
   supplier?: string;
+  invoiceNumber?: string;
+  fiscalKey?: string;
+  startDate?: string;
+  endDate?: string;
 }

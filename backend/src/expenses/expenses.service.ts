@@ -26,6 +26,7 @@ export class ExpensesService {
     purchaseId: number,
     partnerId: number,
     supplierName: string,
+    invoiceNumber: string,
     installments: { number: string; dueDate: string; value: number }[],
   ): Promise<void> {
     if (installments.length === 0) return;
@@ -36,14 +37,13 @@ export class ExpensesService {
         partnerId,
         installmentNumber: Number(installment.number),
         supplier: supplierName,
-        description: `Parcela ${installment.number}/${installments.length} - NF importada`,
+        description: `NF ${invoiceNumber} - Parcela ${installment.number}/${installments.length}`,
         value: installment.value,
         datePayment: new Date(installment.dueDate),
         status: 'Pendente',
       })),
     });
   }
-
   private async updateDelayedExpenses(): Promise<void> {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());

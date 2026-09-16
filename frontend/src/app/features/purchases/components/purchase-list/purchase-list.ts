@@ -17,10 +17,14 @@ import {
 import { Product } from '../../../products/types/product';
 import { PrimaryMaterialService } from '../../../products/services/primary-material.service';
 import { PrimaryMaterial } from '../../../products/types/primary-material';
+import {
+  ProductMaterialSelection,
+  ProductMaterialSelectModal,
+} from '../product-material-select-modal/product-material-select-modal';
 
 @Component({
   selector: 'app-purchase-list',
-  imports: [CommonModule, FormsModule, PaginatorComponent],
+  imports: [CommonModule, FormsModule, PaginatorComponent, ProductMaterialSelectModal],
   templateUrl: './purchase-list.html',
 })
 export class PurchaseList {
@@ -45,13 +49,22 @@ export class PurchaseList {
   // --- Listagem ---
   listPurchases: Purchase[] = [];
   expandedPurchases = new Set<number>();
+  selectModalOpen = false;
+  selectModalIndex: number | null = null;
 
   page = 1;
   limit = 20;
   totalPages = 0;
   totalItems = 0;
 
-  filter: PurchaseFilters = { status: '', supplier: '' };
+  filter: PurchaseFilters = {
+    status: '',
+    supplier: '',
+    invoiceNumber: '',
+    fiscalKey: '',
+    startDate: '',
+    endDate: '',
+  };
 
   ngOnInit() {
     this.loadPurchases();
@@ -62,6 +75,27 @@ export class PurchaseList {
     const input = event.target as HTMLInputElement;
     this.selectedFile = input.files?.[0] ?? null;
   }
+  openSelectModal(index: number) {
+    this.selectModalIndex = index;
+    this.selectModalOpen = true;
+  }
+
+  onItemSelected(selection: ProductMaterialSelection) {
+    if (this.selectModalIndex === null) return;
+    const item = this.reconciledItems[this.selectModalIndex];
+    if (selection.kind === 'product') {
+      item.productId = selection.id;
+      item.materialId = undefined;
+    } else {
+      item.materialId = selection.id;
+      item.productId = undefined;
+    }
+    this.linkedNames[this.selectModalIndex] = selection.name;
+    this.selectModalOpen = false;
+    this.selectModalIndex = null;
+  }
+
+  linkedNames: Record<number, string> = {};
 
   parseXml() {
     if (!this.selectedFile) {
@@ -153,6 +187,27 @@ export class PurchaseList {
   confirmPurchase() {
     if (!this.preview) return;
 
+    const unlinkedCount = this.reconciledItems.filter(
+      (item) => !item.productId && !item.materialId,
+    ).length;
+
+    if (unlinkedCount > 0) {
+      alertConfirm(
+        `${unlinkedCount} item(ns) sem vínculo — serão registrados como consumo, sem baixa de estoque. Confirmar mesmo assim?`,
+      ).then((result) => {
+        if (result) {
+          this.sendPurchase();
+        }
+      });
+      return;
+    }
+
+    this.sendPurchase();
+  }
+
+  private sendPurchase() {
+    if (!this.preview) return;
+
     const dto: CreatePurchaseFromXml = {
       supplierCnpj: this.preview.supplierCnpj,
       supplierName: this.preview.supplierName,
@@ -163,6 +218,8 @@ export class PurchaseList {
       items: this.reconciledItems,
       installments: this.preview.installments,
     };
+
+    console.log('DTO enviado:', JSON.stringify(dto.items, null, 2));
 
     this.purchaseService.createPurchase(dto).subscribe({
       next: () => {
@@ -198,7 +255,14 @@ export class PurchaseList {
   }
 
   clearFilters() {
-    this.filter = { status: '', supplier: '' };
+    this.filter = {
+      status: '',
+      supplier: '',
+      invoiceNumber: '',
+      fiscalKey: '',
+      startDate: '',
+      endDate: '',
+    };
     this.applyFilters();
   }
 
@@ -233,6 +297,22 @@ export class PurchaseList {
 
   isExpanded(id: number): boolean {
     return this.expandedPurchases.has(id);
+  }
+
+  removePurchase(purchase: Purchase) {
+    alertConfirm('Excluir esta compra definitivamente? Ação irreversível.').then((result) => {
+      if (result) {
+        this.purchaseService.removePurchase(purchase.id).subscribe({
+          next: () => {
+            this.notification.success('Compra excluída com sucesso');
+            this.loadPurchases();
+          },
+          error: (e) => {
+            this.notification.error(`Erro ao excluir compra: ${e.error?.message || e.message}`);
+          },
+        });
+      }
+    });
   }
 
   cancelPurchase(purchase: Purchase) {

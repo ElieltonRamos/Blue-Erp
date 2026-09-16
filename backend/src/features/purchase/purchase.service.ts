@@ -15,6 +15,7 @@ import {
 import { ExpensesService } from '../../expenses/expenses.service';
 import { BusinessPartnerService } from './business-partner.service';
 import { ParsedNfeItemDto } from './dto/parsed-nfe.dto';
+import { FindAllPurchaseQueryDto } from './dto/find-all-purchase-query.dto';
 
 @Injectable()
 export class PurchaseService {
@@ -118,6 +119,7 @@ export class PurchaseService {
             createdPurchase.id,
             partner.id,
             dto.supplierName,
+            dto.invoiceNumber,
             dto.installments,
           );
         } else {
@@ -152,20 +154,16 @@ export class PurchaseService {
     }
   }
 
-  // purchase.service.ts — findAll atualizado
-  async findAll(filters: {
-    page?: number;
-    limit?: number;
-    status?: PurchaseStatus;
-    supplier?: string;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-  }) {
+  async findAll(filters: FindAllPurchaseQueryDto) {
     const {
       page = 1,
       limit = 10,
       status,
       supplier,
+      invoiceNumber,
+      fiscalKey,
+      startDate,
+      endDate,
       sortBy,
       sortOrder,
     } = filters;
@@ -176,6 +174,22 @@ export class PurchaseService {
       ...(supplier && {
         supplier: { name: { contains: supplier } },
       }),
+      ...(invoiceNumber && {
+        invoiceNumber: { contains: invoiceNumber },
+      }),
+      ...(fiscalKey && { fiscalKey: { contains: fiscalKey } }),
+      ...(startDate || endDate
+        ? {
+            receivedAt: {
+              ...(startDate && {
+                gte: new Date(`${startDate}T00:00:00.000-03:00`),
+              }),
+              ...(endDate && {
+                lte: new Date(`${endDate}T23:59:59.999-03:00`),
+              }),
+            },
+          }
+        : {}),
     };
 
     const orderBy: Prisma.PurchaseOrderByWithRelationInput = sortBy
@@ -259,6 +273,7 @@ export class PurchaseService {
         supplierProductCode: item.supplierProductCode,
         description: item.description,
         quantity: item.quantity,
+        ncm: item.ncm,
         unitCost: item.unitCost,
         total: item.total,
         productId: match?.productId ?? undefined,
@@ -328,5 +343,25 @@ export class PurchaseService {
         `Nota fiscal não é destinada a esta empresa (CNPJ da nota: ${destCnpj})`,
       );
     }
+  }
+
+  async remove(id: number): Promise<void> {
+    const purchase = await this.prisma.client.purchase.findUnique({
+      where: { id },
+    });
+
+    if (!purchase) {
+      throw new NotFoundException(`Compra ${id} não encontrada`);
+    }
+
+    if (purchase.status !== PurchaseStatus.CANCELED) {
+      throw new BadRequestException('Só é possível excluir compras canceladas');
+    }
+
+    await this.prisma.client.purchase.delete({
+      where: { id },
+    });
+
+    this.logger.log(`[Compra ${id}] excluída`);
   }
 }
