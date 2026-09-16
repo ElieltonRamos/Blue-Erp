@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { PurchaseStatus } from 'generated/prisma/client';
+import { Prisma, PurchaseStatus } from 'generated/prisma/client';
 import {
   CreatePurchaseFromXmlDto,
   ReconciledPurchaseItemDto,
@@ -152,25 +152,45 @@ export class PurchaseService {
     }
   }
 
+  // purchase.service.ts — findAll atualizado
   async findAll(filters: {
     page?: number;
     limit?: number;
     status?: PurchaseStatus;
+    supplier?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
   }) {
-    const { page = 1, limit = 10, status } = filters;
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      supplier,
+      sortBy,
+      sortOrder,
+    } = filters;
     const skip = (page - 1) * limit;
+
+    const where: Prisma.PurchaseWhereInput = {
+      ...(status && { status }),
+      ...(supplier && {
+        supplier: { name: { contains: supplier } },
+      }),
+    };
+
+    const orderBy: Prisma.PurchaseOrderByWithRelationInput = sortBy
+      ? { [sortBy]: sortOrder === 'desc' ? 'desc' : 'asc' }
+      : { receivedAt: 'desc' };
 
     const [purchases, total] = await Promise.all([
       this.prisma.client.purchase.findMany({
-        where: status ? { status } : undefined,
+        where,
         skip,
         take: limit,
         include: { supplier: true },
-        orderBy: { receivedAt: 'desc' },
+        orderBy,
       }),
-      this.prisma.client.purchase.count({
-        where: status ? { status } : undefined,
-      }),
+      this.prisma.client.purchase.count({ where }),
     ]);
 
     return {

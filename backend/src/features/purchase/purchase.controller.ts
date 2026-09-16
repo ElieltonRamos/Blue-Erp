@@ -96,8 +96,18 @@ export class PurchaseController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @Query('status') status?: PurchaseStatus,
+    @Query('supplier') supplier?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc',
   ) {
-    return this.purchaseService.findAll({ page, limit, status });
+    return this.purchaseService.findAll({
+      page,
+      limit,
+      status,
+      supplier,
+      sortBy,
+      sortOrder,
+    });
   }
 
   @Get(':id')

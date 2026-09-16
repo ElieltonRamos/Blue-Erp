@@ -143,6 +143,14 @@
         [isActive]="canAccess('/financeiro')"
       />
     }
+    @if (isEnabled('/compras')) {
+      <app-card-menu
+        [title]="'Compras'"
+        [icon]="'📦🧾'"
+        [path]="'/compras'"
+        [isActive]="canAccess('/compras')"
+      />
+    }
     @if (isEnabled('/empresa')) {
       <app-card-menu
         [title]="'Dados da Empresa'"

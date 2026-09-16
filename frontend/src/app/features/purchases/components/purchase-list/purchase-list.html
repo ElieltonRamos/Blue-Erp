@@ -1,0 +1,306 @@
+<!-- purchase-list.html -->
+<div class="space-y-6">
+  <!-- Import XML -->
+  <div class="bg-surface border border-border rounded-xl shadow-lg p-6">
+    <h2 class="text-text-primary font-semibold text-lg mb-1">Importar NF-e</h2>
+    <p class="text-text-secondary text-sm mb-4">
+      Selecione o XML da nota fiscal recebida do fornecedor.
+    </p>
+
+    @if (!preview) {
+      <div class="flex items-center gap-4">
+        <input
+          type="file"
+          accept=".xml"
+          (change)="onFileSelected($event)"
+          class="text-text-primary text-sm"
+        />
+        <button
+          (click)="parseXml()"
+          [disabled]="!selectedFile || loadingParse"
+          class="px-4 py-2 rounded-lg font-semibold transition"
+          [style.background-color]="'var(--color-accent)'"
+          [style.color]="'var(--color-btn-text)'"
+          [class.opacity-50]="!selectedFile || loadingParse"
+        >
+          {{ loadingParse ? 'Processando...' : 'Processar XML' }}
+        </button>
+      </div>
+    }
+
+    <!-- Conciliação -->
+    @if (preview) {
+      <div class="mt-2">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 text-sm">
+          <div>
+            <span class="text-text-muted">Fornecedor:</span>
+            <p class="text-text-primary font-medium">{{ preview.supplierName }}</p>
+          </div>
+          <div>
+            <span class="text-text-muted">Nota:</span>
+            <p class="text-text-primary font-medium">{{ preview.invoiceNumber }}</p>
+          </div>
+          <div>
+            <span class="text-text-muted">Total:</span>
+            <p class="text-text-primary font-medium">{{ preview.totalValue | currency: 'BRL' }}</p>
+          </div>
+          <div>
+            <span class="text-text-muted">Parcelas:</span>
+            <p class="text-text-primary font-medium">{{ preview.installments.length }}</p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-left text-sm">
+            <thead
+              class="uppercase"
+              [style.background-color]="'var(--color-surface-alt)'"
+              [style.color]="'var(--color-accent)'"
+            >
+              <tr>
+                <th class="py-2 px-3">Cód. Fornecedor</th>
+                <th class="py-2 px-3">Descrição</th>
+                <th class="py-2 px-3">Qtd</th>
+                <th class="py-2 px-3">Custo Unit.</th>
+                <th class="py-2 px-3">Vincular a</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y" [style.border-color]="'var(--color-border)'">
+              @for (item of reconciledItems; track $index) {
+                <tr>
+                  <td class="py-2 px-3">{{ item.supplierProductCode }}</td>
+                  <td class="py-2 px-3">{{ item.description }}</td>
+                  <td class="py-2 px-3">{{ item.quantity }}</td>
+                  <td class="py-2 px-3">{{ item.unitCost | currency: 'BRL' }}</td>
+                  <td class="py-2 px-3 relative min-w-55">
+                    @if (isItemLinked($index)) {
+                      <div class="flex items-center gap-2">
+                        <span class="text-success text-xs">
+                          ✓ {{ productTerm[$index] || materialTerm[$index] }}
+                        </span>
+                        <button
+                          (click)="clearItemLink($index)"
+                          class="text-text-muted text-xs underline"
+                        >
+                          trocar
+                        </button>
+                      </div>
+                    } @else {
+                      <div class="flex flex-col gap-1">
+                        <input
+                          type="text"
+                          placeholder="Produto (revenda)..."
+                          class="w-full px-2 py-1 rounded border text-xs"
+                          [style.background-color]="'var(--color-surface-alt)'"
+                          [style.border-color]="'var(--color-border)'"
+                          [(ngModel)]="productTerm[$index]"
+                          (ngModelChange)="onProductTermChange($index)"
+                        />
+                        @if (productResults[$index]?.length) {
+                          <div
+                            class="absolute z-10 w-full mt-1 bg-surface-alt border border-border rounded shadow-lg max-h-40 overflow-y-auto"
+                          >
+                            @for (p of productResults[$index]; track p.id) {
+                              <button
+                                type="button"
+                                (click)="selectProduct($index, p)"
+                                class="w-full text-left px-2 py-1 text-xs hover:bg-overlay"
+                              >
+                                {{ p.name }}
+                              </button>
+                            }
+                          </div>
+                        }
+
+                        <input
+                          type="text"
+                          placeholder="Matéria-prima..."
+                          class="w-full px-2 py-1 rounded border text-xs"
+                          [style.background-color]="'var(--color-surface-alt)'"
+                          [style.border-color]="'var(--color-border)'"
+                          [(ngModel)]="materialTerm[$index]"
+                          (ngModelChange)="onMaterialTermChange($index)"
+                        />
+                        @if (materialResults[$index]?.length) {
+                          <div
+                            class="absolute z-10 w-full mt-1 bg-surface-alt border border-border rounded shadow-lg max-h-40 overflow-y-auto"
+                          >
+                            @for (m of materialResults[$index]; track m.id) {
+                              <button
+                                type="button"
+                                (click)="selectMaterial($index, m)"
+                                class="w-full text-left px-2 py-1 text-xs hover:bg-overlay"
+                              >
+                                {{ m.name }}
+                              </button>
+                            }
+                          </div>
+                        }
+
+                        <span class="text-text-muted text-xs">Deixe em branco = consumo</span>
+                      </div>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex gap-3 mt-4">
+          <button
+            (click)="confirmPurchase()"
+            class="px-4 py-2 rounded-lg font-semibold"
+            [style.background-color]="'var(--color-success)'"
+            [style.color]="'var(--color-btn-text)'"
+          >
+            Confirmar Compra
+          </button>
+          <button
+            (click)="cancelImport()"
+            class="px-4 py-2 rounded-lg font-semibold"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.color]="'var(--color-text-primary)'"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-surface border border-border rounded-xl shadow-lg p-6">
+    <div class="flex flex-wrap justify-between gap-4">
+      <div class="flex flex-wrap gap-4 items-end">
+        <div class="flex flex-col">
+          <label class="text-sm mb-1 text-text-primary">Fornecedor</label>
+          <input
+            type="text"
+            placeholder="Fornecedor..."
+            class="px-3 py-2 rounded border"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.border-color]="'var(--color-border)'"
+            [(ngModel)]="filter.supplier"
+            (ngModelChange)="applyFilters()"
+          />
+        </div>
+
+        <div class="flex flex-col">
+          <label class="text-sm mb-1 text-text-primary">Status</label>
+          <select
+            class="px-3 py-2 rounded border"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.border-color]="'var(--color-border)'"
+            [(ngModel)]="filter.status"
+            (change)="applyFilters()"
+          >
+            <option value="">Todos</option>
+            <option value="RECEIVED">Recebida</option>
+            <option value="CANCELED">Cancelada</option>
+          </select>
+        </div>
+
+        <button
+          (click)="clearFilters()"
+          class="px-4 py-2 rounded text-sm font-medium"
+          [style.background-color]="'var(--color-danger)'"
+          [style.color]="'var(--color-btn-text)'"
+        >
+          Limpar Filtros
+        </button>
+      </div>
+
+      <app-paginator
+        [totalItems]="totalItems"
+        [itemsPerPage]="limit"
+        [totalPages]="totalPages"
+        [page]="page"
+        (pageChanged)="onPageChange($event)"
+      ></app-paginator>
+    </div>
+  </div>
+
+  <!-- Listagem -->
+  <div class="bg-surface border border-border rounded-xl shadow-lg overflow-hidden">
+    @if (listPurchases.length === 0) {
+      <div class="py-12 text-center text-text-secondary">Nenhuma compra encontrada</div>
+    }
+
+    <div class="divide-y" [style.border-color]="'var(--color-border)'">
+      @for (purchase of listPurchases; track purchase.id) {
+        <div>
+          <button
+            type="button"
+            (click)="togglePurchase(purchase.id)"
+            class="w-full flex items-center justify-between px-6 py-4 hover:bg-overlay transition-colors text-left"
+          >
+            <div class="flex items-center gap-4">
+              <span class="font-mono text-text-muted">#{{ purchase.id }}</span>
+              <span class="font-semibold text-text-primary">{{ purchase.supplier?.name }}</span>
+              <span
+                [ngClass]="{
+                  'text-success': purchase.status === 'RECEIVED',
+                  'text-danger': purchase.status === 'CANCELED',
+                }"
+                class="text-xs uppercase font-medium"
+              >
+                {{ purchase.status === 'RECEIVED' ? 'Recebida' : 'Cancelada' }}
+              </span>
+            </div>
+            <div class="flex items-center gap-4">
+              <span class="text-text-primary font-medium">
+                {{ purchase.total | currency: 'BRL' }}
+              </span>
+              <span class="text-text-muted text-sm">
+                {{ purchase.receivedAt | date: 'dd/MM/yyyy' }}
+              </span>
+              @if (purchase.status === 'RECEIVED') {
+                <button
+                  (click)="cancelPurchase(purchase); $event.stopPropagation()"
+                  class="text-danger text-sm underline"
+                >
+                  Cancelar
+                </button>
+              }
+            </div>
+          </button>
+
+          @if (isExpanded(purchase.id)) {
+            <div class="bg-base/40 px-6 pb-4">
+              <p class="text-text-secondary text-xs uppercase font-semibold mt-2 mb-1">Itens</p>
+              <table class="min-w-full text-sm mb-3">
+                <tbody>
+                  @for (item of purchase.items; track item.id) {
+                    <tr class="border-b" [style.border-color]="'var(--color-border)'">
+                      <td class="py-1 px-2 text-text-muted">{{ item.supplierProductCode }}</td>
+                      <td class="py-1 px-2">{{ item.quantity }}</td>
+                      <td class="py-1 px-2">{{ item.unitCost | currency: 'BRL' }}</td>
+                      <td class="py-1 px-2">{{ item.total | currency: 'BRL' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+
+              @if (purchase.expenses.length > 0) {
+                <p class="text-text-secondary text-xs uppercase font-semibold mb-1">Parcelas</p>
+                <table class="min-w-full text-sm">
+                  <tbody>
+                    @for (expense of purchase.expenses; track expense.id) {
+                      <tr class="border-b" [style.border-color]="'var(--color-border)'">
+                        <td class="py-1 px-2">{{ expense.description }}</td>
+                        <td class="py-1 px-2">{{ expense.value | currency: 'BRL' }}</td>
+                        <td class="py-1 px-2">{{ expense.datePayment | date: 'dd/MM/yyyy' }}</td>
+                        <td class="py-1 px-2">{{ expense.status }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>

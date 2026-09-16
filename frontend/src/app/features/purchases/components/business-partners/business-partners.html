@@ -1,0 +1,190 @@
+<!-- business-partners.html -->
+<div class="space-y-6">
+  <!-- Formulário de criação -->
+  <div class="bg-surface border border-border rounded-xl shadow-lg p-6">
+    <h2 class="text-text-primary font-semibold text-lg mb-1">Cadastrar Parceiro</h2>
+    <p class="text-text-secondary text-sm mb-4">Fornecedor, transportadora, contador ou banco.</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="flex flex-col">
+        <label class="text-sm mb-1 text-text-primary">Tipo</label>
+        <select
+          class="px-3 py-2 rounded border"
+          [style.background-color]="'var(--color-surface-alt)'"
+          [style.border-color]="'var(--color-border)'"
+          [(ngModel)]="newPartner.type"
+        >
+          @for (t of partnerTypes; track t.value) {
+            <option [value]="t.value">{{ t.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="flex flex-col">
+        <label class="text-sm mb-1 text-text-primary">Nome</label>
+        <input
+          type="text"
+          class="px-3 py-2 rounded border"
+          [style.background-color]="'var(--color-surface-alt)'"
+          [style.border-color]="'var(--color-border)'"
+          [(ngModel)]="newPartner.name"
+        />
+      </div>
+
+      <div class="flex flex-col">
+        <label class="text-sm mb-1 text-text-primary">CNPJ/CPF</label>
+        <input
+          type="text"
+          class="px-3 py-2 rounded border"
+          [style.background-color]="'var(--color-surface-alt)'"
+          [style.border-color]="'var(--color-border)'"
+          [(ngModel)]="newPartner.document"
+        />
+      </div>
+
+      <div class="flex flex-col">
+        <label class="text-sm mb-1 text-text-primary">Telefone</label>
+        <input
+          type="text"
+          class="px-3 py-2 rounded border"
+          [style.background-color]="'var(--color-surface-alt)'"
+          [style.border-color]="'var(--color-border)'"
+          [(ngModel)]="newPartner.phone"
+        />
+      </div>
+
+      <div class="flex flex-col">
+        <label class="text-sm mb-1 text-text-primary">E-mail</label>
+        <input
+          type="text"
+          class="px-3 py-2 rounded border"
+          [style.background-color]="'var(--color-surface-alt)'"
+          [style.border-color]="'var(--color-border)'"
+          [(ngModel)]="newPartner.email"
+        />
+      </div>
+
+      <div class="flex flex-col">
+        <label class="text-sm mb-1 text-text-primary">Endereço</label>
+        <input
+          type="text"
+          class="px-3 py-2 rounded border"
+          [style.background-color]="'var(--color-surface-alt)'"
+          [style.border-color]="'var(--color-border)'"
+          [(ngModel)]="newPartner.address"
+        />
+      </div>
+    </div>
+
+    <button
+      (click)="createPartner()"
+      class="mt-4 px-4 py-2 rounded-lg font-semibold"
+      [style.background-color]="'var(--color-accent)'"
+      [style.color]="'var(--color-btn-text)'"
+    >
+      Cadastrar
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-surface border border-border rounded-xl shadow-lg p-6">
+    <div class="flex flex-wrap gap-4 items-end">
+      <div class="flex flex-col">
+        <label class="text-sm mb-1 text-text-primary">Buscar</label>
+        <input
+          type="text"
+          placeholder="Nome do parceiro..."
+          class="px-3 py-2 rounded border"
+          [style.background-color]="'var(--color-surface-alt)'"
+          [style.border-color]="'var(--color-border)'"
+          [(ngModel)]="filter.search"
+          (ngModelChange)="applyFilters()"
+        />
+      </div>
+
+      <div class="flex flex-col">
+        <label class="text-sm mb-1 text-text-primary">Tipo</label>
+        <select
+          class="px-3 py-2 rounded border"
+          [style.background-color]="'var(--color-surface-alt)'"
+          [style.border-color]="'var(--color-border)'"
+          [(ngModel)]="filter.type"
+          (change)="applyFilters()"
+        >
+          <option value="">Todos</option>
+          @for (t of partnerTypes; track t.value) {
+            <option [value]="t.value">{{ t.label }}</option>
+          }
+        </select>
+      </div>
+
+      <button
+        (click)="clearFilters()"
+        class="px-4 py-2 rounded text-sm font-medium"
+        [style.background-color]="'var(--color-danger)'"
+        [style.color]="'var(--color-btn-text)'"
+      >
+        Limpar Filtros
+      </button>
+    </div>
+  </div>
+
+  <!-- Listagem -->
+  <div class="bg-surface border border-border rounded-xl shadow-lg overflow-hidden">
+    <table class="min-w-full text-left text-sm">
+      <thead
+        class="uppercase"
+        [style.background-color]="'var(--color-surface-alt)'"
+        [style.color]="'var(--color-accent)'"
+      >
+        <tr>
+          <th class="py-3 px-4">Nome</th>
+          <th class="py-3 px-4">Tipo</th>
+          <th class="py-3 px-4">Documento</th>
+          <th class="py-3 px-4">Telefone</th>
+          <th class="py-3 px-4">Status</th>
+          <th class="py-3 px-4">Ações</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y" [style.border-color]="'var(--color-border)'">
+        @for (partner of listPartners; track partner.id) {
+          <tr>
+            <td class="py-3 px-4 text-text-primary">{{ partner.name }}</td>
+            <td class="py-3 px-4 text-text-secondary">{{ partnerTypeLabel(partner.type) }}</td>
+            <td class="py-3 px-4 text-text-secondary">{{ partner.document || '-' }}</td>
+            <td class="py-3 px-4 text-text-secondary">{{ partner.phone || '-' }}</td>
+            <td class="py-3 px-4">
+              <span [style.color]="partner.active ? 'var(--color-success)' : 'var(--color-danger)'">
+                {{ partner.active ? 'Ativo' : 'Inativo' }}
+              </span>
+            </td>
+            <td class="py-3 px-4">
+              <div class="flex gap-3">
+                <button (click)="openEditModal(partner)" [style.color]="'var(--color-warning)'">
+                  ✏️ Editar
+                </button>
+                @if (partner.active) {
+                  <button
+                    (click)="deactivatePartner(partner)"
+                    [style.color]="'var(--color-danger)'"
+                  >
+                    🚫 Inativar
+                  </button>
+                }
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<app-modal-edit-entity
+  [title]="'Editar Parceiro'"
+  [show]="showModalEdit"
+  [entity]="editPartner"
+  [fields]="partnerFields"
+  (close)="closeModalEdit()"
+  (save)="onEditSave($event)"
+></app-modal-edit-entity>

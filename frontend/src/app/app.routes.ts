@@ -84,6 +84,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'compras',
+    component: Financial,
+    canActivate: [authGuard],
+  },
+  {
     path: 'mesas',
     component: TableManagement,
     canActivate: [authGuard],

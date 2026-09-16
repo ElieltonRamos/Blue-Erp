@@ -42,6 +42,7 @@ export async function seedCompany(prisma: PrismaClient) {
         '/financeiro',
         '/empresa',
         '/fiscal',
+        '/compras',
 
         // --- Oficina ---
         '/veiculos',

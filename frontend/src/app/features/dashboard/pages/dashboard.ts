@@ -28,6 +28,7 @@ const PERMISSIONS: Record<string, Role[]> = {
   '/ordem-servico': ['admin'],
   '/empresa': ['admin'],
   '/fiscal': ['admin'],
+  '/compras': ['admin', 'caixa'],
 };
 
 @Component({
