@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../core/services/environment';
 import { PaginatedResponse } from '../../../core/guards/types/paginator';
 import {
+  CreateManualPurchase,
   CreatePurchaseFromXml,
   ParsedPurchasePreview,
   Purchase,
@@ -45,7 +46,7 @@ export class PurchaseService {
 
     return this.client.get<PaginatedResponse<Purchase>>(`${this.apiUrl}/purchases`, { params });
   }
-  
+
   getPurchase(id: number): Observable<Purchase> {
     return this.client.get<Purchase>(`${this.apiUrl}/purchases/${id}`);
   }
@@ -56,5 +57,9 @@ export class PurchaseService {
 
   removePurchase(id: number): Observable<{ message: string }> {
     return this.client.delete<{ message: string }>(`${this.apiUrl}/purchases/${id}`);
+  }
+
+  createManualPurchase(dto: CreateManualPurchase): Observable<Purchase> {
+    return this.client.post<Purchase>(`${this.apiUrl}/purchases/manual`, dto);
   }
 }

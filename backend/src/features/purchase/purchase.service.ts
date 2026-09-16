@@ -16,6 +16,7 @@ import { ExpensesService } from '../../expenses/expenses.service';
 import { BusinessPartnerService } from './business-partner.service';
 import { ParsedNfeItemDto } from './dto/parsed-nfe.dto';
 import { FindAllPurchaseQueryDto } from './dto/find-all-purchase-query.dto';
+import { CreateManualPurchaseDto } from './dto/create-manual-purchase.dto';
 
 @Injectable()
 export class PurchaseService {
@@ -343,6 +344,94 @@ export class PurchaseService {
         `Nota fiscal não é destinada a esta empresa (CNPJ da nota: ${destCnpj})`,
       );
     }
+  }
+
+  async createManual(dto: CreateManualPurchaseDto, responsibleId?: number) {
+    const start = Date.now();
+
+    this.logger.log(
+      `[Compra manual nova] fornecedor=${dto.supplierId} | ${dto.items.length} item(ns)`,
+    );
+
+    const supplier = await this.businessPartnerService.findOne(dto.supplierId);
+
+    if (dto.items.length === 0) {
+      throw new BadRequestException('Compra sem itens');
+    }
+
+    for (const item of dto.items) {
+      if (item.productId && item.materialId) {
+        throw new BadRequestException(
+          `Item "${item.description}" não pode ser vinculado a Product e PrimaryMaterial ao mesmo tempo`,
+        );
+      }
+    }
+
+    const purchase = await this.prisma.client.$transaction(async (tx) => {
+      const total = dto.items.reduce((sum, i) => sum + i.total, 0);
+
+      const createdPurchase = await tx.purchase.create({
+        data: {
+          status: PurchaseStatus.RECEIVED,
+          supplierId: supplier.id,
+          responsibleId: responsibleId ?? null,
+          total,
+          invoiceNumber: dto.invoiceNumber ?? null,
+          items: {
+            create: dto.items.map((item) => ({
+              productId: item.productId ?? null,
+              materialId: item.materialId ?? null,
+              supplierProductCode: null,
+              quantity: item.quantity,
+              unitCost: item.unitCost,
+              total: item.total,
+            })),
+          },
+        },
+        include: { items: true, supplier: true },
+      });
+
+      this.logger.log(
+        `[Compra ${createdPurchase.id}] lançamento manual persistido com ${createdPurchase.items.length} item(ns)`,
+      );
+
+      for (const item of dto.items) {
+        if (item.productId) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { quantity: { increment: item.quantity } },
+          });
+        } else if (item.materialId) {
+          await tx.primaryMaterial.update({
+            where: { id: item.materialId },
+            data: { currentStock: { increment: item.quantity } },
+          });
+        } else {
+          this.logger.log(
+            `[Compra ${createdPurchase.id}] item "${item.description}" sem vínculo (consumo) — sem baixa de estoque`,
+          );
+        }
+      }
+
+      if (dto.installments.length > 0) {
+        await this.expensesService.createManyFromPurchase(
+          tx,
+          createdPurchase.id,
+          supplier.id,
+          supplier.name,
+          dto.invoiceNumber ?? `Compra #${createdPurchase.id}`,
+          dto.installments,
+        );
+      }
+
+      return createdPurchase;
+    });
+
+    this.logger.log(
+      `[Compra ${purchase.id}] lançamento manual concluído em ${Date.now() - start}ms`,
+    );
+
+    return purchase;
   }
 
   async remove(id: number): Promise<void> {

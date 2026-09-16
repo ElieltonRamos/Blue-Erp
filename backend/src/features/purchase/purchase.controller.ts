@@ -29,6 +29,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { NfeXmlParserService } from './nfe-xml-parser.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { PartnerType } from 'generated/prisma/client';
+import { CreateManualPurchaseDto } from './dto/create-manual-purchase.dto';
 
 interface UploadedXmlFile {
   originalname: string;
@@ -97,6 +98,16 @@ export class PurchaseController {
   async cancel(@Param('id', ParseIntPipe) id: number) {
     await this.purchaseService.cancel(id);
     return { message: 'Compra cancelada e estoque estornado com sucesso' };
+  }
+
+  @Post('manual')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Lançar compra manualmente (sem NF-e)' })
+  createManual(
+    @Body() dto: CreateManualPurchaseDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.purchaseService.createManual(dto, user.userId);
   }
 
   @Post('parse-xml')

@@ -110,3 +110,26 @@ export interface PurchaseFilters {
   startDate?: string;
   endDate?: string;
 }
+
+// types/purchase.ts — adicionar
+export interface ManualPurchaseItem {
+  description: string;
+  quantity: number;
+  unitCost: number;
+  total: number;
+  productId?: number;
+  materialId?: number;
+}
+
+export interface ManualInstallment {
+  number: string;
+  dueDate: string;
+  value: number;
+}
+
+export interface CreateManualPurchase {
+  supplierId: number;
+  invoiceNumber?: string;
+  items: ManualPurchaseItem[];
+  installments: ManualInstallment[];
+}
