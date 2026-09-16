@@ -94,8 +94,6 @@ enum DocumentItemType {
 }
 
 enum PurchaseStatus {
-  DRAFT
-  ORDERED
   RECEIVED
   CANCELED
 }
@@ -168,6 +166,7 @@ model BusinessPartner {
   address   String?
   active    Boolean     @default(true)
   purchases Purchase[]
+  expenses  Expense[]
   createdAt DateTime    @default(now()) @map("created_at")
   updatedAt DateTime    @updatedAt @map("updated_at")
 
@@ -217,19 +216,26 @@ model Ibpt {
 }
 
 model Expense {
-  id          Int       @id @default(autoincrement())
-  supplier    String
-  description String?
-  value       Decimal   @db.Decimal(10, 2)
-  datePayment DateTime  @map("date_payment")
-  status      String
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  deletedAt   DateTime? @map("deleted_at")
+  id                Int              @id @default(autoincrement())
+  purchaseId        Int?             @map("purchase_id")
+  purchase          Purchase?        @relation(fields: [purchaseId], references: [id])
+  partnerId         Int?             @map("partner_id")
+  partner           BusinessPartner? @relation(fields: [partnerId], references: [id])
+  installmentNumber Int?             @map("installment_number")
+  supplier          String
+  description       String?
+  value             Decimal          @db.Decimal(10, 2)
+  datePayment       DateTime         @map("date_payment")
+  status            String
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+  deletedAt         DateTime?        @map("deleted_at")
 
   @@index([supplier])
   @@index([status])
   @@index([datePayment])
+  @@index([purchaseId])
+  @@index([partnerId])
   @@map("expenses")
 }
 
@@ -660,7 +666,7 @@ model DocumentItem {
 
 model Purchase {
   id            Int             @id @default(autoincrement())
-  status        PurchaseStatus  @default(DRAFT)
+  status        PurchaseStatus  @default(RECEIVED)
   supplierId    Int             @map("supplier_id")
   supplier      BusinessPartner @relation(fields: [supplierId], references: [id])
   responsibleId Int?            @map("responsible_id")
@@ -670,9 +676,9 @@ model Purchase {
   fiscalKey     String?         @unique @map("fiscal_key")
   fiscalXml     String?         @map("fiscal_xml") @db.LongText
   supplierCnpj  String?         @map("supplier_cnpj")
-  orderedAt     DateTime?       @map("ordered_at")
-  receivedAt    DateTime?       @map("received_at")
+  receivedAt    DateTime        @default(now()) @map("received_at") // data da entrada/import
   items         PurchaseItem[]
+  expenses      Expense[]
   createdAt     DateTime        @default(now()) @map("created_at")
   updatedAt     DateTime        @updatedAt @map("updated_at")
 

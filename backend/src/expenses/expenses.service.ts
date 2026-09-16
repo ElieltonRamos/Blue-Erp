@@ -21,6 +21,29 @@ export class ExpensesService {
     return !isNaN(Date.parse(date));
   }
 
+  async createManyFromPurchase(
+    tx: Prisma.TransactionClient,
+    purchaseId: number,
+    partnerId: number,
+    supplierName: string,
+    installments: { number: string; dueDate: string; value: number }[],
+  ): Promise<void> {
+    if (installments.length === 0) return;
+
+    await tx.expense.createMany({
+      data: installments.map((installment) => ({
+        purchaseId,
+        partnerId,
+        installmentNumber: Number(installment.number),
+        supplier: supplierName,
+        description: `Parcela ${installment.number}/${installments.length} - NF importada`,
+        value: installment.value,
+        datePayment: new Date(installment.dueDate),
+        status: 'Pendente',
+      })),
+    });
+  }
+
   private async updateDelayedExpenses(): Promise<void> {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());

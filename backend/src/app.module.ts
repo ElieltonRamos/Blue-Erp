@@ -25,6 +25,7 @@ import { CompanyModule } from './features/company/company.module';
 import { CatalogServiceModule } from './features/catalog-service/catalog.module';
 import { AssetModule } from './features/asset/asset.module';
 import { DocumentModule } from './features/document/document.module';
+import { PurchaseModule } from './features/purchase/purchase.module';
 
 // ScheduleModule.forRoot(): registra o scheduler global do NestJS (@nestjs/schedule).
 // Só pode existir 1x na aplicação — habilita o decorator @Cron nos providers
@@ -62,6 +63,7 @@ import { DocumentModule } from './features/document/document.module';
     CatalogServiceModule,
     AssetModule,
     DocumentModule,
+    PurchaseModule,
   ],
   controllers: [AppController],
   providers: [AppService, LicenseSystemService],
