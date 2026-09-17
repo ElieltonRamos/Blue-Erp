@@ -38,6 +38,14 @@ export interface SaleItem {
   updatedAt: Date;
 }
 
+export interface CreateDirectSaleDto {
+  clientId?: number;
+  payments: SalePaymentDto[];
+  items: CreateSaleItemDto[];
+  discount?: number;
+  cfop?: string;
+}
+
 export interface UpdateSaleItemDto {
   id?: number;
   type: 'PRODUCT' | 'SERVICE';

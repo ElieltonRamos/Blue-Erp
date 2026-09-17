@@ -18,10 +18,12 @@ import { offlineGuard } from './core/guards/offline.guard';
 import { OfflineComponent } from './features/offline/pages/offline.component';
 import { NotFound } from './features/offline/pages/not-found';
 import { CatalogServices } from './features/catalog-services/pages/catalog-services';
-import { Vehicles } from './features/assets/pages/vehicles';
+import { Vehicles } from './features/assets/pages/vehicles/vehicles';
 import { Documents } from './features/documents/pages/documents/document';
 import { ConvertDocumentToSale } from './features/documents/pages/convert-document-to-sale/convert-document-to-sale';
 import { Purchase } from './features/purchases/pages/purchases';
+import { VehicleDetails } from './features/assets/pages/vehicle-details/vehicle-details';
+import { Sales } from './features/sales/pages/sales/sales';
 
 export const routes: Routes = [
   {
@@ -65,6 +67,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'veiculos/:id',
+    component: VehicleDetails,
+    canActivate: [authGuard],
+  },
+  {
     path: 'historico-vendas',
     component: SalesHistory,
     canActivate: [authGuard],
@@ -102,6 +109,11 @@ export const routes: Routes = [
   {
     path: 'comandas/:id',
     component: CloseOrder,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'pdv',
+    component: Sales,
     canActivate: [authGuard],
   },
   {

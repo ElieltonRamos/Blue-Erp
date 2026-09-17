@@ -9,6 +9,7 @@ import {
   SaleFilters,
   SalePaginatedResponse,
   MarkAsReceivedDto,
+  CreateDirectSaleDto,
 } from '../types/sale';
 
 @Injectable({
@@ -24,6 +25,10 @@ export class SaleService {
 
   getSaleByDocumentId(documentId: number): Observable<Sale> {
     return this.client.get<Sale>(`${this.apiUrl}/by-document/${documentId}`);
+  }
+
+  createDirectSale(dto: CreateDirectSaleDto): Observable<Sale> {
+    return this.client.post<Sale>(`${this.apiUrl}/direct`, dto);
   }
 
   getSales(filters?: SaleFilters): Observable<SalePaginatedResponse> {

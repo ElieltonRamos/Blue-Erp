@@ -1,1 +1,333 @@
-<p>sales works!</p>
+<div class="min-h-screen bg-base p-4">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-2 max-w-400 mx-auto flex-wrap gap-2">
+    <img src="/blue-erp.png" alt="Logo" class="h-12 rounded-lg" />
+
+    <div class="flex items-center gap-2 flex-wrap">
+      <button
+        (click)="goToMenu()"
+        class="h-9 px-4 bg-accent hover:bg-accent-hover text-btn-text rounded-md text-sm font-medium transition"
+      >
+        Menu
+      </button>
+
+      <div class="flex items-center gap-1 h-9 bg-surface-alt px-2 rounded-md border border-border">
+        <input
+          type="text"
+          [(ngModel)]="customerSearchId"
+          placeholder="ID"
+          maxlength="10"
+          class="w-14 bg-transparent text-text-primary text-sm text-center focus:outline-none"
+          (keyup.enter)="findClientById(customerSearchId)"
+        />
+        <button
+          (click)="findClientById(customerSearchId)"
+          [disabled]="!customerSearchId.trim()"
+          class="h-7 px-2 bg-accent hover:bg-accent-hover text-btn-text rounded text-xs disabled:opacity-50"
+        >
+          ID
+        </button>
+
+        <input
+          #inputClientName
+          type="text"
+          [(ngModel)]="customerSearchName"
+          placeholder="Cliente (F3)"
+          class="w-36 bg-transparent text-text-primary text-sm focus:outline-none"
+          (keyup.enter)="findClientByName(customerSearchName)"
+        />
+        <button
+          (click)="findClientByName(customerSearchName)"
+          [disabled]="!customerSearchName.trim() || isSearchingClient"
+          class="h-7 px-2 bg-success hover:opacity-80 text-btn-text rounded text-xs disabled:opacity-50"
+        >
+          🔍
+        </button>
+      </div>
+
+      <select
+        [(ngModel)]="selectedClientId"
+        (ngModelChange)="selectClientFromResults()"
+        class="h-9 bg-surface border border-border rounded-md px-2 text-text-primary text-sm w-52"
+      >
+        <option value="">Selecionar cliente</option>
+        @for (c of searchResults; track c.id) {
+          <option [value]="c.id!">{{ c.name }}</option>
+        }
+      </select>
+
+      <div
+        class="flex items-center gap-1 h-9 bg-success/10 px-3 rounded-md border border-success/40 max-w-45"
+      >
+        <span
+          class="text-success text-sm truncate"
+          [title]="selectedClient?.name || 'Sem cliente cadastrado'"
+        >
+          {{ selectedClient?.name || 'Sem cliente' }}
+        </span>
+        @if (selectedClient) {
+          <button (click)="clearCustomer()" class="text-success hover:opacity-70 text-xs">✕</button>
+        }
+      </div>
+    </div>
+
+    <div class="relative">
+      <button
+        (click)="toggleShortcutsHelp()"
+        title="Atalhos do teclado"
+        class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-alt border border-border text-text-secondary hover:text-text-primary transition"
+      >
+        ?
+      </button>
+
+      @if (showShortcutsHelp) {
+        <div
+          class="absolute right-0 mt-2 w-80 bg-surface border border-border rounded-lg shadow-lg p-4 z-20 text-sm text-text-primary"
+        >
+          <p class="font-bold mb-2">Atalhos do teclado</p>
+          <ul class="space-y-1">
+            <li>
+              <span class="font-mono bg-surface-alt px-1 rounded">F1</span> — focar leitor de código
+            </li>
+            <li><span class="font-mono bg-surface-alt px-1 rounded">F2</span> — buscar produto</li>
+            <li><span class="font-mono bg-surface-alt px-1 rounded">F3</span> — buscar cliente</li>
+            <li><span class="font-mono bg-surface-alt px-1 rounded">F4</span> — finalizar venda</li>
+            <li>
+              <span class="font-mono bg-surface-alt px-1 rounded">F5</span> — focar forma de
+              pagamento
+            </li>
+            <li><span class="font-mono bg-surface-alt px-1 rounded">F8</span> — cancelar venda</li>
+            <li>
+              <span class="font-mono bg-surface-alt px-1 rounded">↑ ↓</span> — navegar resultado da
+              busca
+            </li>
+            <li>
+              <span class="font-mono bg-surface-alt px-1 rounded">Enter</span> — selecionar /
+              confirmar
+            </li>
+            <li class="pt-1 border-t border-border mt-1 text-text-muted">
+              Dentro de "Formas de Pagamento": Enter no método avança para o campo de valor, e Enter
+              no valor adiciona o pagamento.
+            </li>
+            <li>
+              <span class="font-mono bg-surface-alt px-1 rounded">Esc</span> — fechar janela aberta
+              ou voltar ao menu
+            </li>
+          </ul>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- CORPO PRINCIPAL -->
+  <div class="max-w-400 mx-auto bg-surface rounded-xl p-4 grid grid-cols-[300px_1fr_340px] gap-4">
+    <!-- COLUNA PRODUTO -->
+    <div class="flex flex-col gap-3 min-w-0">
+      <label class="block text-text-primary text-sm">
+        Leitor de Código de Barras <span class="text-text-muted font-normal">(F1)</span>
+      </label>
+      <input
+        #barcodeInput
+        type="text"
+        placeholder="Escaneie o produto"
+        [(ngModel)]="product.code"
+        (keydown.enter)="searchProductByCode()"
+        class="p-2 rounded bg-surface-alt text-text-primary border border-border font-semibold text-center"
+      />
+
+      <label class="block text-text-primary text-sm">
+        Buscar Produto <span class="text-text-muted font-normal">(F2)</span>
+      </label>
+      <div class="relative">
+        <input
+          #productSearchInput
+          type="text"
+          placeholder="Nome ou código"
+          [ngModel]="productSearchTerm"
+          (ngModelChange)="onProductSearchInput($event)"
+          (keydown)="onProductSearchKeydown($event)"
+          (blur)="onProductSearchBlur()"
+          class="p-2 rounded bg-surface-alt text-text-primary border border-border w-full"
+        />
+
+        @if (showProductDropdown && productSearchResults.length) {
+          <ul
+            class="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto bg-surface border border-border rounded shadow-lg"
+          >
+            @for (item of productSearchResults; track item.id; let i = $index) {
+              <li
+                (mousedown)="selectSearchedProduct(item)"
+                [class.bg-accent]="i === activeProductIndex"
+                class="px-3 py-2 text-sm text-text-primary cursor-pointer flex justify-between"
+              >
+                <span>{{ item.name }}</span>
+                <span class="text-text-muted">R$ {{ item.price }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      <label class="block text-text-primary text-sm">Quantidade</label>
+      <input
+        #quantityInput
+        type="number"
+        [(ngModel)]="product.quantity"
+        (keydown.enter)="addSearchedProductToCart()"
+        class="p-2 rounded bg-surface-alt text-text-primary border border-border text-center font-bold"
+      />
+
+      <div class="flex gap-2">
+        <div class="flex-1">
+          <label class="block text-text-primary text-sm">Valor Unitário</label>
+          <div
+            class="p-2 rounded bg-surface-alt text-text-primary border border-border text-center font-bold"
+          >
+            R$ {{ product.price }}
+          </div>
+        </div>
+        <div class="flex-1">
+          <label class="block text-text-primary text-sm">Valor Total</label>
+          <div
+            class="p-2 rounded bg-surface-alt text-text-primary border border-border text-center font-bold"
+          >
+            {{ (product.price * product.quantity).toFixed(2) }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABELA PRODUTOS -->
+    <div class="min-w-0 overflow-x-auto">
+      <p class="text-text-primary text-sm mb-4 font-bold">Produtos</p>
+
+      <div class="bg-surface border border-border rounded-lg shadow max-h-[65vh] overflow-y-auto">
+        <table class="w-full text-sm text-left text-text-primary">
+          <thead class="bg-surface-alt sticky top-0">
+            <tr>
+              <th class="px-3 py-2">CÓDIGO</th>
+              <th class="px-3 py-2">PRODUTO</th>
+              <th class="px-3 py-2">VLR. UN.</th>
+              <th class="px-3 py-2">QTD</th>
+              <th class="px-3 py-2">TOTAL</th>
+              <th class="px-3 py-2 text-center">Excluir</th>
+              <th class="px-3 py-2 text-center">Editar</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of products; track item.id) {
+              <tr class="border-t border-border">
+                <td class="px-3 py-2">{{ item.code }}</td>
+                <td class="px-3 py-2">{{ item.name }}</td>
+                <td class="px-3 py-2">R$ {{ item.price }}</td>
+                <td class="px-3 py-2">{{ item.quantity }}</td>
+                <td class="px-3 py-2">R$ {{ (item.price * item.quantity).toFixed(2) }}</td>
+                <td class="px-3 py-2 text-center">
+                  <button (click)="removeItem(item)">🗑️</button>
+                </td>
+                <td class="px-3 py-2 text-center">
+                  <button (click)="editItem(item)">📝</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="text-center text-text-muted text-sm py-6">
+                  Nenhum produto adicionado
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FINALIZAR VENDA -->
+    <div class="min-w-0">
+      <app-finish-sale
+        [totalValue]="subtotalValue"
+        [(discountValue)]="discountValue"
+        (discountValueChange)="onDiscountChange($event)"
+        [clientId]="selectedClient?.id || 1"
+        (paymentsChange)="onPaymentsChange($event)"
+      />
+
+      <div class="border-t border-border pt-2 mt-2">
+        <button (click)="toggleFiscalOptions()" class="text-xs text-text-muted underline">
+          {{ showFiscalOptions ? 'Ocultar' : 'Mais opções' }}
+        </button>
+
+        @if (showFiscalOptions) {
+          <div class="flex gap-2 items-end mt-2">
+            <div class="flex-1">
+              <label class="block text-text-muted text-xs mb-1">CFOP</label>
+              <select
+                [(ngModel)]="saleCfop"
+                class="p-1 rounded bg-overlay text-text-primary text-xs text-center font-mono w-full border border-border focus:outline-none"
+              >
+                <option value="5102">5102</option>
+                <option value="5405">5405</option>
+                <option value="5656">5656</option>
+                <option value="6102">6102</option>
+                <option value="6108">6108</option>
+              </select>
+            </div>
+
+            <div class="flex-1">
+              <label class="block text-text-muted text-xs mb-1">CSOSN</label>
+              <select
+                [(ngModel)]="saleCsosn"
+                class="p-1 rounded bg-overlay text-text-primary text-xs w-full border border-border focus:outline-none"
+              >
+                <option value="102">102</option>
+                <option value="103">103</option>
+                <option value="300">300</option>
+                <option value="400">400</option>
+                <option value="500">500</option>
+                <option value="900">900</option>
+              </select>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- RODAPÉ -->
+  <div class="max-w-400 mx-auto flex justify-between items-center mt-4">
+    <div
+      class="bg-surface text-text-primary px-4 py-2 rounded font-semibold shadow border border-border"
+    >
+      Vendedor: <span class="text-lg">{{ sellerName }}</span>
+    </div>
+
+    <div class="flex gap-3">
+      <button
+        (click)="cancelSale()"
+        class="bg-danger hover:opacity-90 text-btn-text px-6 py-2 rounded-lg font-medium transition-colors"
+      >
+        Cancelar Venda <span class="text-xs opacity-70">(F8)</span>
+      </button>
+      <button
+        #finishBtn
+        (click)="finishSale()"
+        [disabled]="!canFinishSale"
+        title="Adicione produtos e formas de pagamento que cubram o total para habilitar"
+        class="bg-accent hover:bg-accent-hover text-btn-text px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        Finalizar Venda <span class="text-xs opacity-70">(F4)</span>
+      </button>
+    </div>
+  </div>
+
+  @if (showEditModal) {
+    <app-modal-edit-product
+      [item]="selectedItem"
+      (cancel)="onCancelEdit()"
+      (save)="onSaveItem($event)"
+    />
+  }
+
+  @if (showSaleModal && saleData) {
+    <app-modal-sales-note [saleData]="saleData" (closeModal)="closeSaleModal()" />
+  }
+</div>

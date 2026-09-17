@@ -20,6 +20,7 @@ import {
 import { SaleFiltersDto } from './dto/filters-sale.dto.js';
 import { ConvertOrderToSaleDto } from '../orders/dto/convert-order-to-sale.js';
 import { resolveLogicalDateTime } from '../common/date-utils.js';
+import { CreateDirectSaleDto } from './dto/create-direct-sale.dto.js';
 
 @Injectable()
 export class SalesService {
@@ -994,5 +995,131 @@ export class SalesService {
     return {
       message: `${result.count} venda(s) marcada(s) como recebida(s) com sucesso`,
     };
+  }
+
+  async createDirectSale(
+    dto: CreateDirectSaleDto,
+    userId: number,
+    username: string,
+  ): Promise<SaleResponseDto> {
+    const start = Date.now();
+
+    const { items, payments, ...saleData } = dto;
+    const clientId = saleData.clientId ?? 1;
+
+    this.logger.log(
+      `[Venda direta] operador=${userId} | criando venda direta com ${items.length} item(ns)`,
+    );
+
+    const client = await this.prisma.client.client.findUnique({
+      where: { id: clientId },
+    });
+
+    if (!client) {
+      throw new BadRequestException(`Cliente ${clientId} não encontrado`);
+    }
+
+    const productIds = items.map((item) => item.productId);
+    const products = await this.prisma.client.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, name: true, costPrice: true, unit: true },
+    });
+
+    const foundIds = products.map((p) => p.id);
+    const missingIds = productIds.filter((id) => !foundIds.includes(id));
+
+    if (missingIds.length > 0) {
+      throw new BadRequestException(
+        `Produtos não encontrados: ${missingIds.join(', ')}`,
+      );
+    }
+
+    const discount = new Decimal(saleData.discount || 0);
+    const cfop = saleData.cfop || '5102';
+
+    let totalProductsWithoutDiscount = new Decimal(0);
+    let profitSale = new Decimal(0);
+
+    const itemsData = items.map((item, index) => {
+      const product = products.find((p) => p.id === item.productId)!;
+      const totalPrice = new Decimal(item.quantity).times(
+        new Decimal(item.unitPrice),
+      );
+      const itemCost = new Decimal(product.costPrice).times(
+        new Decimal(item.quantity),
+      );
+
+      totalProductsWithoutDiscount =
+        totalProductsWithoutDiscount.plus(totalPrice);
+      profitSale = profitSale.plus(totalPrice.minus(itemCost));
+
+      return {
+        itemNumber: index + 1,
+        productId: item.productId,
+        xProd: product.name,
+        quantity: new Decimal(item.quantity),
+        unitPrice: new Decimal(item.unitPrice),
+        totalPrice,
+        taxUnit: product.unit,
+        taxQuantity: new Decimal(item.quantity),
+        taxUnitPrice: new Decimal(item.unitPrice),
+        composesTotal: 1,
+        cfop,
+        totalTaxValue: null,
+        importTaxValue: new Decimal(0),
+        iofValue: new Decimal(0),
+      };
+    });
+
+    const total = totalProductsWithoutDiscount.minus(discount);
+
+    this.validatePayments(payments, total);
+
+    try {
+      const sale = await this.prisma.client.sale.create({
+        data: {
+          clientId,
+          userOperator: username,
+          operatorId: userId,
+          orderId: null,
+          serviceCharge: new Decimal(0),
+          date: resolveLogicalDateTime(),
+          totalProductsWithoutDiscount,
+          discount,
+          total,
+          profitSale: profitSale.minus(discount),
+          isPaid: this.computeIsPaid(payments),
+          cfop,
+          fiscalStatus: FiscalStatus.PENDENTE,
+          createdAt: resolveLogicalDateTime(),
+          items: { create: itemsData },
+          payments: { create: this.buildPaymentsData(payments) },
+        },
+        include: this.saleInclude(),
+      });
+
+      this.logger.log(
+        `[Venda ${sale.id}] operador=${userId} | venda direta persistida com ${sale.items.length} item(ns): ` +
+          sale.items
+            .map((i) => `${i.id}:${i.xProd}(x${Number(i.quantity)})`)
+            .join(', '),
+      );
+
+      this.logger.log(
+        `[Venda ${sale.id}] operador=${userId} | venda direta criada em ${Date.now() - start}ms`,
+      );
+
+      return new SaleResponseDto(sale);
+    } catch (error: unknown) {
+      if ((error as any).code === 'P2003') {
+        this.logger.error(
+          `[Venda direta] operador=${userId} | erro de chave estrangeira: ${(error as any).message}`,
+        );
+        throw new BadRequestException(
+          'Erro de chave estrangeira: Verifique se os dados relacionados existem',
+        );
+      }
+      throw error;
+    }
   }
 }

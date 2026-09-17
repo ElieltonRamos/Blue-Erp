@@ -260,12 +260,29 @@
                           {{ asset.label }}
                         </span>
 
-                        <button
-                          (click)="openEditModal(asset)"
-                          class="action-btn bg-info text-white hover:opacity-90 w-auto px-3"
-                        >
-                          <span>Editar</span>
-                        </button>
+                        <div class="flex items-center justify-between">
+                          <span
+                            class="font-mono font-bold text-text-primary bg-overlay px-2 py-1 rounded"
+                          >
+                            {{ asset.label }}
+                          </span>
+
+                          <div class="flex items-center gap-2">
+                            <button
+                              [routerLink]="['/veiculos', asset.id]"
+                              class="action-btn bg-accent text-white hover:opacity-90 w-auto px-3"
+                            >
+                              <span>Ver detalhes</span>
+                            </button>
+
+                            <button
+                              (click)="openEditModal(asset)"
+                              class="action-btn bg-info text-white hover:opacity-90 w-auto px-3"
+                            >
+                              <span>Editar</span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
 
                       @if (asset.attributes.length > 0) {

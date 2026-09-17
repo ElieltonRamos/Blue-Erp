@@ -24,12 +24,31 @@ import {
 import { PaginatedResponseDto } from '../catalog-service/dto/paginated-response.dto.js';
 import { AssetResponseDto } from './dto/asset-response.dto.js';
 import { FindAllAssetsDto } from './dto/find-all-assets.dto.js';
+import { AssetMaintenanceHistoryResponseDto } from './dto/asset-maintenance-history-response.dto.js';
 
 @ApiTags('Assets')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('assets')
 export class AssetController {
   constructor(private readonly assetService: AssetService) {}
+
+  @Get(':id/maintenance-history')
+  @ApiOperation({ summary: 'Histórico de manutenção do veículo (asset)' })
+  @ApiParam({ name: 'id', type: Number, description: 'ID do asset' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Histórico de manutenção retornado com sucesso',
+    type: AssetMaintenanceHistoryResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Asset não encontrado',
+  })
+  getMaintenanceHistory(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<AssetMaintenanceHistoryResponseDto> {
+    return this.assetService.getMaintenanceHistory(id);
+  }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)

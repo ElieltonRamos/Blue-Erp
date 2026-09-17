@@ -167,6 +167,14 @@
         [isActive]="canAccess('/fiscal')"
       />
     }
+    @if (isEnabled('/pdv')) {
+      <app-card-menu
+        [title]="'PDV - Venda Rapida'"
+        [icon]="'🧾'"
+        [path]="'/pdv'"
+        [isActive]="canAccess('/pdv')"
+      />
+    }
   </div>
 
   <button

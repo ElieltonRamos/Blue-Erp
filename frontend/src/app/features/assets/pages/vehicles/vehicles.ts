@@ -1,15 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { PaginatorComponent } from '../../../shared/paginator/paginator.component';
-import { NotificationService } from '../../../shared/toastr/notification.service';
-import { AssetService } from '../services/asset.service';
-import { Asset, FilterAssetParams } from '../types/asset.type';
-import { ModalEditEntity, FormField } from '../../../shared/modal-edit-entity/modal-edit-entity';
-import { ClientService } from '../../clients/services/client.service';
-import Client from '../../clients/types/clients';
-import { VehicleCreateFormComponent } from '../components/vehicle-create-form.component';
+import { Router, RouterLink } from '@angular/router';
+import { PaginatorComponent } from '../../../../shared/paginator/paginator.component';
+import { NotificationService } from '../../../../shared/toastr/notification.service';
+import { AssetService } from '../../services/asset.service';
+import { Asset, FilterAssetParams } from '../../types/asset.type';
+import { ModalEditEntity, FormField } from '../../../../shared/modal-edit-entity/modal-edit-entity';
+import { ClientService } from '../../../clients/services/client.service';
+import Client from '../../../clients/types/clients';
+import { VehicleCreateFormComponent } from '../../components/vehicle-create-form.component';
 
 interface ClientGroup {
   clientId: number;
@@ -32,6 +32,7 @@ const ATTRIBUTE_LABELS: Record<string, string> = {
     PaginatorComponent,
     ModalEditEntity,
     VehicleCreateFormComponent,
+    RouterLink,
   ],
   templateUrl: './vehicles.html',
 })

@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../core/services/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { PaginatedResponse } from '../../../core/guards/types/paginator';
-import { Asset, CreateAssetDTO, FilterAssetParams, UpdateAssetDTO } from '../types/asset.type';
+import { Asset, AssetMaintenanceHistory, CreateAssetDTO, FilterAssetParams, UpdateAssetDTO } from '../types/asset.type';
 
 @Injectable({
   providedIn: 'root',
@@ -42,5 +42,9 @@ export class AssetService {
 
   update(id: number, asset: UpdateAssetDTO): Observable<Asset> {
     return this.client.patch<Asset>(`${this.apiUrl}/${id}`, asset);
+  }
+
+  getMaintenanceHistory(id: number): Observable<AssetMaintenanceHistory> {
+    return this.client.get<AssetMaintenanceHistory>(`${this.apiUrl}/${id}/maintenance-history`);
   }
 }

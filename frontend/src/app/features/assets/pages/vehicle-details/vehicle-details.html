@@ -1,0 +1,80 @@
+<div class="min-h-screen flex flex-col items-center justify-start bg-base px-4 py-6">
+  <button
+    (click)="goBack()"
+    class="self-center mb-6 bg-accent hover:bg-accent-hover text-btn-text px-6 py-2 rounded-lg shadow-md transition-all"
+  >
+    Voltar para veículos
+  </button>
+
+  <div class="w-full max-w-5xl space-y-6">
+    @if (asset) {
+      <div class="bg-surface border border-border rounded-xl shadow-lg p-6">
+        <span class="font-mono font-bold text-2xl text-text-primary bg-overlay px-3 py-1 rounded">
+          {{ asset.label }}
+        </span>
+        <p class="text-text-secondary text-sm mt-2 mb-4">Cliente: {{ asset.clientName }}</p>
+
+        @if (asset.attributes.length > 0) {
+          <div class="flex flex-wrap gap-2">
+            @for (attr of asset.attributes; track attr.key) {
+              <span class="text-sm text-text-secondary bg-overlay px-3 py-1 rounded">
+                {{ getAttributeLabel(attr.key) }}: {{ attr.value }}
+              </span>
+            }
+          </div>
+        } @else {
+          <p class="text-sm text-text-muted">Sem marca/modelo/ano cadastrados</p>
+        }
+      </div>
+    }
+
+    <div class="bg-surface border border-border rounded-xl shadow-lg overflow-hidden">
+      <div class="px-6 py-4 border-b border-border">
+        <h2 class="text-text-primary font-semibold text-lg">Histórico de Manutenção</h2>
+      </div>
+
+      @if (loading) {
+        <div class="py-12 text-center text-text-secondary">Carregando...</div>
+      } @else if (!history || history.documents.length === 0) {
+        <div class="py-12 text-center text-text-secondary">Nenhuma manutenção registrada</div>
+      } @else {
+        <div class="divide-y divide-border">
+          @for (doc of history.documents; track doc.id) {
+            <button
+              type="button"
+              (click)="openDocument(doc)"
+              class="w-full flex items-center justify-between px-6 py-4 hover:bg-overlay transition-colors text-left"
+            >
+              <div>
+                <span class="font-semibold text-text-primary">#{{ doc.id }}</span>
+                <span class="text-text-muted text-sm ml-2">
+                  {{ doc.createdAt | date: 'dd/MM/yyyy' }}
+                </span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-text-primary font-mono"
+                  >R$ {{ doc.total | number: '1.2-2' }}</span
+                >
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info/20 text-info border border-info/40"
+                >
+                  {{ statusLabels[doc.status] }}
+                </span>
+              </div>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (selectedDocument) {
+    <app-document-detail
+      [document]="selectedDocument"
+      [allUsers]="allUsers"
+      [users]="users"
+      (closed)="closeDocument()"
+      (changed)="onDocumentChanged($event)"
+    />
+  }
+</div>

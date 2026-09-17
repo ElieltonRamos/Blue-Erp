@@ -34,6 +34,7 @@ import { ConvertOrderToSaleDto } from '../orders/dto/convert-order-to-sale.js';
 import { MarkAsReceivedDto } from './dto/mark-as-received.dto.js';
 import { FinalizeDocumentDto } from './dto/finalize-document.dto.js';
 import { DocumentSaleService } from './document-sale.service.js';
+import { CreateDirectSaleDto } from './dto/create-direct-sale.dto.js';
 
 @ApiTags('Sales')
 @Controller('sales')
@@ -44,6 +45,28 @@ export class SalesController {
     private readonly salesService: SalesService,
     private documentService: DocumentSaleService,
   ) {}
+
+  @Post('direct')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Criar venda direta (sem pedido ou documento de origem)',
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Venda criada com sucesso',
+    type: SaleResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Cliente ou produto não encontrado, ou pagamento inválido',
+  })
+  createDirectSale(
+    @Body() dto: CreateDirectSaleDto,
+    @CurrentUser('userId') userId: number,
+    @CurrentUser('username') username: string,
+  ) {
+    return this.salesService.createDirectSale(dto, userId, username);
+  }
 
   @Get('by-document/:documentId')
   @ApiOperation({ summary: 'Buscar venda pelo ID do documento de origem' })

@@ -10,6 +10,8 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { AssetResponseDto } from './dto/asset-response.dto.js';
 import { PaginatedResponseDto } from '../catalog-service/dto/paginated-response.dto.js';
 import { FindAllAssetsDto } from './dto/find-all-assets.dto.js';
+import { AssetMaintenanceHistoryResponseDto } from './dto/asset-maintenance-history-response.dto.js';
+import { DocumentType } from '../../../generated/prisma/enums.js';
 
 @Injectable()
 export class AssetService {
@@ -154,5 +156,35 @@ export class AssetService {
     );
 
     return new AssetResponseDto(asset);
+  }
+
+  async getMaintenanceHistory(
+    id: number,
+  ): Promise<AssetMaintenanceHistoryResponseDto> {
+    const asset = await this.prisma.client.asset.findUnique({
+      where: { id },
+      include: {
+        client: { select: { name: true } },
+        documents: {
+          where: { type: DocumentType.SERVICE_ORDER },
+          orderBy: { createdAt: 'desc' },
+          include: {
+            items: {
+              include: {
+                product: { select: { id: true, name: true, code: true } },
+                service: { select: { id: true, name: true, code: true } },
+                user: { select: { id: true, username: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!asset) {
+      throw new NotFoundException('Asset não encontrado');
+    }
+
+    return new AssetMaintenanceHistoryResponseDto(asset);
   }
 }
