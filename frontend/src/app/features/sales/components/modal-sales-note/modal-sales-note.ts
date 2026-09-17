@@ -47,9 +47,11 @@ export class ModalSalesNote implements OnInit {
   handleKeydown(event: KeyboardEvent) {
     if (event.key === 'Enter') {
       event.preventDefault();
+      event.stopPropagation();
       this.print();
     } else if (event.key === 'Escape') {
       event.preventDefault();
+      event.stopPropagation();
       this.close();
     }
   }

@@ -9,11 +9,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Product } from '../../types/product';
-
-export interface CartProduct extends Product {
-  quantity: number;
-}
+import { CartItem } from '../../types/sale';
 
 @Component({
   selector: 'app-modal-edit-product',
@@ -23,11 +19,11 @@ export interface CartProduct extends Product {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModalEditProduct implements OnChanges {
-  @Input({ required: true }) item!: CartProduct;
+  @Input({ required: true }) item!: CartItem;
   @Output() cancel = new EventEmitter<void>();
-  @Output() save = new EventEmitter<CartProduct>();
+  @Output() save = new EventEmitter<CartItem>();
 
-  editedItem!: CartProduct;
+  editedItem!: CartItem;
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['item']) {

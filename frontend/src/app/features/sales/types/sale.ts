@@ -117,7 +117,8 @@ export interface SalePaymentDto {
 }
 
 export interface CreateSaleItemDto {
-  productId: number;
+  productId?: number;
+  serviceId?: number;
   quantity: number;
   unitPrice: number;
 }
@@ -154,4 +155,15 @@ export interface SalePaginatedResponse {
 
 export interface MarkAsReceivedDto {
   salesIds: number[];
+}
+
+export type CartItemType = 'PRODUCT' | 'SERVICE';
+
+export interface CartItem {
+  id: number;
+  code: string;
+  name: string;
+  price: number;
+  quantity: number;
+  type: CartItemType;
 }

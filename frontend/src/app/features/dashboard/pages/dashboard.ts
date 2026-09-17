@@ -28,6 +28,7 @@ const PERMISSIONS: Record<string, Role[]> = {
   '/ordem-servico': ['admin'],
   '/empresa': ['admin'],
   '/fiscal': ['admin'],
+  '/pdv': ['admin', 'caixa'],
   '/compras': ['admin', 'caixa'],
 };
 

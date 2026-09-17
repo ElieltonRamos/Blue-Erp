@@ -8,6 +8,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   inject,
+  SimpleChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -39,6 +40,7 @@ interface PaymentMethodConfig {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FinishSale {
+  @Input() resetTrigger = 0;
   private readonly cdr = inject(ChangeDetectorRef);
 
   @ViewChild('methodSelect') methodSelectRef?: ElementRef<HTMLSelectElement>;
@@ -63,6 +65,16 @@ export class FinishSale {
     { id: 'PIX', name: 'Pix' },
     { id: 'CREDITO_LOJA', name: 'Notinha' },
   ];
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['resetTrigger'] && !changes['resetTrigger'].firstChange) {
+      this.paymentEntries = [];
+      this.selectedMethod = 'DINHEIRO';
+      this.selectedValue = 0;
+      this.emitPayments();
+      this.cdr.markForCheck();
+    }
+  }
 
   get finalTotal(): number {
     return Math.max(this.totalValue - this.discountValue, 0);

@@ -1019,18 +1019,55 @@ export class SalesService {
       throw new BadRequestException(`Cliente ${clientId} não encontrado`);
     }
 
-    const productIds = items.map((item) => item.productId);
-    const products = await this.prisma.client.product.findMany({
-      where: { id: { in: productIds } },
-      select: { id: true, name: true, costPrice: true, unit: true },
-    });
+    const productItemsInput = items.filter(
+      (item): item is typeof item & { productId: number } =>
+        item.productId != null,
+    );
+    const serviceItemsInput = items.filter(
+      (item): item is typeof item & { serviceId: number } =>
+        item.serviceId != null,
+    );
 
-    const foundIds = products.map((p) => p.id);
-    const missingIds = productIds.filter((id) => !foundIds.includes(id));
-
-    if (missingIds.length > 0) {
+    const invalidItems = items.filter(
+      (item) => item.productId == null && item.serviceId == null,
+    );
+    if (invalidItems.length > 0) {
       throw new BadRequestException(
-        `Produtos não encontrados: ${missingIds.join(', ')}`,
+        'Todo item deve informar productId ou serviceId',
+      );
+    }
+
+    const productIds = productItemsInput.map((item) => item.productId);
+    const serviceIds = serviceItemsInput.map((item) => item.serviceId);
+
+    const [products, services] = await Promise.all([
+      this.prisma.client.product.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, name: true, costPrice: true, unit: true },
+      }),
+      this.prisma.client.service.findMany({
+        where: { id: { in: serviceIds } },
+        select: { id: true, name: true },
+      }),
+    ]);
+
+    const foundProductIds = products.map((p) => p.id);
+    const missingProductIds = productIds.filter(
+      (id) => !foundProductIds.includes(id),
+    );
+    if (missingProductIds.length > 0) {
+      throw new BadRequestException(
+        `Produtos não encontrados: ${missingProductIds.join(', ')}`,
+      );
+    }
+
+    const foundServiceIds = services.map((s) => s.id);
+    const missingServiceIds = serviceIds.filter(
+      (id) => !foundServiceIds.includes(id),
+    );
+    if (missingServiceIds.length > 0) {
+      throw new BadRequestException(
+        `Serviços não encontrados: ${missingServiceIds.join(', ')}`,
       );
     }
 
@@ -1039,8 +1076,10 @@ export class SalesService {
 
     let totalProductsWithoutDiscount = new Decimal(0);
     let profitSale = new Decimal(0);
+    let itemNumber = 0;
 
-    const itemsData = items.map((item, index) => {
+    const productItemsData = productItemsInput.map((item) => {
+      itemNumber += 1;
       const product = products.find((p) => p.id === item.productId)!;
       const totalPrice = new Decimal(item.quantity).times(
         new Decimal(item.unitPrice),
@@ -1054,8 +1093,9 @@ export class SalesService {
       profitSale = profitSale.plus(totalPrice.minus(itemCost));
 
       return {
-        itemNumber: index + 1,
+        itemNumber,
         productId: item.productId,
+        serviceId: null,
         xProd: product.name,
         quantity: new Decimal(item.quantity),
         unitPrice: new Decimal(item.unitPrice),
@@ -1070,6 +1110,38 @@ export class SalesService {
         iofValue: new Decimal(0),
       };
     });
+
+    const serviceItemsData = serviceItemsInput.map((item) => {
+      itemNumber += 1;
+      const service = services.find((s) => s.id === item.serviceId)!;
+      const totalPrice = new Decimal(item.quantity).times(
+        new Decimal(item.unitPrice),
+      );
+
+      totalProductsWithoutDiscount =
+        totalProductsWithoutDiscount.plus(totalPrice);
+      profitSale = profitSale.plus(totalPrice);
+
+      return {
+        itemNumber,
+        productId: null,
+        serviceId: item.serviceId,
+        xProd: service.name,
+        quantity: new Decimal(item.quantity),
+        unitPrice: new Decimal(item.unitPrice),
+        totalPrice,
+        taxUnit: null,
+        taxQuantity: new Decimal(item.quantity),
+        taxUnitPrice: new Decimal(item.unitPrice),
+        composesTotal: 1,
+        cfop,
+        totalTaxValue: null,
+        importTaxValue: new Decimal(0),
+        iofValue: new Decimal(0),
+      };
+    });
+
+    const itemsData = [...productItemsData, ...serviceItemsData];
 
     const total = totalProductsWithoutDiscount.minus(discount);
 

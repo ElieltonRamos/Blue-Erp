@@ -136,31 +136,34 @@
       />
 
       <label class="block text-text-primary text-sm">
-        Buscar Produto <span class="text-text-muted font-normal">(F2)</span>
+        Buscar Produto ou Serviço <span class="text-text-muted font-normal">(F2)</span>
       </label>
       <div class="relative">
         <input
           #productSearchInput
           type="text"
           placeholder="Nome ou código"
-          [ngModel]="productSearchTerm"
-          (ngModelChange)="onProductSearchInput($event)"
-          (keydown)="onProductSearchKeydown($event)"
-          (blur)="onProductSearchBlur()"
+          [ngModel]="searchTerm"
+          (ngModelChange)="onSearchInput($event)"
+          (keydown)="onSearchKeydown($event)"
+          (blur)="onSearchBlur()"
           class="p-2 rounded bg-surface-alt text-text-primary border border-border w-full"
         />
 
-        @if (showProductDropdown && productSearchResults.length) {
+        @if (showSearchDropdown && searchItemsResults.length) {
           <ul
             class="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto bg-surface border border-border rounded shadow-lg"
           >
-            @for (item of productSearchResults; track item.id; let i = $index) {
+            @for (item of searchItemsResults; track item.id + item.type; let i = $index) {
               <li
-                (mousedown)="selectSearchedProduct(item)"
-                [class.bg-accent]="i === activeProductIndex"
-                class="px-3 py-2 text-sm text-text-primary cursor-pointer flex justify-between"
+                (mousedown)="selectSearchedItem(item)"
+                [class.bg-accent]="i === activeSearchIndex"
+                class="px-3 py-2 text-sm text-text-primary cursor-pointer flex justify-between items-center gap-2"
               >
-                <span>{{ item.name }}</span>
+                <span class="flex items-center gap-1.5">
+                  <span class="text-xs">{{ item.type === 'SERVICE' ? '🛠️' : '🏷️' }}</span>
+                  {{ item.name }}
+                </span>
                 <span class="text-text-muted">R$ {{ item.price }}</span>
               </li>
             }
@@ -173,7 +176,7 @@
         #quantityInput
         type="number"
         [(ngModel)]="product.quantity"
-        (keydown.enter)="addSearchedProductToCart()"
+        (keydown.enter)="addSearchedItemToCart()"
         class="p-2 rounded bg-surface-alt text-text-primary border border-border text-center font-bold"
       />
 
@@ -215,19 +218,20 @@
             </tr>
           </thead>
           <tbody>
-            @for (item of products; track item.id) {
+            @for (item of products; track item.id + item.type) {
               <tr class="border-t border-border">
                 <td class="px-3 py-2">{{ item.code }}</td>
-                <td class="px-3 py-2">{{ item.name }}</td>
+                <td class="px-3 py-2">
+                  <span class="text-xs mr-1">{{ item.type === 'SERVICE' ? '🛠️' : '🏷️' }}</span
+                  >{{ item.name }}
+                </td>
                 <td class="px-3 py-2">R$ {{ item.price }}</td>
                 <td class="px-3 py-2">{{ item.quantity }}</td>
                 <td class="px-3 py-2">R$ {{ (item.price * item.quantity).toFixed(2) }}</td>
                 <td class="px-3 py-2 text-center">
                   <button (click)="removeItem(item)">🗑️</button>
                 </td>
-                <td class="px-3 py-2 text-center">
-                  <button (click)="editItem(item)">📝</button>
-                </td>
+                <td class="px-3 py-2 text-center"><button (click)="editItem(item)">📝</button></td>
               </tr>
             } @empty {
               <tr>
@@ -246,8 +250,8 @@
       <app-finish-sale
         [totalValue]="subtotalValue"
         [(discountValue)]="discountValue"
-        (discountValueChange)="onDiscountChange($event)"
         [clientId]="selectedClient?.id || 1"
+        [resetTrigger]="resetCounter"
         (paymentsChange)="onPaymentsChange($event)"
       />
 
