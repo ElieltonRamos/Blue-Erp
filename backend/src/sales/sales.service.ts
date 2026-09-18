@@ -9,6 +9,7 @@ import {
   Prisma,
   FiscalStatus,
   OrderStatus,
+  DocumentStatus,
 } from '../../generated/prisma/client.js';
 import { Decimal, DecimalJsLike } from '@prisma/client/runtime/client';
 import { CreateSaleDto, CreateSalePaymentDto } from './dto/create-sale.dto.js';
@@ -773,7 +774,10 @@ export class SalesService {
     const start = Date.now();
     const tag = `Venda ${id}`;
 
-    const sale = await this.prisma.client.sale.findUnique({ where: { id } });
+    const sale = await this.prisma.client.sale.findUnique({
+      where: { id },
+      include: { items: true },
+    });
 
     if (!sale) {
       throw new NotFoundException(`Venda ${id} não encontrada`);
@@ -788,9 +792,42 @@ export class SalesService {
       );
     }
 
-    await this.prisma.client.sale.delete({ where: { id } });
+    const isDirectSale = !sale.orderId && !sale.documentId;
 
-    this.logger.log(
+    await this.prisma.client.$transaction(async (tx) => {
+      if (isDirectSale) {
+        for (const item of sale.items) {
+          if (item.productId) {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { quantity: { increment: item.quantity } },
+            });
+          }
+        }
+      }
+
+      if (sale.orderId) {
+        await tx.order.update({
+          where: { id: sale.orderId },
+          data: { status: OrderStatus.CLOSED },
+        });
+      }
+
+      if (sale.documentId) {
+        await tx.document.update({
+          where: { id: sale.documentId },
+          data: {
+            status: DocumentStatus.IN_PROGRESS,
+            finishedAt: null,
+            approvedAt: null,
+          },
+        });
+      }
+
+      await tx.sale.delete({ where: { id } });
+    });
+
+    this.logger.warn(
       `[${tag}] operador=${operatorId} | removida em ${Date.now() - start}ms`,
     );
 
@@ -1043,7 +1080,13 @@ export class SalesService {
     const [products, services] = await Promise.all([
       this.prisma.client.product.findMany({
         where: { id: { in: productIds } },
-        select: { id: true, name: true, costPrice: true, unit: true },
+        select: {
+          id: true,
+          name: true,
+          costPrice: true,
+          unit: true,
+          quantity: true,
+        },
       }),
       this.prisma.client.service.findMany({
         where: { id: { in: serviceIds } },
@@ -1148,26 +1191,35 @@ export class SalesService {
     this.validatePayments(payments, total);
 
     try {
-      const sale = await this.prisma.client.sale.create({
-        data: {
-          clientId,
-          userOperator: username,
-          operatorId: userId,
-          orderId: null,
-          serviceCharge: new Decimal(0),
-          date: resolveLogicalDateTime(),
-          totalProductsWithoutDiscount,
-          discount,
-          total,
-          profitSale: profitSale.minus(discount),
-          isPaid: this.computeIsPaid(payments),
-          cfop,
-          fiscalStatus: FiscalStatus.PENDENTE,
-          createdAt: resolveLogicalDateTime(),
-          items: { create: itemsData },
-          payments: { create: this.buildPaymentsData(payments) },
-        },
-        include: this.saleInclude(),
+      const sale = await this.prisma.client.$transaction(async (tx) => {
+        for (const item of productItemsInput) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { quantity: { decrement: item.quantity } },
+          });
+        }
+
+        return tx.sale.create({
+          data: {
+            clientId,
+            userOperator: username,
+            operatorId: userId,
+            orderId: null,
+            serviceCharge: new Decimal(0),
+            date: resolveLogicalDateTime(),
+            totalProductsWithoutDiscount,
+            discount,
+            total,
+            profitSale: profitSale.minus(discount),
+            isPaid: this.computeIsPaid(payments),
+            cfop,
+            fiscalStatus: FiscalStatus.PENDENTE,
+            createdAt: resolveLogicalDateTime(),
+            items: { create: itemsData },
+            payments: { create: this.buildPaymentsData(payments) },
+          },
+          include: this.saleInclude(),
+        });
       });
 
       this.logger.log(

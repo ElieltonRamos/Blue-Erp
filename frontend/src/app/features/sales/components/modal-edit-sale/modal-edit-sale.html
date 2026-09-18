@@ -246,26 +246,40 @@
         <p>Total pagamentos: R$ {{ paymentsTotal.toFixed(2) }}</p>
         @if (paymentsMismatch) {
           <p class="text-warning text-sm mt-1">
-            Atenção: total de pagamentos difere do total da venda.
+            @if (paymentsDifference > 0) {
+              Faltam R$ {{ paymentsDifference.toFixed(2) }} para completar o pagamento.
+            } @else {
+              Pagamento excede o total da venda em R$ {{ (paymentsDifference * -1).toFixed(2) }}.
+            }
           </p>
         }
       </div>
     </div>
 
-    <div class="p-6 border-t border-border-subtle flex justify-end gap-2">
+    <div class="p-6 border-t border-border-subtle flex justify-between gap-2">
       <button
-        (click)="close()"
-        class="bg-surface-alt text-text-primary border border-border px-4 py-2 rounded hover:bg-overlay transition"
-      >
-        Cancelar
-      </button>
-      <button
-        (click)="save()"
+        (click)="deleteSale()"
         [disabled]="saving"
-        class="bg-accent text-btn-text px-4 py-2 rounded hover:bg-accent-hover transition disabled:opacity-60"
+        class="bg-danger text-btn-text px-4 py-2 rounded hover:opacity-90 transition disabled:opacity-60"
       >
-        {{ saving ? 'Salvando...' : 'Salvar' }}
+        Excluir Venda
       </button>
+
+      <div class="flex gap-2">
+        <button
+          (click)="close()"
+          class="bg-surface-alt text-text-primary border border-border px-4 py-2 rounded hover:bg-overlay transition"
+        >
+          Cancelar
+        </button>
+        <button
+          (click)="save()"
+          [disabled]="saving"
+          class="bg-accent text-btn-text px-4 py-2 rounded hover:bg-accent-hover transition disabled:opacity-60"
+        >
+          {{ saving ? 'Salvando...' : 'Salvar' }}
+        </button>
+      </div>
     </div>
   </div>
 </div>

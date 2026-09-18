@@ -19,6 +19,7 @@ import { Product } from '../../../products/types/product';
 import { Service } from '../../../catalog-services/types/catalog-types';
 import User from '../../../users/types/user';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
+import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 
 type ItemType = 'PRODUCT' | 'SERVICE';
 
@@ -339,7 +340,35 @@ export class ModalEditSale implements OnInit {
     this.closeModal.emit();
   }
 
+  get paymentsDifference(): number {
+    return Number((this.totalAfterDiscount - this.paymentsTotal).toFixed(2));
+  }
+
   get hasServiceItems(): boolean {
     return this.items.some((item) => item.type === 'SERVICE');
+  }
+
+  async deleteSale(): Promise<void> {
+    const confirmed = await alertConfirm(
+      `Deseja realmente excluir a venda #${this.saleData.id}? Essa ação não pode ser desfeita.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.saving = true;
+
+    this.saleService.deleteSale(this.saleData.id).subscribe({
+      next: () => {
+        this.saving = false;
+        this.notification.success('Venda excluída com sucesso.');
+        this.saved.emit();
+      },
+      error: (e) => {
+        this.saving = false;
+        this.notification.error(`Erro ao excluir venda: ${e.error?.message || 'Erro inesperado.'}`);
+      },
+    });
   }
 }
