@@ -13,6 +13,7 @@ output
 sefaz-temp
 diff.txt
 /nsis-installer-windows/server.js
+public
 
 # Logs
 logs

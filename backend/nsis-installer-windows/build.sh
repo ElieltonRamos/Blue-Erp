@@ -24,6 +24,7 @@ REQUIRED_FILES=(
     "blue-erp-server.nsi"
     ".env"
     "node-v24-x64.msi"
+    "public/frontend/browser/index.html"
 )
 
 echo "Verificando arquivos necessários..."
@@ -33,6 +34,9 @@ for file in "${REQUIRED_FILES[@]}"; do
         if [ "$file" == "node-v24-x64.msi" ]; then
             echo "  Baixe em: https://nodejs.org/dist/latest-v24.x/ (arquivo node-v24.x.x-x64.msi)"
             echo "  Renomeie para node-v24-x64.msi nesta pasta."
+        fi
+        if [ "$file" == "public/frontend/browser/index.html" ]; then
+            echo "  Build do front ausente. Rode 'npm run installer:win' na raiz do backend."
         fi
         exit 1
     fi

@@ -1,4 +1,4 @@
-; Script NSIS - Instalação do Blue ERP Server
+﻿; Script NSIS - Instalação do Blue ERP Server
 ; Compilar com: makensis blue-erp-server.nsi
 
 !include "MUI2.nsh"
@@ -143,6 +143,13 @@ Section "Instalar"
     File ".env"
     File "${NODE_MSI}"
 
+    ; ---------- FRONTEND (build Angular servido pelo backend) ----------
+    ; Remove o build anterior para não acumular arquivos com hash de versões antigas
+    RMDir /r "$INSTDIR\public"
+    SetOutPath "$INSTDIR\public"
+    File /r "public\*"
+    SetOutPath "$INSTDIR"
+
     CreateDirectory "$INSTDIR\logs"
     CreateDirectory "$INSTDIR\pm2-home"
 
@@ -271,6 +278,7 @@ Section "Uninstall"
     Delete "$INSTDIR\logs\*.log"
     RMDir "$INSTDIR\logs"
     RMDir /r "$INSTDIR\pm2-home"
+    RMDir /r "$INSTDIR\public"
     RMDir "$INSTDIR"
 
     SetRegView 64
