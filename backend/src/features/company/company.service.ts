@@ -11,6 +11,7 @@ import { CompanyResponseDto } from './dto/company-response.dto.js';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { PrismaService } from '../../database/prisma.service.js';
+import { BusinessType } from 'generated/prisma/enums.js';
 
 interface UploadedFile {
   originalname: string;
@@ -339,6 +340,14 @@ export class CompanyService {
     });
 
     return { message: 'Certificado removido com sucesso' };
+  }
+
+  async getBusinessType(): Promise<{ businessType: BusinessType | null }> {
+    const company = await this.prisma.client.company.findUnique({
+      where: { id: 1 },
+      select: { businessType: true },
+    });
+    return { businessType: company?.businessType ?? null };
   }
 
   // Private helper methods

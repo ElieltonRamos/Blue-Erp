@@ -52,6 +52,12 @@ export class CompanyService {
     return this.client.patch<Company>(`${this.apiUrl}/company/certificate`, formData);
   }
 
+  getBusinessType() {
+    return this.client.get<{ businessType: Company['businessType'] | null }>(
+      `${this.apiUrl}/company/business-type`,
+    );
+  }
+
   importIbptFromCsv(file: File) {
     const formData = new FormData();
     formData.append('file', file);

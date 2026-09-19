@@ -18,12 +18,19 @@ import { CreateCompanyDto } from './dto/create-company.dto.js';
 import { UpdateCompanyDto } from './dto/update-company.dto.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
+import { Public } from '../../common/decorators/public.decorator.js';
 
 @ApiTags('company')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('company')
 export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
+
+  @Public()
+  @Get('business-type')
+  getBusinessType() {
+    return this.companyService.getBusinessType();
+  }
 
   @Post()
   @ApiOperation({ summary: 'Configurar empresa (apenas primeira vez)' })

@@ -1,4 +1,4 @@
-import { Component, inject, ElementRef, ViewChild, afterNextRender } from '@angular/core';
+import { Component, inject, ElementRef, ViewChild, afterNextRender, computed } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { alertLoading, closeLoading } from '../../../shared/alerts/custom-alerts';
 import { Router } from '@angular/router';
@@ -7,6 +7,9 @@ import { NotificationService } from '../../../shared/toastr/notification.service
 import { LicenseService } from '../../../core/services/license.service';
 import { version } from '../../../../../package.json';
 import { ThemeService } from '../../../core/services/theme.service';
+import { CompanyService } from '../../company/services/company.service';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { catchError, map, of } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -20,6 +23,7 @@ export class Login {
   private loginService = inject(ServiceLogin);
   private notification = inject(NotificationService);
   private licenseService = inject(LicenseService);
+  private companyService = inject(CompanyService);
 
   @ViewChild('usernameInput') usernameInput!: ElementRef<HTMLInputElement>;
   @ViewChild('passwordInput') passwordInput!: ElementRef<HTMLInputElement>;
@@ -39,6 +43,18 @@ export class Login {
     localStorage.removeItem('token');
   }
 
+  private businessType = toSignal(
+    this.companyService.getBusinessType().pipe(
+      map(({ businessType }) => businessType),
+      catchError(() => of(null)),
+    ),
+    { initialValue: undefined },
+  );
+
+  loaded = computed(() => this.businessType() !== undefined);
+  private isPdv = computed(() => this.businessType() === 'PDV');
+  logo = computed(() => (this.isPdv() ? 'blue-pdv.png' : 'blue-erp.png'));
+  productName = computed(() => (this.isPdv() ? 'Blue PDV' : 'Blue ERP'));
   focusPassword() {
     this.passwordInput.nativeElement.focus();
   }
