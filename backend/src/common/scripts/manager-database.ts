@@ -5,11 +5,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
 import * as mariadb from 'mariadb';
-import * as bcrypt from 'bcryptjs';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import { dumpDatabase } from './database-dump';
+import { runSeeds } from './database-seed';
 
 // ============================================
 // CONFIGURAÇÃO DO BANCO
@@ -235,67 +232,6 @@ async function runMigrations(): Promise<void> {
 }
 
 // ============================================
-// OPERAÇÕES DE SEEDS
-// ============================================
-
-async function runSeeds(): Promise<void> {
-  console.log('\n🌱 Rodando seeds...\n');
-
-  const conn = await mariadb.createConnection({
-    host: dbConfig.host,
-    user: dbConfig.user,
-    password: dbConfig.password,
-    database: dbConfig.database,
-    port: dbConfig.port,
-  });
-
-  try {
-    // Seed Company
-    console.log('   ⏳ Executando: company-seed');
-    await conn.query(`
-      INSERT INTO companies (
-        cnpj, corporate_name, trade_name, state_registration, tax_regime,
-        street, number, complement, neighborhood, city, city_code, state, zip_code,
-        phone, email, nfce_series, nfce_current_number, nfce_environment,
-        nfce_csc, nfce_csc_id, certificate_path, certificate_password,
-        certificate_expiration_date, ibpt_version, license_key, license_token,
-        created_at, updated_at
-      ) VALUES (
-        '00000000000000', 'Restaurante Bom Sabor LTDA', 'Bom Sabor', '123456789', '1',
-        'Rua das Flores', '456', 'Loja 1', 'Centro', 'São Paulo', '3550308', 'SP', '01310100',
-        '11987654321', 'contato@bomsabor.com.br', '1', 1, 'staging',
-        'HOMOLOGACAO-CSC-EXEMPLO', '1', '/certificates/bomsabor.pfx', 'certificado123',
-        '2026-12-31', '4.0', 'b6a63bc12098bbc81b16e5cc4c8e5dcb8d7506aa8b9a57cc56d72f4d677f13ef', 'TOKEN-XYZ-123',
-        NOW(), NOW()
-      ) ON DUPLICATE KEY UPDATE cnpj = cnpj
-    `);
-    console.log('   ✅ Concluído: company-seed');
-
-    // Seed User (admin)
-    console.log('   ⏳ Executando: user-seed');
-    const hashAdmin = await bcrypt.hash('impostoeroubo', 10);
-    await conn.query(
-      `INSERT INTO users (username, password, role, workplace, active, created_at, updated_at)
-      VALUES ('root', ?, 'admin', '', true, NOW(), NOW())
-      ON DUPLICATE KEY UPDATE username = username`,
-      [hashAdmin],
-    );
-    console.log('   ✅ Concluído: user-seed');
-
-    // Seed Client
-    console.log('   ⏳ Executando: client-seed');
-    await conn.query(`
-      INSERT INTO clients (id, name, active, created_at, updated_at)
-      VALUES (1, 'Consumidor Final', true, NOW(), NOW())
-      ON DUPLICATE KEY UPDATE id = id
-    `);
-    console.log('   ✅ Concluído: client-seed');
-  } finally {
-    await conn.end();
-  }
-}
-
-// ============================================
 // OPERAÇÕES DE RESET
 // ============================================
 
@@ -329,6 +265,13 @@ async function dropAllTables(): Promise<void> {
 }
 
 async function resetDatabase(): Promise<void> {
+  if (!migrationsDir) {
+    console.log(
+      '❌ Pasta de migrations não encontrada. Reset cancelado, nada foi removido.\n',
+    );
+    return;
+  }
+
   console.log('\n🔴 RESETANDO banco de dados...\n');
 
   await ensureDatabaseExists();
@@ -337,7 +280,7 @@ async function resetDatabase(): Promise<void> {
   await dropAllTables();
 
   await runMigrations();
-  await runSeeds();
+  await runSeeds(dbConfig);
 
   console.log('✅ Banco resetado com sucesso!\n');
 }
@@ -433,10 +376,8 @@ async function execBackup(): Promise<void> {
 
   manageBackupFiles(backupDir, 5);
 
-  const command = `mysqldump -h 127.0.0.1 -P ${dbConfig.port} -u ${dbConfig.user} -p${dbConfig.password} ${dbConfig.database} > "${backupFile}"`;
-
   try {
-    await execAsync(command);
+    await dumpDatabase(dbConfig, backupFile);
     const stats = fs.statSync(backupFile);
     const sizeMB = (stats.size / 1024 / 1024).toFixed(2);
 
@@ -449,6 +390,51 @@ async function execBackup(): Promise<void> {
     );
     throw err;
   }
+}
+
+async function* readSqlStatements(file: string): AsyncGenerator<string> {
+  let buffer = '';
+  let quote: string | null = null;
+  let escaped = false;
+  let lineComment = false;
+
+  for await (const chunk of fs.createReadStream(file, { encoding: 'utf-8' })) {
+    for (const char of chunk as string) {
+      if (lineComment) {
+        if (char === '\n') lineComment = false;
+        continue;
+      }
+
+      if (quote) {
+        buffer += char;
+        if (escaped) {
+          escaped = false;
+        } else if (char === '\\' && quote !== '`') {
+          escaped = true;
+        } else if (char === quote) {
+          quote = null;
+        }
+        continue;
+      }
+
+      if (char === "'" || char === '"' || char === '`') {
+        quote = char;
+        buffer += char;
+      } else if (char === '-' && buffer.endsWith('-')) {
+        buffer = buffer.slice(0, -1);
+        lineComment = true;
+      } else if (char === ';') {
+        const statement = buffer.trim();
+        buffer = '';
+        if (statement) yield statement;
+      } else {
+        buffer += char;
+      }
+    }
+  }
+
+  const rest = buffer.trim();
+  if (rest) yield rest;
 }
 
 async function restoreBackup(): Promise<void> {
@@ -470,16 +456,22 @@ async function restoreBackup(): Promise<void> {
   console.log(`   📁 Arquivo encontrado: ${backupFile}`);
   console.log(`   📊 Tamanho: ${sizeMB} MB\n`);
 
-  const command = `mysql -h 127.0.0.1 -P ${dbConfig.port} -u ${dbConfig.user} -p${dbConfig.password} ${dbConfig.database} < "${backupFile}"`;
+  const conn = await mariadb.createConnection(dbConfig);
 
   try {
-    await execAsync(command);
-    console.log(`   ✅ Backup restaurado com sucesso!\n`);
+    let count = 0;
+    for await (const statement of readSqlStatements(backupFile)) {
+      await conn.query(statement);
+      count++;
+    }
+    console.log(`   ✅ Backup restaurado com sucesso! (${count} statements)\n`);
   } catch (err) {
     console.log(
       `   ❌ Erro na restauração: ${err instanceof Error ? err.message : err}\n`,
     );
     throw err;
+  } finally {
+    await conn.end().catch(() => undefined);
   }
 }
 
@@ -535,7 +527,7 @@ async function main(): Promise<void> {
           await runMigrations();
           break;
         case '3':
-          await runSeeds();
+          await runSeeds(dbConfig);
           break;
         case '4': {
           const confirm = await promptUser(

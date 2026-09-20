@@ -1,15 +1,14 @@
 // app.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 import { PrismaService } from './database/prisma.service';
-import { promisify } from 'util';
-import { exec } from 'child_process';
 import { Cron } from '@nestjs/schedule';
 import { LicenseSystemService } from './license-system/license-system.service';
 import { version } from '../package.json';
 import { SingleInstance } from './common/decorators/single-instance.decorator';
+import { dumpDatabase } from './common/scripts/database-dump';
 
 const INSTALADOR_INFO = {
   nome: 'BlueTech Informática',
@@ -19,22 +18,59 @@ const INSTALADOR_INFO = {
   instalacao: '22/12/2025',
 };
 
-const execAsync = promisify(exec);
+const BACKUP_HOUR = 5;
 
 @Injectable()
-export class AppService {
+export class AppService implements OnApplicationBootstrap {
   constructor(
     private prisma: PrismaService,
     private licenseService: LicenseSystemService,
   ) {}
 
-  @Cron('0 5 * * *', { name: 'scheduled-backup' }) // Todos os dias às 5h
+  onApplicationBootstrap() {
+    void this.ensureTodayBackup();
+  }
+
+  @Cron(`0 ${BACKUP_HOUR} * * *`, { name: 'scheduled-backup' })
   @SingleInstance()
   async scheduledBackup() {
     console.log('🕐 Executando backup agendado...');
     await this.execBackup();
   }
 
+  @SingleInstance()
+  async ensureTodayBackup() {
+    try {
+      // Antes do horário do cron, o backup de hoje ainda vai rodar sozinho
+      if (new Date().getHours() < BACKUP_HOUR) return;
+
+      if (this.hasBackupToday()) {
+        console.log('✅ Backup do dia já existe.');
+        return;
+      }
+
+      console.log('⚠️ Backup do dia não encontrado. Executando agora...');
+      await this.execBackup();
+    } catch (error) {
+      console.log('❌ Falha na verificação de backup no startup:', error);
+    }
+  }
+
+  private hasBackupToday(): boolean {
+    const backupDir = path.join(process.cwd(), 'backups');
+    if (!fs.existsSync(backupDir)) return false;
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    return fs
+      .readdirSync(backupDir)
+      .filter((file) => file.startsWith('backup-') && file.endsWith('.sql'))
+      .some((file) => {
+        const stats = fs.statSync(path.join(backupDir, file));
+        return stats.size > 0 && stats.mtime >= startOfDay;
+      });
+  }
   async getDashboardData() {
     const uptime = process.uptime();
     const memoryUsage = process.memoryUsage();
@@ -322,24 +358,21 @@ export class AppService {
 
       console.log('🔄 Iniciando backup do banco de dados...');
 
+      fs.mkdirSync(backupDir, { recursive: true });
+
+      await dumpDatabase(
+        {
+          host: '127.0.0.1', // Forçar 127.0.0.1 para Docker
+          port: Number(process.env.DATABASE_PORT) || 3306,
+          user: process.env.DATABASE_USER || 'root',
+          password: process.env.DATABASE_PASSWORD || 'password',
+          database: process.env.DATABASE_NAME || 'db_blue_erp',
+        },
+        backupFile,
+      );
+
+      // Rotação só depois do dump: se ele falhar, nenhum backup antigo é apagado
       this.manageBackupFiles(backupDir, 3);
-
-      const dbName = process.env.DATABASE_NAME || 'db_blue_erp';
-      const dbUser = process.env.DATABASE_USER || 'root';
-      const dbPassword = process.env.DATABASE_PASSWORD || 'password';
-      const dbHost = '127.0.0.1'; // Forçar 127.0.0.1 para Docker
-      const dbPort = process.env.DATABASE_PORT || '3306';
-
-      const mysqldumpPath = process.env.MYSQLDUMP_PATH;
-
-      if (!mysqldumpPath) {
-        console.log('❌ Variável de ambiente MYSQLDUMP_PATH não definida');
-        return;
-      }
-
-      const command = `"${mysqldumpPath}" -h ${dbHost} -P ${dbPort} -u ${dbUser} -p${dbPassword} ${dbName} > "${backupFile}"`;
-
-      await execAsync(command);
 
       console.log(`✅ Backup concluído com sucesso!`);
       console.log(`📁 Arquivo: ${backupFile}`);

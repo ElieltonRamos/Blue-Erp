@@ -1,48 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { PrismaClient } from 'generated/prisma/client';
-
-const MENUS_BASE = [
-  '/clientes',
-  '/produtos',
-  '/usuarios',
-  '/historico-vendas',
-  '/relatorios',
-  '/financeiro',
-  '/empresa',
-  '/pdv',
-];
-
-const MENUS_FISCAL = ['/fiscal', '/compras'];
-const MENUS_SEGMENTO_OFICINA = ['/veiculos', '/servicos', '/ordem-servico'];
-const MENUS_SEGMENTO_RESTAURANTE = ['/comandas', '/cozinha', '/mesas'];
-
-const MENUS_PDV = [...MENUS_BASE];
-
-const MENUS_OFICINA = [
-  ...MENUS_BASE,
-  ...MENUS_FISCAL,
-  ...MENUS_SEGMENTO_OFICINA,
-];
-
-const MENUS_RESTAURANTE = [
-  ...MENUS_BASE,
-  ...MENUS_FISCAL,
-  ...MENUS_SEGMENTO_RESTAURANTE,
-];
-
-const MENUS_VAREJO = [
-  ...MENUS_BASE,
-  ...MENUS_FISCAL,
-  ...MENUS_SEGMENTO_OFICINA,
-  ...MENUS_SEGMENTO_RESTAURANTE,
-];
+import { MENUS_BY_BUSINESS_TYPE } from 'src/common/scripts/database-seed';
 
 const LICENSE_COMPLETO = 'COMPLETO-22222222000122-a7c3e14d8b224a21';
 const LICENSE_PDV = '<chave sem fiscal>';
 
 const businessType = 'PDV';
 const licenseKey = LICENSE_COMPLETO;
-const enabledMenus = MENUS_PDV;
+const enabledMenus = MENUS_BY_BUSINESS_TYPE[businessType];
 
 export async function seedCompany(prisma: PrismaClient) {
   const data = {
