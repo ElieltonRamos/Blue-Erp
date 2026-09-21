@@ -21,6 +21,7 @@ const dbConfig = {
   password: process.env.DATABASE_PASSWORD || 'password',
   database: process.env.DATABASE_NAME || 'db_blue_erp',
   port: Number(process.env.DATABASE_PORT) || 3306,
+  allowPublicKeyRetrieval: true,
 };
 
 // ============================================
@@ -58,16 +59,15 @@ console.log('');
 // ============================================
 
 async function ensureDatabaseExists(): Promise<void> {
-  const conn = await mariadb.createConnection({
-    host: dbConfig.host,
-    user: dbConfig.user,
-    password: dbConfig.password,
-    port: dbConfig.port,
-  });
+  const { database: _database, ...serverConfig } = dbConfig;
+  const conn = await mariadb.createConnection(serverConfig);
 
-  await conn.query(`CREATE DATABASE IF NOT EXISTS \`${dbConfig.database}\``);
-  await conn.end();
-  console.log(`✅ Banco '${dbConfig.database}' verificado/criado`);
+  try {
+    await conn.query(`CREATE DATABASE IF NOT EXISTS \`${dbConfig.database}\``);
+    console.log(`✅ Banco '${dbConfig.database}' verificado/criado`);
+  } finally {
+    await conn.end();
+  }
 }
 
 async function ensureMigrationsTable(conn: mariadb.Connection): Promise<void> {
@@ -166,11 +166,7 @@ async function runMigrations(): Promise<void> {
   }
 
   const conn = await mariadb.createConnection({
-    host: dbConfig.host,
-    user: dbConfig.user,
-    password: dbConfig.password,
-    database: dbConfig.database,
-    port: dbConfig.port,
+    ...dbConfig,
     multipleStatements: true,
   });
 

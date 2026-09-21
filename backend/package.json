@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "",
   "author": "",
   "private": true,
@@ -28,7 +28,7 @@
     "build:frontend": "cd ../frontend && npm run build",
     "copy:frontend": "rm -rf public/frontend && mkdir -p public/frontend/browser && cp -r ../frontend/dist/frontend/browser/. public/frontend/browser/",
     "installer:win": "npm run build && npm run build:frontend && npm run copy:frontend && npm run build:bundle && cp release/server.js nsis-installer-windows/server.js && cp .env nsis-installer-windows/.env && rm -rf nsis-installer-windows/public && cp -r public nsis-installer-windows/public && cd nsis-installer-windows && bash build.sh",
-    "manager-db:win": "npm run build && npx esbuild dist/src/common/scripts/manager-database.js --bundle --platform=node --target=node24 --outfile=release/manager-database.js --minify --packages=external && npx pkg release/manager-database.js --targets node24-win-x64 --output release/manager-database.exe",
+    "manager-db:win": "npm run build && npx esbuild dist/src/common/scripts/manager-database.js --bundle --platform=node --target=node18 --outfile=release/manager-database.js --minify --packages=external && npx pkg release/manager-database.js --targets node18-win-x64 --output release/manager-database.exe",
     "manager-db:linux": "npm run build && npx esbuild dist/src/common/scripts/manager-database.js --bundle --platform=node --target=node24 --outfile=release/manager-database.js --minify --packages=external && npx pkg release/manager-database.js --targets node24-linux-x64 --output release/manager-database-linux"
   },
   "dependencies": {
