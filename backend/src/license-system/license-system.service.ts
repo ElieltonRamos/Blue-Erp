@@ -267,6 +267,7 @@ export class LicenseSystemService {
           licenseKey: company.licenseKey,
           loginAt: new Date().toISOString(),
           version,
+          businessType: company.businessType,
           usage,
         },
         { timeout: this.usageReportTimeoutMs },
