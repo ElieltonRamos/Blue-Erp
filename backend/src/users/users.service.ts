@@ -230,6 +230,7 @@ export class UsersService {
     loginDto: LoginDto,
   ): Promise<{ token: string; licenseWarning?: string }> {
     const { username, password } = loginDto;
+    void this.licenseService.sendUsageReport();
 
     const user = await this.prisma.client.user.findUnique({
       where: { username },
