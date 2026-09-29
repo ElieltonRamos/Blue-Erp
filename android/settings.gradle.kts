@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "garcom-digital"
+rootProject.name = "blue-erp"
 include(":app")
  

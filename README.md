@@ -78,7 +78,7 @@ Blue-Erp/
 │   ├── src/
 │   └── src-tauri/
 │
-└── garcom-digital/
+└── android/
     └── app/
         └── src/
 ```
@@ -216,7 +216,7 @@ Funcionalidades:
 
 ## ⚙️ Configuração do App
 
-Edite `garcom-digital/app/build.gradle.kts` e configure a URL da API:
+Edite `android/app/build.gradle.kts` e configure a URL da API:
 
 ```kotlin
 buildConfigField("String", "BASE_URL", "\"http://SEU_IP:3000/\"")
