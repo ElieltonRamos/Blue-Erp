@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   Injectable,
   ConflictException,
@@ -259,10 +258,15 @@ export class UsersService {
       );
     }
 
+    const company = await this.prisma.client.company.findFirst({
+      select: { businessType: true },
+    });
+
     const payload = {
       userId: user.id,
       username: user.username,
       role: user.role,
+      businessType: company?.businessType,
     };
 
     const token = await this.jwtService.signAsync(payload);
