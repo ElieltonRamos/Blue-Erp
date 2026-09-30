@@ -7,10 +7,10 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.blue_erp.mobile.ui.screens.kitchen_display.KitchenDisplayScreen
+import com.blue_erp.mobile.ui.screens.restaurante.kitchen_display.KitchenDisplayScreen
 import com.blue_erp.mobile.ui.screens.login.LoginScreen
-import com.blue_erp.mobile.ui.screens.order.OrderScreen
-import com.blue_erp.mobile.ui.screens.tables.TablesScreen
+import com.blue_erp.mobile.ui.screens.restaurante.order.OrderScreen
+import com.blue_erp.mobile.ui.screens.restaurante.tables.TablesScreen
 import com.blue_erp.mobile.util.AuthEventBus
 import com.blue_erp.mobile.util.JwtDecoder
 

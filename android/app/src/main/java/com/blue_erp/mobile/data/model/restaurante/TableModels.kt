@@ -1,5 +1,5 @@
 // data/model/Table.kt
-package com.blue_erp.mobile.data.model
+package com.blue_erp.mobile.data.model.restaurante
 
 import com.blue_erp.mobile.data.config.TableAlertConfig
 import com.google.gson.annotations.SerializedName

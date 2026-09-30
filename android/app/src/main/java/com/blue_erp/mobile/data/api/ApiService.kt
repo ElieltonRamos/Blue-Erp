@@ -1,6 +1,19 @@
 package com.blue_erp.mobile.data.api
 
 import com.blue_erp.mobile.data.model.*
+import com.blue_erp.mobile.data.model.restaurante.AddOrderItemsRequest
+import com.blue_erp.mobile.data.model.restaurante.CloseTabRequest
+import com.blue_erp.mobile.data.model.restaurante.CloseTabResponse
+import com.blue_erp.mobile.data.model.restaurante.OccupyTableRequest
+import com.blue_erp.mobile.data.model.restaurante.PaginatedProductResponse
+import com.blue_erp.mobile.data.model.restaurante.ProductionLocationResponse
+import com.blue_erp.mobile.data.model.restaurante.ProductionResponse
+import com.blue_erp.mobile.data.model.restaurante.RemoveOrderItemsRequest
+import com.blue_erp.mobile.data.model.restaurante.ReserveTableRequest
+import com.blue_erp.mobile.data.model.restaurante.TableOrder
+import com.blue_erp.mobile.data.model.restaurante.TableResponse
+import com.blue_erp.mobile.data.model.restaurante.UpdateOrderRequest
+import com.blue_erp.mobile.data.model.restaurante.UpdateServiceChargeRequest
 import retrofit2.Response
 import retrofit2.http.*
 

@@ -1,13 +1,22 @@
-package com.blue_erp.mobile.ui.screens.order
+package com.blue_erp.mobile.ui.screens.restaurante.order
 
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.blue_erp.mobile.data.model.*
-import com.blue_erp.mobile.data.repository.OrderRepository
+import com.blue_erp.mobile.data.model.restaurante.AddOrderItemRequest
+import com.blue_erp.mobile.data.model.restaurante.AddOrderItemsRequest
+import com.blue_erp.mobile.data.model.restaurante.ProductResponse
+import com.blue_erp.mobile.data.model.restaurante.RemoveOrderItemRequest
+import com.blue_erp.mobile.data.model.restaurante.RemoveOrderItemsRequest
+import com.blue_erp.mobile.data.model.restaurante.TableOrder
+import com.blue_erp.mobile.data.model.restaurante.TableOrderItem
+import com.blue_erp.mobile.data.model.restaurante.TableResponse
+import com.blue_erp.mobile.data.model.restaurante.UpdateServiceChargeRequest
+import com.blue_erp.mobile.data.repository.restaurante.OrderRepository
 import com.blue_erp.mobile.data.repository.ProductRepository
-import com.blue_erp.mobile.data.repository.TableRepository
+import com.blue_erp.mobile.data.repository.restaurante.TableRepository
 import com.blue_erp.mobile.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview

@@ -1,12 +1,12 @@
-package com.blue_erp.mobile.ui.screens.kitchen_display
+package com.blue_erp.mobile.ui.screens.restaurante.kitchen_display
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
-import com.blue_erp.mobile.data.model.KitchenOrderItem
-import com.blue_erp.mobile.data.model.ProductionStatus
-import com.blue_erp.mobile.data.model.TimeBadgeColor
+import com.blue_erp.mobile.data.model.restaurante.KitchenOrderItem
+import com.blue_erp.mobile.data.model.restaurante.ProductionStatus
+import com.blue_erp.mobile.data.model.restaurante.TimeBadgeColor
 import com.blue_erp.mobile.ui.theme.BlueErpTheme
 import java.util.Date
 

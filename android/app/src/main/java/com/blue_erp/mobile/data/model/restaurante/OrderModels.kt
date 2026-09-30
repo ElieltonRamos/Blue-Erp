@@ -1,4 +1,4 @@
-package com.blue_erp.mobile.data.model
+package com.blue_erp.mobile.data.model.restaurante
 
 import com.google.gson.annotations.SerializedName
 

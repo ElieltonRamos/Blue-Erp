@@ -1,11 +1,11 @@
-package com.blue_erp.mobile.ui.screens.kitchen_display
+package com.blue_erp.mobile.ui.screens.restaurante.kitchen_display
 
 import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.blue_erp.mobile.data.model.KitchenOrderItem
-import com.blue_erp.mobile.data.model.TimeBadgeColor
-import com.blue_erp.mobile.data.repository.KitchenRepository
+import com.blue_erp.mobile.data.model.restaurante.KitchenOrderItem
+import com.blue_erp.mobile.data.model.restaurante.TimeBadgeColor
+import com.blue_erp.mobile.data.repository.restaurante.KitchenRepository
 import com.blue_erp.mobile.util.JwtDecoder
 import com.blue_erp.mobile.util.MediaPlayerHelper
 import com.blue_erp.mobile.util.Resource

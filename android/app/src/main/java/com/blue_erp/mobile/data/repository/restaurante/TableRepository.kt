@@ -1,8 +1,13 @@
-package com.blue_erp.mobile.data.repository
+package com.blue_erp.mobile.data.repository.restaurante
 
 import android.util.Log
 import com.blue_erp.mobile.data.api.ApiService
-import com.blue_erp.mobile.data.model.*
+import com.blue_erp.mobile.data.model.restaurante.CloseTabRequest
+import com.blue_erp.mobile.data.model.restaurante.CloseTabResponse
+import com.blue_erp.mobile.data.model.restaurante.OccupyTableRequest
+import com.blue_erp.mobile.data.model.restaurante.ProductionLocationResponse
+import com.blue_erp.mobile.data.model.restaurante.ReserveTableRequest
+import com.blue_erp.mobile.data.model.restaurante.TableResponse
 import com.blue_erp.mobile.util.Resource
 import com.blue_erp.mobile.util.parseNetworkError
 import javax.inject.Inject

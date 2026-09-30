@@ -19,7 +19,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.blue_erp.mobile.data.model.*
+import com.blue_erp.mobile.data.model.restaurante.OrderProduction
+import com.blue_erp.mobile.data.model.restaurante.TableAlertLevel
+import com.blue_erp.mobile.data.model.restaurante.TableLocation
+import com.blue_erp.mobile.data.model.restaurante.TableOrder
+import com.blue_erp.mobile.data.model.restaurante.TableOrderItem
+import com.blue_erp.mobile.data.model.restaurante.TableResponse
+import com.blue_erp.mobile.data.model.restaurante.TableStatus
 import com.blue_erp.mobile.ui.theme.BlueErpTheme
 import com.blue_erp.mobile.ui.theme.TableAvailable
 import com.blue_erp.mobile.ui.theme.TableReserved

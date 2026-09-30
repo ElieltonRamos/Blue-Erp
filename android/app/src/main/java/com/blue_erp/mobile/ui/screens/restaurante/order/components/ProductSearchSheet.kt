@@ -1,4 +1,4 @@
-package com.blue_erp.mobile.ui.screens.order.components
+package com.blue_erp.mobile.ui.screens.restaurante.order.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,8 +37,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.blue_erp.mobile.data.model.CategoryResponse
-import com.blue_erp.mobile.data.model.ProductResponse
-import com.blue_erp.mobile.ui.screens.order.currencyFormat
+import com.blue_erp.mobile.data.model.restaurante.ProductResponse
+import com.blue_erp.mobile.ui.screens.restaurante.order.currencyFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

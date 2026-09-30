@@ -1,4 +1,4 @@
-package com.blue_erp.mobile.ui.screens.order
+package com.blue_erp.mobile.ui.screens.restaurante.order
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,14 +12,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.blue_erp.mobile.data.model.ProductResponse
-import com.blue_erp.mobile.ui.screens.order.components.OrderBottomBar
-import com.blue_erp.mobile.ui.screens.order.components.OrderItemCard
-import com.blue_erp.mobile.ui.screens.order.components.ProductDetailSheet
+import com.blue_erp.mobile.data.model.restaurante.ProductResponse
+import com.blue_erp.mobile.ui.screens.restaurante.order.components.OrderBottomBar
+import com.blue_erp.mobile.ui.screens.restaurante.order.components.OrderItemCard
+import com.blue_erp.mobile.ui.screens.restaurante.order.components.ProductDetailSheet
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
-import com.blue_erp.mobile.ui.screens.order.components.ProductSearchSheet
-import com.blue_erp.mobile.ui.screens.order.components.TabSummaryDialog
+import com.blue_erp.mobile.ui.screens.restaurante.order.components.ProductSearchSheet
+import com.blue_erp.mobile.ui.screens.restaurante.order.components.TabSummaryDialog
 import java.text.NumberFormat
 import java.util.Locale
 

@@ -1,4 +1,4 @@
-package com.blue_erp.mobile.ui.screens.tables
+package com.blue_erp.mobile.ui.screens.restaurante.tables
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -34,10 +34,10 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
-import com.blue_erp.mobile.data.model.ProductionLocationResponse
-import com.blue_erp.mobile.data.model.TableLocation
-import com.blue_erp.mobile.data.model.TableResponse
-import com.blue_erp.mobile.data.model.TableStatus
+import com.blue_erp.mobile.data.model.restaurante.ProductionLocationResponse
+import com.blue_erp.mobile.data.model.restaurante.TableLocation
+import com.blue_erp.mobile.data.model.restaurante.TableResponse
+import com.blue_erp.mobile.data.model.restaurante.TableStatus
 import com.blue_erp.mobile.ui.components.TableCard
 import com.blue_erp.mobile.ui.theme.BlueErpTheme
 

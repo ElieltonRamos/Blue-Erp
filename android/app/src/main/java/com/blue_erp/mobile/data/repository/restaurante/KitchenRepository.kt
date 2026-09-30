@@ -1,10 +1,11 @@
-package com.blue_erp.mobile.data.repository
+package com.blue_erp.mobile.data.repository.restaurante
 
+import android.util.Log
 import com.blue_erp.mobile.data.api.ApiService
-import com.blue_erp.mobile.data.model.KitchenOrderItem
-import com.blue_erp.mobile.data.model.PreparationStep
-import com.blue_erp.mobile.data.model.ProductionLocationResponse
-import com.blue_erp.mobile.data.model.ProductionStatus
+import com.blue_erp.mobile.data.model.restaurante.KitchenOrderItem
+import com.blue_erp.mobile.data.model.restaurante.PreparationStep
+import com.blue_erp.mobile.data.model.restaurante.ProductionLocationResponse
+import com.blue_erp.mobile.data.model.restaurante.ProductionStatus
 import com.blue_erp.mobile.util.Resource
 import com.blue_erp.mobile.util.parseNetworkError
 import org.json.JSONObject
@@ -80,7 +81,7 @@ class KitchenRepository @Inject constructor(
                 Resource.Error(parseError(response, "Erro ao buscar pedidos da cozinha"))
             }
         } catch (e: Exception) {
-            android.util.Log.e("KitchenRepository", "Erro: ${e::class.java.name} - ${e.message}", e)
+            Log.e("KitchenRepository", "Erro: ${e::class.java.name} - ${e.message}", e)
             Resource.Error(parseNetworkError(e))
         }
     }

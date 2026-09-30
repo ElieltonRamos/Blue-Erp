@@ -1,4 +1,4 @@
-package com.blue_erp.mobile.ui.screens.order.components
+package com.blue_erp.mobile.ui.screens.restaurante.order.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,8 +9,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.blue_erp.mobile.data.model.ProductResponse
-import com.blue_erp.mobile.ui.screens.order.currencyFormat
+import com.blue_erp.mobile.data.model.restaurante.ProductResponse
+import com.blue_erp.mobile.ui.screens.restaurante.order.currencyFormat
+import kotlin.collections.get
 
 enum class ComplementType { SINGLE, MULTI_QTY }
 

@@ -1,7 +1,7 @@
-package com.blue_erp.mobile.ui.screens.kitchen_display
+package com.blue_erp.mobile.ui.screens.restaurante.kitchen_display
 
-import com.blue_erp.mobile.data.model.KitchenOrderItem
-import com.blue_erp.mobile.data.model.ProductionStatus
+import com.blue_erp.mobile.data.model.restaurante.KitchenOrderItem
+import com.blue_erp.mobile.data.model.restaurante.ProductionStatus
 
 data class KitchenDisplayUiState(
     val orders: List<KitchenOrderItem> = emptyList(),

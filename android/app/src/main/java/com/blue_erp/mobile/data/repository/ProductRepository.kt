@@ -2,6 +2,7 @@ package com.blue_erp.mobile.data.repository
 
 import com.blue_erp.mobile.data.api.ApiService
 import com.blue_erp.mobile.data.model.*
+import com.blue_erp.mobile.data.model.restaurante.ProductResponse
 import com.blue_erp.mobile.util.Resource
 import com.blue_erp.mobile.util.parseNetworkError
 import org.json.JSONObject

@@ -1,4 +1,4 @@
-package com.blue_erp.mobile.ui.screens.order.components
+package com.blue_erp.mobile.ui.screens.restaurante.order.components
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,8 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.blue_erp.mobile.data.model.TableOrder
-import com.blue_erp.mobile.data.model.TableOrderItem
+import com.blue_erp.mobile.data.model.restaurante.TableOrder
+import com.blue_erp.mobile.data.model.restaurante.TableOrderItem
 import java.text.NumberFormat
 import java.util.Locale
 

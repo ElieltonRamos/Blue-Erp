@@ -1,7 +1,11 @@
-package com.blue_erp.mobile.data.repository
+package com.blue_erp.mobile.data.repository.restaurante
 
 import com.blue_erp.mobile.data.api.ApiService
-import com.blue_erp.mobile.data.model.*
+import com.blue_erp.mobile.data.model.restaurante.AddOrderItemsRequest
+import com.blue_erp.mobile.data.model.restaurante.RemoveOrderItemsRequest
+import com.blue_erp.mobile.data.model.restaurante.TableOrder
+import com.blue_erp.mobile.data.model.restaurante.UpdateOrderRequest
+import com.blue_erp.mobile.data.model.restaurante.UpdateServiceChargeRequest
 import com.blue_erp.mobile.util.Resource
 import com.blue_erp.mobile.util.parseNetworkError
 import org.json.JSONObject

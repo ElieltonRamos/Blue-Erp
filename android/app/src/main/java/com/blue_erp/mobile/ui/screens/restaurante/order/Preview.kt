@@ -1,9 +1,9 @@
-package com.blue_erp.mobile.ui.screens.order
+package com.blue_erp.mobile.ui.screens.restaurante.order
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import com.blue_erp.mobile.data.model.TableOrder
-import com.blue_erp.mobile.data.model.TableOrderItem
+import com.blue_erp.mobile.data.model.restaurante.TableOrder
+import com.blue_erp.mobile.data.model.restaurante.TableOrderItem
 import com.blue_erp.mobile.ui.theme.BlueErpTheme
 
 

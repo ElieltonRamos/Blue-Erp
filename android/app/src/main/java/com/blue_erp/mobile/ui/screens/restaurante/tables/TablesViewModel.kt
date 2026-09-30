@@ -1,12 +1,12 @@
-package com.blue_erp.mobile.ui.screens.tables
+package com.blue_erp.mobile.ui.screens.restaurante.tables
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.blue_erp.mobile.data.model.ProductionLocationResponse
-import com.blue_erp.mobile.data.model.TableResponse
-import com.blue_erp.mobile.data.model.TableStatus
+import com.blue_erp.mobile.data.model.restaurante.ProductionLocationResponse
+import com.blue_erp.mobile.data.model.restaurante.TableResponse
+import com.blue_erp.mobile.data.model.restaurante.TableStatus
 import com.blue_erp.mobile.data.repository.AuthRepository
-import com.blue_erp.mobile.data.repository.TableRepository
+import com.blue_erp.mobile.data.repository.restaurante.TableRepository
 import com.blue_erp.mobile.util.JwtDecoder
 import com.blue_erp.mobile.util.Resource
 import com.blue_erp.mobile.util.TokenManager

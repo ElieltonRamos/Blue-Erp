@@ -1,4 +1,4 @@
-package com.blue_erp.mobile.ui.screens.kitchen_display
+package com.blue_erp.mobile.ui.screens.restaurante.kitchen_display
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
@@ -35,8 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.blue_erp.mobile.data.model.KitchenOrderItem
-import com.blue_erp.mobile.data.model.TimeBadgeColor
+import com.blue_erp.mobile.data.model.restaurante.KitchenOrderItem
+import com.blue_erp.mobile.data.model.restaurante.TimeBadgeColor
 import com.blue_erp.mobile.util.isAndroidTv
 import kotlinx.coroutines.launch
 
