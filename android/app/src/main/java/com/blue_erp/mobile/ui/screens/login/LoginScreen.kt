@@ -17,11 +17,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -37,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.blue_erp.mobile.ui.theme.BlueErpTheme
 import com.blue_erp.mobile.util.isAndroidTv
+import com.blue_erp.mobile.R
 
 @Composable
 fun LoginScreen(
@@ -113,9 +116,12 @@ private fun LoginScreenContent(
             Spacer(modifier = Modifier.height(if (imeVisible) 16.dp else 48.dp))
 
             Image(
-                painter = painterResource(id = R.drawable.logo_app_garcom),
-                contentDescription = "Logo Garçom Digital",
-                modifier = Modifier.size(logoSize)
+                painter = painterResource(id = R.drawable.blue_erp),
+                contentDescription = "Logo Blue Erp",
+                modifier = Modifier
+                    .size(logoSize)
+                    .clip(RoundedCornerShape(24.dp)),
+                contentScale = ContentScale.Crop
             )
 
             Spacer(modifier = Modifier.height(if (imeVisible) 24.dp else 48.dp))
