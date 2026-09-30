@@ -7,4 +7,6 @@ sealed class Screen(val route: String) {
     data object Order   : Screen("order/{tableId}") {
         fun createRoute(tableId: Int) = "order/$tableId"
     }
+    data object Unavailable : Screen("unavailable")
+    data object Documents   : Screen("documents")
 }

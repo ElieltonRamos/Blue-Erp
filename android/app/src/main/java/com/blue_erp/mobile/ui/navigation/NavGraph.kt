@@ -6,8 +6,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.blue_erp.mobile.ui.screens.login.LoginScreen
+import com.blue_erp.mobile.ui.screens.unavailable.UnavailableScreen
 import com.blue_erp.mobile.util.AuthEventBus
-import com.blue_erp.mobile.util.JwtDecoder
 
 @Composable
 fun NavGraph(
@@ -31,12 +31,7 @@ fun NavGraph(
         composable(Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = { token ->
-                    val role = JwtDecoder.getRole(token)
-                    val destination = when (role) {
-                        "cozinheiro" -> Screen.Kitchen.route
-                        else -> Screen.Tables.route
-                    }
-                    navController.navigate(destination) {
+                    navController.navigate(destinationFor(token)) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 },
@@ -47,5 +42,15 @@ fun NavGraph(
 
         restauranteGraph(navController)
         oficinaGraph(navController)
+
+        composable(Screen.Unavailable.route) {
+            UnavailableScreen(
+                onBack = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
     }
 }

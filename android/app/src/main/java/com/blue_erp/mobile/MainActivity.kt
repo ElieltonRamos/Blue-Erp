@@ -14,9 +14,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.blue_erp.mobile.ui.navigation.NavGraph
 import com.blue_erp.mobile.ui.navigation.Screen
+import com.blue_erp.mobile.ui.navigation.destinationFor
 import com.blue_erp.mobile.ui.theme.BlueErpTheme
 import com.blue_erp.mobile.ui.theme.ThemeViewModel
-import com.blue_erp.mobile.util.JwtDecoder
 import com.blue_erp.mobile.util.TokenManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -42,10 +42,7 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(Unit) {
                     val token = tokenManager.getToken()
                     startDestination = if (!token.isNullOrBlank()) {
-                        when (JwtDecoder.getRole(token)) {
-                            "cozinheiro" -> Screen.Kitchen.route
-                            else -> Screen.Tables.route
-                        }
+                        destinationFor(token)
                     } else {
                         Screen.Login.route
                     }
@@ -56,7 +53,6 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         startDestination = destination,
                         onToggleTheme = {
-                            android.util.Log.d("THEME", "toggle called, current: $isDarkTheme")
                             themeViewModel.toggle()
                         },
                         isDarkTheme = isDarkTheme

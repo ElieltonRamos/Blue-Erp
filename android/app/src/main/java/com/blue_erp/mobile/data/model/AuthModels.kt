@@ -12,3 +12,11 @@ data class LoginResponse(
     @SerializedName("licenseWarning")
     val licenseWarning: String? = null
 )
+
+enum class BusinessType {
+    RESTAURANTE, OFICINA, VAREJO, PDV;
+
+    companion object {
+        fun from(value: String?): BusinessType? = entries.firstOrNull { it.name == value }
+    }
+}
