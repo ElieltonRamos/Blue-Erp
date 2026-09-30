@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.blue_erp.garcom_digital"
+    namespace = "com.blue_erp.mobile"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.blue_erp.garcom_digital"
+        applicationId = "com.blue_erp.mobile"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

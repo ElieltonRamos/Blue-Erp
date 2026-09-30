@@ -17,7 +17,7 @@
         android:required="false" />
 
     <application
-        android:name=".GarcomDigitalApp"
+        android:name=".BlueErpApp"
         android:allowBackup="true"
         android:banner="@mipmap/ic_launcher"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -26,7 +26,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Garcomdigital"
+        android:theme="@style/Theme.BlueErp"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
 
@@ -34,7 +34,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Garcomdigital"
+            android:theme="@style/Theme.BlueErp"
             android:configChanges="keyboard|keyboardHidden|navigation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
