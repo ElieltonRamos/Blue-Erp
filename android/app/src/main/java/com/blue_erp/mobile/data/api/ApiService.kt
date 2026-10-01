@@ -1,6 +1,18 @@
 package com.blue_erp.mobile.data.api
 
 import com.blue_erp.mobile.data.model.*
+import com.blue_erp.mobile.data.model.oficina.AddDocumentItemRequest
+import com.blue_erp.mobile.data.model.oficina.AssetResponse
+import com.blue_erp.mobile.data.model.oficina.ClientResponse
+import com.blue_erp.mobile.data.model.oficina.CreateDocumentRequest
+import com.blue_erp.mobile.data.model.oficina.DocumentResponse
+import com.blue_erp.mobile.data.model.oficina.DocumentStatus
+import com.blue_erp.mobile.data.model.oficina.DocumentType
+import com.blue_erp.mobile.data.model.oficina.FinalizeDocumentRequest
+import com.blue_erp.mobile.data.model.oficina.PageResponse
+import com.blue_erp.mobile.data.model.oficina.UpdateDocumentItemRequest
+import com.blue_erp.mobile.data.model.oficina.UpdateDocumentResponsibleRequest
+import com.blue_erp.mobile.data.model.oficina.UpdateDocumentStatusRequest
 import com.blue_erp.mobile.data.model.restaurante.AddOrderItemsRequest
 import com.blue_erp.mobile.data.model.restaurante.CloseTabRequest
 import com.blue_erp.mobile.data.model.restaurante.CloseTabResponse
@@ -99,4 +111,76 @@ interface ApiService {
         @Query("active") active: Boolean = true,
         @Query("categoryId") categoryId: Int? = null
     ): Response<PaginatedProductResponse>
+
+    // Clients
+    @GET("clients/search")
+    suspend fun searchClients(@Query("name") name: String): Response<List<ClientResponse>>
+
+    // Assets
+    @GET("assets")
+    suspend fun getAssets(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 50,
+        @Query("search") search: String? = null,
+        @Query("clientId") clientId: Int? = null,
+        @Query("type") type: String? = null,
+        @Query("sortKey") sortKey: String = "clientId",
+        @Query("sortOrder") sortOrder: String = "asc"
+    ): Response<PageResponse<AssetResponse>>
+
+    // Documents
+    @GET("documents")
+    suspend fun getDocuments(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 20,
+        @Query("type") type: DocumentType? = null,
+        @Query("status") status: DocumentStatus? = null,
+        @Query("clientId") clientId: Int? = null,
+        @Query("assetId") assetId: Int? = null,
+        @Query("userId") userId: Int? = null,
+        @Query("startDate") startDate: String? = null,
+        @Query("endDate") endDate: String? = null,
+        @Query("minTotal") minTotal: Double? = null,
+        @Query("maxTotal") maxTotal: Double? = null
+    ): Response<PageResponse<DocumentResponse>>
+
+    @GET("documents/{id}")
+    suspend fun getDocument(@Path("id") id: Int): Response<DocumentResponse>
+
+    @POST("documents")
+    suspend fun createDocument(@Body request: CreateDocumentRequest): Response<DocumentResponse>
+
+    @POST("documents/{id}/items")
+    suspend fun addDocumentItem(@Path("id") id: Int, @Body request: AddDocumentItemRequest): Response<DocumentResponse>
+
+    @PATCH("documents/{id}/items/{itemId}")
+    suspend fun updateDocumentItem(
+        @Path("id") id: Int,
+        @Path("itemId") itemId: Int,
+        @Body request: UpdateDocumentItemRequest
+    ): Response<DocumentResponse>
+
+    @DELETE("documents/{id}/items/{itemId}")
+    suspend fun removeDocumentItem(@Path("id") id: Int, @Path("itemId") itemId: Int): Response<DocumentResponse>
+
+    @PATCH("documents/{id}/approve")
+    suspend fun approveDocument(@Path("id") id: Int): Response<DocumentResponse>
+
+    @PATCH("documents/{id}/status")
+    suspend fun updateDocumentStatus(@Path("id") id: Int, @Body request: UpdateDocumentStatusRequest): Response<DocumentResponse>
+
+    @PATCH("documents/{id}/cancel")
+    suspend fun cancelDocument(@Path("id") id: Int): Response<DocumentResponse>
+
+    @PATCH("documents/{id}/reopen")
+    suspend fun reopenDocument(@Path("id") id: Int): Response<DocumentResponse>
+
+    @PATCH("documents/{id}/responsible")
+    suspend fun updateDocumentResponsible(
+        @Path("id") id: Int,
+        @Body request: UpdateDocumentResponsibleRequest
+    ): Response<DocumentResponse>
+
+    @POST("sales/finalize-document/{id}")
+    suspend fun finalizeDocument(@Path("id") id: Int, @Body request: FinalizeDocumentRequest): Response<Unit>
 }
