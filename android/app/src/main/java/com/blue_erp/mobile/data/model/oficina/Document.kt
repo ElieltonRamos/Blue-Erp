@@ -79,3 +79,15 @@ data class FinalizeDocumentRequest(
     val cfop: String? = null,
     val payments: List<SalePaymentRequest>
 )
+
+data class DocumentFilters(
+    val type: DocumentType? = null,
+    val status: DocumentStatus? = null,
+    val clientId: Int? = null,
+    val assetId: Int? = null,
+    val userId: Int? = null,
+    val startDate: String? = null, // yyyy-MM-dd
+    val endDate: String? = null,   // yyyy-MM-dd
+    val minTotal: Double? = null,
+    val maxTotal: Double? = null
+)
