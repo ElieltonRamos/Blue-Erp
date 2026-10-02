@@ -17,7 +17,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        buildConfigField("String", "BASE_URL", "\"http://192.168.1.104:3000/api/\"") // servidor teste
+        buildConfigField("String", "BASE_URL", "\"http://192.168.254.143:3000/api/\"") // servidor teste
 //        buildConfigField("String", "BASE_URL", "\"https://blue-erp-api.portfoliostudio.cfd/api/\"") // teste nuvem
 //        buildConfigField("String", "BASE_URL", "\"http://100.90.243.105:3000/api/\"") // vpn casa do lago
 //        buildConfigField("String", "BASE_URL", "\"http://192.168.0.219:3000/api/\"") // casa do lago

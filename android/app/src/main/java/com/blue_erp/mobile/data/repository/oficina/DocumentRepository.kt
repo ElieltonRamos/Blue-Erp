@@ -1,6 +1,7 @@
 package com.blue_erp.mobile.data.repository.oficina
 
 import com.blue_erp.mobile.data.api.ApiService
+import com.blue_erp.mobile.data.model.UserResponse
 import com.blue_erp.mobile.data.model.oficina.*
 import com.blue_erp.mobile.util.Resource
 import com.blue_erp.mobile.util.parseNetworkError
@@ -115,8 +116,47 @@ class DocumentRepository @Inject constructor(
 
     // Apoio à criação
 
+    suspend fun getUsers(active: Boolean? = true): Resource<List<UserResponse>> =
+        safeCall("Erro ao buscar usuários") { apiService.getUsers(active = active) }
+
+    suspend fun getAsset(id: Int): Resource<AssetResponse> =
+        safeCall("Erro ao buscar veículo") { apiService.getAsset(id) }
+
+    suspend fun getUsers(active: Boolean? = true, role: String? = null): Resource<List<UserResponse>> =
+        safeCall("Erro ao buscar usuários") { apiService.getUsers(active = active, role = role) }
     suspend fun searchClients(name: String): Resource<List<ClientResponse>> =
         safeCall("Erro ao buscar clientes") { apiService.searchClients(name) }
+
+    suspend fun searchProducts(search: String): Resource<List<CatalogOption>> {
+        return try {
+            val response = apiService.getProducts(limit = 10, search = search)
+            if (response.isSuccessful) {
+                // Ajuste aqui se os campos do ProductResponse tiverem outros nomes
+                val options = response.body()?.data.orEmpty()
+                    .map { CatalogOption(it.id, it.name, it.price) }
+                Resource.Success(options)
+            } else {
+                Resource.Error(parseError(response, "Erro ao buscar peças"))
+            }
+        } catch (e: Exception) {
+            Resource.Error(parseNetworkError(e))
+        }
+    }
+
+    suspend fun searchServices(search: String): Resource<List<CatalogOption>> {
+        return try {
+            val response = apiService.getServices(limit = 10, search = search)
+            if (response.isSuccessful) {
+                val options = response.body()?.data.orEmpty()
+                    .map { CatalogOption(it.id, it.name, it.price) }
+                Resource.Success(options)
+            } else {
+                Resource.Error(parseError(response, "Erro ao buscar serviços"))
+            }
+        } catch (e: Exception) {
+            Resource.Error(parseNetworkError(e))
+        }
+    }
 
     suspend fun getAssets(
         clientId: Int? = null,

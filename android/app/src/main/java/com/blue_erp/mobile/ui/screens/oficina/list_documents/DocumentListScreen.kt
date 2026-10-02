@@ -1,4 +1,4 @@
-package com.blue_erp.mobile.ui.screens.oficina.documents
+package com.blue_erp.mobile.ui.screens.oficina.list_documents
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -43,19 +43,6 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 private val displayDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-
-private fun DocumentStatus.label() = when (this) {
-    DocumentStatus.DRAFT -> "Orçamento"
-    DocumentStatus.APPROVED -> "Aprovado"
-    DocumentStatus.IN_PROGRESS -> "Em andamento"
-    DocumentStatus.COMPLETED -> "Concluído"
-    DocumentStatus.CANCELED -> "Cancelado"
-}
-
-private fun DocumentType.label() = when (this) {
-    DocumentType.QUOTE -> "Orçamento"
-    DocumentType.SERVICE_ORDER -> "Ordem de Serviço"
-}
 
 @Composable
 fun DocumentListScreen(
@@ -430,7 +417,7 @@ private fun FiltersPanel(
 }
 
 @Composable
-private fun <T> SearchFilterField(
+internal fun <T> SearchFilterField(
     label: String,
     placeholder: String,
     term: String,
@@ -487,7 +474,7 @@ private fun <T> SearchFilterField(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun <T> FilterDropdown(
+internal fun <T> FilterDropdown(
     label: String,
     selectedText: String,
     options: List<Pair<String, T?>>,

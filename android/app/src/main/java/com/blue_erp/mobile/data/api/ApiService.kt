@@ -10,6 +10,7 @@ import com.blue_erp.mobile.data.model.oficina.DocumentStatus
 import com.blue_erp.mobile.data.model.oficina.DocumentType
 import com.blue_erp.mobile.data.model.oficina.FinalizeDocumentRequest
 import com.blue_erp.mobile.data.model.oficina.PageResponse
+import com.blue_erp.mobile.data.model.oficina.ServiceResponse
 import com.blue_erp.mobile.data.model.oficina.UpdateDocumentItemRequest
 import com.blue_erp.mobile.data.model.oficina.UpdateDocumentResponsibleRequest
 import com.blue_erp.mobile.data.model.oficina.UpdateDocumentStatusRequest
@@ -180,6 +181,27 @@ interface ApiService {
         @Path("id") id: Int,
         @Body request: UpdateDocumentResponsibleRequest
     ): Response<DocumentResponse>
+
+    // Users
+    @GET("users")
+    suspend fun getUsers(
+        @Query("active") active: Boolean? = null,
+        @Query("role") role: String? = null
+    ): Response<List<UserResponse>>
+
+    @GET("assets/{id}")
+    suspend fun getAsset(@Path("id") id: Int): Response<AssetResponse>
+
+    // Services (catálogo)
+    @GET("services")
+    suspend fun getServices(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 10,
+        @Query("search") search: String? = null,
+        @Query("active") active: Boolean? = true,
+        @Query("sortKey") sortKey: String = "name",
+        @Query("sortOrder") sortOrder: String = "asc"
+    ): Response<PageResponse<ServiceResponse>>
 
     @POST("sales/finalize-document/{id}")
     suspend fun finalizeDocument(@Path("id") id: Int, @Body request: FinalizeDocumentRequest): Response<Unit>

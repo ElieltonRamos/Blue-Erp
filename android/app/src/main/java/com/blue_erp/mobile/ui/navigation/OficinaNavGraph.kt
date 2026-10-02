@@ -1,14 +1,13 @@
 package com.blue_erp.mobile.ui.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
-import com.blue_erp.mobile.ui.screens.oficina.documents.DocumentListScreen
+import androidx.navigation.navArgument
+import com.blue_erp.mobile.ui.screens.oficina.create_document.DocumentCreateScreen
+import com.blue_erp.mobile.ui.screens.oficina.detail_document.DocumentDetailScreen
+import com.blue_erp.mobile.ui.screens.oficina.list_documents.DocumentListScreen
 
 fun NavGraphBuilder.oficinaGraph(navController: NavHostController) {
     composable(Screen.Documents.route) {
@@ -18,8 +17,29 @@ fun NavGraphBuilder.oficinaGraph(navController: NavHostController) {
                     popUpTo(0) { inclusive = true }
                 }
             },
-            onDocumentClick = { /* detalhe: próximo passo */ },
-            onCreateClick = { /* criação: próximo passo */ }
+            onDocumentClick = { id ->
+                navController.navigate(Screen.DocumentDetail.createRoute(id))
+            },
+            onCreateClick = { navController.navigate(Screen.DocumentCreate.route) }
         )
+    }
+
+    composable(Screen.DocumentCreate.route) {
+        DocumentCreateScreen(
+            onBack = { navController.popBackStack() },
+            onCreated = { id ->
+                // Abre o detalhe e remove a criação da pilha: voltar leva à listagem
+                navController.navigate(Screen.DocumentDetail.createRoute(id)) {
+                    popUpTo(Screen.DocumentCreate.route) { inclusive = true }
+                }
+            }
+        )
+    }
+
+    composable(
+        route = Screen.DocumentDetail.route,
+        arguments = listOf(navArgument("documentId") { type = NavType.IntType })
+    ) {
+        DocumentDetailScreen(onBack = { navController.popBackStack() })
     }
 }

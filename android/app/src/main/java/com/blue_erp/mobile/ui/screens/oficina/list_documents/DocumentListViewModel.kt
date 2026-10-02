@@ -1,4 +1,4 @@
-package com.blue_erp.mobile.ui.screens.oficina.documents
+package com.blue_erp.mobile.ui.screens.oficina.list_documents
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

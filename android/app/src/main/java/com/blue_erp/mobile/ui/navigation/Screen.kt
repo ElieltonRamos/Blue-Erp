@@ -8,5 +8,9 @@ sealed class Screen(val route: String) {
         fun createRoute(tableId: Int) = "order/$tableId"
     }
     data object Unavailable : Screen("unavailable")
+    data object DocumentCreate : Screen("document_create")
     data object Documents   : Screen("documents")
+    data object DocumentDetail : Screen("document_detail/{documentId}") {
+        fun createRoute(documentId: Int) = "document_detail/$documentId"
+    }
 }
