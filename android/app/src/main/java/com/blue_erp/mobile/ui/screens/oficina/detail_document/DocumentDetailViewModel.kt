@@ -113,7 +113,10 @@ class DocumentDetailViewModel @Inject constructor(
                         editingItem = null,
                         itemToRemove = null,
                         showCancelDialog = false,
-                        showResponsibleDialog = false
+                        showResponsibleDialog = false,
+                        showAddSheet = false,
+                        catalogResults = emptyList(),
+                        isSearchingCatalog = false
                     )
                 }
                 is Resource.Error -> _uiState.update {
