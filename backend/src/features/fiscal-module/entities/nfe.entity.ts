@@ -132,3 +132,10 @@ export interface Nfe55Options {
   };
   infAdic?: string;
 }
+
+export interface DanfeNfeConfig {
+  /** PNG ou JPG do logotipo do emitente (opcional) */
+  logo?: Buffer;
+  /** Exibido na identificação do emitente (opcional) */
+  emitterEmail?: string;
+}
