@@ -5,8 +5,8 @@ import { PrismaService } from 'src/database/prisma.service';
 import {
   NFeOptions,
   NFeProduct,
-} from 'src/fiscal-module/entities/fiscal-module.entity';
-import { FiscalException } from 'src/fiscal-module/fiscal.exception';
+} from 'src/features/fiscal-module/entities/fiscal-module.entity';
+import { FiscalException } from 'src/features/fiscal-module/fiscal.exception';
 import {
   PAYMENT_MAP,
   TaxSummary,

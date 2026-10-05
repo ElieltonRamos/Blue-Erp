@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CompanyService } from '../../features/company/company.service';
-import { IbptService } from '../../ibpt/ibpt.service';
+import { CompanyService } from '../../company/company.service';
+import { IbptService } from '../../../ibpt/ibpt.service';
 import { StorageService } from './storage.service';
-import { SaleToNfeConverterService } from '../../sales/sale-to-nfe-converte.service';
+import { SaleToNfeConverterService } from '../../../sales/sale-to-nfe-converte.service';
 import {
   NfceAlreadyEmittedException,
   CertificateException,
