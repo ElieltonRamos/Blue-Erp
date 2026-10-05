@@ -1,6 +1,6 @@
 import * as forge from 'node-forge';
 import { SignedXml } from 'xml-crypto';
-import { DigitalCertificate } from '../entities/fiscal-module.entity';
+import { DigitalCertificate } from '../../entities/fiscal-module.entity';
 
 export class NfeSigner {
   private readonly certificate: DigitalCertificate;

@@ -4,11 +4,10 @@ import {
   SefazReturn,
   NFeOptions,
   CancelNFeParams,
-} from '../entities/fiscal-module.entity';
+} from '../../entities/fiscal-module.entity';
 import { NfeSigner } from './nfe-signer';
 import { NfeHttpClient } from './nfe-http.client';
 import { NfeResponseParser } from './nfe-response.parser';
-import { buildQrCodeUrl } from './nfe-xml-builder';
 import { nowBrasilia, toSefazDateTime } from 'src/common/date-utils';
 import {
   HOSTS,
@@ -21,6 +20,7 @@ import {
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { Logger } from '@nestjs/common';
+import { buildQrCodeUrl } from '../xml/nfce-xml-builder';
 
 export class NfeSender {
   private readonly config: NFeConfiguration;

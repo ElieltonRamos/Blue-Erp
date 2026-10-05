@@ -1,50 +1,8 @@
 import { create } from 'xmlbuilder2';
-import { NFeOptions, NFeProduct } from '../entities/fiscal-module.entity';
 import { createHash } from 'crypto';
-import { PORTAL_URLS } from './nfe-endpoints.config';
-
-function calculateCheckDigit(key43: string): string {
-  const multipliers = [2, 3, 4, 5, 6, 7, 8, 9];
-  let sum = 0;
-  let idx = 0;
-
-  for (let i = key43.length - 1; i >= 0; i--) {
-    sum += parseInt(key43[i], 10) * multipliers[idx];
-    idx = (idx + 1) % 8;
-  }
-
-  const remainder = sum % 11;
-  return (remainder < 2 ? 0 : 11 - remainder).toString();
-}
-
-function formatDateTimeBR(isoDate: string): string {
-  const date = new Date(isoDate);
-  const offset = -3 * 60;
-  const local = new Date(date.getTime() + offset * 60 * 1000);
-  const pad = (n: number) => n.toString().padStart(2, '0');
-
-  return `${local.getUTCFullYear()}-${pad(local.getUTCMonth() + 1)}-${pad(local.getUTCDate())}T${pad(local.getUTCHours())}:${pad(local.getUTCMinutes())}:${pad(local.getUTCSeconds())}-03:00`;
-}
-
-function generateAccessKey(ide: NFeOptions['ide'], cnpj: string): string {
-  const cleanCnpj = cnpj.replace(/\D/g, '');
-  const date = new Date(ide.dhEmi);
-  const yy = date.getFullYear().toString().slice(-2);
-  const mm = (date.getMonth() + 1).toString().padStart(2, '0');
-
-  const key43 =
-    ide.cUF.padStart(2, '0') +
-    yy +
-    mm +
-    cleanCnpj.padStart(14, '0') +
-    ide.mod +
-    ide.serie.padStart(3, '0') +
-    ide.nNF.padStart(9, '0') +
-    ide.tpEmis +
-    ide.cNF.padStart(8, '0');
-
-  return key43 + calculateCheckDigit(key43);
-}
+import { NFeOptions, NFeProduct } from '../../entities/fiscal-module.entity';
+import { PORTAL_URLS } from '../transport/nfe-endpoints.config';
+import { formatDateTimeBR, generateAccessKey } from './xml-common';
 
 function buildIcmsGroup(item: NFeProduct): Record<string, any> {
   const orig = item.origem.toString();
@@ -217,9 +175,18 @@ function buildDetPag(data: NFeOptions) {
 }
 
 export function generateNFeXML(data: NFeOptions): string {
-  const accessKey = generateAccessKey(data.ide, data.emit.CNPJ);
-  data.ide.cDV = accessKey.slice(-1);
   data.ide.dhEmi = formatDateTimeBR(data.ide.dhEmi);
+  const accessKey = generateAccessKey({
+    cUF: data.ide.cUF,
+    dhEmiBR: data.ide.dhEmi,
+    cnpj: data.emit.CNPJ,
+    mod: data.ide.mod,
+    serie: data.ide.serie,
+    nNF: data.ide.nNF,
+    tpEmis: data.ide.tpEmis,
+    cNF: data.ide.cNF,
+  });
+  data.ide.cDV = accessKey.slice(-1);
   data.ide.nNF = parseInt(data.ide.nNF, 10).toString();
   const taxPerItem = data.produtos.map((p) => buildItemTax(p));
 

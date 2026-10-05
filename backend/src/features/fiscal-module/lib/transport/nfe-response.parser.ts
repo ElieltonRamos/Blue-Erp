@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { parseString } from 'xml2js';
 import { promisify } from 'util';
-import { SefazReturn } from '../entities/fiscal-module.entity';
+import { SefazReturn } from '../../entities/fiscal-module.entity';
 
 const parseXML = promisify(parseString);
 

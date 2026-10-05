@@ -8,7 +8,7 @@ import {
   NFeOptions,
   DanfeConfig,
   DanfeTotals,
-} from '../entities/fiscal-module.entity';
+} from '../../entities/fiscal-module.entity';
 
 const PAYMENT_LABELS: Record<string, string> = {
   '01': 'Dinheiro',

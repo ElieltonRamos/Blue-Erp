@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { StorageService } from './storage.service';
-import { DanfeGenerator } from '../lib/danfe-generator';
+import { DanfeGenerator } from '../lib/danfe/nfce-danfe-generator';
 import { NfceNotFoundException } from '../fiscal.exception';
 import { ListNfceDto } from '../dto/list-nfce.dto';
 import { RevenueReportQueryDto } from '../dto/revenue-report-query.dto';

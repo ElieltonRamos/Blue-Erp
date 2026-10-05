@@ -6,7 +6,7 @@ import {
 import { PrismaService } from 'src/database/prisma.service';
 import { CancelNfceDto } from '../dto/cancel-nfce.dto';
 import { FiscalException, NfceNotFoundException } from '../fiscal.exception';
-import { NfeSender } from '../lib/nfe-sender';
+import { NfeSender } from '../lib/transport/nfe-sender';
 import { Sale } from 'generated/prisma/client';
 import { CompanyService } from 'src/features/company/company.service';
 

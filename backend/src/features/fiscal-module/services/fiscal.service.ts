@@ -16,7 +16,7 @@ import {
   InvalidAccessKeyException,
   NfceNotFoundException,
 } from '../fiscal.exception';
-import { NfeSender } from '../lib/nfe-sender';
+import { NfeSender } from '../lib/transport/nfe-sender';
 import { CompanyService } from 'src/features/company/company.service';
 
 @Injectable()
