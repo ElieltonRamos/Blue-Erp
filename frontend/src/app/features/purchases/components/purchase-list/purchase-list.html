@@ -74,6 +74,34 @@
             </div>
           </div>
 
+          @if (
+            preview.transportStateRegistration ||
+            preview.transportCity ||
+            preview.transportState ||
+            preview.transportRntc
+          ) {
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 text-sm">
+              <div>
+                <span class="text-text-muted">IE transportadora:</span>
+                <p class="text-text-primary font-medium">
+                  {{ preview.transportStateRegistration || '—' }}
+                </p>
+              </div>
+              <div>
+                <span class="text-text-muted">Cidade:</span>
+                <p class="text-text-primary font-medium">{{ preview.transportCity || '—' }}</p>
+              </div>
+              <div>
+                <span class="text-text-muted">UF:</span>
+                <p class="text-text-primary font-medium">{{ preview.transportState || '—' }}</p>
+              </div>
+              <div>
+                <span class="text-text-muted">RNTC:</span>
+                <p class="text-text-primary font-medium">{{ preview.transportRntc || '—' }}</p>
+              </div>
+            </div>
+          }
+
           <div class="overflow-x-auto">
             <table class="min-w-full text-left text-sm">
               <thead
@@ -246,6 +274,49 @@
             [style.border-color]="'var(--color-border)'"
             [(ngModel)]="manualInvoiceNumber"
           />
+        </div>
+
+        <div>
+          <label class="block text-text-secondary font-medium mb-2 text-sm"
+            >Transporte (opcional)</label
+          >
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+            <input
+              type="text"
+              placeholder="Inscrição estadual"
+              maxlength="20"
+              class="px-3 py-2 rounded border text-text-primary text-sm"
+              [style.background-color]="'var(--color-surface-alt)'"
+              [style.border-color]="'var(--color-border)'"
+              [(ngModel)]="manualTransportStateRegistration"
+            />
+            <input
+              type="text"
+              placeholder="Cidade"
+              class="px-3 py-2 rounded border text-text-primary text-sm"
+              [style.background-color]="'var(--color-surface-alt)'"
+              [style.border-color]="'var(--color-border)'"
+              [(ngModel)]="manualTransportCity"
+            />
+            <input
+              type="text"
+              placeholder="UF"
+              maxlength="2"
+              class="px-3 py-2 rounded border text-text-primary text-sm uppercase"
+              [style.background-color]="'var(--color-surface-alt)'"
+              [style.border-color]="'var(--color-border)'"
+              [(ngModel)]="manualTransportState"
+            />
+            <input
+              type="text"
+              placeholder="RNTC"
+              maxlength="20"
+              class="px-3 py-2 rounded border text-text-primary text-sm"
+              [style.background-color]="'var(--color-surface-alt)'"
+              [style.border-color]="'var(--color-border)'"
+              [(ngModel)]="manualTransportRntc"
+            />
+          </div>
         </div>
 
         <div>
@@ -602,6 +673,29 @@
 
           @if (isExpanded(purchase.id)) {
             <div class="bg-base/40 px-6 pb-4">
+              @if (purchase.stateRegistration || purchase.city || purchase.state || purchase.rntc) {
+                <p class="text-text-secondary text-xs uppercase font-semibold mt-2 mb-1">
+                  Transporte
+                </p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm mb-3">
+                  <div>
+                    <span class="text-text-muted">IE:</span>
+                    <span class="text-text-primary">{{ purchase.stateRegistration || '—' }}</span>
+                  </div>
+                  <div>
+                    <span class="text-text-muted">Cidade:</span>
+                    <span class="text-text-primary">{{ purchase.city || '—' }}</span>
+                  </div>
+                  <div>
+                    <span class="text-text-muted">UF:</span>
+                    <span class="text-text-primary">{{ purchase.state || '—' }}</span>
+                  </div>
+                  <div>
+                    <span class="text-text-muted">RNTC:</span>
+                    <span class="text-text-primary">{{ purchase.rntc || '—' }}</span>
+                  </div>
+                </div>
+              }
               <p class="text-text-secondary text-xs uppercase font-semibold mt-2 mb-1">Itens</p>
               <table class="min-w-full text-sm mb-3">
                 <tbody>

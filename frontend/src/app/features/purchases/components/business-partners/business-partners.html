@@ -74,6 +74,55 @@
           [(ngModel)]="newPartner.address"
         />
       </div>
+
+            <div class="flex flex-col">
+        <label class="text-sm mb-1 text-text-primary">Inscrição estadual</label>
+        <input
+          type="text"
+          maxlength="20"
+          class="px-3 py-2 rounded border text-text-primary"
+          [style.background-color]="'var(--color-surface-alt)'"
+          [style.border-color]="'var(--color-border)'"
+          [(ngModel)]="newPartner.stateRegistration"
+        />
+      </div>
+
+      <div class="flex flex-col">
+        <label class="text-sm mb-1 text-text-primary">Cidade</label>
+        <input
+          type="text"
+          class="px-3 py-2 rounded border text-text-primary"
+          [style.background-color]="'var(--color-surface-alt)'"
+          [style.border-color]="'var(--color-border)'"
+          [(ngModel)]="newPartner.city"
+        />
+      </div>
+
+      <div class="flex flex-col">
+        <label class="text-sm mb-1 text-text-primary">UF</label>
+        <input
+          type="text"
+          maxlength="2"
+          class="px-3 py-2 rounded border text-text-primary uppercase"
+          [style.background-color]="'var(--color-surface-alt)'"
+          [style.border-color]="'var(--color-border)'"
+          [(ngModel)]="newPartner.state"
+        />
+      </div>
+
+      @if (newPartner.type === 'CARRIER') {
+        <div class="flex flex-col">
+          <label class="text-sm mb-1 text-text-primary">RNTC/ANTT</label>
+          <input
+            type="text"
+            maxlength="20"
+            class="px-3 py-2 rounded border text-text-primary"
+            [style.background-color]="'var(--color-surface-alt)'"
+            [style.border-color]="'var(--color-border)'"
+            [(ngModel)]="newPartner.rntc"
+          />
+        </div>
+      }
     </div>
 
     <button

@@ -35,6 +35,10 @@ export class BusinessPartners {
     phone: '',
     email: '',
     address: '',
+    stateRegistration: '',
+    city: '',
+    state: '',
+    rntc: '',
   };
 
   partnerTypes: { value: PartnerType; label: string }[] = [
@@ -55,6 +59,15 @@ export class BusinessPartners {
     { name: 'phone', label: 'Telefone', type: 'text' },
     { name: 'email', label: 'E-mail', type: 'text' },
     { name: 'address', label: 'Endereço', type: 'text' },
+    { name: 'stateRegistration', label: 'Inscrição estadual', type: 'text' },
+    { name: 'city', label: 'Cidade', type: 'text' },
+    { name: 'state', label: 'UF', type: 'text' },
+    {
+      name: 'rntc',
+      label: 'RNTC/ANTT',
+      type: 'text',
+      showIf: (entity) => entity.type === 'CARRIER',
+    },
   ];
 
   ngOnInit() {
@@ -88,7 +101,13 @@ export class BusinessPartners {
       return;
     }
 
-    this.partnerService.create(this.newPartner).subscribe({
+    const dto: CreateBusinessPartnerDTO = {
+      ...this.newPartner,
+      state: this.newPartner.state?.trim().toUpperCase(),
+      rntc: this.newPartner.type === 'CARRIER' ? this.newPartner.rntc : undefined,
+    };
+
+    this.partnerService.create(dto).subscribe({
       next: () => {
         this.notification.success('Parceiro cadastrado com sucesso');
         this.resetNewPartner();
@@ -108,17 +127,26 @@ export class BusinessPartners {
       phone: '',
       email: '',
       address: '',
+      stateRegistration: '',
+      city: '',
+      state: '',
+      rntc: '',
     };
   }
 
   openEditModal(partner: BusinessPartner) {
     this.editingId = partner.id;
     this.editPartner = {
+      type: partner.type,
       name: partner.name,
       document: partner.document || '',
       phone: partner.phone || '',
       email: partner.email || '',
       address: partner.address || '',
+      stateRegistration: partner.stateRegistration || '',
+      city: partner.city || '',
+      state: partner.state || '',
+      rntc: partner.rntc || '',
     };
     this.showModalEdit = true;
   }
@@ -132,7 +160,10 @@ export class BusinessPartners {
   onEditSave(data: any) {
     if (this.editingId === null) return;
 
-    this.partnerService.update(this.editingId, data).subscribe({
+    const { type: _type, ...rest } = data;
+    const payload = { ...rest, state: rest.state?.trim().toUpperCase() };
+
+    this.partnerService.update(this.editingId, payload).subscribe({
       next: () => {
         this.notification.success('Parceiro atualizado com sucesso');
         this.closeModalEdit();

@@ -40,11 +40,28 @@ export class BusinessPartnerService {
     return partner;
   }
 
-  async findAll(filters: { type?: PartnerType; active?: boolean } = {}) {
+  async findAll(
+    filters: { type?: PartnerType; active?: boolean; search?: string } = {},
+  ) {
     const where: Prisma.BusinessPartnerWhereInput = {
       ...(filters.type && { type: filters.type }),
       ...(filters.active !== undefined && { active: filters.active }),
     };
+
+    const search = filters.search?.trim();
+    if (search) {
+      const searchConditions: Prisma.BusinessPartnerWhereInput[] = [
+        { name: { contains: search } },
+      ];
+
+      // document é salvo só com dígitos; busca por CNPJ/CPF aceita texto formatado
+      const searchDigits = this.cleanDocument(search);
+      if (searchDigits) {
+        searchConditions.push({ document: { contains: searchDigits } });
+      }
+
+      where.OR = searchConditions;
+    }
 
     return this.prisma.client.businessPartner.findMany({
       where,

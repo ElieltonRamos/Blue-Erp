@@ -10,6 +10,10 @@ export interface BusinessPartner {
   phone?: string;
   email?: string;
   address?: string;
+  stateRegistration?: string;
+  city?: string;
+  state?: string;
+  rntc?: string; // código ANTT, só transportadora
   active: boolean;
 }
 
@@ -20,6 +24,10 @@ export interface CreateBusinessPartnerDTO {
   phone?: string;
   email?: string;
   address?: string;
+  stateRegistration?: string;
+  city?: string;
+  state?: string;
+  rntc?: string;
 }
 
 export interface UpdateBusinessPartnerDTO extends Partial<CreateBusinessPartnerDTO> {}

@@ -64,8 +64,12 @@ export class PurchaseList {
   manualSupplierResults: BusinessPartner[] = [];
   manualSupplierSelected: BusinessPartner | null = null;
   private manualSupplierTimer: ReturnType<typeof setTimeout> | null = null;
-
   manualInvoiceNumber = '';
+  manualTransportStateRegistration = '';
+  manualTransportCity = '';
+  manualTransportState = '';
+  manualTransportRntc = '';
+
   manualItems: ManualPurchaseItem[] = [];
   manualInstallments: ManualInstallment[] = [];
 
@@ -237,6 +241,13 @@ export class PurchaseList {
     const dto: CreatePurchaseFromXml = {
       supplierCnpj: this.preview.supplierCnpj,
       supplierName: this.preview.supplierName,
+      supplierStateRegistration: this.preview.supplierStateRegistration,
+      supplierCity: this.preview.supplierCity,
+      supplierState: this.preview.supplierState,
+      transportStateRegistration: this.preview.transportStateRegistration,
+      transportCity: this.preview.transportCity,
+      transportState: this.preview.transportState,
+      transportRntc: this.preview.transportRntc,
       destCnpj: this.preview.destCnpj,
       invoiceNumber: this.preview.invoiceNumber,
       fiscalKey: this.preview.fiscalKey,
@@ -509,9 +520,15 @@ export class PurchaseList {
   private sendManualPurchase() {
     if (!this.manualSupplierSelected) return;
 
+    const text = (value: string) => value.trim() || undefined;
+
     const dto: CreateManualPurchase = {
       supplierId: this.manualSupplierSelected.id,
       invoiceNumber: this.manualInvoiceNumber || undefined,
+      transportStateRegistration: text(this.manualTransportStateRegistration),
+      transportCity: text(this.manualTransportCity),
+      transportState: text(this.manualTransportState)?.toUpperCase(),
+      transportRntc: text(this.manualTransportRntc),
       items: this.manualItems,
       installments: this.manualInstallments,
     };
@@ -534,6 +551,10 @@ export class PurchaseList {
     this.manualSupplierSelected = null;
     this.manualSupplierResults = [];
     this.manualInvoiceNumber = '';
+    this.manualTransportStateRegistration = '';
+    this.manualTransportCity = '';
+    this.manualTransportState = '';
+    this.manualTransportRntc = '';
     this.manualItems = [];
     this.manualInstallments = [];
   }
