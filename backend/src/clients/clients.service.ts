@@ -128,8 +128,11 @@ export class ClientsService {
       throw new NotFoundException('Cliente não encontrado');
     }
 
-    let cpf: string | undefined;
-    if (updateClientDto.cpf) {
+    // null = limpar o campo no banco | undefined = não alterar
+    let cpf: string | null | undefined;
+    if (updateClientDto.cpf === null) {
+      cpf = null;
+    } else if (updateClientDto.cpf) {
       this.validateCpf(updateClientDto.cpf);
       cpf = this.cleanCpf(updateClientDto.cpf);
       if (cpf !== existingClient.cpf) {
@@ -137,8 +140,10 @@ export class ClientsService {
       }
     }
 
-    let cnpj: string | undefined;
-    if (updateClientDto.cnpj) {
+    let cnpj: string | null | undefined;
+    if (updateClientDto.cnpj === null) {
+      cnpj = null;
+    } else if (updateClientDto.cnpj) {
       this.validateCnpj(updateClientDto.cnpj);
       cnpj = this.cleanCnpj(updateClientDto.cnpj);
       if (cnpj !== existingClient.cnpj) {
@@ -146,9 +151,12 @@ export class ClientsService {
       }
     }
 
-    const zipCode = updateClientDto.zipCode
-      ? this.normalizeZipCode(updateClientDto.zipCode)
-      : undefined;
+    let zipCode: string | null | undefined;
+    if (updateClientDto.zipCode === null) {
+      zipCode = null;
+    } else if (updateClientDto.zipCode) {
+      zipCode = this.normalizeZipCode(updateClientDto.zipCode);
+    }
 
     if (updateClientDto.name && updateClientDto.name !== existingClient.name) {
       const nameExists = await this.prisma.client.client.findFirst({

@@ -16,14 +16,22 @@ export class ListClients {
   private clientService = inject(ClientService);
   private notification = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef);
-  
+
   listClients: Client[] = [];
   page: number = 1;
   limit: number = 20;
   totalPages: number = 0;
   totalItems: number = 0;
   showModalEdit: boolean = false;
-  editClient: Client = { name: '', phone: '', address: '', cpf: '', active: true, createdAt: '', updatedAt: '' };
+  editClient: Client = {
+    name: '',
+    phone: '',
+    address: '',
+    cpf: '',
+    active: true,
+    createdAt: '',
+    updatedAt: '',
+  };
 
   // Filtros
   filterName: string = '';
@@ -32,9 +40,25 @@ export class ListClients {
   clientFields: FormField[] = [
     { name: 'name', label: 'Nome', type: 'text' },
     { name: 'phone', label: 'Telefone', type: 'number' },
-    { name: 'address', label: 'Endereço', type: 'text' },
-    { name: 'cpf', label: 'CPF', type: 'number' },
-    { name: 'active', label: 'Status', type: 'select', options: ['Ativo', 'Inativo'] }
+    { name: 'address', label: 'Endereço resumido', type: 'text' },
+    { name: 'cpf', label: 'CPF', type: 'text' },
+    { name: 'cnpj', label: 'CNPJ', type: 'text' },
+    { name: 'stateRegistration', label: 'Inscrição estadual', type: 'text' },
+    {
+      name: 'ieIndicator',
+      label: 'Indicador de IE (1 = contribuinte, 2 = isento, 9 = não contribuinte)',
+      type: 'select',
+      options: ['1', '2', '9'],
+    },
+    { name: 'zipCode', label: 'CEP', type: 'text' },
+    { name: 'street', label: 'Logradouro', type: 'text' },
+    { name: 'number', label: 'Número', type: 'text' },
+    { name: 'complement', label: 'Complemento', type: 'text' },
+    { name: 'neighborhood', label: 'Bairro', type: 'text' },
+    { name: 'city', label: 'Cidade', type: 'text' },
+    { name: 'cityCode', label: 'Código IBGE do município', type: 'text' },
+    { name: 'state', label: 'UF', type: 'text' },
+    { name: 'active', label: 'Status', type: 'select', options: ['Ativo', 'Inativo'] },
   ];
 
   ngOnInit() {
@@ -49,7 +73,7 @@ export class ListClients {
         this.page = response.page;
         this.limit = response.limit;
         this.totalPages = response.totalPages;
-        this.cdr.detectChanges(); 
+        this.cdr.detectChanges();
       },
       error: (e) => {
         this.notification.error(`Erro ao buscar clientes: ${e.error?.message || e.message}`);
