@@ -7,6 +7,7 @@ export type ServiceType =
   | 'inutilization'
   | 'registrationQuery';
 export type EnvironmentType = 'staging' | 'production';
+export type NfeModel = '55' | '65';
 
 export const WEBSERVICES: Record<
   string,
@@ -81,6 +82,73 @@ export const SVRS_STATES = [
   'SE',
   'TO',
 ];
+
+// ===== NF-e (modelo 55) =====
+// WEBSERVICES / HOSTS / SVRS_STATES acima são do modelo 65 (NFC-e).
+
+export const NFE_WEBSERVICES: typeof WEBSERVICES = {
+  MG: {
+    staging: {
+      authorization: '/nfe2/services/NFeAutorizacao4',
+      status: '/nfe2/services/NFeStatusServico4',
+      // TODO: confirmar nome do serviço (NFeConsulta4 ou NFeConsultaProtocolo4)
+      query: '/nfe2/services/NFeConsultaProtocolo4',
+      cancellation: '/nfe2/services/NFeRecepcaoEvento4',
+      returnAuthorization: '',
+      inutilization: '',
+      registrationQuery: '',
+    },
+    // TODO: produção MG (modelo 55) não configurada
+  },
+  SVRS: {
+    staging: {
+      authorization: '/ws/NfeAutorizacao/NFeAutorizacao4.asmx',
+      status: '/ws/NfeStatusServico/NFeStatusServico4.asmx',
+      query: '/ws/NfeConsulta/NfeConsulta4.asmx',
+      cancellation: '/ws/recepcaoevento/recepcaoevento4.asmx',
+      returnAuthorization: '/ws/NfeRetAutorizacao/NFeRetAutorizacao4.asmx',
+      inutilization: '/ws/nfeinutilizacao/nfeinutilizacao4.asmx',
+      registrationQuery: '/ws/cadconsultacadastro/cadconsultacadastro2.asmx',
+    },
+    production: {
+      authorization: '/ws/NfeAutorizacao/NFeAutorizacao4.asmx',
+      status: '/ws/NfeStatusServico/NFeStatusServico4.asmx',
+      query: '/ws/NfeConsulta/NfeConsulta4.asmx',
+      cancellation: '/ws/recepcaoevento/recepcaoevento4.asmx',
+      returnAuthorization: '/ws/NFeRetAutorizacao/NFeRetAutorizacao4.asmx',
+      inutilization: '/ws/nfeinutilizacao/nfeinutilizacao4.asmx',
+      registrationQuery: '/ws/cadconsultacadastro/cadconsultacadastro2.asmx',
+    },
+  },
+};
+
+export const NFE_HOSTS: typeof HOSTS = {
+  MG: {
+    staging: 'hnfe.fazenda.mg.gov.br',
+  },
+  SVRS: {
+    staging: 'nfe-homologacao.svrs.rs.gov.br',
+    production: 'nfe.svrs.rs.gov.br',
+  },
+};
+
+// TODO: não verificado — copiado da lista da NFC-e. Confirmar no Portal Nacional da NF-e.
+export const NFE_SVRS_STATES = [...SVRS_STATES];
+
+export const WEBSERVICES_BY_MODEL: Record<NfeModel, typeof WEBSERVICES> = {
+  '65': WEBSERVICES,
+  '55': NFE_WEBSERVICES,
+};
+
+export const HOSTS_BY_MODEL: Record<NfeModel, typeof HOSTS> = {
+  '65': HOSTS,
+  '55': NFE_HOSTS,
+};
+
+export const SVRS_STATES_BY_MODEL: Record<NfeModel, string[]> = {
+  '65': SVRS_STATES,
+  '55': NFE_SVRS_STATES,
+};
 
 export const UF_CODES: Record<string, string> = {
   AC: '12',

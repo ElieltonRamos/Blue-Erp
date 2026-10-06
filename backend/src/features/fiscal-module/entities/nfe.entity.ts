@@ -35,6 +35,8 @@ export interface Nfe55Item {
   xProd: string;
   ncm: string;
   cest?: string;
+  gtin?: string;
+  gtinTrib?: string;
   cfop: string;
   uCom: string;
   qCom: number;
@@ -107,6 +109,7 @@ export interface Nfe55Options {
       xMun?: string;
       UF?: string;
     };
+    veicTransp?: { placa: string; UF: string; RNTC?: string };
     vol?: {
       qVol?: string;
       esp?: string;

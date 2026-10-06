@@ -338,7 +338,7 @@ export function generateNFe55XML(data: Nfe55Options): string {
       '@nItem': p.nItem.toString(),
       prod: {
         cProd: p.cProd,
-        cEAN: 'SEM GTIN',
+        cEAN: p.gtin || 'SEM GTIN',
         xProd: isHomolog && index === 0 ? HOMOLOG_TEXT : p.xProd,
         NCM: p.ncm,
         ...(p.cest ? { CEST: p.cest } : {}),
@@ -347,7 +347,7 @@ export function generateNFe55XML(data: Nfe55Options): string {
         qCom: p.qCom.toFixed(4),
         vUnCom: p.vUnCom.toFixed(5),
         vProd: vProd.toFixed(2),
-        cEANTrib: 'SEM GTIN',
+        cEANTrib: p.gtinTrib || 'SEM GTIN',
         uTrib: p.uTrib,
         qTrib: p.qTrib.toFixed(4),
         vUnTrib: p.vUnTrib.toFixed(5),

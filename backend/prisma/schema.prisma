@@ -120,6 +120,10 @@ model Company {
   nfceEnvironment           String       @default("staging") @map("nfce_environment")
   nfceCsc                   String       @map("nfce_csc")
   nfceCscId                 String       @map("nfce_csc_id")
+  nfeSeries                 String       @default("1") @map("nfe_series") // NF-e
+  nfeCurrentNumber          Int          @default(0) @map("nfe_current_number") // NF-e
+  nfeEnvironment            String       @default("staging") @map("nfe_environment") // NF-e
+  simplesCreditRate         Decimal?     @map("simples_credit_rate") @db.Decimal(5, 2) // NF-e (pCredSN)
   certificatePath           String       @map("certificate_path")
   certificatePassword       String       @map("certificate_password")
   certificateExpirationDate DateTime?    @map("certificate_expiration_date")
@@ -136,17 +140,28 @@ model Company {
 
 // Cliente do restaurante/PDV/oficina — mantido como está, sem alteração
 model Client {
-  id        Int        @id @default(autoincrement())
-  name      String
-  phone     String?
-  address   String?
-  cpf       String?    @unique
-  active    Boolean    @default(true)
-  sales     Sale[]
-  documents Document[]
-  assets    Asset[]
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
+  id                Int        @id @default(autoincrement())
+  name              String
+  phone             String?
+  address           String?
+  cpf               String?    @unique
+  cnpj              String?    @unique // NF-e
+  stateRegistration String?    @map("state_registration") // NF-e
+  ieIndicator       String?    @map("ie_indicator") // NF-e (indIEDest: 1, 2 ou 9)
+  street            String? // NF-e
+  number            String? // NF-e
+  complement        String? // NF-e
+  neighborhood      String? // NF-e
+  city              String? // NF-e
+  cityCode          String?    @map("city_code") // NF-e (cMun IBGE)
+  state             String? // NF-e
+  zipCode           String?    @map("zip_code") // NF-e
+  active            Boolean    @default(true)
+  sales             Sale[]
+  documents         Document[]
+  assets            Asset[]
+  createdAt         DateTime   @default(now()) @map("created_at")
+  updatedAt         DateTime   @updatedAt @map("updated_at")
 
   @@index([cpf])
   @@index([phone])
@@ -157,18 +172,22 @@ model Client {
 // Novo — parceiro de negócio para gestão empresarial (fornecedor, funcionário,
 // transportadora, contador, banco). Separado de Client de propósito.
 model BusinessPartner {
-  id        Int         @id @default(autoincrement())
-  type      PartnerType
-  name      String
-  document  String?     @unique
-  phone     String?
-  email     String?
-  address   String?
-  active    Boolean     @default(true)
-  purchases Purchase[]
-  expenses  Expense[]
-  createdAt DateTime    @default(now()) @map("created_at")
-  updatedAt DateTime    @updatedAt @map("updated_at")
+  id                Int         @id @default(autoincrement())
+  type              PartnerType
+  name              String
+  document          String?     @unique
+  phone             String?
+  email             String?
+  address           String?
+  active            Boolean     @default(true)
+  purchases         Purchase[]
+  expenses          Expense[]
+  stateRegistration String?     @map("state_registration")
+  city              String?
+  state             String?
+  rntc              String? // código ANTT, só transportadora
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
 
   @@index([type])
   @@index([document])
@@ -273,6 +292,9 @@ model Product {
   pisRate            Decimal?          @map("pis_rate") @db.Decimal(5, 2)
   cstCofins          String?           @map("cst_cofins")
   cofinsRate         Decimal?          @map("cofins_rate") @db.Decimal(5, 2)
+  ipiCst             String?           @map("ipi_cst") // NF-e (CST de saída)
+  ipiRate            Decimal?          @map("ipi_rate") @db.Decimal(5, 2) // NF-e
+  ipiEnqCode         String?           @map("ipi_enq_code") // NF-e (cEnq)
   federalTaxRate     Decimal?          @map("federal_tax_rate") @db.Decimal(5, 2)
   stateTaxRate       Decimal?          @map("state_tax_rate") @db.Decimal(5, 2)
   municipalTaxRate   Decimal?          @map("municipal_tax_rate") @db.Decimal(5, 2)
@@ -423,6 +445,7 @@ model Sale {
   isPaid                       Boolean       @default(false) @map("is_paid")
   cfop                         String        @default("5102")
   fiscalStatus                 FiscalStatus  @default(PENDENTE) @map("fiscal_status")
+  fiscalModel                  String?       @map("fiscal_model") // NF-e ("65" | "55")
   fiscalKey                    String?       @map("fiscal_key")
   fiscalProtocol               String?       @map("fiscal_protocol")
   fiscalEmitDate               DateTime?     @map("fiscal_emit_date")
@@ -440,6 +463,7 @@ model Sale {
   @@index([operatorId])
   @@index([date])
   @@index([fiscalStatus])
+  @@index([fiscalModel]) // NF-e
   @@index([fiscalKey])
   @@map("sales")
 }
