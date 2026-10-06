@@ -16,36 +16,79 @@ import { Prisma } from 'generated/prisma/client.js';
 export class ClientsService {
   constructor(private prisma: PrismaService) {}
 
+  private cleanDigits(value: string): string {
+    return value.replace(/\D/g, '');
+  }
+
   private cleanCpf(cpf: string): string {
-    return cpf.replace(/\D/g, '');
+    return this.cleanDigits(cpf);
   }
 
   private validateCpf(cpf: string): void {
-    const cleanedCpf = this.cleanCpf(cpf);
-    if (cleanedCpf.length !== 11) {
+    if (this.cleanCpf(cpf).length !== 11) {
       throw new BadRequestException('CPF deve conter 11 dígitos numéricos');
     }
   }
 
+  private cleanCnpj(cnpj: string): string {
+    return this.cleanDigits(cnpj);
+  }
+
+  private validateCnpj(cnpj: string): void {
+    if (this.cleanCnpj(cnpj).length !== 14) {
+      throw new BadRequestException('CNPJ deve conter 14 dígitos numéricos');
+    }
+  }
+
+  private normalizeZipCode(zipCode: string): string {
+    const cleaned = this.cleanDigits(zipCode);
+    if (cleaned.length !== 8) {
+      throw new BadRequestException('CEP deve conter 8 dígitos numéricos');
+    }
+    return cleaned;
+  }
+
+  private async assertDocumentAvailable(
+    field: 'cpf' | 'cnpj',
+    value: string,
+    excludeId?: number,
+  ): Promise<void> {
+    const where: Prisma.ClientWhereInput =
+      field === 'cpf' ? { cpf: value } : { cnpj: value };
+    if (excludeId) where.id = { not: excludeId };
+
+    const exists = await this.prisma.client.client.findFirst({
+      where,
+      select: { id: true },
+    });
+    if (exists) {
+      throw new ConflictException(
+        `Já existe um cliente com este ${field === 'cpf' ? 'CPF' : 'CNPJ'}`,
+      );
+    }
+  }
+
   async create(createClientDto: CreateClientDto): Promise<ClientResponseDto> {
-    const { name, cpf } = createClientDto;
+    const { name } = createClientDto;
 
-    // Valida e limpa CPF se foi enviado
-    let cleanedCpf: string | undefined;
-    if (cpf) {
-      this.validateCpf(cpf);
-      cleanedCpf = this.cleanCpf(cpf);
-
-      // Verifica se CPF já existe
-      const existingByCpf = await this.prisma.client.client.findUnique({
-        where: { cpf: cleanedCpf },
-      });
-      if (existingByCpf) {
-        throw new ConflictException('Já existe um cliente com este CPF');
-      }
+    let cpf: string | undefined;
+    if (createClientDto.cpf) {
+      this.validateCpf(createClientDto.cpf);
+      cpf = this.cleanCpf(createClientDto.cpf);
+      await this.assertDocumentAvailable('cpf', cpf);
     }
 
-    // Verifica se nome já existe
+    let cnpj: string | undefined;
+    if (createClientDto.cnpj) {
+      this.validateCnpj(createClientDto.cnpj);
+      cnpj = this.cleanCnpj(createClientDto.cnpj);
+      await this.assertDocumentAvailable('cnpj', cnpj);
+    }
+
+    const zipCode = createClientDto.zipCode
+      ? this.normalizeZipCode(createClientDto.zipCode)
+      : undefined;
+
     const existingByName = await this.prisma.client.client.findFirst({
       where: { name },
     });
@@ -54,14 +97,76 @@ export class ClientsService {
     }
 
     const client = await this.prisma.client.client.create({
-      data: {
-        ...createClientDto,
-        cpf: cleanedCpf,
-      },
+      data: { ...createClientDto, cpf, cnpj, zipCode },
     });
 
     return new ClientResponseDto(client);
   }
+
+  async findByCnpj(cnpj: string): Promise<ClientResponseDto | null> {
+    this.validateCnpj(cnpj);
+
+    const client = await this.prisma.client.client.findUnique({
+      where: { cnpj: this.cleanCnpj(cnpj) },
+    });
+
+    return client ? new ClientResponseDto(client) : null;
+  }
+
+  async update(
+    id: number,
+    updateClientDto: UpdateClientDto,
+  ): Promise<ClientResponseDto> {
+    if (isNaN(id) || id <= 0) {
+      throw new BadRequestException('ID inválido');
+    }
+
+    const existingClient = await this.prisma.client.client.findUnique({
+      where: { id },
+    });
+    if (!existingClient) {
+      throw new NotFoundException('Cliente não encontrado');
+    }
+
+    let cpf: string | undefined;
+    if (updateClientDto.cpf) {
+      this.validateCpf(updateClientDto.cpf);
+      cpf = this.cleanCpf(updateClientDto.cpf);
+      if (cpf !== existingClient.cpf) {
+        await this.assertDocumentAvailable('cpf', cpf, id);
+      }
+    }
+
+    let cnpj: string | undefined;
+    if (updateClientDto.cnpj) {
+      this.validateCnpj(updateClientDto.cnpj);
+      cnpj = this.cleanCnpj(updateClientDto.cnpj);
+      if (cnpj !== existingClient.cnpj) {
+        await this.assertDocumentAvailable('cnpj', cnpj, id);
+      }
+    }
+
+    const zipCode = updateClientDto.zipCode
+      ? this.normalizeZipCode(updateClientDto.zipCode)
+      : undefined;
+
+    if (updateClientDto.name && updateClientDto.name !== existingClient.name) {
+      const nameExists = await this.prisma.client.client.findFirst({
+        where: { name: updateClientDto.name, id: { not: id } },
+      });
+      if (nameExists) {
+        throw new ConflictException('Já existe um cliente com este nome');
+      }
+    }
+
+    const client = await this.prisma.client.client.update({
+      where: { id },
+      data: { ...updateClientDto, cpf, cnpj, zipCode },
+    });
+
+    return new ClientResponseDto(client);
+  }
+
   async findAll(
     page: number = 1,
     limit: number = 10,
@@ -176,66 +281,6 @@ export class ClientsService {
     });
 
     return clients.map((client) => new ClientResponseDto(client));
-  }
-
-  async update(
-    id: number,
-    updateClientDto: UpdateClientDto,
-  ): Promise<ClientResponseDto> {
-    if (isNaN(id) || id <= 0) {
-      throw new BadRequestException('ID inválido');
-    }
-
-    const existingClient = await this.prisma.client.client.findUnique({
-      where: { id },
-    });
-
-    if (!existingClient) {
-      throw new NotFoundException('Cliente não encontrado');
-    }
-
-    // Valida e limpa CPF se foi enviado
-    let cleanedCpf: string | undefined;
-    if (updateClientDto.cpf) {
-      this.validateCpf(updateClientDto.cpf);
-      cleanedCpf = this.cleanCpf(updateClientDto.cpf);
-
-      // Verifica se CPF já existe em OUTRO cliente
-      if (cleanedCpf !== existingClient.cpf) {
-        const cpfExists = await this.prisma.client.client.findFirst({
-          where: {
-            cpf: cleanedCpf,
-            id: { not: id },
-          },
-        });
-        if (cpfExists) {
-          throw new ConflictException('Já existe um cliente com este CPF');
-        }
-      }
-    }
-
-    // Verifica se nome já existe em OUTRO cliente
-    if (updateClientDto.name && updateClientDto.name !== existingClient.name) {
-      const nameExists = await this.prisma.client.client.findFirst({
-        where: {
-          name: updateClientDto.name,
-          id: { not: id },
-        },
-      });
-      if (nameExists) {
-        throw new ConflictException('Já existe um cliente com este nome');
-      }
-    }
-
-    const client = await this.prisma.client.client.update({
-      where: { id },
-      data: {
-        ...updateClientDto,
-        cpf: cleanedCpf,
-      },
-    });
-
-    return new ClientResponseDto(client);
   }
 
   async remove(id: number): Promise<{ message: string }> {

@@ -1,5 +1,6 @@
 // dto/parsed-nfe.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
 
 export class ParsedNfeItemDto {
   @ApiProperty({
@@ -32,15 +33,21 @@ export class ParsedNfeItemDto {
 
 export class ParsedNfeInstallmentDto {
   @ApiProperty({ description: 'Número da duplicata (nDup)', example: '001' })
+  @IsString({ message: 'Número da parcela deve ser texto' })
+  @IsNotEmpty({ message: 'Número da parcela é obrigatório' })
   number: string;
 
   @ApiProperty({
     description: 'Data de vencimento (dVenc)',
     example: '2026-09-29',
   })
+  @IsString({ message: 'Data de vencimento deve ser texto' })
+  @IsNotEmpty({ message: 'Data de vencimento é obrigatória' })
   dueDate: string;
 
   @ApiProperty({ description: 'Valor da duplicata (vDup)', example: 2378.4 })
+  @IsNumber({}, { message: 'Valor da parcela deve ser um número' })
+  @Min(0, { message: 'Valor da parcela não pode ser negativo' })
   value: number;
 }
 
@@ -56,6 +63,55 @@ export class ParsedNfeDto {
     example: 'EDANTEX COMERCIO IMPORTACAO E EXPORTACAO LTDA.',
   })
   supplierName: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Inscrição estadual do emitente (emit.IE)',
+    example: '123456789',
+  })
+  supplierStateRegistration?: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Município do emitente (emit.enderEmit.xMun)',
+    example: 'Belo Horizonte',
+  })
+  supplierCity?: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'UF do emitente (emit.enderEmit.UF)',
+    example: 'MG',
+  })
+  supplierState?: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Inscrição estadual da transportadora (transp.transporta.IE)',
+    example: '123456789',
+  })
+  transportStateRegistration?: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Município da transportadora (transp.transporta.xMun)',
+    example: 'Belo Horizonte',
+  })
+  transportCity?: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'UF da transportadora (transp.transporta.UF)',
+    example: 'MG',
+  })
+  transportState?: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'RNTC/ANTT do veículo de transporte (transp.veicTransp.RNTC)',
+    example: '12345678',
+  })
+  transportRntc?: string;
 
   @ApiProperty({ description: 'Número da nota fiscal (nNF)', example: '25278' })
   invoiceNumber: string;

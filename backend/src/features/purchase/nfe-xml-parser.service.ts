@@ -96,9 +96,21 @@ export class NfeXmlParserService {
       );
     }
 
+    const transporta = infNFe.transp?.transporta;
+    const veicTransp = infNFe.transp?.veicTransp;
+
     const result: ParsedNfeDto = {
       supplierCnpj: emit.CNPJ,
       supplierName: emit.xNome,
+      supplierStateRegistration: emit.IE ? String(emit.IE) : undefined,
+      supplierCity: emit.enderEmit?.xMun,
+      supplierState: emit.enderEmit?.UF,
+      transportStateRegistration: transporta?.IE
+        ? String(transporta.IE)
+        : undefined,
+      transportCity: transporta?.xMun,
+      transportState: transporta?.UF,
+      transportRntc: veicTransp?.RNTC ? String(veicTransp.RNTC) : undefined,
       destCnpj: dest.CNPJ,
       invoiceNumber: String(infNFe.ide?.nNF ?? ''),
       fiscalKey,

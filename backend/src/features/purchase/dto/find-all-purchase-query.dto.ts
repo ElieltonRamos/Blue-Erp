@@ -11,6 +11,15 @@ import {
 } from 'class-validator';
 import { PurchaseStatus } from 'generated/prisma/client';
 
+const PURCHASE_SORT_FIELDS = [
+  'id',
+  'receivedAt',
+  'total',
+  'invoiceNumber',
+  'status',
+  'createdAt',
+] as const;
+
 export class FindAllPurchaseQueryDto {
   @ApiPropertyOptional({ default: 1 })
   @IsOptional()
@@ -58,10 +67,12 @@ export class FindAllPurchaseQueryDto {
   @IsString({ message: 'Data final deve ser um texto' })
   endDate?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: PURCHASE_SORT_FIELDS })
   @IsOptional()
-  @IsString({ message: 'Campo de ordenação deve ser um texto' })
-  sortBy?: string;
+  @IsIn(PURCHASE_SORT_FIELDS, {
+    message: `Campo de ordenação inválido. Valores aceitos: ${PURCHASE_SORT_FIELDS.join(', ')}`,
+  })
+  sortBy?: (typeof PURCHASE_SORT_FIELDS)[number];
 
   @ApiPropertyOptional({ enum: ['asc', 'desc'] })
   @IsOptional()
