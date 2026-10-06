@@ -1,7 +1,10 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { promises as fs } from 'fs';
 import { PrismaService } from 'src/database/prisma.service';
 import { StorageService } from './storage.service';
 import { DanfeGenerator } from '../lib/danfe/nfce-danfe-generator';
+import { DanfeNfeGenerator } from '../lib/danfe/nfe-danfe-generator';
+import { modelFromAccessKey } from '../lib/nfe-utils';
 import { NfceNotFoundException } from '../fiscal.exception';
 import { ListNfceDto } from '../dto/list-nfce.dto';
 import { RevenueReportQueryDto } from '../dto/revenue-report-query.dto';
@@ -23,12 +26,21 @@ export class FiscalReportsService {
     private readonly storageService: StorageService,
   ) {}
 
+  // Notas emitidas antes do campo fiscalModel existir têm o campo nulo e são NFC-e
+  private modelWhere(model?: string) {
+    if (model === '55') return { fiscalModel: '55' };
+    if (model === '65') {
+      return { OR: [{ fiscalModel: '65' }, { fiscalModel: null }] };
+    }
+    return {};
+  }
+
   // ---------------------------------------------------------------------------
   // GET /fiscal/nfce/list
   // ---------------------------------------------------------------------------
 
   async listNfce(dto: ListNfceDto) {
-    const where: any = {};
+    const where: any = { ...this.modelWhere(dto.model) };
 
     if (dto.status) {
       where.fiscalStatus = dto.status;
@@ -56,6 +68,7 @@ export class FiscalReportsService {
         take: limit,
         select: {
           id: true,
+          fiscalModel: true,
           fiscalKey: true,
           fiscalProtocol: true,
           fiscalStatus: true,
@@ -102,7 +115,8 @@ export class FiscalReportsService {
       sale.fiscalKey,
       sale.fiscalEmitDate,
     );
-    const filename = `nfce-${sale.fiscalKey}.xml`;
+    const prefix = modelFromAccessKey(sale.fiscalKey) === '55' ? 'nfe' : 'nfce';
+    const filename = `${prefix}-${sale.fiscalKey}.xml`;
 
     if (this.storageService.fileExists(paths.xmlPath)) {
       return { xmlPath: paths.xmlPath, filename };
@@ -141,7 +155,8 @@ export class FiscalReportsService {
       sale.fiscalKey,
       sale.fiscalEmitDate,
     );
-    const filename = `nfce-${sale.fiscalKey}.pdf`;
+    const isNfe = modelFromAccessKey(sale.fiscalKey) === '55';
+    const filename = `${isNfe ? 'nfe' : 'nfce'}-${sale.fiscalKey}.pdf`;
 
     if (!paths.pdfPath) {
       throw new NotFoundException(
@@ -167,6 +182,14 @@ export class FiscalReportsService {
     );
 
     const company = await this.companyService.getCompany();
+
+    if (isNfe) {
+      const danfe = new DanfeNfeGenerator({
+        emitterEmail: company.email ?? undefined,
+      });
+      await fs.writeFile(pdfPath, await danfe.generate(sale.fiscalXml));
+      return { pdfPath, filename };
+    }
 
     const danfe = new DanfeGenerator({
       csc: company.nfceCsc,
@@ -202,6 +225,7 @@ export class FiscalReportsService {
 
     const sales = await this.prisma.client.sale.findMany({
       where: {
+        ...this.modelWhere(dto.model),
         fiscalStatus: { in: ['EMITIDA', 'CANCELADA'] },
         fiscalEmitDate: { gte: start, lt: end },
       },

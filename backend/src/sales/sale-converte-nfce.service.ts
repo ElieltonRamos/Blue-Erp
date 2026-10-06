@@ -18,8 +18,8 @@ import { CompanyService } from 'src/features/company/company.service';
 const CARD_PAYMENT_METHODS = ['CARTAO_CREDITO', 'CARTAO_DEBITO', 'PIX'];
 
 @Injectable()
-export class SaleToNfeConverterService {
-  private readonly logger = new Logger(SaleToNfeConverterService.name);
+export class SaleConverterNFCeService {
+  private readonly logger = new Logger(SaleConverterNFCeService.name);
 
   constructor(
     private readonly prisma: PrismaService,

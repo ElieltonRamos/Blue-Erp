@@ -10,7 +10,13 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
 import { createReadStream } from 'fs';
 import { FiscalService } from './services/fiscal.service';
@@ -20,6 +26,7 @@ import { QueryNfceDto } from './dto/query-nfce.dto';
 import { RevenueReportQueryDto } from './dto/revenue-report-query.dto';
 import { FiscalReportsService } from './services/fiscal-report.service';
 import { ListNfceDto } from './dto/list-nfce.dto';
+import { EmitNfeDto } from './dto/emit-nfe.dto';
 
 @ApiTags('Fiscal')
 @Controller('fiscal')
@@ -71,13 +78,6 @@ export class FiscalController {
       'Content-Disposition': `attachment; filename="${accessKey}.pdf"`,
     });
     fileStream.pipe(res);
-  }
-
-  @Get('sefaz/status')
-  @ApiOperation({ summary: 'Query SEFAZ service status' })
-  @ApiResponse({ status: 200, description: 'SEFAZ service status' })
-  async queryServiceStatus() {
-    return this.fiscalService.queryServiceStatus();
   }
 
   @Get('nfce/list')
@@ -142,5 +142,21 @@ export class FiscalController {
       'Content-Disposition': `attachment; filename="relatorio-fiscal-${dto.year}-${dto.month}.csv"`,
     });
     res.send('\uFEFF' + csv); // BOM para Excel abrir UTF-8 corretamente
+  }
+
+  @Post('nfe/emit')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Emit NF-e (modelo 55)' })
+  @ApiResponse({ status: 201, description: 'NF-e emitted successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
+  async emitNfe(@Body() dto: EmitNfeDto) {
+    return this.fiscalService.emitNfe(dto);
+  }
+
+  @Get('sefaz/status')
+  @ApiOperation({ summary: 'Query SEFAZ service status' })
+  @ApiQuery({ name: 'model', required: false, enum: ['55', '65'] })
+  async queryServiceStatus(@Query('model') model?: string) {
+    return this.fiscalService.queryServiceStatus(model);
   }
 }

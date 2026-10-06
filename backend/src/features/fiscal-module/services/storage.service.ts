@@ -2,25 +2,48 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import { StoragePaths } from '../entities/fiscal-module.entity';
+import { modelFromAccessKey } from '../lib/nfe-utils';
+
+type StorageModel = '55' | '65';
+type StorageKind = 'xml' | 'pdf';
+
+const MODEL_FOLDER: Record<StorageModel, string> = {
+  '55': 'nfe',
+  '65': 'nfce',
+};
 
 @Injectable()
 export class StorageService {
   private readonly logger = new Logger(StorageService.name);
-  private readonly xmlBaseDir = path.join(
-    process.cwd(),
-    'output',
-    'nfce',
-    'xml',
-  );
-  private readonly pdfBaseDir = path.join(
-    process.cwd(),
-    'output',
-    'nfce',
-    'pdf',
-  );
 
   constructor() {
-    this.ensureDirectoriesExist([this.xmlBaseDir, this.pdfBaseDir]);
+    const models = Object.keys(MODEL_FOLDER) as StorageModel[];
+    this.ensureDirectoriesExist(
+      models.flatMap((model) => [
+        this.baseDir(model, 'xml'),
+        this.baseDir(model, 'pdf'),
+      ]),
+    );
+  }
+
+  private baseDir(model: StorageModel, kind: StorageKind): string {
+    return path.join(process.cwd(), 'output', MODEL_FOLDER[model], kind);
+  }
+
+  // O modelo (55 ou 65) vem da própria chave de acesso
+  private resolveModel(accessKey: string): StorageModel {
+    if (!accessKey || accessKey.length !== 44) {
+      throw new Error(`Invalid access key: ${accessKey}`);
+    }
+
+    const model = modelFromAccessKey(accessKey);
+    if (model !== '55' && model !== '65') {
+      throw new Error(
+        `Unsupported model "${model}" in access key: ${accessKey}`,
+      );
+    }
+
+    return model;
   }
 
   private ensureDirectoriesExist(directories: string[]): void {
@@ -33,14 +56,11 @@ export class StorageService {
   }
 
   getStoragePaths(accessKey: string, emissionDate: Date): StoragePaths {
-    if (!accessKey || accessKey.length !== 44) {
-      throw new Error(`Invalid access key: ${accessKey}`);
-    }
-
+    const model = this.resolveModel(accessKey);
     const yearMonth = this.getYearMonthFolder(emissionDate);
 
-    const xmlDir = path.join(this.xmlBaseDir, yearMonth);
-    const pdfDir = path.join(this.pdfBaseDir, yearMonth);
+    const xmlDir = path.join(this.baseDir(model, 'xml'), yearMonth);
+    const pdfDir = path.join(this.baseDir(model, 'pdf'), yearMonth);
 
     this.ensureDirectoriesExist([xmlDir, pdfDir]);
 
@@ -63,8 +83,9 @@ export class StorageService {
   }
 
   getPdfPath(accessKey: string, emissionDate: Date): string {
+    const model = this.resolveModel(accessKey);
     const yearMonth = this.getYearMonthFolder(emissionDate);
-    return path.join(this.pdfBaseDir, yearMonth, `${accessKey}.pdf`);
+    return path.join(this.baseDir(model, 'pdf'), yearMonth, `${accessKey}.pdf`);
   }
 
   fileExists(filePath: string): boolean {

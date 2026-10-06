@@ -1,4 +1,4 @@
-import { IsString, Matches } from 'class-validator';
+import { IsIn, IsOptional, IsString, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RevenueReportQueryDto {
@@ -11,4 +11,8 @@ export class RevenueReportQueryDto {
   @IsString()
   @Matches(/^\d{4}$/, { message: 'year must be a 4-digit number' })
   year: string;
+
+  @IsOptional()
+  @IsIn(['55', '65'])
+  model?: string;
 }

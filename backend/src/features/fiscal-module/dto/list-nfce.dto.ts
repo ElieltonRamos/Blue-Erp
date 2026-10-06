@@ -25,6 +25,10 @@ export class ListNfceDto {
   @Min(1)
   page?: number = 1;
 
+  @IsOptional()
+  @IsIn(['55', '65'])
+  model?: string;
+
   @ApiPropertyOptional({ default: 20 })
   @IsOptional()
   @Type(() => Number)

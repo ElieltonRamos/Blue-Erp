@@ -2,18 +2,15 @@ import { Injectable, Logger } from '@nestjs/common';
 import { CompanyService } from '../../company/company.service';
 import { IbptService } from '../../../ibpt/ibpt.service';
 import { StorageService } from './storage.service';
-import { SaleToNfeConverterService } from '../../../sales/sale-to-nfe-converte.service';
+import { SaleConverterNFCeService } from '../../../sales/sale-converte-nfce.service';
 import {
   NfceAlreadyEmittedException,
-  CertificateException,
   SefazException,
   FiscalException,
 } from '../fiscal.exception';
 import {
   EmissionResult,
   NFeOptions,
-  DigitalCertificate,
-  NFeConfiguration,
   DanfeConfig,
   SefazReturn,
 } from '../entities/fiscal-module.entity';
@@ -23,34 +20,30 @@ import { generateNFeXML } from '../lib/xml/nfce-xml-builder';
 import { NfeSender } from '../lib/transport/nfe-sender';
 import { DanfeGenerator } from '../lib/danfe/nfce-danfe-generator';
 import {
-  existsSync,
-  mkdirSync,
-  writeFileSync,
-  readdirSync,
-  statSync,
-  unlinkSync,
-} from 'fs';
-import { join } from 'path';
+  buildSefazConfig,
+  cleanOldDebugFiles,
+  ensureSefazTempDir,
+  extractAccessKey,
+  isAuthorized,
+  loadCertificate,
+  saveXmlDebug,
+  validateCertificate,
+} from '../lib/nfe-utils';
 import { nowBrasilia } from 'src/common/date-utils';
 import { CompanyResponseDto } from 'src/features/company/dto/company-response.dto';
 
-const DEBUG_RETENTION_DAYS = 7;
-
 @Injectable()
-export class EmissionService {
-  private readonly logger = new Logger(EmissionService.name);
-  private readonly sefazTempDir = join(process.cwd(), 'sefaz-temp');
+export class EmissionNfceService {
+  private readonly logger = new Logger(EmissionNfceService.name);
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly companyService: CompanyService,
     private readonly ibptService: IbptService,
     private readonly storageService: StorageService,
-    private readonly saleToNfeConverter: SaleToNfeConverterService,
+    private readonly saleToNfeConverter: SaleConverterNFCeService,
   ) {
-    if (!existsSync(this.sefazTempDir)) {
-      mkdirSync(this.sefazTempDir, { recursive: true });
-    }
+    ensureSefazTempDir();
   }
 
   async emit(dto: EmitNfceDto): Promise<EmissionResult> {
@@ -60,7 +53,9 @@ export class EmissionService {
     this.checkIfAlreadyEmitted(sale);
 
     const company = await this.companyService.getCompany();
-    const certificate = await this.loadCertificate();
+    const certificate = await loadCertificate(() =>
+      this.companyService.getCertificateBuffer(),
+    );
 
     await this.ibptService.updateAliqSale(dto.saleId);
 
@@ -68,33 +63,33 @@ export class EmissionService {
     const nfceNumber = await this.reserveNfceNumber();
 
     let nfeData: NFeOptions;
+    let xml: string;
+    let accessKey: string;
+    let sender: NfeSender;
     try {
       nfeData = await this.saleToNfeConverter.convert(dto.saleId, nfceNumber);
+      this.validateNFeData(nfeData);
+
+      xml = generateNFeXML(nfeData);
+      accessKey = extractAccessKey(xml);
+      if (!accessKey) {
+        throw new FiscalException('Erro ao gerar chave de acesso');
+      }
+      this.validateInfAdic(nfeData, accessKey);
+
+      cleanOldDebugFiles(this.logger);
+
+      sender = new NfeSender(buildSefazConfig(company, '65'), certificate);
+      validateCertificate(sender);
     } catch (error) {
       // Se falhar antes do SEFAZ, reverte o número reservado
       await this.releaseNfceNumber(nfceNumber);
       throw error;
     }
 
-    this.validateNFeData(nfeData);
-
-    const xml = generateNFeXML(nfeData);
-    const accessKey = this.extractAccessKey(xml);
-    this.validateInfAdic(nfeData, accessKey);
-
-    this.cleanOldDebugFiles();
-
-    const sefazConfig: NFeConfiguration = {
-      environment: company.nfceEnvironment,
-      state: company.state,
-    };
-
-    const sender = new NfeSender(sefazConfig, certificate);
-    this.validateCertificate(sender);
-
     const sefazReturn = await sender.send(xml, nfeData);
 
-    if (!sefazReturn.success || sefazReturn.statusCode !== '100') {
+    if (!isAuthorized(sefazReturn)) {
       await this.handleRejection(
         dto.saleId,
         accessKey,
@@ -108,7 +103,7 @@ export class EmissionService {
       throw new FiscalException('SEFAZ não retornou o XML assinado');
     }
 
-    this.saveXmlDebug(accessKey, sefazReturn.signedXml, 'retorno');
+    saveXmlDebug(this.logger, accessKey, sefazReturn.signedXml, 'retorno');
 
     // A partir daqui a nota está autorizada na SEFAZ.
     // Qualquer falha é registrada com a chave para recuperação manual.
@@ -176,39 +171,19 @@ export class EmissionService {
     };
   }
 
-  // Incrementa atomicamente e retorna o número reservado
+  // Incremento atômico (update com increment); devolve o número reservado
   private async reserveNfceNumber(): Promise<number> {
-    const company = await this.prisma.client.$transaction(async (tx) => {
-      const current = await tx.company.findUnique({ where: { id: 1 } });
-
-      if (!current) {
-        throw new FiscalException('Empresa não configurada');
-      }
-
-      const next = current.nfceCurrentNumber + 1;
-
-      return tx.company.update({
-        where: { id: 1 },
-        data: { nfceCurrentNumber: next },
-      });
-    });
-
-    return company.nfceCurrentNumber;
+    const { data } = await this.companyService.incrementNfceNumber();
+    return data;
   }
 
-  // Reverte o número caso a emissão falhe antes de chegar ao SEFAZ
+  // Reverte o número caso a emissão falhe antes de chegar ao SEFAZ.
+  // Só reverte se ninguém avançou o número enquanto isso.
   private async releaseNfceNumber(number: number): Promise<void> {
     try {
-      await this.prisma.client.$transaction(async (tx) => {
-        const current = await tx.company.findUnique({ where: { id: 1 } });
-
-        // Só reverte se ninguém avançou o número enquanto isso
-        if (current && current.nfceCurrentNumber === number) {
-          await tx.company.update({
-            where: { id: 1 },
-            data: { nfceCurrentNumber: number - 1 },
-          });
-        }
+      await this.prisma.client.company.updateMany({
+        where: { id: 1, nfceCurrentNumber: number },
+        data: { nfceCurrentNumber: { decrement: 1 } },
       });
     } catch (error) {
       this.logger.warn(
@@ -251,33 +226,6 @@ export class EmissionService {
     this.logger.log(`infAdic validado com sucesso para chave ${accessKey}`);
   }
 
-  private saveXmlDebug(accessKey: string, xml: string, stage: string): void {
-    try {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const fileName = `${stage}_${accessKey}_${timestamp}.xml`;
-      writeFileSync(join(this.sefazTempDir, fileName), xml, 'utf8');
-    } catch (error) {
-      this.logger.warn(`Falha ao salvar XML de debug (${stage}): ${error}`);
-    }
-  }
-
-  private cleanOldDebugFiles(): void {
-    try {
-      const cutoff = Date.now() - DEBUG_RETENTION_DAYS * 24 * 60 * 60 * 1000;
-      const files = readdirSync(this.sefazTempDir);
-
-      for (const file of files) {
-        const filePath = join(this.sefazTempDir, file);
-        const { mtimeMs } = statSync(filePath);
-        if (mtimeMs < cutoff) {
-          unlinkSync(filePath);
-        }
-      }
-    } catch (error) {
-      this.logger.warn(`Falha ao limpar XMLs de debug antigos: ${error}`);
-    }
-  }
-
   private async findSale(saleId: number) {
     const sale = await this.prisma.client.sale.findUnique({
       where: { id: saleId },
@@ -299,21 +247,6 @@ export class EmissionService {
     }
   }
 
-  private async loadCertificate(): Promise<DigitalCertificate> {
-    try {
-      const { pfxBuffer, password } =
-        await this.companyService.getCertificateBuffer();
-
-      return { pfxBuffer, password };
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Erro ao carregar certificado digital';
-      throw new CertificateException(message);
-    }
-  }
-
   private validateNFeData(nfeData: NFeOptions): void {
     if (!nfeData.emit?.CNPJ) {
       throw new FiscalException('CNPJ do emitente é obrigatório');
@@ -332,26 +265,6 @@ export class EmissionService {
     }
   }
 
-  private extractAccessKey(xml: string): string {
-    const accessKey = this.storageService.extractAccessKey(xml);
-
-    if (!accessKey) {
-      throw new FiscalException('Erro ao gerar chave de acesso');
-    }
-
-    return accessKey;
-  }
-
-  private validateCertificate(sender: NfeSender): void {
-    try {
-      sender.signer.validateCertificate();
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : 'Certificado inválido';
-      throw new CertificateException(message);
-    }
-  }
-
   private async handleRejection(
     saleId: number,
     accessKey: string,
@@ -363,6 +276,7 @@ export class EmissionService {
       where: { id: saleId },
       data: {
         fiscalStatus: 'ERRO',
+        fiscalModel: '65',
         fiscalKey: accessKey,
         fiscalProtocol: sefazReturn.protocol,
         fiscalEmitDate: nowBrasilia(),
@@ -412,6 +326,7 @@ export class EmissionService {
       where: { id: saleId },
       data: {
         fiscalStatus: 'EMITIDA',
+        fiscalModel: '65',
         fiscalKey: accessKey,
         fiscalXml: signedXml,
         fiscalProtocol: protocol,

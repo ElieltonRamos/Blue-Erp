@@ -151,22 +151,54 @@ export class CompanyService {
   }
 
   async incrementNfceNumber(): Promise<{ data: number }> {
+    const exists = await this.prisma.client.company.findUnique({
+      where: { id: 1 },
+      select: { id: true },
+    });
+
+    if (!exists) {
+      throw new NotFoundException('Empresa não configurada');
+    }
+
+    const updated = await this.prisma.client.company.update({
+      where: { id: 1 },
+      data: { nfceCurrentNumber: { increment: 1 } },
+      select: { nfceCurrentNumber: true },
+    });
+
+    return { data: updated.nfceCurrentNumber };
+  }
+
+  async getNextNfeNumber(): Promise<{ data: number }> {
     const company = await this.prisma.client.company.findUnique({
       where: { id: 1 },
+      select: { nfeCurrentNumber: true },
     });
 
     if (!company) {
       throw new NotFoundException('Empresa não configurada');
     }
 
-    const nextNumber = company.nfceCurrentNumber + 1;
+    return { data: company.nfeCurrentNumber + 1 };
+  }
 
-    await this.prisma.client.company.update({
+  async incrementNfeNumber(): Promise<{ data: number }> {
+    const exists = await this.prisma.client.company.findUnique({
       where: { id: 1 },
-      data: { nfceCurrentNumber: nextNumber },
+      select: { id: true },
     });
 
-    return { data: nextNumber };
+    if (!exists) {
+      throw new NotFoundException('Empresa não configurada');
+    }
+
+    const updated = await this.prisma.client.company.update({
+      where: { id: 1 },
+      data: { nfeCurrentNumber: { increment: 1 } },
+      select: { nfeCurrentNumber: true },
+    });
+
+    return { data: updated.nfeCurrentNumber };
   }
 
   async getCertificateConfig(): Promise<{

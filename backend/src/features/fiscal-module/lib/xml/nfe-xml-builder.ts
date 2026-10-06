@@ -227,6 +227,9 @@ function buildTransp(t: Nfe55Options['transp']) {
   const transporta = t.transporta
     ? pick(t.transporta, ['CNPJ', 'CPF', 'xNome', 'IE', 'xEnder', 'xMun', 'UF'])
     : undefined;
+  const veicTransp = t.veicTransp
+    ? pick(t.veicTransp, ['placa', 'UF', 'RNTC'])
+    : undefined;
   const vol = t.vol
     ? pick(t.vol, ['qVol', 'esp', 'marca', 'nVol', 'pesoL', 'pesoB'])
     : undefined;
@@ -234,6 +237,7 @@ function buildTransp(t: Nfe55Options['transp']) {
   return {
     modFrete: t.modFrete,
     ...(transporta && Object.keys(transporta).length ? { transporta } : {}),
+    ...(veicTransp && Object.keys(veicTransp).length ? { veicTransp } : {}),
     ...(vol && Object.keys(vol).length ? { vol } : {}),
   };
 }

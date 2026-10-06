@@ -689,22 +689,26 @@ model DocumentItem {
 // ---------------------------------------------------------------------------
 
 model Purchase {
-  id            Int             @id @default(autoincrement())
-  status        PurchaseStatus  @default(RECEIVED)
-  supplierId    Int             @map("supplier_id")
-  supplier      BusinessPartner @relation(fields: [supplierId], references: [id])
-  responsibleId Int?            @map("responsible_id")
-  responsible   User?           @relation("PurchaseResponsible", fields: [responsibleId], references: [id])
-  total         Decimal         @default(0) @db.Decimal(10, 2)
-  invoiceNumber String?         @map("invoice_number")
-  fiscalKey     String?         @unique @map("fiscal_key")
-  fiscalXml     String?         @map("fiscal_xml") @db.LongText
-  supplierCnpj  String?         @map("supplier_cnpj")
-  receivedAt    DateTime        @default(now()) @map("received_at") // data da entrada/import
-  items         PurchaseItem[]
-  expenses      Expense[]
-  createdAt     DateTime        @default(now()) @map("created_at")
-  updatedAt     DateTime        @updatedAt @map("updated_at")
+  id                Int             @id @default(autoincrement())
+  status            PurchaseStatus  @default(RECEIVED)
+  supplierId        Int             @map("supplier_id")
+  supplier          BusinessPartner @relation(fields: [supplierId], references: [id])
+  responsibleId     Int?            @map("responsible_id")
+  responsible       User?           @relation("PurchaseResponsible", fields: [responsibleId], references: [id])
+  total             Decimal         @default(0) @db.Decimal(10, 2)
+  invoiceNumber     String?         @map("invoice_number")
+  fiscalKey         String?         @unique @map("fiscal_key")
+  fiscalXml         String?         @map("fiscal_xml") @db.LongText
+  supplierCnpj      String?         @map("supplier_cnpj")
+  receivedAt        DateTime        @default(now()) @map("received_at") // data da entrada/import
+  items             PurchaseItem[]
+  expenses          Expense[]
+  stateRegistration String?         @map("state_registration")
+  city              String?
+  state             String?
+  rntc              String?
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
 
   @@index([status])
   @@index([supplierId])
