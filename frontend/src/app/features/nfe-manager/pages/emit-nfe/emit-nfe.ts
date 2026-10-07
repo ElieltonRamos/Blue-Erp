@@ -1,7 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import {
   AbstractControl,
-  FormArray,
   FormBuilder,
   FormsModule,
   ReactiveFormsModule,
@@ -25,7 +24,8 @@ import { BusinessPartner } from '../../../purchases/types/business-partner';
 import { BusinessPartnerService } from '../../../purchases/services/business-partner.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { FiscalService } from '../../services/fiscal.service';
-import { EmitNfeRequest, ModFrete, NfeFat, NfeVehicle, NfeVolumes } from '../../types/fiscal';
+import { EmitNfeRequest, ModFrete, NfeVehicle, NfeVolumes } from '../../types/fiscal';
+import { Cfop, CFOPS } from '../../types/cfops';
 
 type ItemType = 'PRODUCT' | 'SERVICE';
 
@@ -44,6 +44,7 @@ interface EditableItem {
 interface EditablePayment {
   method: string;
   amount: number;
+  dVenc?: string; // só para a nota (yyyy-MM-dd), não vai para a venda
 }
 
 interface SearchResult {
@@ -51,14 +52,6 @@ interface SearchResult {
   id: number;
   name: string;
   price: number;
-}
-
-function dupSumValidator(group: AbstractControl): ValidationErrors | null {
-  const vLiq = group.get('fat.vLiq')?.value;
-  const dups = (group.get('dup') as FormArray).controls;
-  if (vLiq == null || !dups.length) return null;
-  const sum = dups.reduce((acc, c) => acc + (Number(c.get('vDup')?.value) || 0), 0);
-  return Math.abs(sum - Number(vLiq)) > 0.005 ? { dupSum: { sum, vLiq } } : null;
 }
 
 function vehicleValidator(group: AbstractControl): ValidationErrors | null {
@@ -95,6 +88,7 @@ export class EmitNfe implements OnInit {
     'w-full bg-overlay border border-border px-2 py-1 rounded text-sm text-text-primary';
   readonly labelClass = 'block text-xs text-text-secondary mb-1';
   readonly hintClass = 'text-xs text-text-muted mt-1';
+  private readonly DEFAULT_CLIENT_ID = 1;
 
   paymentMethods = ['DINHEIRO', 'CARTAO_CREDITO', 'CARTAO_DEBITO', 'PIX', 'CREDITO_LOJA'];
 
@@ -102,30 +96,37 @@ export class EmitNfe implements OnInit {
   clientSearch = '';
   clientResults: Client[] = [];
   showClientResults = false;
+  get clientBlocked(): boolean {
+    return this.selectedClientId === this.DEFAULT_CLIENT_ID;
+  }
 
   itemSearch = '';
   itemResults: SearchResult[] = [];
   showItemResults = false;
   private itemSearchTimer: ReturnType<typeof setTimeout> | null = null;
 
+  cfop = '';
+  cfopSearch = '';
+  cfopResults: Cfop[] = [];
+  showCfopResults = false;
+
   items: EditableItem[] = [];
   payments: EditablePayment[] = [];
   discount = 0;
   serviceCharge = 0;
   isPaid = false;
-  cfop = '';
   private initialSnapshot = '';
 
   form = this.fb.group({
     natOp: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(60)]),
-    tpNF: this.fb.nonNullable.control(''),
-    finNFe: this.fb.nonNullable.control(''),
+    tpNF: this.fb.nonNullable.control('1'),
+    finNFe: this.fb.nonNullable.control('1'),
     dhSaiEnt: this.fb.nonNullable.control(''),
     permiteCredito: this.fb.nonNullable.control(false),
     generateDanfe: this.fb.nonNullable.control(true),
     infAdic: this.fb.nonNullable.control(''),
     transp: this.fb.group({
-      modFrete: this.fb.nonNullable.control('', Validators.required),
+      modFrete: this.fb.nonNullable.control('0', Validators.required),
       carrierId: this.fb.control<number | null>(null),
       vehicle: this.fb.group(
         {
@@ -146,23 +147,7 @@ export class EmitNfe implements OnInit {
         pesoB: this.fb.control<number | null>(null, Validators.min(0)),
       }),
     }),
-    cobr: this.fb.group(
-      {
-        fat: this.fb.group({
-          nFat: this.fb.nonNullable.control('', Validators.maxLength(60)),
-          vOrig: this.fb.control<number | null>(null, Validators.min(0)),
-          vDesc: this.fb.control<number | null>(null, Validators.min(0)),
-          vLiq: this.fb.control<number | null>(null, Validators.min(0)),
-        }),
-        dup: this.fb.array([] as ReturnType<EmitNfe['createDup']>[]),
-      },
-      { validators: dupSumValidator },
-    ),
   });
-
-  get dups(): FormArray {
-    return this.form.controls.cobr.controls.dup as unknown as FormArray;
-  }
 
   ngOnInit() {
     forkJoin({
@@ -176,6 +161,11 @@ export class EmitNfe implements OnInit {
           return;
         }
         this.loadSale(sale);
+        if (this.clientBlocked) {
+          this.notification.error(
+            'Esta venda está com o cliente padrão. Troque o cliente para emitir a NF-e.',
+          );
+        }
         if (this.hasServices && this.productCount === 0) {
           this.notification.error(
             'Esta venda tem apenas serviços e não pode ter nota fiscal. Para nota de serviços, utilize o emissor da prefeitura da sua cidade.',
@@ -201,6 +191,8 @@ export class EmitNfe implements OnInit {
     this.serviceCharge = Number(sale.serviceCharge);
     this.isPaid = sale.isPaid;
     this.cfop = sale.cfop;
+    this.cfopSearch = sale.cfop ?? '';
+    this.applyNatOp(sale.cfop);
 
     this.items = (sale.items ?? []).map((item) => ({
       id: item.id,
@@ -224,7 +216,9 @@ export class EmitNfe implements OnInit {
     return JSON.stringify({
       clientId: this.selectedClientId,
       items: this.items,
-      payments: this.hasServices ? null : this.payments,
+      payments: this.hasServices
+        ? null
+        : this.payments.map((p) => ({ method: p.method, amount: p.amount })),
       discount: this.discount,
       serviceCharge: this.serviceCharge,
       isPaid: this.isPaid,
@@ -256,6 +250,39 @@ export class EmitNfe implements OnInit {
     this.selectedClientId = client.id!;
     this.clientSearch = client.name;
     this.showClientResults = false;
+  }
+
+  searchCfop() {
+    const term = this.cfopSearch.trim().toLowerCase();
+    if (!term) {
+      this.cfopResults = [];
+      this.showCfopResults = false;
+      return;
+    }
+    this.cfopResults = CFOPS.filter(
+      (c) => c.code.startsWith(term) || c.natOp.toLowerCase().includes(term),
+    ).slice(0, 10);
+    this.showCfopResults = true;
+  }
+
+  selectCfop(c: Cfop) {
+    this.cfop = c.code;
+    this.cfopSearch = c.code;
+    this.showCfopResults = false;
+    this.applyNatOp(c.code);
+  }
+
+  selectFirstCfop() {
+    if (this.cfopResults.length) this.selectCfop(this.cfopResults[0]);
+  }
+
+  onCfopBlur() {
+    this.showCfopResults = false;
+    if (!this.cfopSearch.trim()) {
+      this.cfop = '';
+      this.applyNatOp('');
+    }
+    this.cfopSearch = this.cfop ?? '';
   }
 
   onItemSearchChange() {
@@ -371,22 +398,6 @@ export class EmitNfe implements OnInit {
     return Number((this.paymentsTarget - this.paymentsTotal).toFixed(2));
   }
 
-  createDup() {
-    return this.fb.group({
-      nDup: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(60)]),
-      dVenc: this.fb.nonNullable.control('', Validators.required),
-      vDup: this.fb.control<number | null>(null, [Validators.required, Validators.min(0.01)]),
-    });
-  }
-
-  addDup() {
-    this.dups.push(this.createDup());
-  }
-
-  removeDup(index: number) {
-    this.dups.removeAt(index);
-  }
-
   money(n: unknown): string {
     const num = Number(n);
     return (isNaN(num) ? 0 : num).toFixed(2);
@@ -397,6 +408,9 @@ export class EmitNfe implements OnInit {
   }
 
   private validateSale(): string | null {
+    if (this.clientBlocked) {
+      return 'NF-e exige destinatário identificado. Troque o cliente da venda (o cliente padrão não é permitido).';
+    }
     if (!this.selectedClientId) return 'Selecione um cliente.';
     if (this.items.length === 0) return 'A venda precisa ter ao menos um item.';
     if (this.payments.length === 0) return 'A venda precisa ter ao menos um pagamento.';
@@ -462,7 +476,7 @@ export class EmitNfe implements OnInit {
     }
 
     this.submitting.set(true);
-    const request = this.buildRequest();
+    const request = this.buildRequest(); // montado antes de salvar: loadSale() recarrega os pagamentos
 
     this.saveSaleIfChanged().subscribe({
       next: () => this.emit(request),
@@ -514,14 +528,34 @@ export class EmitNfe implements OnInit {
     return entries.length ? (Object.fromEntries(entries) as Partial<T>) : undefined;
   }
 
+  private buildCobr(): EmitNfeRequest['cobr'] {
+    const dup = this.payments
+      .filter((p) => p.dVenc)
+      .map((p, i) => ({
+        nDup: String(i + 1).padStart(3, '0'),
+        dVenc: p.dVenc as string,
+        vDup: Number(p.amount),
+      }));
+    if (!dup.length) return undefined;
+
+    const total = Number(dup.reduce((s, d) => s + d.vDup, 0).toFixed(2));
+    return {
+      fat: { nFat: String(this.saleId), vOrig: total, vLiq: total },
+      dup,
+    } as EmitNfeRequest['cobr'];
+  }
+
+  private applyNatOp(code: string | null | undefined) {
+    const found = CFOPS.find((c) => c.code === code);
+    this.form.controls.natOp.setValue(found ? found.natOp.slice(0, 60) : '');
+    this.form.controls.natOp.markAsDirty();
+  }
+
   private buildRequest(): EmitNfeRequest {
     const v = this.form.getRawValue();
 
     const vehicle = this.compact(v.transp.vehicle) as NfeVehicle | undefined;
     const volumes = this.compact(v.transp.volumes) as NfeVolumes | undefined;
-    const fat = this.compact(v.cobr.fat) as NfeFat | undefined;
-    const dup = v.cobr.dup.length ? v.cobr.dup : undefined;
-    const cobr = fat || dup ? { fat, dup } : undefined;
 
     return {
       saleId: this.saleId,
@@ -537,7 +571,7 @@ export class EmitNfe implements OnInit {
         vehicle,
         volumes,
       },
-      cobr: cobr as EmitNfeRequest['cobr'],
+      cobr: this.buildCobr(),
       infAdic: v.infAdic || undefined,
       omitServices: this.hasServices || undefined,
       payments: this.hasServices
