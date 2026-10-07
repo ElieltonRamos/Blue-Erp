@@ -60,6 +60,10 @@ export class Company {
       nfceEnvironment: ['staging', Validators.required],
       nfceCsc: ['', Validators.required],
       nfceCscId: ['', Validators.required],
+      nfeSeries: ['1'],
+      nfeCurrentNumber: [0],
+      nfeEnvironment: ['staging', Validators.required],
+      simplesCreditRate: [null, [Validators.min(0), Validators.max(100)]],
       // certificatePath removido — gerenciado pelo enviarCertificado()
       certificatePassword: ['', Validators.required],
     });
@@ -281,6 +285,8 @@ export class Company {
       nfceEnvironment: 'Ambiente NFC-e',
       nfceCsc: 'CSC',
       nfceCscId: 'ID do CSC',
+      nfeEnvironment: 'Ambiente NF-e',
+      simplesCreditRate: 'Crédito Simples Nacional (%)',
       certificatePassword: 'Senha do Certificado',
     };
 
