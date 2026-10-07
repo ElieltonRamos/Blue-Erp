@@ -24,6 +24,7 @@ import { ConvertDocumentToSale } from './features/documents/pages/convert-docume
 import { Purchase } from './features/purchases/pages/purchases';
 import { VehicleDetails } from './features/assets/pages/vehicle-details/vehicle-details';
 import { Sales } from './features/sales/pages/sales/sales';
+import { EmitNfe } from './features/nfe-manager/pages/emit-nfe/emit-nfe';
 
 export const routes: Routes = [
   {
@@ -129,6 +130,12 @@ export const routes: Routes = [
   {
     path: 'fiscal',
     component: NfeManager,
+    canActivate: [authGuard],
+  },
+
+  {
+    path: 'fiscal/emitir/:saleId',
+    component: EmitNfe,
     canActivate: [authGuard],
   },
   {

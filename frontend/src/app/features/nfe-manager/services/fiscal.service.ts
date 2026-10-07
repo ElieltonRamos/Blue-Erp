@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../core/services/environment';
-import { PaginatedNotaFiscal, SefazStatus, RevenueReport } from '../types/fiscal';
+import { PaginatedNotaFiscal, SefazStatus, RevenueReport, EmitNfeRequest, NfeEmissionResult } from '../types/fiscal';
 
 @Injectable({
   providedIn: 'root',
@@ -75,5 +75,9 @@ export class FiscalService {
   exportCsv(month: string, year: string): Observable<Blob> {
     const params = new HttpParams().set('month', month).set('year', year);
     return this.client.get(`${this.apiUrl}/reports/export`, { params, responseType: 'blob' });
+  }
+
+  emitNfe(request: EmitNfeRequest): Observable<NfeEmissionResult> {
+    return this.client.post<NfeEmissionResult>(`${this.apiUrl}/nfe/emit`, request);
   }
 }

@@ -5,7 +5,7 @@ import { MENUS_BY_BUSINESS_TYPE } from 'src/common/scripts/database-seed';
 const LICENSE_COMPLETO = 'COMPLETO-22222222000122-a7c3e14d8b224a21';
 const LICENSE_PDV = '<chave sem fiscal>';
 
-const businessType = 'PDV';
+const businessType = 'VAREJO';
 const licenseKey = LICENSE_COMPLETO;
 const enabledMenus = MENUS_BY_BUSINESS_TYPE[businessType];
 

@@ -102,6 +102,7 @@ export interface Sale {
   fiscalProtocol?: string;
   fiscalEmitDate: Date | null;
   fiscalXml: string | null;
+  fiscalModel: '55' | '65' | null;
   createdAt: Date;
   updatedAt: Date;
   serviceCharge: number;

@@ -1,0 +1,672 @@
+<div class="min-h-screen bg-base px-4 py-6">
+  <div class="mx-auto w-full max-w-5xl space-y-4">
+    <div class="flex items-center justify-between">
+      <h1 class="text-xl font-bold text-text-primary">Emitir NF-e — Venda #{{ saleId }}</h1>
+      <button
+        type="button"
+        (click)="goBack()"
+        class="bg-accent hover:bg-accent-hover text-btn-text px-6 py-2 rounded shadow-md transition"
+      >
+        Voltar
+      </button>
+    </div>
+
+    @if (loading()) {
+      <p class="text-text-secondary text-sm">Carregando venda...</p>
+    } @else if (sale()) {
+      <div class="bg-surface rounded-2xl shadow-lg p-6 border border-border-subtle">
+        <p class="text-text-primary font-semibold mb-2">Como emitir</p>
+        <ol class="list-decimal pl-5 space-y-1 text-sm text-text-secondary">
+          <li>
+            Revise os dados da venda abaixo. Você pode trocar o cliente, os itens e os valores.
+          </li>
+          <li>
+            Preencha os dados da operação e do transporte. Cobrança e informações adicionais são
+            opcionais.
+          </li>
+          <li>Clique em <span class="text-text-primary">Emitir NF-e</span>.</li>
+        </ol>
+        <p class="text-xs text-warning mt-3">
+          As alterações feitas na venda são salvas no sistema antes da emissão e passam a valer no
+          histórico e no financeiro. Depois de autorizada, a NF-e não pode ser editada; só
+          cancelada, dentro do prazo.
+        </p>
+      </div>
+
+      @if (hasServices) {
+        <div class="bg-surface rounded-2xl shadow-lg p-6 border border-warning">
+          <p class="text-warning font-semibold mb-1">Esta venda contém serviços</p>
+          <p class="text-sm text-text-secondary">
+            {{ serviceCount }} serviço(s), no valor de R$ {{ money(servicesTotal) }}, não vão para a
+            emissão fiscal. Esta NF-e será emitida só com os produtos (R$
+            {{ money(productsTotal) }}). Para nota fiscal de serviços, utilize o emissor da
+            prefeitura da sua cidade.
+          </p>
+          <p class="text-sm text-text-secondary mt-2">
+            <span class="text-text-primary font-medium">Ajuste os pagamentos</span> na seção Venda
+            para que a soma seja igual ao valor dos produtos. Esses pagamentos valem só para a nota;
+            a venda mantém os pagamentos originais.
+          </p>
+        </div>
+      }
+
+      <div class="bg-surface rounded-2xl shadow-lg p-6 space-y-6">
+        <div>
+          <h2 class="text-text-primary font-semibold">Venda</h2>
+          <p [class]="hintClass">
+            @if (saleDirty) {
+              Há alterações não salvas. Elas serão gravadas ao emitir a nota.
+            } @else {
+              Nenhuma alteração feita na venda.
+            }
+          </p>
+        </div>
+
+        <div>
+          <label [class]="labelClass" for="clientSearch">Cliente (destinatário da nota)</label>
+          <div class="relative">
+            <input
+              id="clientSearch"
+              type="text"
+              [class]="inputClass"
+              [(ngModel)]="clientSearch"
+              (ngModelChange)="searchClients()"
+              placeholder="Buscar cliente..."
+              autocomplete="off"
+            />
+            @if (showClientResults && clientResults.length > 0) {
+              <ul
+                class="absolute z-10 w-full bg-surface border border-border rounded shadow mt-1 max-h-48 overflow-y-auto"
+              >
+                @for (client of clientResults; track client.id) {
+                  <li
+                    (click)="selectClient(client)"
+                    class="px-3 py-2 hover:bg-overlay cursor-pointer text-text-primary text-sm"
+                  >
+                    {{ client.name }}
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+          <p [class]="hintClass">
+            Digite ao menos 2 letras. Confira no cadastro do cliente se documento e endereço estão
+            completos: a SEFAZ rejeita nota com dados do destinatário inconsistentes.
+          </p>
+        </div>
+
+        <div>
+          <label [class]="labelClass" for="itemSearch">Produtos</label>
+          <div class="relative mb-3">
+            <input
+              id="itemSearch"
+              type="text"
+              [class]="inputClass"
+              [(ngModel)]="itemSearch"
+              (ngModelChange)="onItemSearchChange()"
+              placeholder="Buscar produto para adicionar..."
+              autocomplete="off"
+            />
+            @if (showItemResults && itemResults.length > 0) {
+              <ul
+                class="absolute z-10 w-full bg-surface border border-border rounded shadow mt-1 max-h-48 overflow-y-auto"
+              >
+                @for (result of itemResults; track result.id) {
+                  <li
+                    (click)="selectSearchResult(result)"
+                    class="px-3 py-2 hover:bg-overlay cursor-pointer text-text-primary text-sm flex justify-between items-center gap-2"
+                  >
+                    <span>{{ result.name }}</span>
+                    <span class="text-text-secondary">R$ {{ money(result.price) }}</span>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-text-primary text-left text-sm">
+              <thead class="bg-surface-alt text-accent text-xs">
+                <tr>
+                  <th class="py-2 px-3 min-w-55">Produto</th>
+                  <th class="py-2 px-3 w-20">Qtd</th>
+                  <th class="py-2 px-3 w-28">Preço un.</th>
+                  <th class="py-2 px-3 w-28">Total</th>
+                  <th class="py-2 px-3 w-12"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border-subtle">
+                @for (item of items; track $index) {
+                  @if (item.type === 'PRODUCT') {
+                    <tr>
+                      <td class="py-2 px-3 min-w-55">{{ item.xProd }}</td>
+                      <td class="py-2 px-3">
+                        <input
+                          type="number"
+                          min="0.01"
+                          step="1"
+                          [class]="cellClass"
+                          [(ngModel)]="item.quantity"
+                          (ngModelChange)="recalcItemTotal(item)"
+                        />
+                      </td>
+                      <td class="py-2 px-3">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          [class]="cellClass"
+                          [(ngModel)]="item.unitPrice"
+                          (ngModelChange)="recalcItemTotal(item)"
+                        />
+                      </td>
+                      <td class="py-2 px-3 font-medium">R$ {{ money(item.totalPrice) }}</td>
+                      <td class="py-2 px-3">
+                        <button
+                          type="button"
+                          (click)="removeItem($index)"
+                          class="text-danger hover:opacity-70"
+                        >
+                          Remover
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                }
+                @if (productCount === 0) {
+                  <tr>
+                    <td colspan="5" class="text-center py-4 text-text-muted">
+                      Nenhum produto. Busque um produto acima.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <p [class]="hintClass">
+            O preço unitário pode ser alterado e vale só para esta venda; o cadastro do produto não
+            muda.
+          </p>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label [class]="labelClass">{{
+              hasServices ? 'Pagamentos da nota' : 'Pagamentos'
+            }}</label>
+            <button
+              type="button"
+              (click)="addPayment()"
+              class="text-accent text-sm hover:underline"
+            >
+              + Adicionar pagamento
+            </button>
+          </div>
+          @for (payment of payments; track $index) {
+            <div class="flex gap-2 mb-2 items-center">
+              <select [class]="inputClass" [(ngModel)]="payment.method">
+                @for (method of paymentMethods; track method) {
+                  <option [value]="method">{{ method }}</option>
+                }
+              </select>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                class="w-32 bg-surface-alt border border-border rounded px-3 py-2 text-sm text-text-primary"
+                [(ngModel)]="payment.amount"
+              />
+              <button
+                type="button"
+                (click)="removePayment($index)"
+                class="text-danger hover:opacity-70"
+              >
+                Remover
+              </button>
+            </div>
+          }
+          @if (hasServices) {
+            <p class="text-xs text-warning mt-1">
+              Ajuste os valores para que a soma seja igual ao valor dos produtos (R$
+              {{ money(productsTotal) }}). Os pagamentos atuais somam o total da venda, com
+              serviços.
+            </p>
+          } @else {
+            <p [class]="hintClass">A soma dos pagamentos precisa ser igual ao total da venda.</p>
+          }
+        </div>
+
+        <div class="flex flex-wrap gap-4 items-end">
+          <div class="flex flex-col w-44">
+            <label [class]="labelClass" for="serviceCharge">Taxa de serviço / gorjeta (R$)</label>
+            <input
+              id="serviceCharge"
+              type="number"
+              min="0"
+              step="0.01"
+              [class]="inputClass"
+              [(ngModel)]="serviceCharge"
+            />
+          </div>
+          <div class="flex flex-col w-40">
+            <label [class]="labelClass" for="discount">Desconto (R$)</label>
+            <input
+              id="discount"
+              type="number"
+              min="0"
+              step="0.01"
+              [class]="inputClass"
+              [(ngModel)]="discount"
+            />
+          </div>
+          <div class="flex flex-col w-40">
+            <label [class]="labelClass" for="cfop">CFOP</label>
+            <input id="cfop" type="text" [class]="inputClass" [(ngModel)]="cfop" />
+          </div>
+          <label class="flex items-center gap-2 pb-2 text-sm text-text-primary">
+            <input type="checkbox" [(ngModel)]="isPaid" />
+            Pago
+          </label>
+        </div>
+        <p [class]="hintClass">
+          O CFOP define a natureza fiscal da operação no documento (mesmo estado, outro estado,
+          etc.). Confirme com o contador antes de alterar.
+        </p>
+
+        <div
+          class="bg-surface-alt rounded-xl p-4 border border-border-subtle text-text-primary text-sm space-y-1"
+        >
+          <p>Subtotal dos produtos: R$ {{ money(productsTotal) }}</p>
+          @if (hasServices) {
+            <p class="text-text-muted">Serviços (fora da nota): R$ {{ money(servicesTotal) }}</p>
+          }
+          @if (discount > 0) {
+            <p>Desconto: R$ {{ money(discount) }}</p>
+          }
+          @if (serviceCharge > 0) {
+            <p>Taxa de serviço: R$ {{ money(serviceCharge) }}</p>
+          }
+          <p class="font-semibold">Total da venda: R$ {{ money(totalAfterDiscount) }}</p>
+          @if (hasServices) {
+            <p class="font-semibold">Valor da nota (só produtos): R$ {{ money(productsTotal) }}</p>
+          }
+          <p>
+            Total dos pagamentos{{ hasServices ? ' da nota' : '' }}: R$ {{ money(paymentsTotal) }}
+          </p>
+          @if (paymentsMismatch) {
+            <p class="text-warning">
+              @if (paymentsDifference > 0) {
+                Faltam R$ {{ money(paymentsDifference) }} para completar o pagamento{{
+                  hasServices ? ' da nota' : ''
+                }}.
+              } @else {
+                Pagamento excede o valor{{ hasServices ? ' da nota' : ' da venda' }} em R$
+                {{ money(paymentsDifference * -1) }}.
+              }
+            </p>
+          }
+        </div>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+        <div class="bg-surface rounded-2xl shadow-lg p-6">
+          <h2 class="text-text-primary font-semibold">Operação</h2>
+          <p class="text-xs text-text-muted mb-4">
+            Dados que identificam a operação no documento fiscal.
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-3">
+              <label [class]="labelClass" for="natOp">Natureza da operação</label>
+              <input
+                id="natOp"
+                type="text"
+                formControlName="natOp"
+                [class]="inputClass"
+                maxlength="60"
+              />
+              <p [class]="hintClass">
+                Obrigatório, até 60 caracteres. Descreva a operação, por exemplo: Venda de
+                mercadoria.
+              </p>
+              @if (form.controls.natOp.touched && form.controls.natOp.invalid) {
+                <p class="msg-error">Informe a natureza da operação (até 60 caracteres)</p>
+              }
+            </div>
+
+            <div>
+              <label [class]="labelClass" for="tpNF">Tipo da nota</label>
+              <select id="tpNF" formControlName="tpNF" [class]="inputClass">
+                <option value="">Padrão do sistema</option>
+                <option value="1">Saída</option>
+                <option value="0">Entrada</option>
+              </select>
+              <p [class]="hintClass">Saída: a mercadoria sai da empresa.</p>
+            </div>
+
+            <div>
+              <label [class]="labelClass" for="finNFe">Finalidade</label>
+              <select id="finNFe" formControlName="finNFe" [class]="inputClass">
+                <option value="">Padrão do sistema</option>
+                <option value="1">Normal</option>
+                <option value="2">Complementar</option>
+                <option value="3">Ajuste</option>
+                <option value="4">Devolução</option>
+              </select>
+              <p [class]="hintClass">Normal para uma venda comum.</p>
+            </div>
+
+            <div>
+              <label [class]="labelClass" for="dhSaiEnt">Data/hora de saída</label>
+              <input
+                id="dhSaiEnt"
+                type="datetime-local"
+                formControlName="dhSaiEnt"
+                [class]="inputClass"
+              />
+              <p [class]="hintClass">Quando a mercadoria sai. Opcional.</p>
+            </div>
+
+            <div class="md:col-span-3">
+              <label class="flex items-center gap-2 text-sm text-text-primary">
+                <input type="checkbox" formControlName="permiteCredito" />
+                Permite crédito de ICMS ao comprador (CSOSN 101)
+              </label>
+              <p [class]="hintClass">
+                Marque só se o comprador puder aproveitar crédito de ICMS. Em caso de dúvida,
+                consulte o contador.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-surface rounded-2xl shadow-lg p-6" formGroupName="transp">
+          <h2 class="text-text-primary font-semibold">Transporte</h2>
+          <p class="text-xs text-text-muted mb-4">
+            A modalidade do frete é obrigatória. Transportadora, veículo e volumes são opcionais.
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label [class]="labelClass" for="modFrete">Modalidade do frete</label>
+              <select id="modFrete" formControlName="modFrete" [class]="inputClass">
+                <option value="">Selecione</option>
+                <option value="0">0 - Remetente</option>
+                <option value="1">1 - Destinatário</option>
+                <option value="2">2 - Terceiros</option>
+                <option value="3">3 - Próprio, remetente</option>
+                <option value="4">4 - Próprio, destinatário</option>
+                <option value="9">9 - Sem ocorrência de transporte</option>
+              </select>
+              <p [class]="hintClass">
+                Quem paga o frete. Use 9 quando não há transporte (retirada no balcão).
+              </p>
+              @if (
+                form.controls.transp.controls.modFrete.touched &&
+                form.controls.transp.controls.modFrete.invalid
+              ) {
+                <p class="msg-error">Selecione a modalidade do frete</p>
+              }
+            </div>
+
+            <div class="md:col-span-2">
+              <label [class]="labelClass" for="carrierId">Transportadora</label>
+              <select id="carrierId" formControlName="carrierId" [class]="inputClass">
+                <option [ngValue]="null">Nenhuma</option>
+                @for (c of carriers(); track c.id) {
+                  <option [ngValue]="c.id">{{ c.name }}</option>
+                }
+              </select>
+              <p [class]="hintClass">Lista os parceiros cadastrados como transportadora.</p>
+            </div>
+
+            <div
+              formGroupName="vehicle"
+              class="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4"
+            >
+              <div>
+                <label [class]="labelClass" for="plate">Placa</label>
+                <input id="plate" type="text" formControlName="plate" [class]="inputClass" />
+                <p [class]="hintClass">Formato antigo (ABC-1234) ou Mercosul (ABC1D23).</p>
+                @if (form.controls.transp.controls.vehicle.controls.plate.invalid) {
+                  <p class="msg-error">Placa inválida</p>
+                }
+              </div>
+              <div>
+                <label [class]="labelClass" for="plateUf">UF da placa</label>
+                <input
+                  id="plateUf"
+                  type="text"
+                  formControlName="uf"
+                  maxlength="2"
+                  [class]="inputClass"
+                />
+                @if (form.controls.transp.controls.vehicle.controls.uf.invalid) {
+                  <p class="msg-error">UF inválida</p>
+                }
+              </div>
+              @if (form.controls.transp.controls.vehicle.errors?.['vehicleIncomplete']) {
+                <p class="msg-error md:col-span-3">
+                  Informe placa e UF juntas, ou deixe ambas vazias
+                </p>
+              }
+            </div>
+
+            <div
+              formGroupName="volumes"
+              class="md:col-span-3 grid grid-cols-2 md:grid-cols-6 gap-4"
+            >
+              <div>
+                <label [class]="labelClass" for="qVol">Quantidade</label>
+                <input
+                  id="qVol"
+                  type="number"
+                  min="0"
+                  formControlName="qVol"
+                  [class]="inputClass"
+                />
+              </div>
+              <div>
+                <label [class]="labelClass" for="esp">Espécie</label>
+                <input
+                  id="esp"
+                  type="text"
+                  formControlName="esp"
+                  maxlength="60"
+                  [class]="inputClass"
+                />
+              </div>
+              <div>
+                <label [class]="labelClass" for="marca">Marca</label>
+                <input
+                  id="marca"
+                  type="text"
+                  formControlName="marca"
+                  maxlength="60"
+                  [class]="inputClass"
+                />
+              </div>
+              <div>
+                <label [class]="labelClass" for="nVol">Numeração</label>
+                <input
+                  id="nVol"
+                  type="text"
+                  formControlName="nVol"
+                  maxlength="60"
+                  [class]="inputClass"
+                />
+              </div>
+              <div>
+                <label [class]="labelClass" for="pesoL">Peso líquido</label>
+                <input
+                  id="pesoL"
+                  type="number"
+                  min="0"
+                  step="0.001"
+                  formControlName="pesoL"
+                  [class]="inputClass"
+                />
+              </div>
+              <div>
+                <label [class]="labelClass" for="pesoB">Peso bruto</label>
+                <input
+                  id="pesoB"
+                  type="number"
+                  min="0"
+                  step="0.001"
+                  formControlName="pesoB"
+                  [class]="inputClass"
+                />
+              </div>
+              <p class="col-span-2 md:col-span-6 text-xs text-text-muted">
+                Volumes transportados: quantidade, espécie (caixa, pacote...), marca e pesos em kg.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-surface rounded-2xl shadow-lg p-6" formGroupName="cobr">
+          <h2 class="text-text-primary font-semibold">Cobrança</h2>
+          <p class="text-xs text-text-muted mb-4">
+            Opcional. Use para vendas a prazo: a fatura é o total devido e as duplicatas são as
+            parcelas.
+          </p>
+
+          <div formGroupName="fat" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div>
+              <label [class]="labelClass" for="nFat">Nº da fatura</label>
+              <input
+                id="nFat"
+                type="text"
+                formControlName="nFat"
+                maxlength="60"
+                [class]="inputClass"
+              />
+            </div>
+            <div>
+              <label [class]="labelClass" for="vOrig">Valor original</label>
+              <input
+                id="vOrig"
+                type="number"
+                min="0"
+                step="0.01"
+                formControlName="vOrig"
+                [class]="inputClass"
+              />
+            </div>
+            <div>
+              <label [class]="labelClass" for="vDesc">Desconto</label>
+              <input
+                id="vDesc"
+                type="number"
+                min="0"
+                step="0.01"
+                formControlName="vDesc"
+                [class]="inputClass"
+              />
+            </div>
+            <div>
+              <label [class]="labelClass" for="vLiq">Valor líquido</label>
+              <input
+                id="vLiq"
+                type="number"
+                min="0"
+                step="0.01"
+                formControlName="vLiq"
+                [class]="inputClass"
+              />
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-sm text-text-primary font-medium">Duplicatas</p>
+            <button
+              type="button"
+              (click)="addDup()"
+              class="bg-accent hover:bg-accent-hover text-btn-text px-3 py-1 rounded text-sm transition"
+            >
+              Adicionar duplicata
+            </button>
+          </div>
+
+          <div formArrayName="dup" class="space-y-2">
+            @for (dup of dups.controls; track dup; let i = $index) {
+              <div [formGroupName]="i" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                  <label [class]="labelClass">Número</label>
+                  <input type="text" formControlName="nDup" maxlength="60" [class]="inputClass" />
+                </div>
+                <div>
+                  <label [class]="labelClass">Vencimento</label>
+                  <input type="date" formControlName="dVenc" [class]="inputClass" />
+                </div>
+                <div>
+                  <label [class]="labelClass">Valor</label>
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    formControlName="vDup"
+                    [class]="inputClass"
+                  />
+                </div>
+                <button
+                  type="button"
+                  (click)="removeDup(i)"
+                  class="bg-btn-delete text-btn-text px-3 py-2 rounded text-sm transition hover:opacity-90"
+                >
+                  Remover
+                </button>
+              </div>
+            }
+          </div>
+          <p [class]="hintClass">
+            A soma das duplicatas precisa ser igual ao valor líquido da fatura.
+          </p>
+
+          @if (form.controls.cobr.errors?.['dupSum']; as err) {
+            <p class="msg-error">
+              A soma das duplicatas (R$ {{ money(err.sum) }}) deve ser igual ao valor líquido da
+              fatura (R$ {{ money(err.vLiq) }})
+            </p>
+          }
+        </div>
+
+        <div class="bg-surface rounded-2xl shadow-lg p-6">
+          <h2 class="text-text-primary font-semibold">Informações adicionais</h2>
+          <p class="text-xs text-text-muted mb-4">
+            Texto livre que aparece no DANFE. Use para observações ao cliente ou orientações
+            fiscais.
+          </p>
+          <textarea formControlName="infAdic" rows="4" [class]="inputClass"></textarea>
+
+          <label class="flex items-center gap-2 text-sm text-text-primary mt-4">
+            <input type="checkbox" formControlName="generateDanfe" />
+            Gerar DANFE após a autorização
+          </label>
+        </div>
+
+        <div class="flex justify-end gap-2">
+          <button
+            type="button"
+            (click)="goBack()"
+            class="bg-surface-alt text-text-primary px-6 py-2 rounded hover:bg-overlay transition"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="submitting()"
+            class="bg-accent hover:bg-accent-hover text-btn-text px-6 py-2 rounded shadow-md transition disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {{
+              submitting()
+                ? 'Processando...'
+                : saleDirty
+                  ? 'Salvar venda e emitir NF-e'
+                  : 'Emitir NF-e'
+            }}
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</div>

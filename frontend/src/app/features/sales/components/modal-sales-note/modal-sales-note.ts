@@ -18,6 +18,7 @@ import { CompanyService } from '../../../company/services/company.service';
 import { Company } from '../../../company/types/company';
 import { SafePipe } from '../../../../shared/pipes/safe.pipe';
 import { NgClass } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-modal-sales-note',
@@ -35,6 +36,7 @@ export class ModalSalesNote implements OnInit {
   private companyService = inject(CompanyService);
   private notification = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef);
+  private router = inject(Router);
 
   isRequestingNfce = false;
   nfceData: EmissionResult | null = null;
@@ -42,6 +44,22 @@ export class ModalSalesNote implements OnInit {
   isPdfPreviewUrl: string | null = null;
 
   canEmitNfce = this.licenseService.getCurrentPlan() === 'pro';
+
+  get hasServiceItems(): boolean {
+    return this.saleData.items?.some((i) => !!i.serviceId) ?? false;
+  }
+
+  get hasProductItems(): boolean {
+    return this.saleData.items?.some((i) => !i.serviceId) ?? false;
+  }
+
+  get nfceBlockedByServices(): boolean {
+    return this.hasServiceItems && !this.hasNfce();
+  }
+
+  get nfeBlocked(): boolean {
+    return this.hasServiceItems && !this.hasProductItems;
+  }
 
   @HostListener('document:keydown', ['$event'])
   handleKeydown(event: KeyboardEvent) {
@@ -138,6 +156,11 @@ export class ModalSalesNote implements OnInit {
       return;
     }
 
+    if (this.nfceBlockedByServices) {
+      this.notification.error('Venda com serviços: use a NF-e para ajustar os pagamentos da nota.');
+      return;
+    }
+
     if (this.hasNfce()) {
       this.downloadPdf(this.saleData.fiscalKey!);
       return;
@@ -204,6 +227,24 @@ export class ModalSalesNote implements OnInit {
         this.notification.error('Erro ao baixar o DANFE');
       },
     });
+  }
+
+  goToEmitNfe() {
+    if (!this.canEmitNfce) {
+      this.notification.error(
+        'Recurso disponível apenas no plano Pro! Faça upgrade para emitir notas fiscais.',
+      );
+      return;
+    }
+
+    if (this.nfeBlocked) {
+      this.notification.error(
+        'Venda só com serviços não pode ter nota fiscal. Utilize o emissor da prefeitura da sua cidade.',
+      );
+      return;
+    }
+    this.close();
+    this.router.navigate(['/fiscal/emitir', this.saleData.id]);
   }
 
   print() {
