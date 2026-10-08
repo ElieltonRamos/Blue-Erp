@@ -143,6 +143,9 @@ export function resolveCsosn(
 ): string {
   const base = (productCsosn ?? '').trim() || '102';
 
+  console.log('funcao resolveCsosn = parametroallowCredit = ' + allowCredit);
+  console.log('valor de productCsosn' + productCsosn);
+
   if (SUBSTITUTO.has(base)) {
     throw new Error(
       `CSOSN ${base} (substituto tributário) exige dados de ST que o produto não tem.`,

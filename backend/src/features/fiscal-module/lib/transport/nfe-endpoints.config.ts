@@ -64,6 +64,10 @@ export const CHAVE_CONSULTA_URLS: Record<
     production: 'http://www.sefaz.ba.gov.br/nfce/consulta',
     staging: 'http://hinternet.sefaz.ba.gov.br/nfce/consulta',
   },
+  MG: {
+    production: 'https://portalsped.fazenda.mg.gov.br/portalnfce',
+    staging: 'https://hportalsped.fazenda.mg.gov.br/portalnfce',
+  },
 };
 
 export const SVRS_STATES = [

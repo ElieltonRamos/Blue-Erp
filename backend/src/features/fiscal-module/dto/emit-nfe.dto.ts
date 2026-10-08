@@ -28,6 +28,16 @@ export class VehicleDto {
   uf: string;
 }
 
+export class NfePaymentDto {
+  @IsString()
+  @Length(1, 30)
+  method: string;
+
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  amount: number;
+}
+
 export class VolumesDto {
   @IsOptional()
   @IsInt()
@@ -172,6 +182,19 @@ export class EmitNfeDto {
   @ValidateNested()
   @Type(() => CobrDto)
   cobr?: CobrDto;
+
+  // Venda com serviços: a NF-e leva só os produtos
+  @IsOptional()
+  @IsBoolean()
+  omitServices?: boolean;
+
+  // Pagamentos da nota (soma dos produtos), usados quando omitServices = true
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => NfePaymentDto)
+  payments?: NfePaymentDto[];
 
   // Informações complementares digitadas pelo usuário
   @IsOptional()

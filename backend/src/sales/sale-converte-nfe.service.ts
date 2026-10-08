@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type {
   BusinessPartner,
   Client,
@@ -41,13 +41,19 @@ type BaseItem = Omit<Nfe55Item, 'vDesc' | 'icms' | 'ipi' | 'pis' | 'cofins'> & {
 
 @Injectable()
 export class SaleConverterNFeService {
+  private readonly logger = new Logger(SaleConverterNFeService.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly companyService: CompanyService,
   ) {}
 
   async convert(dto: EmitNfeDto, nfeNumber: number): Promise<Nfe55Options> {
-    const sale = await this.findSale(dto.saleId);
+    this.logger.debug(
+      `convert: dto.permiteCredito=${JSON.stringify(dto.permiteCredito)}`,
+    );
+    const omitServices = dto.omitServices === true;
+
+    const sale = await this.findSale(dto.saleId, omitServices);
     const company = await this.companyService.getCompany();
 
     const allowCredit = dto.permiteCredito === true;
@@ -58,11 +64,19 @@ export class SaleConverterNFeService {
       );
     }
 
+    const dest = this.buildDest(sale.client);
+    if (allowCredit && dest.indIEDest === '9') {
+      throw new FiscalException(
+        'Crédito de ICMS (CSOSN 101) não é permitido para destinatário não contribuinte',
+      );
+    }
+
     const baseItems = sale.items.map((item) =>
-      this.toBaseItem(item, sale.cfop, allowCredit),
+      this.toBaseItem(item, sale.cfop, allowCredit, omitServices),
     );
 
-    const discount = toNumber(sale.discount, 2);
+    // venda com serviços: desconto da venda não é aplicado à nota
+    const discount = omitServices ? 0 : toNumber(sale.discount, 2);
     const totalProd = round2(
       baseItems.reduce((sum, i) => sum + round2(i.qCom * i.vUnCom), 0),
     );
@@ -89,7 +103,6 @@ export class SaleConverterNFeService {
         .filter(Boolean)
         .join(' ') || undefined;
 
-    const dest = this.buildDest(sale.client);
     const carrier = await this.findCarrier(dto.transp.carrierId);
 
     const cUF = UF_CODES[company.state];
@@ -98,6 +111,28 @@ export class SaleConverterNFeService {
     }
 
     const cNF = String(Math.floor(Math.random() * 100000000)).padStart(8, '0');
+
+    const payments = omitServices
+      ? this.resolveNotePayments(dto)
+      : sale.payments.map((p) => ({
+          method: p.method,
+          amount: round2(toNumber(p.amount, 2) - toNumber(p.change, 2)),
+        }));
+
+    const totalNota = round2(
+      produtos.reduce(
+        (s, p) =>
+          s + round2(p.qCom * p.vUnCom) - (p.vDesc ?? 0) + (p.vOutro ?? 0),
+        0,
+      ),
+    );
+    const totalPag = round2(payments.reduce((s, p) => s + p.amount, 0));
+
+    if (Math.abs(totalPag - totalNota) > 0.01) {
+      throw new FiscalException(
+        `Pagamentos (R$ ${totalPag.toFixed(2)}) não conferem com o total da nota (R$ ${totalNota.toFixed(2)})`,
+      );
+    }
 
     return {
       ide: {
@@ -147,13 +182,13 @@ export class SaleConverterNFeService {
       transp: this.buildTransp(dto, carrier),
       ...this.buildCobr(dto),
       pag: {
-        detPag: sale.payments.map((p) => {
+        detPag: payments.map((p) => {
           const card = this.buildCard(p.method);
           return {
             indPag: sale.isPaid ? '0' : '1',
             tPag: PAYMENT_MAP[p.method] || '99',
             xPag: p.method === 'CREDITO_LOJA' ? 'Crédito Loja' : undefined,
-            vPag: toNumber(p.amount, 2),
+            vPag: p.amount,
             ...(card && { card }),
           };
         }),
@@ -170,7 +205,7 @@ export class SaleConverterNFeService {
       : { tpIntegra: '2', tBand: '99', cAut: '000000' };
   }
 
-  private async findSale(saleId: number) {
+  private async findSale(saleId: number, omitServices = false) {
     const sale = await this.prisma.client.sale.findUnique({
       where: { id: saleId },
       include: {
@@ -184,11 +219,18 @@ export class SaleConverterNFeService {
     });
 
     if (!sale) throw new FiscalException('Sale not found', 404);
+
+    if (omitServices) {
+      // nItem da NF-e precisa ser sequencial (1..N), sem lacunas
+      sale.items = sale.items
+        .filter((i) => i.serviceId == null)
+        .map((i, idx) => ({ ...i, itemNumber: idx + 1 }));
+    }
+
     if (!sale.items.length) throw new FiscalException('Sale has no items', 400);
 
     return sale;
   }
-
   private async findCarrier(
     carrierId?: number,
   ): Promise<BusinessPartner | null> {
@@ -210,6 +252,7 @@ export class SaleConverterNFeService {
     item: SaleItemWithProduct,
     saleCfop: string,
     allowCredit: boolean,
+    omitServices: boolean,
   ): BaseItem {
     const product = item.product;
     if (!product) {
@@ -227,6 +270,9 @@ export class SaleConverterNFeService {
     }
 
     let csosn: string;
+    this.logger.debug(
+      `toBaseItem: allowCredit=${allowCredit} csosn=${product.csosn}`,
+    );
     try {
       csosn = resolveCsosn(product.csosn, allowCredit);
     } catch (error) {
@@ -239,7 +285,7 @@ export class SaleConverterNFeService {
     const qCom = toNumber(item.quantity, 4);
     const vUnCom = toNumber(item.unitPrice, 4);
     const gtin = toGtin(product.code);
-    const vOutro = toNumber(item.serviceCharge, 2);
+    const vOutro = omitServices ? 0 : toNumber(item.serviceCharge, 2);
 
     return {
       product,
@@ -375,6 +421,20 @@ export class SaleConverterNFeService {
       indIEDest,
       ...(indIEDest === '1' && { IE: ie }),
     };
+  }
+
+  private resolveNotePayments(
+    dto: EmitNfeDto,
+  ): { method: string; amount: number }[] {
+    if (!dto.payments?.length) {
+      throw new FiscalException(
+        'Venda com serviços: informe os pagamentos da nota (omitServices)',
+      );
+    }
+    return dto.payments.map((p) => ({
+      method: p.method,
+      amount: round2(p.amount),
+    }));
   }
 
   private buildTransp(

@@ -414,8 +414,9 @@ export class EmitNfe implements OnInit {
     if (!this.selectedClientId) return 'Selecione um cliente.';
     if (this.items.length === 0) return 'A venda precisa ter ao menos um item.';
     if (this.payments.length === 0) return 'A venda precisa ter ao menos um pagamento.';
-    if (this.paymentsMismatch && !this.hasServices) {
-      return `O total de pagamentos (R$ ${this.money(this.paymentsTotal)}) não confere com o total da venda (R$ ${this.money(this.totalAfterDiscount)}).`;
+    if (this.paymentsMismatch) {
+      const label = this.hasServices ? 'dos produtos (nota)' : 'da venda';
+      return `O total de pagamentos (R$ ${this.money(this.paymentsTotal)}) não confere com o total ${label} (R$ ${this.money(this.paymentsTarget)}).`;
     }
     return null;
   }
