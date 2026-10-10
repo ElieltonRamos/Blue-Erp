@@ -4,7 +4,7 @@ import { IbptService } from '../../../ibpt/ibpt.service';
 import { StorageService } from './storage.service';
 import { SaleConverterNFCeService } from '../../../sales/sale-converte-nfce.service';
 import {
-  NfceAlreadyEmittedException,
+  FiscalAlreadyEmittedException,
   SefazException,
   FiscalException,
 } from '../fiscal.exception';
@@ -243,7 +243,7 @@ export class EmissionNfceService {
     fiscalKey: string | null;
   }): void {
     if (sale.fiscalStatus === 'EMITIDA' && sale.fiscalKey) {
-      throw new NfceAlreadyEmittedException(sale.fiscalKey);
+      throw new FiscalAlreadyEmittedException(sale.fiscalKey);
     }
   }
 

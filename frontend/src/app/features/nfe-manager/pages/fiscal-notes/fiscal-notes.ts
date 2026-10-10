@@ -116,8 +116,10 @@ export class FiscalNotes implements OnInit {
   }
 
   downloadPdf(nota: NotaFiscal): void {
+    if (!nota.fiscalKey) return;
+
     this.fiscalService.downloadPdf(nota.fiscalKey).subscribe({
-      next: (blob) => this.downloadFile(blob, `nfce-${nota.nNF}.pdf`, 'PDF'),
+      next: (blob) => this.downloadFile(blob, `${this.filePrefix(nota)}-${nota.nNF}.pdf`, 'PDF'),
       error: (e) =>
         this.notification.error(`Erro ao baixar PDF: ${e.error?.message ?? 'Erro desconhecido'}`),
     });
@@ -125,7 +127,8 @@ export class FiscalNotes implements OnInit {
 
   reemitirPdf(nota: NotaFiscal): void {
     this.fiscalService.reemitirPdf(nota.id).subscribe({
-      next: (blob) => this.downloadFile(blob, `nfce-reemissao-${nota.nNF}.pdf`, 'PDF'),
+      next: (blob) =>
+        this.downloadFile(blob, `${this.filePrefix(nota)}-reemissao-${nota.nNF}.pdf`, 'PDF'),
       error: (e) =>
         this.notification.error(`Erro ao reemitir PDF: ${e.error?.message ?? 'Erro desconhecido'}`),
     });
@@ -133,13 +136,15 @@ export class FiscalNotes implements OnInit {
 
   downloadXml(nota: NotaFiscal): void {
     this.fiscalService.downloadXml(nota.id).subscribe({
-      next: (blob) => this.downloadFile(blob, `nfce-${nota.nNF}.xml`, 'XML'),
+      next: (blob) => this.downloadFile(blob, `${this.filePrefix(nota)}-${nota.nNF}.xml`, 'XML'),
       error: (e) =>
         this.notification.error(`Erro ao baixar XML: ${e.error?.message ?? 'Erro desconhecido'}`),
     });
   }
 
   queryNota(nota: NotaFiscal): void {
+    if (!nota.fiscalKey) return;
+
     this.fiscalService.queryNota(nota.fiscalKey).subscribe({
       next: (res) => this.notification.success(`Status SEFAZ: ${res?.message ?? 'Consultado'}`),
       error: (e) =>
@@ -169,10 +174,11 @@ export class FiscalNotes implements OnInit {
       return;
     }
 
-    if (!this.cancelTarget) return;
+    const accessKey = this.cancelTarget?.fiscalKey;
+    if (!accessKey) return;
 
     this.canceling = true;
-    this.fiscalService.cancelNota(this.cancelTarget.fiscalKey, justification).subscribe({
+    this.fiscalService.cancelNota(accessKey, justification).subscribe({
       next: () => {
         this.notification.success('Nota cancelada com sucesso');
         this.canceling = false;
@@ -189,7 +195,17 @@ export class FiscalNotes implements OnInit {
   }
 
   canCancel(nota: NotaFiscal): boolean {
-    return nota.fiscalStatus === 'EMITIDA';
+    return nota.fiscalStatus === 'EMITIDA' && !!nota.fiscalKey;
+  }
+
+  // Notas antigas têm fiscalModel nulo e são NFC-e
+  private filePrefix(nota: NotaFiscal): 'nfe' | 'nfce' {
+    return nota.fiscalModel === '55' ? 'nfe' : 'nfce';
+  }
+
+  // Notas antigas têm fiscalModel nulo e são NFC-e
+  modelLabel(nota: NotaFiscal): 'NF-e' | 'NFC-e' {
+    return nota.fiscalModel === '55' ? 'NF-e' : 'NFC-e';
   }
 
   private async downloadFile(blob: Blob, filename: string, type: 'PDF' | 'XML'): Promise<void> {

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { FiscalController } from './fiscal.controller';
-import { FiscalService } from './services/fiscal.service';
+import { FiscalService } from './fiscal.service';
 import { EmissionNfceService } from './services/emission-nfce.service';
 import { CancellationService } from './services/cancellation.service';
 import { StorageService } from './services/storage.service';

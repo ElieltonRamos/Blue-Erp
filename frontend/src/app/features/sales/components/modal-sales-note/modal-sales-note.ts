@@ -12,13 +12,14 @@ import {
 } from '@angular/core';
 import { FiscalStatus, Sale, SaleItem } from '../../types/sale';
 import { LicenseService } from '../../../../core/services/license.service';
-import { EmissionResult, NfceService } from '../../services/nfce.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { CompanyService } from '../../../company/services/company.service';
 import { Company } from '../../../company/types/company';
 import { SafePipe } from '../../../../shared/pipes/safe.pipe';
 import { NgClass } from '@angular/common';
 import { Router } from '@angular/router';
+import { EmissionResult } from '../../../nfe-manager/types/fiscal';
+import { FiscalService } from '../../../nfe-manager/services/fiscal.service';
 
 @Component({
   selector: 'app-modal-sales-note',
@@ -32,7 +33,7 @@ export class ModalSalesNote implements OnInit {
   @ViewChild('pdfFrame') pdfFrame?: ElementRef<HTMLIFrameElement>;
 
   private licenseService = inject(LicenseService);
-  private nfceService = inject(NfceService);
+  private fiscalService = inject(FiscalService);
   private companyService = inject(CompanyService);
   private notification = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef);
@@ -168,7 +169,7 @@ export class ModalSalesNote implements OnInit {
 
     this.isRequestingNfce = true;
 
-    this.nfceService.emitBySale(this.saleData.id!, true).subscribe({
+    this.fiscalService.emitNfce(this.saleData.id!, true).subscribe({
       next: (response) => {
         this.nfceData = response;
         this.isRequestingNfce = false;
@@ -204,11 +205,11 @@ export class ModalSalesNote implements OnInit {
   }
 
   formatAccessKey(key: string): string {
-    return this.nfceService.formatAccessKey(key);
+    return this.fiscalService.formatAccessKey(key);
   }
 
   downloadPdf(accessKey: string) {
-    this.nfceService.downloadPdf(accessKey).subscribe({
+    this.fiscalService.downloadPdf(accessKey).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
 

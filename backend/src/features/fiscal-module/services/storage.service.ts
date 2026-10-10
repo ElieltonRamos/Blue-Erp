@@ -3,6 +3,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { StoragePaths } from '../entities/fiscal-module.entity';
 import { modelFromAccessKey } from '../lib/nfe-utils';
+import {
+  FiscalException,
+  InvalidAccessKeyException,
+} from '../fiscal.exception';
 
 type StorageModel = '55' | '65';
 type StorageKind = 'xml' | 'pdf';
@@ -30,17 +34,14 @@ export class StorageService {
     return path.join(process.cwd(), 'output', MODEL_FOLDER[model], kind);
   }
 
-  // O modelo (55 ou 65) vem da própria chave de acesso
   private resolveModel(accessKey: string): StorageModel {
-    if (!accessKey || accessKey.length !== 44) {
-      throw new Error(`Invalid access key: ${accessKey}`);
+    if (!/^\d{44}$/.test(accessKey ?? '')) {
+      throw new InvalidAccessKeyException();
     }
 
     const model = modelFromAccessKey(accessKey);
     if (model !== '55' && model !== '65') {
-      throw new Error(
-        `Unsupported model "${model}" in access key: ${accessKey}`,
-      );
+      throw new FiscalException(`Unsupported model "${model}" in access key`);
     }
 
     return model;

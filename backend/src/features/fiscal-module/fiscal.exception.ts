@@ -6,10 +6,10 @@ export class FiscalException extends HttpException {
   }
 }
 
-export class NfceAlreadyEmittedException extends FiscalException {
+export class FiscalAlreadyEmittedException extends FiscalException {
   constructor(accessKey: string) {
     super(
-      `NFC-e already emitted for this sale. Key: ${accessKey}`,
+      `Documento fiscal já emitido para esta venda. Chave: ${accessKey}`,
       HttpStatus.CONFLICT,
     );
   }
@@ -17,24 +17,27 @@ export class NfceAlreadyEmittedException extends FiscalException {
 
 export class InvalidAccessKeyException extends FiscalException {
   constructor() {
-    super('Invalid access key', HttpStatus.BAD_REQUEST);
+    super('Chave de acesso inválida', HttpStatus.BAD_REQUEST);
   }
 }
 
 export class CertificateException extends FiscalException {
-  constructor(message: string = 'Invalid or expired digital certificate') {
+  constructor(message: string = 'Certificado digital inválido ou expirado') {
     super(message, HttpStatus.BAD_REQUEST);
   }
 }
 
 export class SefazException extends FiscalException {
   constructor(message: string) {
-    super(`SEFAZ error: ${message}`, HttpStatus.BAD_REQUEST);
+    super(`Erro da SEFAZ: ${message}`, HttpStatus.BAD_REQUEST);
   }
 }
 
-export class NfceNotFoundException extends FiscalException {
+export class FiscalNotFoundException extends FiscalException {
   constructor(identifier: string) {
-    super(`NFC-e not found: ${identifier}`, HttpStatus.NOT_FOUND);
+    super(
+      `Documento fiscal não encontrado: ${identifier}`,
+      HttpStatus.NOT_FOUND,
+    );
   }
 }

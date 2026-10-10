@@ -5,8 +5,8 @@ import { StorageService } from './storage.service';
 import { DanfeGenerator } from '../lib/danfe/nfce-danfe-generator';
 import { DanfeNfeGenerator } from '../lib/danfe/nfe-danfe-generator';
 import { modelFromAccessKey } from '../lib/nfe-utils';
-import { NfceNotFoundException } from '../fiscal.exception';
-import { ListNfceDto } from '../dto/list-nfce.dto';
+import { FiscalNotFoundException } from '../fiscal.exception';
+import { ListFiscalDto } from '../dto/list-fiscal.dto';
 import { RevenueReportQueryDto } from '../dto/revenue-report-query.dto';
 import { CompanyService } from 'src/features/company/company.service';
 
@@ -26,7 +26,6 @@ export class FiscalReportsService {
     private readonly storageService: StorageService,
   ) {}
 
-  // Notas emitidas antes do campo fiscalModel existir têm o campo nulo e são NFC-e
   private modelWhere(model?: string) {
     if (model === '55') return { fiscalModel: '55' };
     if (model === '65') {
@@ -35,12 +34,11 @@ export class FiscalReportsService {
     return {};
   }
 
-  // ---------------------------------------------------------------------------
-  // GET /fiscal/nfce/list
-  // ---------------------------------------------------------------------------
-
-  async listNfce(dto: ListNfceDto) {
-    const where: any = { ...this.modelWhere(dto.model) };
+  async list(dto: ListFiscalDto) {
+    const where: any = {
+      ...this.modelWhere(dto.model),
+      fiscalKey: { not: null },
+    };
 
     if (dto.status) {
       where.fiscalStatus = dto.status;
@@ -91,10 +89,6 @@ export class FiscalReportsService {
     };
   }
 
-  // ---------------------------------------------------------------------------
-  // GET /fiscal/nfce/xml/:saleId
-  // ---------------------------------------------------------------------------
-
   async downloadXml(
     saleId: number,
   ): Promise<{ xmlPath: string; filename: string }> {
@@ -108,7 +102,7 @@ export class FiscalReportsService {
     });
 
     if (!sale?.fiscalKey || !sale.fiscalEmitDate) {
-      throw new NfceNotFoundException(`Sale ${saleId}`);
+      throw new FiscalNotFoundException(`Venda ${saleId}`);
     }
 
     const paths = this.storageService.getStoragePaths(
@@ -131,10 +125,6 @@ export class FiscalReportsService {
     throw new NotFoundException(`XML não encontrado para a venda ${saleId}`);
   }
 
-  // ---------------------------------------------------------------------------
-  // GET /fiscal/nfce/reprint/:saleId
-  // ---------------------------------------------------------------------------
-
   async reprintPdf(
     saleId: number,
   ): Promise<{ pdfPath: string; filename: string }> {
@@ -148,7 +138,7 @@ export class FiscalReportsService {
     });
 
     if (!sale?.fiscalKey || !sale.fiscalEmitDate) {
-      throw new NfceNotFoundException(`Sale ${saleId}`);
+      throw new FiscalNotFoundException(`Venda ${saleId}`);
     }
 
     const paths = this.storageService.getStoragePaths(
@@ -213,10 +203,6 @@ export class FiscalReportsService {
     return { pdfPath, filename };
   }
 
-  // ---------------------------------------------------------------------------
-  // GET /fiscal/reports/revenue
-  // ---------------------------------------------------------------------------
-
   async getRevenueReport(dto: RevenueReportQueryDto) {
     const { month, year } = dto;
     const start = new Date(`${year}-${month}-01T00:00:00-03:00`);
@@ -249,7 +235,6 @@ export class FiscalReportsService {
     const totalRevenue = emitted.reduce((acc, s) => acc + Number(s.total), 0);
     const canceledValue = canceled.reduce((acc, s) => acc + Number(s.total), 0);
 
-    // Agrupamento por CFOP — usa item.cfop, fallback para sale.cfop, fallback '5102'
     const cfopMap = new Map<string, { totalValue: number; count: number }>();
     for (const sale of emitted) {
       for (const item of sale.items) {
@@ -268,7 +253,6 @@ export class FiscalReportsService {
       count: data.count,
     }));
 
-    // Agrupamento por NCM
     const ncmMap = new Map<string, { totalValue: number; count: number }>();
     for (const sale of emitted) {
       for (const item of sale.items) {
@@ -296,10 +280,6 @@ export class FiscalReportsService {
       byNcm,
     };
   }
-
-  // ---------------------------------------------------------------------------
-  // GET /fiscal/reports/export
-  // ---------------------------------------------------------------------------
 
   async exportCsv(dto: RevenueReportQueryDto): Promise<string> {
     const report = await this.getRevenueReport(dto);

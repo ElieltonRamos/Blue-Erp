@@ -2,7 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../core/services/environment';
-import { PaginatedNotaFiscal, SefazStatus, RevenueReport, EmitNfeRequest, NfeEmissionResult } from '../types/fiscal';
+import {
+  PaginatedNotaFiscal,
+  SefazStatus,
+  RevenueReport,
+  EmitNfeRequest,
+  NfeEmissionResult,
+  EmissionResult,
+} from '../types/fiscal';
 
 @Injectable({
   providedIn: 'root',
@@ -32,7 +39,7 @@ export class FiscalService {
       if (filters.limit) params = params.set('limit', filters.limit.toString());
     }
 
-    return this.client.get<any>(`${this.apiUrl}/nfce/list`, { params }).pipe(
+    return this.client.get<any>(`${this.apiUrl}/list`, { params }).pipe(
       map((res) => ({
         ...res,
         data: res.data.map((item: any) => ({
@@ -40,29 +47,29 @@ export class FiscalService {
           clientName: item.client?.name ?? '—',
           total: Number(item.total).toFixed(2),
           nNF: item.fiscalKey ? parseInt(item.fiscalKey.substring(25, 34)) : '—',
-          fiscalEmitDate: item.fiscalEmitDate?.replace('Z', ''),
         })),
       })),
     );
   }
+
   cancelNota(accessKey: string, justification: string): Observable<any> {
-    return this.client.post<any>(`${this.apiUrl}/nfce/cancel`, { accessKey, justification });
+    return this.client.post<any>(`${this.apiUrl}/cancel`, { accessKey, justification });
   }
 
   downloadPdf(accessKey: string): Observable<Blob> {
-    return this.client.get(`${this.apiUrl}/nfce/pdf/${accessKey}`, { responseType: 'blob' });
+    return this.client.get(`${this.apiUrl}/pdf/${accessKey}`, { responseType: 'blob' });
   }
 
   reemitirPdf(saleId: number): Observable<Blob> {
-    return this.client.get(`${this.apiUrl}/nfce/reprint/${saleId}`, { responseType: 'blob' });
+    return this.client.get(`${this.apiUrl}/reprint/${saleId}`, { responseType: 'blob' });
   }
 
   downloadXml(saleId: number): Observable<Blob> {
-    return this.client.get(`${this.apiUrl}/nfce/xml/${saleId}`, { responseType: 'blob' });
+    return this.client.get(`${this.apiUrl}/xml/${saleId}`, { responseType: 'blob' });
   }
 
   queryNota(accessKey: string): Observable<any> {
-    return this.client.get<any>(`${this.apiUrl}/nfce/query`, {
+    return this.client.get<any>(`${this.apiUrl}/query`, {
       params: new HttpParams().set('accessKey', accessKey),
     });
   }
@@ -79,5 +86,13 @@ export class FiscalService {
 
   emitNfe(request: EmitNfeRequest): Observable<NfeEmissionResult> {
     return this.client.post<NfeEmissionResult>(`${this.apiUrl}/nfe/emit`, request);
+  }
+
+  emitNfce(saleId: number, generateDanfe = true): Observable<EmissionResult> {
+    return this.client.post<EmissionResult>(`${this.apiUrl}/nfce/emit`, { saleId, generateDanfe });
+  }
+  formatAccessKey(key: string): string {
+    if (!key || key.length !== 44) return key;
+    return key.match(/.{1,4}/g)?.join(' ') || key;
   }
 }

@@ -19,13 +19,13 @@ import {
 } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { createReadStream } from 'fs';
-import { FiscalService } from './services/fiscal.service';
+import { FiscalService } from './fiscal.service';
 import { EmitNfceDto } from './dto/emit-nfce.dto';
-import { CancelNfceDto } from './dto/cancel-nfce.dto';
-import { QueryNfceDto } from './dto/query-nfce.dto';
+import { CancelFiscalDto } from './dto/cancel-fiscal.dto';
+import { QueryFiscalDto } from './dto/query-fiscal.dto';
 import { RevenueReportQueryDto } from './dto/revenue-report-query.dto';
 import { FiscalReportsService } from './services/fiscal-report.service';
-import { ListNfceDto } from './dto/list-nfce.dto';
+import { ListFiscalDto } from './dto/list-fiscal.dto';
 import { EmitNfeDto } from './dto/emit-nfe.dto';
 
 @ApiTags('Fiscal')
@@ -36,35 +36,50 @@ export class FiscalController {
     private readonly fiscalReportsService: FiscalReportsService,
   ) {}
 
+  // ---------- Emissão (específicas por modelo) ----------
+
   @Post('nfce/emit')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Emit NFC-e' })
+  @ApiOperation({ summary: 'Emit NFC-e (modelo 65)' })
   @ApiResponse({ status: 201, description: 'NFC-e emitted successfully' })
   @ApiResponse({ status: 400, description: 'Invalid data' })
   async emitNfce(@Body() dto: EmitNfceDto) {
     return this.fiscalService.emitNfce(dto);
   }
 
-  @Post('nfce/cancel')
+  @Post('nfe/emit')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Emit NF-e (modelo 55)' })
+  @ApiResponse({ status: 201, description: 'NF-e emitted successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
+  async emitNfe(@Body() dto: EmitNfeDto) {
+    return this.fiscalService.emitNfe(dto);
+  }
+
+  // ---------- Compartilhadas (NF-e e NFC-e) ----------
+
+  @Post('cancel')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Cancel NFC-e' })
-  @ApiResponse({ status: 200, description: 'NFC-e cancelled successfully' })
-  @ApiResponse({ status: 404, description: 'NFC-e not found' })
-  async cancelNfce(@Body() dto: CancelNfceDto) {
-    return this.fiscalService.cancelNfce(dto);
+  @ApiOperation({ summary: 'Cancel fiscal document (NF-e or NFC-e)' })
+  @ApiResponse({ status: 200, description: 'Document cancelled successfully' })
+  @ApiResponse({ status: 404, description: 'Document not found' })
+  async cancel(@Body() dto: CancelFiscalDto) {
+    return this.fiscalService.cancel(dto);
   }
 
-  @Get('nfce/query')
-  @ApiOperation({ summary: 'Query NFC-e by access key' })
-  @ApiResponse({ status: 200, description: 'NFC-e query result' })
-  @ApiResponse({ status: 404, description: 'NFC-e not found' })
-  async queryNfce(@Query() dto: QueryNfceDto) {
-    return this.fiscalService.queryNfce(dto);
+  @Get('query')
+  @ApiOperation({
+    summary: 'Query fiscal document (NF-e or NFC-e) by access key',
+  })
+  @ApiResponse({ status: 200, description: 'Query result' })
+  @ApiResponse({ status: 404, description: 'Document not found' })
+  async query(@Query() dto: QueryFiscalDto) {
+    return this.fiscalService.query(dto);
   }
 
-  @Get('nfce/pdf/:accessKey')
-  @ApiOperation({ summary: 'Download NFC-e PDF' })
-  @ApiParam({ name: 'accessKey', description: '44-digit NFC-e access key' })
+  @Get('pdf/:accessKey')
+  @ApiOperation({ summary: 'Download fiscal document PDF (NF-e or NFC-e)' })
+  @ApiParam({ name: 'accessKey', description: '44-digit access key' })
   @ApiResponse({ status: 200, description: 'PDF file stream' })
   @ApiResponse({ status: 404, description: 'PDF not found' })
   async downloadPdf(
@@ -80,14 +95,16 @@ export class FiscalController {
     fileStream.pipe(res);
   }
 
-  @Get('nfce/list')
-  @ApiOperation({ summary: 'List NFC-e with filters' })
-  @ApiResponse({ status: 200, description: 'List of NFC-e' })
-  async listNfce(@Query() dto: ListNfceDto) {
-    return this.fiscalReportsService.listNfce(dto);
+  @Get('list')
+  @ApiOperation({
+    summary: 'List fiscal documents (NF-e and NFC-e) with filters',
+  })
+  @ApiResponse({ status: 200, description: 'List of fiscal documents' })
+  async list(@Query() dto: ListFiscalDto) {
+    return this.fiscalReportsService.list(dto);
   }
 
-  @Get('nfce/xml/:saleId')
+  @Get('xml/:saleId')
   @ApiOperation({ summary: 'Download XML saved for a sale' })
   @ApiParam({ name: 'saleId', description: 'Sale ID' })
   @ApiResponse({ status: 200, description: 'XML file stream' })
@@ -106,7 +123,7 @@ export class FiscalController {
     fileStream.pipe(res);
   }
 
-  @Get('nfce/reprint/:saleId')
+  @Get('reprint/:saleId')
   @ApiOperation({ summary: 'Reprint PDF from saved XML (no SEFAZ required)' })
   @ApiParam({ name: 'saleId', description: 'Sale ID' })
   @ApiResponse({ status: 200, description: 'PDF file stream' })
@@ -142,15 +159,6 @@ export class FiscalController {
       'Content-Disposition': `attachment; filename="relatorio-fiscal-${dto.year}-${dto.month}.csv"`,
     });
     res.send('\uFEFF' + csv); // BOM para Excel abrir UTF-8 corretamente
-  }
-
-  @Post('nfe/emit')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Emit NF-e (modelo 55)' })
-  @ApiResponse({ status: 201, description: 'NF-e emitted successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid data' })
-  async emitNfe(@Body() dto: EmitNfeDto) {
-    return this.fiscalService.emitNfe(dto);
   }
 
   @Get('sefaz/status')

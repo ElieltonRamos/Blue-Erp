@@ -2,7 +2,7 @@ import { IsOptional, IsString, IsIn, IsInt, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
-export class ListNfceDto {
+export class ListFiscalDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

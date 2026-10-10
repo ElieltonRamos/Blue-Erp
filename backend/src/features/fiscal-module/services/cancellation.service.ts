@@ -2,11 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Sale } from 'generated/prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
 import { CompanyService } from 'src/features/company/company.service';
-import { CancelNfceDto } from '../dto/cancel-nfce.dto';
 import {
   FiscalException,
   InvalidAccessKeyException,
-  NfceNotFoundException,
+  FiscalNotFoundException,
 } from '../fiscal.exception';
 import { NfeSender } from '../lib/transport/nfe-sender';
 import { NfeModel } from '../lib/transport/nfe-endpoints.config';
@@ -15,6 +14,7 @@ import {
   loadCertificate,
   modelFromAccessKey,
 } from '../lib/nfe-utils';
+import { CancelFiscalDto } from '../dto/cancel-fiscal.dto';
 
 const CANCELLATION_RULES: Record<
   NfeModel,
@@ -34,7 +34,7 @@ export class CancellationService {
   ) {}
 
   async cancel(
-    dto: CancelNfceDto,
+    dto: CancelFiscalDto,
   ): Promise<{ message: string; protocol?: string }> {
     const accessKey = dto.accessKey.replace(/\D/g, '');
     const model = this.resolveModel(accessKey);
@@ -94,7 +94,7 @@ export class CancellationService {
     });
 
     if (!sale) {
-      throw new NfceNotFoundException(accessKey);
+      throw new FiscalNotFoundException(accessKey);
     }
 
     return sale;

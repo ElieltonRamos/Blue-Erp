@@ -1,15 +1,15 @@
 export interface NotaFiscal {
   id: number;
-  fiscalKey: string;
-  fiscalProtocol: string;
+  fiscalModel: '55' | '65' | null; // null = notas antigas, tratadas como NFC-e
+  fiscalKey: string | null;
+  fiscalProtocol: string | null;
   fiscalStatus: 'PENDENTE' | 'EMITIDA' | 'CANCELADA' | 'ERRO';
-  fiscalEmitDate: string;
-  fiscalXml: string;
-  total: number;
-  nNF: number;
+  fiscalEmitDate: string | null;
+  total: string; // o getNotas converte com toFixed(2)
+  nNF: number | '—'; // '—' quando não há chave
   date: string;
   clientName: string;
-  paymentMethod: string;
+  payments: { method: string; amount: number }[];
 }
 
 export interface PaginatedNotaFiscal {

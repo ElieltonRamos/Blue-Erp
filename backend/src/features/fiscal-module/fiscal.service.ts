@@ -1,27 +1,27 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { StorageService } from './storage.service';
-import { EmissionNfceService } from './emission-nfce.service';
-import { EmissionNfeService } from './emission-nfe.service';
-import { CancellationService } from './cancellation.service';
+import { StorageService } from './services/storage.service';
+import { EmissionNfceService } from './services/emission-nfce.service';
+import { EmissionNfeService } from './services/emission-nfe.service';
+import { CancellationService } from './services/cancellation.service';
 import { PrismaService } from 'src/database/prisma.service';
-import { EmissionResult, SefazReturn } from '../entities/fiscal-module.entity';
-import { EmitNfceDto } from '../dto/emit-nfce.dto';
-import { EmitNfeDto } from '../dto/emit-nfe.dto';
-import { CancelNfceDto } from '../dto/cancel-nfce.dto';
-import { QueryNfceDto } from '../dto/query-nfce.dto';
+import { EmissionResult, SefazReturn } from './entities/fiscal-module.entity';
+import { EmitNfceDto } from './dto/emit-nfce.dto';
+import { EmitNfeDto } from './dto/emit-nfe.dto';
 import {
   FiscalException,
+  FiscalNotFoundException,
   InvalidAccessKeyException,
-  NfceNotFoundException,
-} from '../fiscal.exception';
-import { NfeSender } from '../lib/transport/nfe-sender';
-import { NfeModel } from '../lib/transport/nfe-endpoints.config';
+} from './fiscal.exception';
+import { NfeSender } from './lib/transport/nfe-sender';
+import { NfeModel } from './lib/transport/nfe-endpoints.config';
 import {
   buildSefazConfig,
   loadCertificate,
   modelFromAccessKey,
-} from '../lib/nfe-utils';
+} from './lib/nfe-utils';
 import { CompanyService } from 'src/features/company/company.service';
+import { CancelFiscalDto } from './dto/cancel-fiscal.dto';
+import { QueryFiscalDto } from './dto/query-fiscal.dto';
 
 @Injectable()
 export class FiscalService {
@@ -44,14 +44,14 @@ export class FiscalService {
     return this.emissionNfeService.emit(dto);
   }
 
-  async cancelNfce(
-    dto: CancelNfceDto,
+  async cancel(
+    dto: CancelFiscalDto,
   ): Promise<{ message: string; protocol?: string }> {
     return this.cancellationService.cancel(dto);
   }
 
   // O modelo (55 ou 65) vem da própria chave de acesso
-  async queryNfce(dto: QueryNfceDto): Promise<SefazReturn> {
+  async query(dto: QueryFiscalDto): Promise<SefazReturn> {
     const accessKey = dto.accessKey.replace(/\D/g, '');
     const model = this.modelFromKey(accessKey);
 
@@ -66,7 +66,7 @@ export class FiscalService {
     const result = await sender.queryNFe(accessKey, model);
 
     if (!result.success) {
-      throw new NfceNotFoundException(accessKey);
+      throw new FiscalNotFoundException(accessKey);
     }
 
     return result;
@@ -85,7 +85,7 @@ export class FiscalService {
     });
 
     if (!sale || !sale.fiscalEmitDate) {
-      throw new NfceNotFoundException(normalizedKey);
+      throw new FiscalNotFoundException(normalizedKey);
     }
 
     const pdfPath = this.storageService.getPdfPath(
@@ -94,7 +94,9 @@ export class FiscalService {
     );
 
     if (!this.storageService.fileExists(pdfPath)) {
-      throw new NfceNotFoundException(`PDF not found for key ${normalizedKey}`);
+      throw new FiscalNotFoundException(
+        `PDF not found for key ${normalizedKey}`,
+      );
     }
 
     return pdfPath;
