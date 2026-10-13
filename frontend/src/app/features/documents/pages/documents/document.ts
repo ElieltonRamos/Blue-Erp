@@ -1,0 +1,401 @@
+import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { PaginatorComponent } from '../../../../shared/paginator/paginator.component';
+import { NotificationService } from '../../../../shared/toastr/notification.service';
+import { DocumentService } from '../../services/document.service';
+import {
+  OSDocument,
+  DocumentType,
+  DocumentStatus,
+  CreateDocumentDTO,
+  FilterDocumentParams,
+  DOCUMENT_STATUS_LABELS,
+} from '../../types/documents.types';
+import { ClientService } from '../../../clients/services/client.service';
+import Client from '../../../clients/types/clients';
+import { AssetService } from '../../../assets/services/asset.service';
+import { Asset } from '../../../assets/types/asset.type';
+import { VehicleCreateFormComponent } from '../../../assets/components/vehicle-create-form.component';
+import { UserService } from '../../../users/services/user.service';
+import User from '../../../users/types/user';
+import { CreateClient } from '../../../clients/components/create-client/create-client';
+import { DocumentDetailComponent } from '../../components/document-detail/document-detail.component';
+
+@Component({
+  selector: 'app-documents',
+  imports: [
+    CommonModule,
+    FormsModule,
+    PaginatorComponent,
+    DocumentDetailComponent,
+    CreateClient,
+    VehicleCreateFormComponent,
+  ],
+  templateUrl: './document.html',
+})
+export class Documents {
+  private notification = inject(NotificationService);
+  private documentService = inject(DocumentService);
+  private clientService = inject(ClientService);
+  private assetService = inject(AssetService);
+  private userService = inject(UserService);
+  private cdr = inject(ChangeDetectorRef);
+  private router = inject(Router);
+
+  statusLabels = DOCUMENT_STATUS_LABELS;
+
+  // --- Listagem ---
+  listDocuments: OSDocument[] = [];
+  page = 1;
+  limit = 20;
+  totalPages = 0;
+  totalItems = 0;
+
+  // --- Filtros ---
+  filterStatus: DocumentStatus | '' = '';
+  filterType: DocumentType | '' = '';
+
+  filterClientTerm = '';
+  filterClientResults: Client[] = [];
+  filterClient: Client | null = null;
+  private filterClientTimer: ReturnType<typeof setTimeout> | null = null;
+
+  filterAssetTerm = '';
+  filterAssetResults: Asset[] = [];
+  filterAsset: Asset | null = null;
+  private filterAssetTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private today(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  filterStartDate: string = this.today();
+  filterEndDate: string = this.today();
+
+  users: User[] = [];
+  filteruserId: number | null = null;
+
+  filterMinTotal: number | null = null;
+  filterMaxTotal: number | null = null;
+
+  // --- Criação ---
+  showCreateForm = false;
+  newDocumentType: DocumentType = 'QUOTE';
+  creating = false;
+
+  newClientTerm = '';
+  newClientResults: Client[] = [];
+  newClientSelected: Client | null = null;
+  private newClientTimer: ReturnType<typeof setTimeout> | null = null;
+
+  newAssetOptions: Asset[] = [];
+  newAssetSelected: Asset | null = null;
+
+  allUsers: User[] = [];
+  newResponsibleId: number | null = null;
+
+  // --- Atalhos de cadastro rápido ---
+  showClientCreateForm = false;
+  showVehicleCreateForm = false;
+
+  // --- Detalhe ---
+  selectedDocument: OSDocument | null = null;
+
+  ngOnInit() {
+    this.loadDocuments();
+    this.loadusers();
+    this.loadAllUsers();
+  }
+
+  goToMenu() {
+    this.router.navigate(['/dashboard']);
+  }
+
+  private loadusers() {
+    this.userService.getUsers({ role: 'mechanic' }).subscribe({
+      next: (users) => {
+        this.users = users;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.users = [];
+      },
+    });
+  }
+
+  private loadAllUsers() {
+    this.userService.getUsers({ active: true }).subscribe({
+      next: (users) => {
+        this.allUsers = users;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.allUsers = [];
+      },
+    });
+  }
+
+  // --- Listagem ---
+  loadDocuments() {
+    const filters: FilterDocumentParams = {};
+    if (this.filterStatus) filters.status = this.filterStatus;
+    if (this.filterType) filters.type = this.filterType;
+    if (this.filterClient?.id) filters.clientId = this.filterClient.id;
+    if (this.filterAsset?.id) filters.assetId = this.filterAsset.id;
+    if (this.filteruserId) filters.userId = this.filteruserId;
+    if (this.filterStartDate) filters.startDate = this.filterStartDate;
+    if (this.filterEndDate) filters.endDate = this.filterEndDate;
+    if (this.filterMinTotal !== null) filters.minTotal = this.filterMinTotal;
+    if (this.filterMaxTotal !== null) filters.maxTotal = this.filterMaxTotal;
+
+    this.documentService.getAll(this.page, this.limit, filters).subscribe({
+      next: (response) => {
+        this.listDocuments = response.data;
+        this.totalItems = response.total;
+        this.page = response.page;
+        this.limit = response.limit;
+        this.totalPages = response.totalPages;
+        this.cdr.detectChanges();
+      },
+      error: (e) => {
+        this.notification.error(`Erro ao buscar documentos: ${e.error?.message || e.message}`);
+      },
+    });
+  }
+
+  onFilterChange() {
+    this.page = 1;
+    this.loadDocuments();
+  }
+
+  // --- Filtro por cliente ---
+  onFilterClientTermChange() {
+    this.filterClient = null;
+
+    if (this.filterClientTimer) clearTimeout(this.filterClientTimer);
+
+    const term = this.filterClientTerm.trim();
+    if (!term) {
+      this.filterClientResults = [];
+      this.onFilterChange();
+      return;
+    }
+
+    this.filterClientTimer = setTimeout(() => {
+      this.clientService.findClientByName(term).subscribe({
+        next: (clients) => {
+          this.filterClientResults = clients;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.filterClientResults = [];
+          this.cdr.detectChanges();
+        },
+      });
+    }, 350);
+  }
+
+  selectFilterClient(client: Client) {
+    this.filterClient = client;
+    this.filterClientTerm = client.name;
+    this.filterClientResults = [];
+    this.onFilterChange();
+  }
+
+  clearFilterClient() {
+    this.filterClient = null;
+    this.filterClientTerm = '';
+    this.filterClientResults = [];
+    this.onFilterChange();
+  }
+
+  // --- Filtro por veículo ---
+  onFilterAssetTermChange() {
+    this.filterAsset = null;
+
+    if (this.filterAssetTimer) clearTimeout(this.filterAssetTimer);
+
+    const term = this.filterAssetTerm.trim();
+    if (!term) {
+      this.filterAssetResults = [];
+      this.onFilterChange();
+      return;
+    }
+
+    this.filterAssetTimer = setTimeout(() => {
+      this.assetService.getAll(1, 10, { search: term }).subscribe({
+        next: (response) => {
+          this.filterAssetResults = response.data;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.filterAssetResults = [];
+          this.cdr.detectChanges();
+        },
+      });
+    }, 350);
+  }
+
+  selectFilterAsset(asset: Asset) {
+    this.filterAsset = asset;
+    this.filterAssetTerm = asset.label;
+    this.filterAssetResults = [];
+    this.onFilterChange();
+  }
+
+  clearFilterAsset() {
+    this.filterAsset = null;
+    this.filterAssetTerm = '';
+    this.filterAssetResults = [];
+    this.onFilterChange();
+  }
+
+  onPageChange(newPage: number) {
+    this.page = newPage;
+    this.loadDocuments();
+  }
+
+  // --- Criação ---
+  openCreateForm() {
+    this.showCreateForm = true;
+  }
+
+  closeCreateForm() {
+    this.showCreateForm = false;
+    this.resetCreateForm();
+  }
+
+  private resetCreateForm() {
+    this.newDocumentType = 'QUOTE';
+    this.newClientTerm = '';
+    this.newClientResults = [];
+    this.newClientSelected = null;
+    this.newAssetOptions = [];
+    this.newAssetSelected = null;
+    this.newResponsibleId = null;
+    this.showClientCreateForm = false;
+    this.showVehicleCreateForm = false;
+  }
+
+  onNewClientTermChange() {
+    this.newClientSelected = null;
+    this.newAssetOptions = [];
+    this.newAssetSelected = null;
+
+    if (this.newClientTimer) clearTimeout(this.newClientTimer);
+
+    const term = this.newClientTerm.trim();
+    if (!term) {
+      this.newClientResults = [];
+      return;
+    }
+
+    this.newClientTimer = setTimeout(() => {
+      this.clientService.findClientByName(term).subscribe({
+        next: (clients) => {
+          this.newClientResults = clients;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.newClientResults = [];
+          this.cdr.detectChanges();
+        },
+      });
+    }, 350);
+  }
+
+  selectNewClient(client: Client) {
+    this.newClientSelected = client;
+    this.newClientTerm = client.name;
+    this.newClientResults = [];
+
+    this.assetService.getAll(1, 50, { clientId: client.id! }).subscribe({
+      next: (response) => {
+        this.newAssetOptions = response.data;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.newAssetOptions = [];
+      },
+    });
+  }
+
+  createDocument() {
+    if (!this.newClientSelected) {
+      this.notification.error('Selecione o cliente.');
+      return;
+    }
+
+    const dto: CreateDocumentDTO = {
+      type: this.newDocumentType,
+      clientId: this.newClientSelected.id!,
+      assetId: this.newAssetSelected?.id,
+      responsibleId: this.newResponsibleId ?? undefined,
+    };
+
+    this.creating = true;
+
+    this.documentService.create(dto).subscribe({
+      next: (document) => {
+        this.notification.success('Documento criado com sucesso!');
+        this.creating = false;
+        this.closeCreateForm();
+        this.page = 1;
+        this.loadDocuments();
+        this.openDocument(document);
+      },
+      error: (e) => {
+        this.creating = false;
+        this.notification.error(`Erro ao criar documento: ${e.error?.message || e.message}`);
+      },
+    });
+  }
+
+  // --- Atalhos de cadastro rápido ---
+  openClientCreateForm() {
+    this.showClientCreateForm = true;
+  }
+
+  closeClientCreateForm() {
+    this.showClientCreateForm = false;
+  }
+
+  onClientCreated(client: Client) {
+    this.showClientCreateForm = false;
+    this.selectNewClient(client);
+  }
+
+  openVehicleCreateForm() {
+    this.showVehicleCreateForm = true;
+  }
+
+  closeVehicleCreateForm() {
+    this.showVehicleCreateForm = false;
+  }
+
+  onVehicleCreatedInForm(asset: Asset) {
+    this.showVehicleCreateForm = false;
+    this.newAssetOptions = [...this.newAssetOptions, asset];
+    this.newAssetSelected = asset;
+  }
+
+  // --- Detalhe ---
+  openDocument(document: OSDocument) {
+    this.selectedDocument = document;
+  }
+
+  closeDocument() {
+    this.selectedDocument = null;
+  }
+
+  onDocumentChanged(document: OSDocument) {
+    this.selectedDocument = document;
+    this.loadDocuments();
+  }
+}

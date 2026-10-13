@@ -383,7 +383,7 @@ export class CreateOrder implements OnInit {
         this.cdr.detectChanges();
 
         setTimeout(() => {
-          this.router.navigate(['/pedidos']);
+          this.router.navigate(['/comandas']);
         }, 1500);
       },
       error: (error) => {

@@ -3,16 +3,42 @@
  * Use sempre que precisar de new Date() para gravar no banco ou gerar XML fiscal
  */
 export function nowBrasilia(): Date {
-  const now = new Date();
-  const offset = -3 * 60;
-  return new Date(now.getTime() + offset * 60 * 1000);
+  return new Date();
 }
 
 /**
  * Formata uma data para o formato exigido pela SEFAZ: AAAA-MM-DDTHH:MM:SS-03:00
  */
+/**
+ * Formata uma data (instante UTC real) para o formato exigido pela SEFAZ,
+ * no fuso de Brasília: AAAA-MM-DDTHH:MM:SS-03:00
+ * Não altera o instante — apenas formata a representação.
+ */
 export function toSefazDateTime(date: Date): string {
-  return date.toISOString().replace(/\.\d{3}Z$/, '-03:00');
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+
+  const get = (type: string) => parts.find((p) => p.type === type)?.value;
+
+  const year = get('year');
+  const month = get('month');
+  const day = get('day');
+  let hour = get('hour');
+  const minute = get('minute');
+  const second = get('second');
+
+  // Intl pode retornar '24' para meia-noite dependendo do runtime; normaliza para '00'
+  if (hour === '24') hour = '00';
+
+  return `${year}-${month}-${day}T${hour}:${minute}:${second}-03:00`;
 }
 
 export function resolveLogicalDateTime(): Date {

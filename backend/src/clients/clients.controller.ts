@@ -16,6 +16,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { ClientsService } from './clients.service.js';
 import { CreateClientDto } from './dto/create-client.dto.js';
 import { UpdateClientDto } from './dto/update-client.dto.js';
+import { ClientResponseDto } from './dto/client-response.dto.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 
@@ -26,18 +27,21 @@ export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Registrar novo cliente' })
+  @ApiOperation({
+    summary: 'Registrar novo cliente (pessoa física ou jurídica)',
+  })
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'Cliente criado com sucesso',
+    type: ClientResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.CONFLICT,
-    description: 'Nome ou CPF já cadastrado',
+    description: 'Nome, CPF ou CNPJ já cadastrado',
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
-    description: 'CPF inválido ou dados incorretos',
+    description: 'CPF, CNPJ, CEP ou dados incorretos',
   })
   create(@Body() createClientDto: CreateClientDto) {
     return this.clientsService.create(createClientDto);
@@ -110,6 +114,7 @@ export class ClientsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Clientes encontrados',
+    type: [ClientResponseDto],
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
@@ -128,7 +133,8 @@ export class ClientsController {
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Cliente encontrado',
+    description: 'Cliente encontrado (null se não existir)',
+    type: ClientResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
@@ -136,6 +142,26 @@ export class ClientsController {
   })
   findByCpf(@Query('cpf') cpf: string) {
     return this.clientsService.findByCpf(cpf);
+  }
+
+  @Get('search/cnpj')
+  @ApiOperation({ summary: 'Buscar cliente por CNPJ' })
+  @ApiQuery({
+    name: 'cnpj',
+    example: '12345678000190',
+    description: 'CNPJ do cliente (com ou sem formatação)',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Cliente encontrado (null se não existir)',
+    type: ClientResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'CNPJ inválido',
+  })
+  findByCnpj(@Query('cnpj') cnpj: string) {
+    return this.clientsService.findByCnpj(cnpj);
   }
 
   @Get('search/phone')
@@ -148,6 +174,7 @@ export class ClientsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Clientes encontrados',
+    type: [ClientResponseDto],
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
@@ -162,6 +189,7 @@ export class ClientsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Cliente encontrado',
+    type: ClientResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
@@ -180,6 +208,7 @@ export class ClientsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Cliente atualizado com sucesso',
+    type: ClientResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
@@ -187,7 +216,7 @@ export class ClientsController {
   })
   @ApiResponse({
     status: HttpStatus.CONFLICT,
-    description: 'Nome ou CPF já cadastrado em outro cliente',
+    description: 'Nome, CPF ou CNPJ já cadastrado em outro cliente',
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
@@ -221,6 +250,7 @@ export class ClientsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Cliente restaurado com sucesso',
+    type: ClientResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,

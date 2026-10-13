@@ -1,0 +1,83 @@
+// find-all-purchase-query.dto.ts — com os novos filtros
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import {
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
+import { PurchaseStatus } from 'generated/prisma/client';
+
+const PURCHASE_SORT_FIELDS = [
+  'id',
+  'receivedAt',
+  'total',
+  'invoiceNumber',
+  'status',
+  'createdAt',
+] as const;
+
+export class FindAllPurchaseQueryDto {
+  @ApiPropertyOptional({ default: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt({ message: 'Página deve ser um número inteiro' })
+  @Min(1, { message: 'Página deve ser maior ou igual a 1' })
+  page?: number = 1;
+
+  @ApiPropertyOptional({ default: 10 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt({ message: 'Limite deve ser um número inteiro' })
+  @Min(1, { message: 'Limite deve ser maior ou igual a 1' })
+  limit?: number = 10;
+
+  @ApiPropertyOptional({ enum: PurchaseStatus })
+  @IsOptional()
+  @IsEnum(PurchaseStatus, {
+    message: `Status inválido. Valores aceitos: ${Object.values(PurchaseStatus).join(', ')}`,
+  })
+  status?: PurchaseStatus;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString({ message: 'Fornecedor deve ser um texto' })
+  supplier?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString({ message: 'Número da nota deve ser um texto' })
+  invoiceNumber?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString({ message: 'Chave de acesso deve ser um texto' })
+  fiscalKey?: string;
+
+  @ApiPropertyOptional({ description: 'Data inicial (YYYY-MM-DD)' })
+  @IsOptional()
+  @IsString({ message: 'Data inicial deve ser um texto' })
+  startDate?: string;
+
+  @ApiPropertyOptional({ description: 'Data final (YYYY-MM-DD)' })
+  @IsOptional()
+  @IsString({ message: 'Data final deve ser um texto' })
+  endDate?: string;
+
+  @ApiPropertyOptional({ enum: PURCHASE_SORT_FIELDS })
+  @IsOptional()
+  @IsIn(PURCHASE_SORT_FIELDS, {
+    message: `Campo de ordenação inválido. Valores aceitos: ${PURCHASE_SORT_FIELDS.join(', ')}`,
+  })
+  sortBy?: (typeof PURCHASE_SORT_FIELDS)[number];
+
+  @ApiPropertyOptional({ enum: ['asc', 'desc'] })
+  @IsOptional()
+  @IsIn(['asc', 'desc'], {
+    message: 'Ordem deve ser "asc" ou "desc"',
+  })
+  sortOrder?: 'asc' | 'desc';
+}

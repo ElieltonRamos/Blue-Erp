@@ -18,7 +18,9 @@ export interface SaleItem {
   id: number;
   itemNumber: number;
   saleId: number;
-  productId: number;
+  productId: number | null;
+  serviceId: number | null;
+  userId: number | null;
   xProd: string | null;
   quantity: number;
   unitPrice: number;
@@ -31,8 +33,38 @@ export interface SaleItem {
   totalTaxValue: number | null;
   importTaxValue: number | null;
   iofValue: number | null;
+  serviceCharge: number;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface CreateDirectSaleDto {
+  clientId?: number;
+  payments: SalePaymentDto[];
+  items: CreateSaleItemDto[];
+  discount?: number;
+  cfop?: string;
+}
+
+export interface UpdateSaleItemDto {
+  id?: number;
+  type: 'PRODUCT' | 'SERVICE';
+  productId?: number;
+  serviceId?: number;
+  userId?: number;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface UpdateSaleDto {
+  clientId?: number;
+  payments?: SalePaymentDto[];
+  items?: UpdateSaleItemDto[];
+  discount?: number;
+  serviceCharge?: number;
+  isPaid?: boolean;
+  fiscalStatus?: FiscalStatus;
+  cfop?: string;
 }
 
 export interface SaleClient {
@@ -70,9 +102,12 @@ export interface Sale {
   fiscalProtocol?: string;
   fiscalEmitDate: Date | null;
   fiscalXml: string | null;
+  fiscalModel: '55' | '65' | null;
   createdAt: Date;
   updatedAt: Date;
   serviceCharge: number;
+  orderId: number | null;
+  documentId: number | null;
   items?: SaleItem[];
 }
 
@@ -83,7 +118,8 @@ export interface SalePaymentDto {
 }
 
 export interface CreateSaleItemDto {
-  productId: number;
+  productId?: number;
+  serviceId?: number;
   quantity: number;
   unitPrice: number;
 }
@@ -93,14 +129,6 @@ export interface CreateSaleDto {
   payments: SalePaymentDto[];
   items: CreateSaleItemDto[];
   discount?: number;
-  cfop?: string;
-}
-
-export interface UpdateSaleDto {
-  payments?: SalePaymentDto[];
-  discount?: number;
-  isPaid?: boolean;
-  fiscalStatus?: FiscalStatus;
   cfop?: string;
 }
 
@@ -128,4 +156,15 @@ export interface SalePaginatedResponse {
 
 export interface MarkAsReceivedDto {
   salesIds: number[];
+}
+
+export type CartItemType = 'PRODUCT' | 'SERVICE';
+
+export interface CartItem {
+  id: number;
+  code: string;
+  name: string;
+  price: number;
+  quantity: number;
+  type: CartItemType;
 }

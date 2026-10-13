@@ -1,0 +1,103 @@
+import { PaginatedResponse } from '../../../core/guards/types/paginator';
+import { PaymentMethod } from '../../orders/pages/close-order/close-order';
+
+export type DocumentType = 'QUOTE' | 'SERVICE_ORDER';
+export type DocumentStatus = 'DRAFT' | 'APPROVED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELED';
+export type DocumentItemType = 'PRODUCT' | 'SERVICE';
+
+export interface DocumentItem {
+  id: number;
+  type: DocumentItemType;
+  productId: number | null;
+  productName?: string;
+  serviceId: number | null;
+  serviceName?: string;
+  userId: number | null;
+  userName?: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface OSDocument {
+  id: number;
+  type: DocumentType;
+  status: DocumentStatus;
+  clientId: number;
+  clientName: string;
+  assetId: number | null;
+  responsibleId: number | null;
+  responsibleName?: string;
+  total: number;
+  items: DocumentItem[];
+  approvedAt: Date | null;
+  finishedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UpdateDocumentItemDTO {
+  quantity?: number;
+  unitPrice?: number;
+  userId?: number;
+}
+
+export interface UpdateDocumentResponsibleDTO {
+  responsibleId: number;
+}
+
+export interface CreateDocumentDTO {
+  type: DocumentType;
+  clientId: number;
+  assetId?: number;
+  responsibleId?: number;
+}
+
+export interface AddDocumentItemDTO {
+  type: DocumentItemType;
+  productId?: number;
+  serviceId?: number;
+  userId?: number;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface UpdateDocumentStatusDTO {
+  status: DocumentStatus;
+}
+
+export interface FilterDocumentParams {
+  type?: DocumentType;
+  status?: DocumentStatus;
+  clientId?: number;
+  assetId?: number;
+  userId?: number;
+  startDate?: string;
+  endDate?: string;
+  minTotal?: number;
+  maxTotal?: number;
+}
+
+export type DocumentPaginatedResponse = PaginatedResponse<OSDocument>;
+
+export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
+  DRAFT: 'Rascunho',
+  APPROVED: 'Aprovado',
+  IN_PROGRESS: 'Em andamento',
+  COMPLETED: 'Concluído',
+  CANCELED: 'Cancelado',
+};
+
+export interface FinalizeDocumentDTO {
+  discount?: number;
+  cfop?: string;
+  payments: SalePaymentDto[];
+}
+
+export interface SalePaymentDto {
+  method: PaymentMethod;
+  amount: number;
+  change?: number;
+}

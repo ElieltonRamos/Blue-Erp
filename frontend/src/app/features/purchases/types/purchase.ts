@@ -1,0 +1,147 @@
+// types/purchase.ts
+import { BusinessPartner } from './business-partner';
+
+// Re-export para não quebrar imports existentes de BusinessPartner a partir deste arquivo
+export type { BusinessPartner } from './business-partner';
+
+export type PurchaseStatus = 'RECEIVED' | 'CANCELED';
+
+// Dados do emitente (fornecedor) extraídos do XML: emit.IE, emit.enderEmit.xMun, emit.enderEmit.UF
+export interface NfeSupplierData {
+  supplierStateRegistration?: string;
+  supplierCity?: string;
+  supplierState?: string;
+}
+
+// Dados de transporte da compra: transp.transporta (IE, xMun, UF) e transp.veicTransp.RNTC
+export interface PurchaseTransportData {
+  transportStateRegistration?: string;
+  transportCity?: string;
+  transportState?: string;
+  transportRntc?: string;
+}
+
+export interface ParsedNfeItem {
+  supplierProductCode: string;
+  description: string;
+  ncm: string;
+  unit: string;
+  quantity: number;
+  unitCost: number;
+  total: number;
+}
+
+export interface ParsedNfeInstallment {
+  number: string;
+  dueDate: string;
+  value: number;
+}
+
+export interface ReconciledPurchaseItem {
+  supplierProductCode: string;
+  description: string;
+  quantity: number;
+  unitCost: number;
+  total: number;
+  ncm: string;
+  productId?: number;
+  materialId?: number;
+}
+
+// Retorno de POST /purchases/parse-xml
+export interface ParsedPurchasePreview extends NfeSupplierData, PurchaseTransportData {
+  supplierCnpj: string;
+  supplierName: string;
+  destCnpj: string;
+  invoiceNumber: string;
+  fiscalKey: string;
+  fiscalXml: string;
+  items: ReconciledPurchaseItem[];
+  installments: ParsedNfeInstallment[];
+  totalValue: number;
+}
+
+// Payload de POST /purchases
+export interface CreatePurchaseFromXml extends NfeSupplierData, PurchaseTransportData {
+  supplierCnpj: string;
+  supplierName: string;
+  destCnpj: string;
+  invoiceNumber: string;
+  fiscalKey: string;
+  fiscalXml: string;
+  items: ReconciledPurchaseItem[];
+  installments: ParsedNfeInstallment[];
+}
+
+export interface PurchaseItem {
+  id: number;
+  purchaseId: number;
+  productId?: number;
+  materialId?: number;
+  supplierProductCode?: string;
+  quantity: number;
+  unitCost: number;
+  total: number;
+}
+
+export interface Purchase {
+  id: number;
+  status: PurchaseStatus;
+  supplierId: number;
+  supplier?: BusinessPartner;
+  total: number;
+  invoiceNumber?: string;
+  fiscalKey?: string;
+  supplierCnpj?: string;
+  // Dados de transporte da compra
+  stateRegistration?: string;
+  city?: string;
+  state?: string;
+  rntc?: string;
+  receivedAt: string;
+  items: PurchaseItem[];
+  expenses: Expense[];
+}
+
+// Reaproveitado do módulo financeiro
+export interface Expense {
+  id: number;
+  supplier: string;
+  description?: string;
+  value: number;
+  datePayment: string;
+  status: 'Pago' | 'Pendente' | 'Atrasado';
+  purchaseId?: number;
+  partnerId?: number;
+}
+
+export interface PurchaseFilters {
+  status?: PurchaseStatus | '';
+  supplier?: string;
+  invoiceNumber?: string;
+  fiscalKey?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface ManualPurchaseItem {
+  description: string;
+  quantity: number;
+  unitCost: number;
+  total: number;
+  productId?: number;
+  materialId?: number;
+}
+
+export interface ManualInstallment {
+  number: string;
+  dueDate: string;
+  value: number;
+}
+
+export interface CreateManualPurchase extends PurchaseTransportData {
+  supplierId: number;
+  invoiceNumber?: string;
+  items: ManualPurchaseItem[];
+  installments: ManualInstallment[];
+}

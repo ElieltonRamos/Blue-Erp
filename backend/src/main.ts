@@ -6,6 +6,7 @@ import { version } from '../package.json';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api');
 
   app.enableShutdownHooks();
 
@@ -37,6 +38,7 @@ async function bootstrap() {
     'TELEGRAM_CHAT_ID',
     'PRINTER_BAR',
     'PRINTER_COZINHA_DOM_JUAN',
+    'MYSQLDUMP_PATH',
   ];
 
   console.log('=== Environment Variables ===');
@@ -57,7 +59,7 @@ async function bootstrap() {
   console.log(`VERSAO SERVIDOR = ${packageVersion}`);
   console.log('=============================');
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.ENVIRONMENT !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('Blue-ERP API')
       .setDescription('API do sistema Blue-ERP para gestão')
@@ -67,7 +69,7 @@ async function bootstrap() {
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document);
+    SwaggerModule.setup('docs', app, document);
   }
 
   await app.listen(process.env.PORT ?? 3000);

@@ -68,8 +68,12 @@ export class SaleItemResponseDto {
   itemNumber: number;
   @ApiProperty({ example: 1 })
   saleId: number;
-  @ApiProperty({ example: 5 })
-  productId: number;
+  @ApiPropertyOptional({ example: 5 })
+  productId: number | null;
+  @ApiPropertyOptional({ example: 3 })
+  serviceId: number | null;
+  @ApiPropertyOptional({ example: 7 })
+  userId: number | null;
   @ApiPropertyOptional({ example: 'Pizza Margherita' })
   xProd: string | null;
   @ApiProperty({ example: 2.5 })
@@ -104,6 +108,8 @@ export class SaleItemResponseDto {
     this.itemNumber = data.itemNumber;
     this.saleId = data.saleId;
     this.productId = data.productId;
+    this.serviceId = data.serviceId;
+    this.userId = data.userId;
     this.xProd = data.xProd;
     this.quantity = Number(data.quantity);
     this.unitPrice = Number(data.unitPrice);

@@ -114,7 +114,7 @@ export class CloseOrder implements OnInit {
     this.orderId = Number(this.route.snapshot.paramMap.get('id')) || 0;
     if (!this.orderId) {
       this.notification.error('ID do pedido não informado');
-      this.router.navigate(['/pedidos']);
+      this.router.navigate(['/comandas']);
       return;
     }
     this.loadOrder();
@@ -133,7 +133,7 @@ export class CloseOrder implements OnInit {
       error: () => {
         this.notification.error('Erro ao carregar pedido');
         this.isLoading = false;
-        this.router.navigate(['/pedidos']);
+        this.router.navigate(['/comandas']);
       },
     });
   }

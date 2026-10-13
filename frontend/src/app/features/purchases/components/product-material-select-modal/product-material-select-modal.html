@@ -1,0 +1,206 @@
+<!-- product-material-select-modal.html -->
+@if (show) {
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+    <div
+      class="w-full max-w-2xl rounded-xl shadow-lg p-6 max-h-[90vh] overflow-y-auto"
+      [style.background-color]="'var(--color-surface)'"
+    >
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-text-primary font-semibold text-lg">
+          Vincular item: {{ itemDescription }}
+        </h3>
+        <button (click)="closeModal()" class="text-text-muted">✕</button>
+      </div>
+
+      <div class="flex gap-2 mb-4">
+        <button
+          (click)="switchTab('product')"
+          class="px-4 py-2 rounded-lg text-sm font-semibold"
+          [style.background-color]="
+            tab === 'product' ? 'var(--color-accent)' : 'var(--color-surface-alt)'
+          "
+          [style.color]="tab === 'product' ? 'var(--color-btn-text)' : 'var(--color-text-primary)'"
+        >
+          Produto (revenda)
+        </button>
+        <button
+          (click)="switchTab('material')"
+          class="px-4 py-2 rounded-lg text-sm font-semibold"
+          [style.background-color]="
+            tab === 'material' ? 'var(--color-accent)' : 'var(--color-surface-alt)'
+          "
+          [style.color]="tab === 'material' ? 'var(--color-btn-text)' : 'var(--color-text-primary)'"
+        >
+          Matéria-prima
+        </button>
+      </div>
+
+      @if (!showCreateForm) {
+        <input
+          type="text"
+          [placeholder]="tab === 'product' ? 'Buscar produto...' : 'Buscar matéria-prima...'"
+          class="w-full px-3 py-2 rounded border mb-3 text-text-primary"
+          [style.background-color]="'var(--color-surface-alt)'"
+          [style.border-color]="'var(--color-border)'"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+        />
+
+        <div class="max-h-64 overflow-y-auto space-y-1 mb-4">
+          @if (tab === 'product') {
+            @for (p of productResults; track p.id) {
+              <button
+                type="button"
+                (click)="selectProduct(p)"
+                class="w-full text-left px-3 py-2 rounded hover:bg-overlay text-sm text-text-primary"
+              >
+                {{ p.name }} <span class="text-text-muted">({{ p.code }})</span>
+              </button>
+            }
+          } @else {
+            @for (m of materialResults; track m.id) {
+              <button
+                type="button"
+                (click)="selectMaterial(m)"
+                class="w-full text-left px-3 py-2 rounded hover:bg-overlay text-sm"
+              >
+                {{ m.name }} <span class="text-text-muted">({{ m.code }})</span>
+              </button>
+            }
+          }
+        </div>
+
+        <button
+          (click)="openCreateForm()"
+          class="text-sm underline"
+          [style.color]="'var(--color-accent)'"
+        >
+          + Cadastrar {{ tab === 'product' ? 'produto' : 'matéria-prima' }} novo
+        </button>
+      } @else if (tab === 'product') {
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col col-span-2">
+            <label class="text-sm mb-1 text-text-primary">Nome</label>
+            <input type="text" class="px-3 py-2 rounded border text-text-primary" [(ngModel)]="newProduct.name" />
+          </div>
+          <div class="flex flex-col">
+            <label class="text-sm mb-1 text-text-primary">Código</label>
+            <input type="text" class="px-3 py-2 rounded border text-text-primary" [(ngModel)]="newProduct.code" />
+          </div>
+          <div class="flex flex-col">
+            <label class="text-sm mb-1 text-text-primary">Unidade</label>
+            <select class="px-3 py-2 rounded border text-text-primary" [(ngModel)]="newProduct.unit">
+              <option value="UN">UN</option>
+              <option value="KG">KG</option>
+              <option value="LT">LT</option>
+              <option value="MT">MT</option>
+              <option value="CX">CX</option>
+              <option value="ML">ML</option>
+              <option value="GR">GR</option>
+              <option value="DZ">DZ</option>
+            </select>
+          </div>
+          <div class="flex flex-col">
+            <label class="text-sm mb-1 text-text-primary">Preço de venda</label>
+            <input type="number" class="px-3 py-2 rounded border text-text-primary" [(ngModel)]="newProduct.price" />
+          </div>
+          <div class="flex flex-col">
+            <label class="text-sm mb-1 text-text-primary">Custo</label>
+            <input
+              type="number"
+              class="px-3 py-2 rounded border text-text-primary"
+              [(ngModel)]="newProduct.costPrice"
+            />
+          </div>
+          <div class="flex flex-col">
+            <label class="text-sm mb-1 text-text-primary">NCM</label>
+            <input
+              type="text"
+              maxlength="8"
+              class="px-3 py-2 rounded border text-text-primary"
+              [(ngModel)]="newProduct.ncm"
+            />
+          </div>
+          <div class="flex flex-col">
+            <label class="text-sm mb-1 text-text-primary">Origem (0-8)</label>
+            <input
+              type="number"
+              min="0"
+              max="8"
+              class="px-3 py-2 rounded border text-text-primary"
+              [(ngModel)]="newProduct.origin"
+            />
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-4">
+          <button
+            (click)="createProduct()"
+            class="px-4 py-2 rounded-lg font-semibold"
+            [style.background-color]="'var(--color-success)'"
+            [style.color]="'var(--color-btn-text)'"
+          >
+            Cadastrar e vincular
+          </button>
+          <button
+            (click)="showCreateForm = false"
+            class="px-4 py-2 rounded-lg font-semibold"
+            [style.background-color]="'var(--color-surface-alt)'"
+          >
+            Voltar
+          </button>
+        </div>
+      } @else {
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col col-span-2">
+            <label class="text-sm mb-1 text-text-primary">Nome</label>
+            <input type="text" class="px-3 py-2 rounded border text-text-primary" [(ngModel)]="newMaterial.name" />
+          </div>
+          <div class="flex flex-col">
+            <label class="text-sm mb-1 text-text-primary">Código</label>
+            <input type="text" class="px-3 py-2 rounded border text-text-primary" [(ngModel)]="newMaterial.code" />
+          </div>
+          <div class="flex flex-col">
+            <label class="text-sm mb-1 text-text-primary">Unidade</label>
+            <select class="px-3 py-2 rounded border text-text-primary" [(ngModel)]="newMaterial.unit">
+              <option value="UN">UN</option>
+              <option value="KG">KG</option>
+              <option value="LT">LT</option>
+              <option value="MT">MT</option>
+              <option value="CX">CX</option>
+              <option value="ML">ML</option>
+              <option value="GR">GR</option>
+              <option value="DZ">DZ</option>
+            </select>
+          </div>
+          <div class="flex flex-col">
+            <label class="text-sm mb-1 text-text-primary">Custo unitário</label>
+            <input
+              type="number"
+              class="px-3 py-2 rounded border text-text-primary"
+              [(ngModel)]="newMaterial.unitCost"
+            />
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-4">
+          <button
+            (click)="createMaterial()"
+            class="px-4 py-2 rounded-lg font-semibold"
+            [style.background-color]="'var(--color-success)'"
+            [style.color]="'var(--color-btn-text)'"
+          >
+            Cadastrar e vincular
+          </button>
+          <button
+            (click)="showCreateForm = false"
+            class="px-4 py-2 rounded-lg font-semibold"
+            [style.background-color]="'var(--color-surface-alt)'"
+          >
+            Voltar
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}

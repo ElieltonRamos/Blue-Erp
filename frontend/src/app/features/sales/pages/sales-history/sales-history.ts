@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { UserService } from '../../../users/services/user.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
@@ -9,13 +9,15 @@ import { FiscalStatus, Sale, SaleFilters } from '../../types/sale';
 import User from '../../../users/types/user';
 import { SaleService } from '../../services/sales.service';
 import { DatePipe } from '@angular/common';
+import { ModalEditSale } from "../../components/modal-edit-sale/modal-edit-sale";
 
 @Component({
   selector: 'app-sales-history',
-  imports: [FormsModule, ModalSalesNote, PaginatorComponent, DatePipe],
+  imports: [FormsModule, ModalSalesNote, PaginatorComponent, DatePipe, ModalEditSale],
   templateUrl: './sales-history.html',
 })
 export class SalesHistory {
+  private cdr = inject(ChangeDetectorRef);
   totalItems = 0;
   limit = 100;
   page = 1;
@@ -33,6 +35,10 @@ export class SalesHistory {
   filterFiscalStatus: FiscalStatus | null = null;
   filterIsPaid: boolean | null = null;
   operators: User[] = [];
+
+  fiscalStatusEnum = FiscalStatus;
+  showEditModal = false;
+  saleToEdit: Sale | null = null;
 
   fiscalStatusOptions = Object.values(FiscalStatus);
 
@@ -58,6 +64,22 @@ export class SalesHistory {
         );
       },
     });
+  }
+
+  openEditModal(sale: Sale): void {
+    if (sale.fiscalStatus === FiscalStatus.EMITIDA) return;
+    this.saleToEdit = sale;
+    this.showEditModal = true;
+  }
+
+  closeEditModal(): void {
+    this.saleToEdit = null;
+    this.showEditModal = false;
+  }
+
+  onSaleUpdated(): void {
+    this.closeEditModal();
+    this.getSales(this.page, this.limit);
   }
 
   applyDateFilter(): void {
@@ -113,6 +135,7 @@ export class SalesHistory {
         this.page = response.page;
         this.limit = response.limit;
         this.totalPages = response.totalPages;
+        this.cdr.detectChanges();
       },
       error: (e: any) => {
         this.notification.error(`Erro ao buscar vendas: ${e.error?.message || 'Erro inesperado.'}`);

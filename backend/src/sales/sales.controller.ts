@@ -22,7 +22,7 @@ import {
 import { SalesService } from './sales.service.js';
 import { CreateSaleDto } from './dto/create-sale.dto.js';
 import { UpdateSaleDto } from './dto/update-sale.dto.js';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
+import { JwtAuthGuard, JwtPayload } from '../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../common/guards/roles.guard.js';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import {
@@ -32,13 +32,89 @@ import {
 import { SaleFiltersDto } from './dto/filters-sale.dto.js';
 import { ConvertOrderToSaleDto } from '../orders/dto/convert-order-to-sale.js';
 import { MarkAsReceivedDto } from './dto/mark-as-received.dto.js';
+import { FinalizeDocumentDto } from './dto/finalize-document.dto.js';
+import { DocumentSaleService } from './document-sale.service.js';
+import { CreateDirectSaleDto } from './dto/create-direct-sale.dto.js';
 
 @ApiTags('Sales')
 @Controller('sales')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class SalesController {
-  constructor(private readonly salesService: SalesService) {}
+  constructor(
+    private readonly salesService: SalesService,
+    private documentService: DocumentSaleService,
+  ) {}
+
+  @Post('direct')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Criar venda direta (sem pedido ou documento de origem)',
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Venda criada com sucesso',
+    type: SaleResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Cliente ou produto não encontrado, ou pagamento inválido',
+  })
+  createDirectSale(
+    @Body() dto: CreateDirectSaleDto,
+    @CurrentUser('userId') userId: number,
+    @CurrentUser('username') username: string,
+  ) {
+    return this.salesService.createDirectSale(dto, userId, username);
+  }
+
+  @Get('by-document/:documentId')
+  @ApiOperation({ summary: 'Buscar venda pelo ID do documento de origem' })
+  @ApiParam({ name: 'documentId', type: Number })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Venda encontrada',
+    type: SaleResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Nenhuma venda associada a esse documento',
+  })
+  findByDocumentId(@Param('documentId', ParseIntPipe) documentId: number) {
+    return this.documentService.findByDocumentId(documentId);
+  }
+
+  @Post('finalize-document/:documentId')
+  @ApiOperation({
+    summary: 'Finalizar OS e gerar venda (Sale) a partir dos itens PRODUCT',
+  })
+  @ApiParam({
+    name: 'documentId',
+    type: Number,
+    description: 'ID do documento',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Venda gerada com sucesso',
+    type: SaleResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Documento não está IN_PROGRESS, sem itens PRODUCT, ou pagamento inválido',
+  })
+  finalizeDocument(
+    @Param('documentId', ParseIntPipe) documentId: number,
+    @Body() dto: FinalizeDocumentDto,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<SaleResponseDto> {
+    return this.documentService.convertDocumentoToSale(
+      documentId,
+      dto,
+      user.userId,
+      user.username,
+    );
+  }
 
   @Patch('mark-as-received')
   @HttpCode(HttpStatus.OK)
@@ -63,8 +139,11 @@ export class SalesController {
     status: HttpStatus.NOT_FOUND,
     description: 'Nenhuma venda pendente encontrada',
   })
-  markAsReceived(@Body() dto: MarkAsReceivedDto) {
-    return this.salesService.markAsReceived(dto.salesIds);
+  markAsReceived(
+    @Body() dto: MarkAsReceivedDto,
+    @CurrentUser('userId') userId: number,
+  ) {
+    return this.salesService.markAsReceived(dto.salesIds, userId);
   }
 
   @Post()
@@ -133,8 +212,9 @@ export class SalesController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateSaleDto: UpdateSaleDto,
+    @CurrentUser('userId') userId: number,
   ) {
-    return this.salesService.update(id, updateSaleDto);
+    return this.salesService.update(id, updateSaleDto, userId);
   }
 
   @Delete(':id')
@@ -154,8 +234,11 @@ export class SalesController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Venda com nota emitida não pode ser deletada',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.salesService.remove(id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('userId') userId: number,
+  ) {
+    return this.salesService.remove(id, userId);
   }
 
   @Post('convert/:orderId')

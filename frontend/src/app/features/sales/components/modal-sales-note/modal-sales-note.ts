@@ -7,46 +7,74 @@ import {
   OnInit,
   ChangeDetectorRef,
   HostListener,
+  ViewChild,
+  ElementRef,
 } from '@angular/core';
 import { FiscalStatus, Sale, SaleItem } from '../../types/sale';
 import { LicenseService } from '../../../../core/services/license.service';
-import { EmissionResult, NfceService } from '../../services/nfce.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { CompanyService } from '../../../company/services/company.service';
 import { Company } from '../../../company/types/company';
+import { SafePipe } from '../../../../shared/pipes/safe.pipe';
+import { NgClass } from '@angular/common';
+import { Router } from '@angular/router';
+import { EmissionResult } from '../../../nfe-manager/types/fiscal';
+import { FiscalService } from '../../../nfe-manager/services/fiscal.service';
 
 @Component({
   selector: 'app-modal-sales-note',
-  imports: [],
+  imports: [SafePipe, NgClass],
   templateUrl: './modal-sales-note.html',
 })
 export class ModalSalesNote implements OnInit {
   @Input() saleData!: Sale;
   @Output() closeModal = new EventEmitter();
 
+  @ViewChild('pdfFrame') pdfFrame?: ElementRef<HTMLIFrameElement>;
+
   private licenseService = inject(LicenseService);
-  private nfceService = inject(NfceService);
+  private fiscalService = inject(FiscalService);
   private companyService = inject(CompanyService);
   private notification = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef);
+  private router = inject(Router);
 
   isRequestingNfce = false;
   nfceData: EmissionResult | null = null;
   companyData: Company | null = null;
+  isPdfPreviewUrl: string | null = null;
 
   canEmitNfce = this.licenseService.getCurrentPlan() === 'pro';
+
+  get hasServiceItems(): boolean {
+    return this.saleData.items?.some((i) => !!i.serviceId) ?? false;
+  }
+
+  get hasProductItems(): boolean {
+    return this.saleData.items?.some((i) => !i.serviceId) ?? false;
+  }
+
+  get nfceBlockedByServices(): boolean {
+    return this.hasServiceItems && !this.hasNfce();
+  }
+
+  get nfeBlocked(): boolean {
+    return this.hasServiceItems && !this.hasProductItems;
+  }
 
   @HostListener('document:keydown', ['$event'])
   handleKeydown(event: KeyboardEvent) {
     if (event.key === 'Enter') {
       event.preventDefault();
+      event.stopPropagation();
       this.print();
     } else if (event.key === 'Escape') {
       event.preventDefault();
+      event.stopPropagation();
       this.close();
     }
   }
-  
+
   ngOnInit() {
     this.loadCompanyData();
   }
@@ -102,7 +130,15 @@ export class ModalSalesNote implements OnInit {
   }
 
   close() {
+    this.backToSummary();
     this.closeModal.emit();
+  }
+
+  backToSummary() {
+    if (this.isPdfPreviewUrl) {
+      window.URL.revokeObjectURL(this.isPdfPreviewUrl);
+      this.isPdfPreviewUrl = null;
+    }
   }
 
   hasNfce(): boolean {
@@ -121,6 +157,11 @@ export class ModalSalesNote implements OnInit {
       return;
     }
 
+    if (this.nfceBlockedByServices) {
+      this.notification.error('Venda com serviços: use a NF-e para ajustar os pagamentos da nota.');
+      return;
+    }
+
     if (this.hasNfce()) {
       this.downloadPdf(this.saleData.fiscalKey!);
       return;
@@ -128,7 +169,7 @@ export class ModalSalesNote implements OnInit {
 
     this.isRequestingNfce = true;
 
-    this.nfceService.emitBySale(this.saleData.id!, true).subscribe({
+    this.fiscalService.emitNfce(this.saleData.id!, true).subscribe({
       next: (response) => {
         this.nfceData = response;
         this.isRequestingNfce = false;
@@ -164,18 +205,22 @@ export class ModalSalesNote implements OnInit {
   }
 
   formatAccessKey(key: string): string {
-    return this.nfceService.formatAccessKey(key);
+    return this.fiscalService.formatAccessKey(key);
   }
 
   downloadPdf(accessKey: string) {
-    this.nfceService.downloadPdf(accessKey).subscribe({
+    this.fiscalService.downloadPdf(accessKey).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
+
+        this.isPdfPreviewUrl = url;
+        this.cdr.detectChanges();
+
         const link = document.createElement('a');
         link.href = url;
         link.download = `${accessKey}.pdf`;
         link.click();
-        window.URL.revokeObjectURL(url);
+
         this.notification.success('DANFE baixado com sucesso!');
       },
       error: (error) => {
@@ -185,7 +230,43 @@ export class ModalSalesNote implements OnInit {
     });
   }
 
+  goToEmitNfe() {
+    if (!this.canEmitNfce) {
+      this.notification.error(
+        'Recurso disponível apenas no plano Pro! Faça upgrade para emitir notas fiscais.',
+      );
+      return;
+    }
+
+    if (this.nfeBlocked) {
+      this.notification.error(
+        'Venda só com serviços não pode ter nota fiscal. Utilize o emissor da prefeitura da sua cidade.',
+      );
+      return;
+    }
+    this.close();
+    this.router.navigate(['/fiscal/emitir', this.saleData.id]);
+  }
+
   print() {
+    if (this.isPdfPreviewUrl) {
+      this.printPdf();
+      return;
+    }
+    this.printCupom();
+  }
+
+  printPdf() {
+    const iframeEl = this.pdfFrame?.nativeElement;
+    if (!iframeEl?.contentWindow) {
+      console.error('Iframe do PDF não encontrado.');
+      return;
+    }
+    iframeEl.contentWindow.focus();
+    iframeEl.contentWindow.print();
+  }
+
+  printCupom() {
     const content = document.getElementById('invoiceContent')?.innerHTML;
     if (!content) {
       console.error('Conteúdo da nota fiscal não encontrado.');

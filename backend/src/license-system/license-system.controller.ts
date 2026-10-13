@@ -1,6 +1,6 @@
 // src/license/license.controller.ts
 
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, HttpCode, Post } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -17,6 +17,13 @@ import { LicenseSystemService } from './license-system.service';
 @Controller('license')
 export class LicenseSystemController {
   constructor(private readonly licenseService: LicenseSystemService) {}
+
+  @Post('usage-report')
+  @HttpCode(202)
+  sendUsageReport() {
+    void this.licenseService.sendUsageReport(true);
+    return { message: 'Envio do resumo de uso iniciado' };
+  }
 
   @Get('status')
   @ApiOperation({ summary: 'Verificar status da licença' })

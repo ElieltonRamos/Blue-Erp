@@ -1,0 +1,102 @@
+<div class="flex flex-col gap-1">
+  <div class="w-full">
+    <p class="block text-text-primary text-sm mb-1 font-bold">Resumo da Venda</p>
+    <label class="block text-sm text-text-primary mb-1">Valor Total dos Produtos:</label>
+    <p class="w-full p-1 rounded bg-surface-alt text-text-primary font-bold">
+      R$: {{ totalValue }}
+    </p>
+  </div>
+
+  <div>
+    <label class="block text-sm text-text-primary mb-1 font-bold">Desconto</label>
+    <input
+      type="number"
+      min="0"
+      [max]="totalValue"
+      [(ngModel)]="discountValue"
+      (ngModelChange)="onDiscountChange($event)"
+      placeholder="R$ 0,00"
+      class="w-full p-1 rounded bg-surface-alt text-text-primary text-center font-bold"
+    />
+  </div>
+
+  <div>
+    <p class="block text-sm text-text-primary font-bold">
+      Formas de Pagamento
+      <span class="text-text-muted font-normal">(F5)</span>
+    </p>
+
+    <div class="flex gap-2 items-end mt-1">
+      <div class="flex-1">
+        <label class="block text-xs text-text-primary mb-1">Método</label>
+        <select
+          #methodSelect
+          [(ngModel)]="selectedMethod"
+          (ngModelChange)="onMethodChange()"
+          (keydown.enter)="onMethodKeydownEnter()"
+          class="w-full p-1 rounded bg-surface-alt text-text-primary border border-border"
+        >
+          <option value="DINHEIRO">Dinheiro</option>
+          <option value="CARTAO_DEBITO">Cartão Débito</option>
+          <option value="CARTAO_CREDITO">Cartão Crédito</option>
+          <option value="PIX">Pix</option>
+          <option value="CREDITO_LOJA" [disabled]="clientId === 1">Notinha</option>
+        </select>
+      </div>
+
+      <div class="flex-1">
+        <label class="block text-xs text-text-primary mb-1">Valor</label>
+        <input
+          #valueInput
+          type="number"
+          [(ngModel)]="selectedValue"
+          (keydown.enter)="addPayment()"
+          placeholder="R$ 0,00"
+          class="w-full p-1 rounded bg-surface-alt text-text-primary text-center font-bold"
+        />
+      </div>
+
+      <button
+        (click)="addPayment()"
+        [disabled]="remainingValue <= 0.01"
+        class="bg-accent hover:bg-accent-hover text-btn-text px-3 py-1 rounded text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        Adicionar
+      </button>
+    </div>
+
+    <p class="text-[11px] text-text-muted mt-1">
+      Enter no método avança para o valor · Enter no valor adiciona o pagamento
+    </p>
+
+    @if (selectedMethod === 'DINHEIRO' && previewChange > 0) {
+      <p class="text-xl text-warning mt-1">Troco: R$ {{ previewChange.toFixed(2) }}</p>
+    }
+
+    @if (paymentEntries.length) {
+      <ul class="mt-2 flex flex-col gap-1">
+        @for (entry of paymentEntries; track $index) {
+          <li
+            class="flex justify-between items-center bg-surface-alt border border-border rounded px-2 py-1 text-sm text-text-primary gap-1"
+          >
+            <span>{{ getMethodLabel(entry.paymentMethod) }} — R$ {{ entry.value.toFixed(2) }}</span>
+            <div class="flex items-center gap-2">
+              @if (entry.change > 0) {
+                <span class="text-xs text-warning">troco R$ {{ entry.change.toFixed(2) }}</span>
+              }
+              <button (click)="removePayment($index)" class="text-danger">🗑️</button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+
+    <p
+      class="text-xl mt-1"
+      [class.text-danger]="remainingValue > 0.01"
+      [class.text-success]="remainingValue <= 0.01"
+    >
+      Restante: R$ {{ remainingValue.toFixed(2) }}
+    </p>
+  </div>
+</div>

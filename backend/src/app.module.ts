@@ -4,7 +4,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { PrismaModule } from './database/prisma.module';
-import { CompanyModule } from './company/company.module';
 import { ClientsModule } from './clients/clients.module';
 import { IbptModule } from './ibpt/ibpt.module';
 import { ExpensesModule } from './expenses/expenses.module';
@@ -18,10 +17,17 @@ import { SalesModule } from './sales/sales.module';
 import { ReportsModule } from './reports/reports.module';
 import { LicenseSystemModule } from './license-system/license-system.module';
 import { LicenseSystemService } from './license-system/license-system.service';
-import { FiscalModule } from './fiscal-module/fiscal.module';
+import { FiscalModule } from './features/fiscal-module/fiscal.module';
 import { CategoryProductModule } from './category-product/category-product.module';
 import { PrinterModule } from './printer/printer.module';
 import { TelegramModule } from './telegram/telegram.module';
+import { CompanyModule } from './features/company/company.module';
+import { CatalogServiceModule } from './features/catalog-service/catalog.module';
+import { AssetModule } from './features/asset/asset.module';
+import { DocumentModule } from './features/document/document.module';
+import { PurchaseModule } from './features/purchase/purchase.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 // ScheduleModule.forRoot(): registra o scheduler global do NestJS (@nestjs/schedule).
 // Só pode existir 1x na aplicação — habilita o decorator @Cron nos providers
@@ -36,6 +42,10 @@ import { TelegramModule } from './telegram/telegram.module';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'public', 'frontend', 'browser'),
+      exclude: ['/api/{*any}'],
+    }),
     ScheduleModule.forRoot(),
     UsersModule,
     PrismaModule,
@@ -56,6 +66,10 @@ import { TelegramModule } from './telegram/telegram.module';
     CategoryProductModule,
     PrinterModule,
     TelegramModule,
+    CatalogServiceModule,
+    AssetModule,
+    DocumentModule,
+    PurchaseModule,
   ],
   controllers: [AppController],
   providers: [AppService, LicenseSystemService],

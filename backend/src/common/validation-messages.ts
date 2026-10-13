@@ -9,5 +9,6 @@ export const ValidationMessages = {
   MAX_LENGTH: (field: string, max: number) =>
     `${field} deve ter no máximo ${max} caracteres`,
   IS_ENUM: (field: string) => `${field} inválido`,
+  MIN: (field: string, min: number) => `${field} deve ser no mínimo ${min}`,
   IS_BOOLEAN: (field: string) => `${field} deve ser verdadeiro ou falso`,
 };

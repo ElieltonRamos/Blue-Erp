@@ -17,6 +17,9 @@ import { LocationReportFilterDto } from './dto/create-report-location.dto';
 import { LocationReportService } from './location-reports.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { WorkshopReportResponseDto } from './dto/response-report-workshop.dto';
+import { WorkshopReportFilterDto } from './dto/create-report-workshop.dto';
+import { WorkshopReportService } from './workshop-reports.service';
 
 @ApiTags('Relatórios')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -28,7 +31,45 @@ export class ReportsController {
     private readonly expenseReportService: ExpenseReportService,
     private readonly orderReportService: OrderReportService,
     private readonly locationReportService: LocationReportService,
+    private readonly workshopReportService: WorkshopReportService,
   ) {}
+
+  @Get('workshop')
+  @ApiOperation({
+    summary: 'Gerar relatório geral da oficina por período',
+    description:
+      'Gera uma visão geral do movimento da oficina: total de orçamentos/OS, faturamento, ticket médio, veículos atendidos e ranking de veículos mais recorrentes.',
+  })
+  @ApiQuery({
+    name: 'startDate',
+    type: String,
+    description: 'Data de início do período (formato: YYYY-MM-DD)',
+    example: '2024-01-01',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    type: String,
+    description: 'Data de fim do período (formato: YYYY-MM-DD)',
+    example: '2024-01-31',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Relatório gerado com sucesso',
+    type: WorkshopReportResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Parâmetros de filtro inválidos',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Erro interno do servidor',
+  })
+  async generateWorkshopReport(
+    @Query() filters: WorkshopReportFilterDto,
+  ): Promise<WorkshopReportResponseDto> {
+    return await this.workshopReportService.generateReportByDate(filters);
+  }
 
   @Get('sales')
   @ApiOperation({

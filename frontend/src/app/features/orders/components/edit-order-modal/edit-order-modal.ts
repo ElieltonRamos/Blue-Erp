@@ -15,9 +15,18 @@ import {
 import { FormsModule } from '@angular/forms';
 import { Overlay, OverlayConfig, OverlayRef } from '@angular/cdk/overlay';
 import { CdkPortal, PortalModule } from '@angular/cdk/portal';
-import { Order, OrderItem, OrderStatus, Product } from '../../types/order';
+import { Order, OrderItem, Product } from '../../types/order';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { OrderService } from '../../services/order.service';
+
+interface PendingItem {
+  productId: number;
+  code: string;
+  name: string;
+  unitPrice: number;
+  quantity: number;
+  observation: string;
+}
 
 @Component({
   selector: 'app-edit-order-modal',
@@ -37,15 +46,19 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
 
   @ViewChild(CdkPortal) portal!: CdkPortal;
 
-  isSaving: boolean = false;
   private overlayRef: OverlayRef | null = null;
   serviceChargeAmount: number = 0;
+  serviceChargeEnabled = false;
 
   searchCode = '';
   searchName = '';
   isSearchingProduct = false;
   searchResults: Product[] = [];
-  serviceChargeEnabled = false;
+
+  pendingItem: PendingItem | null = null;
+  isSavingItem = false;
+  isSavingHeader = false;
+  isSavingServiceCharge = false;
 
   private readonly overlayConfig = new OverlayConfig({
     hasBackdrop: true,
@@ -57,15 +70,8 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
     maxHeight: '90vh',
   });
 
-  get hasInvalidObservations(): boolean {
-    return (
-      this.order?.items.some((item) => !item.observation || item.observation.trim().length < 2) ??
-      false
-    );
-  }
-
   get isDefaultServiceCharge(): boolean {
-    if (!this.order) return true; // <-- falta isso
+    if (!this.order) return true;
     const defaultValue = parseFloat(
       (this.order.items.reduce((s, i) => s + i.total, 0) * 0.1).toFixed(2),
     );
@@ -73,9 +79,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
   }
 
   ngAfterViewInit(): void {
-    if (this.isOpen) {
-      this.openModal();
-    }
+    if (this.isOpen) this.openModal();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -100,57 +104,15 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
     this.closeModalInternal();
   }
 
-  toggleServiceCharge(): void {
-    this.serviceChargeEnabled = !this.serviceChargeEnabled;
-    this.distributeServiceCharge();
-    this.cdr.detectChanges();
-  }
-
-  onServiceChargeInput(value: number): void {
-    this.serviceChargeAmount = value;
-    this.distributeServiceCharge();
-    this.cdr.detectChanges();
-  }
-
-  distributeServiceCharge(): void {
-    if (!this.order) return;
-
-    if (!this.serviceChargeEnabled || this.serviceChargeAmount === 0) {
-      this.order.items.forEach((item) => (item.serviceCharge = 0));
-      this.order.serviceCharge = 0;
-      return;
-    }
-
-    if (this.isDefaultServiceCharge) {
-      // modo padrão: cada item calcula 10% do próprio total
-      this.order.items.forEach((item) => {
-        item.serviceCharge = parseFloat((item.total * 0.1).toFixed(2));
-      });
-    } else {
-      // valor fixo: divide igualmente
-      const perItem = parseFloat((this.serviceChargeAmount / this.order.items.length).toFixed(2));
-      this.order.items.forEach((item) => (item.serviceCharge = perItem));
-    }
-
-    this.order.serviceCharge = this.order.items.reduce((s, i) => s + (i.serviceCharge ?? 0), 0);
-  }
-
   private openModal(): void {
     this.serviceChargeEnabled = (this.order?.serviceCharge ?? 0) > 0;
     if (!this.overlayRef) {
       this.overlayRef = this.overlay.create(this.overlayConfig);
-
-      this.overlayRef.backdropClick().subscribe(() => {
-        this.closeModal();
-      });
-
+      this.overlayRef.backdropClick().subscribe(() => this.closeModal());
       this.overlayRef.keydownEvents().subscribe((event) => {
-        if (event.key === 'Escape') {
-          this.closeModal();
-        }
+        if (event.key === 'Escape') this.closeModal();
       });
     }
-
     if (this.portal && !this.overlayRef.hasAttached()) {
       this.overlayRef.attach(this.portal);
     }
@@ -172,6 +134,38 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
     }
   }
 
+  // ---------- Header fields (customerName, table, address, status) ----------
+
+  saveHeader(): void {
+    if (!this.order || this.isSavingHeader) return;
+    this.isSavingHeader = true;
+
+    const dto = {
+      customerName: this.order.customerName,
+      table: this.order.type === 'DINE_IN' ? this.order.table : undefined,
+      address: this.order.type === 'DELIVERY' ? this.order.address : undefined,
+      status: this.order.status,
+    };
+
+    this.orderService.updateOrder(this.order.id, dto).subscribe({
+      next: (updatedOrder) => {
+        this.order = updatedOrder;
+        this.isSavingHeader = false;
+        this.orderUpdated.emit(updatedOrder);
+        this.notification.success('Pedido atualizado');
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        this.isSavingHeader = false;
+        const msg = error.error?.message || error.message || 'Erro ao atualizar pedido';
+        this.notification.error(msg);
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  // ---------- Product search ----------
+
   searchProduct(): void {
     if (!this.searchCode && !this.searchName) {
       this.notification.error('Digite um código ou nome para buscar');
@@ -191,7 +185,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
     this.orderService.getByCode(this.searchCode).subscribe({
       next: (product: Product) => {
         if (product) {
-          this.addProductToOrder(product);
+          this.openPendingItem(product);
           this.searchCode = '';
         } else {
           this.notification.error('Produto não encontrado');
@@ -211,7 +205,6 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
     this.orderService.getAll(1, 10, { search: this.searchName }).subscribe({
       next: (response) => {
         const products = response.data;
-
         if (!products || products.length === 0) {
           this.notification.error('Nenhum produto encontrado');
           this.searchResults = [];
@@ -236,135 +229,159 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
 
     if (!isNaN(selectedIndex) && selectedIndex >= 0) {
       const product = this.searchResults[selectedIndex];
-      this.addProductToOrder(product);
+      this.openPendingItem(product);
       this.searchResults = [];
       this.searchName = '';
       select.selectedIndex = 0;
     }
   }
 
-  private addProductToOrder(product: Product): void {
-    if (!this.order) return;
+  // ---------- Pending item (new product or quantity increase) ----------
 
-    const existingItem = this.order.items.find((item) => item.productId === product.id);
-
-    if (existingItem) {
-      existingItem.quantity += 1;
-      existingItem.total = existingItem.quantity * existingItem.unitPrice;
-      this.notification.success('Quantidade atualizada');
-    } else {
-      const newItem: OrderItem = {
-        productId: product.id,
-        code: product.code,
-        name: product.name,
-        quantity: 1,
-        unitPrice: product.price,
-        total: product.price,
-        serviceCharge: 0,
-        observation: '',
-      };
-      this.order.items.push(newItem);
-      this.notification.success('Produto adicionado');
-    }
-
-    this.calculateOrderTotal();
-    this.clearProductForm();
-    this.cdr.detectChanges();
+  openPendingItem(product: Product): void {
+    this.pendingItem = {
+      productId: product.id,
+      code: product.code,
+      name: product.name,
+      unitPrice: product.price,
+      quantity: 1,
+      observation: '',
+    };
   }
 
-  private clearProductForm(): void {
-    this.searchCode = '';
-    this.searchName = '';
+  openPendingIncrease(item: OrderItem): void {
+    this.pendingItem = {
+      productId: item.productId,
+      code: item.code,
+      name: item.name,
+      unitPrice: item.unitPrice,
+      quantity: 1,
+      observation: '',
+    };
   }
 
-  removeItem(index: number): void {
-    if (!this.order) return;
-    this.order.items.splice(index, 1);
-    this.calculateOrderTotal();
+  cancelPendingItem(): void {
+    this.pendingItem = null;
   }
 
-  updateQuantity(item: OrderItem, newQuantity: number): void {
-    if (newQuantity > 0) {
-      item.quantity = newQuantity;
-      item.total = item.quantity * item.unitPrice;
-      this.calculateOrderTotal();
-      this.cdr.detectChanges();
-    }
-  }
+  confirmPendingItem(): void {
+    if (!this.order || !this.pendingItem || this.isSavingItem) return;
 
-  calculateOrderTotal(): void {
-    if (!this.order) return;
-    const newTotal = this.order.items.reduce((sum, item) => sum + item.total, 0);
-    const prevDefault =
-      parseFloat(this.serviceChargeAmount.toFixed(2)) ===
-      parseFloat((this.order.total * 0.1).toFixed(2));
-    this.order.total = newTotal;
-    if (prevDefault) {
-      this.serviceChargeAmount = parseFloat((newTotal * 0.1).toFixed(2));
-    }
-    this.distributeServiceCharge();
-  }
-
-  saveOrder(): void {
-    if (!this.order || this.isSaving) return;
-
-    const validationError = this.validateOrder();
-    if (validationError) {
-      this.notification.error(validationError);
+    if (!this.pendingItem.observation || this.pendingItem.observation.trim().length < 2) {
+      this.notification.error('Observação obrigatória (mínimo 2 caracteres)');
       return;
     }
 
-    this.isSaving = true;
+    this.isSavingItem = true;
 
-    this.orderService.updateOrder(this.order.id, this.buildUpdateDto()).subscribe({
-      next: (updatedOrder) => {
-        this.notification.success('Pedido atualizado com sucesso');
-        this.isSaving = false;
-        this.orderUpdated.emit(updatedOrder);
-        this.closeModal();
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        this.isSaving = false;
-        const errorMsg = error.error?.message || error.message || 'Erro ao atualizar pedido';
-        this.notification.error(`Erro: ${errorMsg}`);
-        this.cdr.detectChanges();
-        this.closeModal();
-      },
+    const dto = {
+      items: [
+        {
+          productId: this.pendingItem.productId,
+          code: this.pendingItem.code,
+          name: this.pendingItem.name,
+          quantity: this.pendingItem.quantity,
+          unitPrice: this.pendingItem.unitPrice,
+          observation: this.pendingItem.observation,
+        },
+      ],
+    };
+
+    this.orderService.addItems(this.order.id, dto).subscribe({
+      next: (updatedOrder) => this.onItemsMutated(updatedOrder, 'Item adicionado'),
+      error: (error) => this.onItemMutationError(error),
     });
   }
 
-  private validateOrder(): string | null {
-    const o = this.order!;
-    if (!o.customerName?.trim()) return 'Nome do cliente é obrigatório';
-    if (o.type === 'DINE_IN' && !o.table?.trim()) return 'Mesa é obrigatória para pedidos no local';
-    if (o.type === 'DELIVERY' && !o.address?.trim()) return 'Endereço é obrigatório para delivery';
-    if (this.hasInvalidObservations)
-      return 'Preencha a observação de todos os itens (mínimo 2 caracteres)';
-    return null;
+  // ---------- Quantity decrease / remove ----------
+
+  decreaseQuantity(item: OrderItem): void {
+    if (!this.order || this.isSavingItem || !item.id) return;
+    this.removeItemQuantity(item, 1);
   }
 
-  private buildUpdateDto() {
-    const o = this.order!;
-    return {
-      customerName: o.customerName,
-      table: o.type === 'DINE_IN' ? o.table : undefined,
-      address: o.type === 'DELIVERY' ? o.address : undefined,
-      status: o.status,
-      total: o.total,
-      serviceCharge: o.serviceCharge,
-      items: o.items.map((item) => ({
-        ...(typeof item.id === 'number' && { id: item.id }),
-        productId: item.productId,
-        code: item.code,
-        name: item.name,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        total: item.total,
-        serviceCharge: item.serviceCharge ?? 0,
-        observation: item.observation,
-      })),
-    };
+  removeItem(item: OrderItem): void {
+    if (!this.order || this.isSavingItem || !item.id) return;
+    this.removeItemQuantity(item, item.quantity);
+  }
+
+  private removeItemQuantity(item: OrderItem, quantity: number): void {
+    if (!this.order || !item.id) return;
+    this.isSavingItem = true;
+
+    const dto = { items: [{ id: item.id, quantity }] };
+
+    this.orderService.removeItems(this.order.id, dto).subscribe({
+      next: (updatedOrder) => this.onItemsMutated(updatedOrder, 'Item atualizado'),
+      error: (error) => this.onItemMutationError(error),
+    });
+  }
+
+  private onItemsMutated(updatedOrder: Order, successMsg: string): void {
+    this.order = updatedOrder;
+    this.pendingItem = null;
+    this.isSavingItem = false;
+    this.orderUpdated.emit(updatedOrder);
+    this.notification.success(successMsg);
+
+    if (this.serviceChargeEnabled && this.isDefaultServiceCharge) {
+      this.pushDefaultServiceCharge();
+    }
+
+    this.cdr.detectChanges();
+  }
+
+  private onItemMutationError(error: any): void {
+    this.isSavingItem = false;
+    const msg = error.error?.message || error.message || 'Erro ao atualizar item';
+    this.notification.error(msg);
+    this.cdr.detectChanges();
+  }
+
+  // ---------- Service charge ----------
+
+  toggleServiceCharge(): void {
+    this.serviceChargeEnabled = !this.serviceChargeEnabled;
+    if (!this.serviceChargeEnabled) {
+      this.serviceChargeAmount = 0;
+    } else {
+      const totalItems = this.order?.items.reduce((s, i) => s + i.total, 0) ?? 0;
+      this.serviceChargeAmount = parseFloat((totalItems * 0.1).toFixed(2));
+    }
+    this.pushServiceCharge();
+  }
+
+  onServiceChargeInput(value: number): void {
+    this.serviceChargeAmount = value;
+    this.pushServiceCharge();
+  }
+
+  private pushDefaultServiceCharge(): void {
+    const totalItems = this.order?.items.reduce((s, i) => s + i.total, 0) ?? 0;
+    this.serviceChargeAmount = parseFloat((totalItems * 0.1).toFixed(2));
+    this.pushServiceCharge();
+  }
+
+  private pushServiceCharge(): void {
+    if (!this.order || this.isSavingServiceCharge) return;
+    this.isSavingServiceCharge = true;
+
+    const dto = { enabled: this.serviceChargeEnabled, amount: this.serviceChargeAmount };
+
+    this.orderService.updateServiceCharge(this.order.id, dto).subscribe({
+      next: (updatedOrder) => {
+        this.order = updatedOrder;
+        this.isSavingServiceCharge = false;
+        this.orderUpdated.emit(updatedOrder);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        this.isSavingServiceCharge = false;
+        const msg = error.error?.message || error.message || 'Erro ao atualizar taxa de serviço';
+        this.notification.error(msg);
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   closeModal(): void {

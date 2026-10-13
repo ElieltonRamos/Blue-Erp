@@ -1,19 +1,24 @@
 // src/license/license.service.ts
 
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import * as jwt from 'jsonwebtoken';
+import axios from 'axios';
 import {
   LicenseStatus,
   LicenseTokenPayload,
 } from './entities/license-system.entity';
-import axios from 'axios';
+import { version } from '../../package.json';
 
 @Injectable()
 export class LicenseSystemService {
+  private readonly logger = new Logger(LicenseSystemService.name);
   private readonly licensingServer = process.env.LICENSING_SERVER || '';
   private readonly publicKey =
     process.env.LICENSE_PUBLIC_KEY?.replace(/\\n/g, '\n') || '';
+
+  private readonly usageReportTimeoutMs = 5000;
+  private lastUsageReportDay: string | null = null;
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -43,7 +48,13 @@ export class LicenseSystemService {
       }
 
       return { success: false, serverRejected: true };
-    } catch {
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        // Servidor respondeu (400, 401, 404, 500...) = rejeição explícita
+        return { success: false, serverRejected: true };
+      }
+      // Sem resposta (timeout, DNS, rede fora) = falha de rede, não rejeição
+      console.log(error, 'erro');
       return { success: false, serverRejected: false };
     }
   }
@@ -164,16 +175,16 @@ export class LicenseSystemService {
       return this.checkToken(result.token);
     }
 
-    // Servidor rejeitou - licença inválida
+    // Servidor rejeitou explicitamente - limpa token e invalida
     if (result.serverRejected) {
       await this.prisma.client.company.update({
         where: { id: company.id },
-        data: { licenseToken: undefined },
+        data: { licenseToken: '' },
       });
       return { isValid: false, plan: 'none', mode: 'expired' };
     }
 
-    // Sem conexão - tenta usar token em cache
+    // Falha de rede - mantém token atual e cai no cache (respeita maxOfflineDays)
     if (!licenseToken) {
       return { isValid: false, plan: 'none', mode: 'expired' };
     }
@@ -199,5 +210,75 @@ export class LicenseSystemService {
     }
 
     return payload;
+  }
+
+  // Data local (do processo) no formato YYYY-MM-DD
+  private getLocalDay(): string {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${now.getFullYear()}-${month}-${day}`;
+  }
+
+  private async collectUsage(): Promise<Record<string, number>> {
+    const rows = await this.prisma.client.$queryRaw<
+      { tabela: string; linhas: bigint | number | null }[]
+    >`
+      SELECT CAST(TABLE_NAME AS CHAR) AS tabela, TABLE_ROWS AS linhas
+      FROM information_schema.TABLES
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_TYPE = 'BASE TABLE'
+        AND TABLE_NAME <> '_prisma_migrations'
+      ORDER BY TABLE_NAME
+    `;
+
+    return Object.fromEntries(
+      rows.map((row) => [row.tabela, Number(row.linhas ?? 0)]),
+    );
+  }
+
+  // Nunca lança erro: pode ser chamado sem await
+  async sendUsageReport(force = false): Promise<void> {
+    const today = this.getLocalDay();
+
+    if (!force && this.lastUsageReportDay === today) {
+      return;
+    }
+
+    // Marca antes de executar para evitar disparos simultâneos
+    this.lastUsageReportDay = today;
+
+    try {
+      const company = await this.prisma.client.company.findFirst();
+
+      if (!company || !company.licenseKey) {
+        this.logger.warn(
+          'Resumo de uso não enviado: empresa ou licenseKey ausente',
+        );
+        return;
+      }
+
+      const usage = await this.collectUsage();
+
+      await axios.post(
+        `${this.licensingServer}/api/usage-report`,
+        {
+          cnpj: company.cnpj,
+          licenseKey: company.licenseKey,
+          loginAt: new Date().toISOString(),
+          version,
+          businessType: company.businessType,
+          usage,
+        },
+        { timeout: this.usageReportTimeoutMs },
+      );
+
+      this.logger.log(
+        `Resumo de uso enviado (${Object.keys(usage).length} tabelas)`,
+      );
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Falha ao enviar resumo de uso: ${reason}`);
+    }
   }
 }

@@ -27,7 +27,7 @@ export class UserService {
       if (filters.workplace) {
         params = params.set('workplace', filters.workplace);
       }
-      if (filters.active !== '') {
+      if (filters.active !== undefined && filters.active !== '') {
         params = params.set('active', filters.active);
       }
     }

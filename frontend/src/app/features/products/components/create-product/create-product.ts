@@ -27,7 +27,7 @@ export class CreateProduct implements OnInit {
   formCreateProduct = new FormGroup({
     name: new FormControl<string>('', [Validators.required]),
     code: new FormControl<string>('', [Validators.required]),
-    productType: new FormControl<string>('manufactured', [Validators.required]),
+    productType: new FormControl<string>('resale', [Validators.required]),
     productionLocation: new FormControl<string>('', [Validators.required]),
     price: new FormControl<number | null>(null, [Validators.required, Validators.min(0.01)]),
     costPrice: new FormControl<number | null>(null, [Validators.required, Validators.min(0)]),

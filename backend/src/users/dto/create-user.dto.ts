@@ -6,6 +6,9 @@ import {
   MinLength,
   IsOptional,
   IsBoolean,
+  IsNumber,
+  Min,
+  Max,
 } from 'class-validator';
 import { ValidationMessages } from '../../common/validation-messages.js';
 
@@ -40,4 +43,18 @@ export class CreateUserDto {
   @IsBoolean({ message: ValidationMessages.IS_BOOLEAN('Ativo') })
   @IsOptional()
   active?: boolean;
+
+  @ApiProperty({
+    example: 40.0,
+    required: false,
+    description: 'Percentual de comissão (mecânico)',
+  })
+  @IsNumber(
+    {},
+    { message: ValidationMessages.IS_STRING('Percentual de comissão') },
+  )
+  @Min(0)
+  @Max(100)
+  @IsOptional()
+  commissionRate?: number;
 }

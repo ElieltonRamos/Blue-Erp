@@ -1,13 +1,4 @@
-import {
-  IsEnum,
-  IsString,
-  IsOptional,
-  IsArray,
-  ValidateNested,
-  IsNumber,
-  Min,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsEnum, IsString, IsOptional, IsNumber, Min } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { OrderStatus } from 'generated/prisma/client';
 
@@ -106,22 +97,9 @@ export class UpdateOrderDto {
   @IsOptional()
   status?: OrderStatus;
 
-  @ApiPropertyOptional({
-    description: 'Itens do pedido (substitui todos)',
-    type: [UpdateOrderItemDto],
-    isArray: true,
-  })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => UpdateOrderItemDto)
-  @IsOptional()
-  items?: UpdateOrderItemDto[];
-
-  @ApiPropertyOptional({ description: 'Total do pedido', example: 100.0 })
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  total?: number;
+  // Removido: 'items' e 'total'. Itens não são mais tratados por update()
+  // — ver OrderItemsService.addItems() / OrderItemsService.removeItems().
+  // 'total' é sempre derivado dos itens, nunca setável diretamente.
 
   @ApiPropertyOptional({ example: 15.05 })
   @IsNumber()

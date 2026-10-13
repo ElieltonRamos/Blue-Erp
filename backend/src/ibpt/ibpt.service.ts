@@ -154,6 +154,9 @@ export class IbptService {
     }
 
     for (const item of sale.items) {
+      if (item.product === null) {
+        throw new NotFoundException('Isso nao e um Produto (DEV-MODE)');
+      }
       const ncm = this.cleanNcm(item.product.ncm || '');
 
       if (!ncm || ncm === '00000000') {
@@ -173,6 +176,10 @@ export class IbptService {
       const federalTaxRate = ibpt.federalTaxRate;
       const stateTaxRate = ibpt.stateTaxRate;
       const municipalTaxRate = ibpt.municipalTaxRate;
+
+      if (item.productId === null) {
+        throw new NotFoundException('Isso nao e um Produto (DEV-MODE)');
+      }
 
       // 1. Atualiza alíquotas no Product
       await this.prisma.client.product.update({
