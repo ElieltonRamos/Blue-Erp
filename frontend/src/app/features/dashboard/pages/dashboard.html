@@ -22,9 +22,9 @@
         ✕
       </button>
 
-      @if (subscriptionOverdue()) {
-        <div class="px-4 py-2 border-b border-border text-red-500 text-sm font-medium">
-          🚨 Mensalidade vencida — regularize para evitar bloqueio do sistema
+      @if (daysToExpire() !== null) {
+        <div class="px-4 py-2 border-b border-border text-text-secondary text-sm font-medium">
+          ⏳ Sua licença vence em {{ daysToExpire() }} dia(s) — renove para evitar interrupções
         </div>
       }
 

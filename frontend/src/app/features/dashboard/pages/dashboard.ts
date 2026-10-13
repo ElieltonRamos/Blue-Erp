@@ -55,6 +55,9 @@ export class Dashboard implements OnInit {
   closedWithoutPayment = signal<AutoClosedOrder[]>([]);
   bannerDismissed = signal(false);
   subscriptionOverdue = signal(false);
+  daysToExpire = signal<number | null>(null);
+
+  private readonly EXPIRY_WARNING_DAYS = 3;
 
   autoClosedIds = computed(() =>
     this.autoClosedOrders()
@@ -105,9 +108,18 @@ export class Dashboard implements OnInit {
 
     this.licenseService.getTokenInfo().subscribe({
       next: (info) => {
-        this.subscriptionOverdue.set(info.licenseValidUntil < Date.now());
+        const msLeft = info.licenseValidUntil - Date.now();
+        this.subscriptionOverdue.set(msLeft < 0);
+
+        const daysLeft = Math.ceil(msLeft / 86_400_000);
+        this.daysToExpire.set(
+          msLeft >= 0 && daysLeft <= this.EXPIRY_WARNING_DAYS ? daysLeft : null,
+        );
       },
-      error: () => this.subscriptionOverdue.set(false),
+      error: () => {
+        this.subscriptionOverdue.set(false);
+        this.daysToExpire.set(null);
+      },
     });
   }
 
@@ -115,7 +127,8 @@ export class Dashboard implements OnInit {
     return (
       this.autoClosedOrders().length > 0 ||
       this.closedWithoutPayment().length > 0 ||
-      this.subscriptionOverdue()
+      this.subscriptionOverdue() ||
+      this.daysToExpire() !== null
     );
   }
 

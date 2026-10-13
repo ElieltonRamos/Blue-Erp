@@ -7,6 +7,7 @@ import * as readline from 'readline';
 import * as mariadb from 'mariadb';
 import { dumpDatabase } from './database-dump';
 import { runSeeds } from './database-seed';
+import { runCompanyMenu } from './database-company';
 
 // ============================================
 // CONFIGURAÇÃO DO BANCO
@@ -489,7 +490,8 @@ function showMenu(): void {
   console.log('║  5 - Ver status                        ║');
   console.log('║  6 - Fazer backup                      ║');
   console.log('║  7 - Restaurar backup (backup.sql)     ║');
-  console.log('║  8 - Sair                              ║');
+  console.log('║  8 - Mudar tipo de Empresa             ║');
+  console.log('║  9 - Sair                              ║');
   console.log('╚════════════════════════════════════════╝\n');
 }
 
@@ -557,11 +559,14 @@ async function main(): Promise<void> {
           break;
         }
         case '8':
+          await runCompanyMenu(dbConfig);
+          break;
+        case '9':
           console.log('\n👋 Até logo!\n');
           process.exit(0);
           break;
         default:
-          console.log('\n❌ Opção inválida! Escolha de 1 a 8.\n');
+          console.log('\n❌ Opção inválida! Escolha de 1 a 9.\n');
       }
     } catch (err) {
       console.error('\n❌ Erro:', err instanceof Error ? err.message : err);

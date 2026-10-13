@@ -10,17 +10,34 @@ import {
 } from './entities/license-system.entity';
 import { version } from '../../package.json';
 
+const DAY_MS = 1000 * 60 * 60 * 24;
+
 @Injectable()
 export class LicenseSystemService {
   private readonly logger = new Logger(LicenseSystemService.name);
-  private readonly licensingServer = process.env.LICENSING_SERVER || '';
-  private readonly publicKey =
-    process.env.LICENSE_PUBLIC_KEY?.replace(/\\n/g, '\n') || '';
+  private readonly licensingServer =
+    'https://licensing-service-blue-pdv.vercel.app';
+  publicKey = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyIWwh09J45ZEL1yM2bbD
+YzEL/X+Kq06HCMClCu0MGBAGwsi6rYN+PKH3B3YBZsAG4TW3jCOdE5F5Ekb4gqP8
+AsWxLt4rsKW3GavYZm8hbkldh43GPgcgr3+7pojSNz4pcUDtJM24JN/COTS5loCZ
+CD3oPQ2QIQTerGEN0jlTWxOz6bXih0BX603jjIFNFoSo4JUjmC6RGPNyvGXxfqhN
+mMmqHKLIcU9Vy7aYfsR5UTA8rAPN1+FLcOtfqYopejIx+dyqIYdjPwSi3RJB4hyc
+kfKw2XUE5yzIIuakjISSYlN8vvv2WlNh1xoJyp/Jj0cZL58JArn4nW+NvU7d0ZBn
+rwIDAQAB
+-----END PUBLIC KEY-----`;
 
   private readonly usageReportTimeoutMs = 5000;
   private lastUsageReportDay: string | null = null;
 
+  // Tolerância para pequenas diferenças de relógio entre a venda e a validação
+  private readonly clockToleranceMs = 5 * 60 * 1000;
+
   constructor(private readonly prisma: PrismaService) {}
+
+  private expiredStatus(message?: string): LicenseStatus {
+    return { isValid: false, plan: 'none', mode: 'expired', message };
+  }
 
   private async fetchToken(
     cnpj: string,
@@ -50,11 +67,28 @@ export class LicenseSystemService {
       return { success: false, serverRejected: true };
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        // Servidor respondeu (400, 401, 404, 500...) = rejeição explícita
-        return { success: false, serverRejected: true };
+        const status = error.response.status;
+
+        // Só 4xx é rejeição explícita. 5xx (servidor/proxy fora), 408 e 429
+        // são tratados como indisponibilidade e mantêm o token em cache.
+        const rejected =
+          status >= 400 && status < 500 && status !== 408 && status !== 429;
+
+        if (!rejected) {
+          this.logger.warn(
+            `Servidor de licenças indisponível (HTTP ${status}), usando cache`,
+          );
+        }
+
+        return { success: false, serverRejected: rejected };
       }
+
       // Sem resposta (timeout, DNS, rede fora) = falha de rede, não rejeição
-      console.log(error, 'erro');
+      this.logger.warn(
+        `Falha de rede ao validar licença: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
       return { success: false, serverRejected: false };
     }
   }
@@ -64,10 +98,10 @@ export class LicenseSystemService {
       const decoded = jwt.verify(token, this.publicKey, {
         algorithms: ['RS256'],
         issuer: 'blue-pdv-licensing',
-        ignoreExpiration: true, // adicione isso
+        ignoreExpiration: true, // exp é tratado manualmente em checkToken
       }) as jwt.JwtPayload;
 
-      return {
+      const payload: LicenseTokenPayload = {
         companyId: Number(decoded.companyId),
         cnpj: String(decoded.cnpj),
         plan: decoded.plan as 'basic' | 'pro',
@@ -76,30 +110,66 @@ export class LicenseSystemService {
         iat: Number(decoded.iat),
         exp: Number(decoded.exp),
       };
+
+      // Claim ausente ou inválido vira NaN e faria as comparações de data
+      // retornarem sempre false (licença válida para sempre)
+      const numericClaims = [
+        payload.companyId,
+        payload.licenseValidUntil,
+        payload.maxOfflineDays,
+        payload.iat,
+        payload.exp,
+      ];
+
+      if (!numericClaims.every((value) => Number.isFinite(value))) {
+        return null;
+      }
+
+      if (payload.plan !== 'basic' && payload.plan !== 'pro') {
+        return null;
+      }
+
+      return payload;
     } catch {
       return null;
     }
   }
 
-  private checkToken(token: string): LicenseStatus {
+  private isTokenForCompany(token: string, cnpj: string): boolean {
+    const payload = this.verifyToken(token);
+    return !!payload && payload.cnpj === cnpj;
+  }
+
+  private graceDaysRemaining(
+    payload: LicenseTokenPayload,
+    sinceMs: number,
+    now: number,
+  ): number {
+    const elapsedDays = Math.max(0, Math.floor((now - sinceMs) / DAY_MS));
+    return payload.maxOfflineDays - elapsedDays;
+  }
+
+  private checkToken(
+    token: string,
+    cnpj: string,
+    cached = false,
+  ): LicenseStatus {
     const payload = this.verifyToken(token);
 
-    if (!payload) {
-      return { isValid: false, plan: 'none', mode: 'expired' };
+    if (!payload || payload.cnpj !== cnpj) {
+      return this.expiredStatus();
     }
 
     const now = Date.now();
-    const nowSeconds = Math.floor(now / 1000);
-
     const licenseExpired = now > payload.licenseValidUntil;
-    const tokenExpired = nowSeconds > payload.exp;
 
-    // Licença expirada — verifica grace period offline a partir do exp do token
+    // Licença expirada — grace period conta a partir do vencimento da licença
     if (licenseExpired) {
-      const tokenExpDate = new Date(payload.exp * 1000);
-      const diffMs = now - tokenExpDate.getTime();
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      const daysRemaining = payload.maxOfflineDays - diffDays;
+      const daysRemaining = this.graceDaysRemaining(
+        payload,
+        payload.licenseValidUntil,
+        now,
+      );
 
       if (daysRemaining > 0) {
         return {
@@ -111,15 +181,17 @@ export class LicenseSystemService {
         };
       }
 
-      return { isValid: false, plan: 'none', mode: 'expired' };
+      return this.expiredStatus();
     }
 
-    // Token expirado mas licença ainda válida — modo offline normal
-    if (tokenExpired) {
-      const tokenExpDate = new Date(payload.exp * 1000);
-      const diffMs = now - tokenExpDate.getTime();
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      const daysRemaining = payload.maxOfflineDays - diffDays;
+    // Sem conexão (token do cache) — tolerância conta a partir da última
+    // sincronização com o servidor (iat)
+    if (cached) {
+      const daysRemaining = this.graceDaysRemaining(
+        payload,
+        payload.iat * 1000,
+        now,
+      );
 
       if (daysRemaining > 0) {
         return {
@@ -131,12 +203,12 @@ export class LicenseSystemService {
         };
       }
 
-      return { isValid: false, plan: 'none', mode: 'expired' };
+      return this.expiredStatus();
     }
 
     // Online válida — verifica se está próxima de vencer (3 dias)
     const msUntilExpiry = payload.licenseValidUntil - now;
-    const daysUntilExpiry = Math.ceil(msUntilExpiry / (1000 * 60 * 60 * 24));
+    const daysUntilExpiry = Math.ceil(msUntilExpiry / DAY_MS);
 
     if (daysUntilExpiry <= 3) {
       return {
@@ -151,6 +223,24 @@ export class LicenseSystemService {
     return { isValid: true, plan: payload.plan, mode: 'online' };
   }
 
+  // Usa as duas últimas vendas como marco de tempo: se o relógio atual está
+  // anterior a elas, a data do computador foi voltada
+  private async isClockRolledBack(): Promise<boolean> {
+    const lastSales = await this.prisma.client.sale.findMany({
+      select: { createdAt: true },
+      orderBy: { id: 'desc' },
+      take: 2,
+    });
+
+    if (lastSales.length === 0) return false;
+
+    const reference = Math.max(
+      ...lastSales.map((sale) => sale.createdAt.getTime()),
+    );
+
+    return Date.now() + this.clockToleranceMs < reference;
+  }
+
   async validate(): Promise<LicenseStatus> {
     const company = await this.prisma.client.company.findFirst();
 
@@ -161,35 +251,47 @@ export class LicenseSystemService {
     const { cnpj, licenseKey, licenseToken } = company;
 
     if (!licenseKey) {
-      return { isValid: false, plan: 'none', mode: 'expired' };
+      return this.expiredStatus();
     }
 
     const result = await this.fetchToken(cnpj, licenseKey);
 
     // Sucesso online - atualiza token e retorna
     if (result.success && result.token) {
+      if (!this.isTokenForCompany(result.token, cnpj)) {
+        this.logger.warn('Token recebido inválido ou de outro CNPJ');
+        return this.expiredStatus();
+      }
+
       await this.prisma.client.company.update({
         where: { id: company.id },
         data: { licenseToken: result.token },
       });
-      return this.checkToken(result.token);
+      return this.checkToken(result.token, cnpj);
     }
 
-    // Servidor rejeitou explicitamente - limpa token e invalida
+    // Servidor rejeitou explicitamente (4xx) - limpa token e invalida
     if (result.serverRejected) {
       await this.prisma.client.company.update({
         where: { id: company.id },
         data: { licenseToken: '' },
       });
-      return { isValid: false, plan: 'none', mode: 'expired' };
+      return this.expiredStatus();
     }
 
     // Falha de rede - mantém token atual e cai no cache (respeita maxOfflineDays)
     if (!licenseToken) {
-      return { isValid: false, plan: 'none', mode: 'expired' };
+      return this.expiredStatus();
     }
 
-    return this.checkToken(licenseToken);
+    if (await this.isClockRolledBack()) {
+      this.logger.warn('Relógio do sistema anterior à última venda registrada');
+      return this.expiredStatus(
+        'Não foi possível validar a licença. Conecte-se à internet para regularizar.',
+      );
+    }
+
+    return this.checkToken(licenseToken, cnpj, true);
   }
 
   async getStatus(): Promise<LicenseStatus> {
@@ -205,7 +307,7 @@ export class LicenseSystemService {
 
     const payload = this.verifyToken(company.licenseToken);
 
-    if (!payload) {
+    if (!payload || payload.cnpj !== company.cnpj) {
       throw new HttpException('Token inválido', HttpStatus.BAD_REQUEST);
     }
 
@@ -277,6 +379,14 @@ export class LicenseSystemService {
         `Resumo de uso enviado (${Object.keys(usage).length} tabelas)`,
       );
     } catch (error) {
+      const status = axios.isAxiosError(error)
+        ? error.response?.status
+        : undefined;
+      const retryable = !status || status >= 500;
+
+      // Libera nova tentativa no mesmo dia só se a falha for transitória
+      if (!force && retryable) this.lastUsageReportDay = null;
+
       const reason = error instanceof Error ? error.message : String(error);
       this.logger.warn(`Falha ao enviar resumo de uso: ${reason}`);
     }
