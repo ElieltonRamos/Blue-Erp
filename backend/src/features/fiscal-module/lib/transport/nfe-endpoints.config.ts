@@ -104,6 +104,20 @@ export const NFE_WEBSERVICES: typeof WEBSERVICES = {
     },
     // TODO: produção MG (modelo 55) não configurada
   },
+  BA: {
+    staging: {
+      authorization: '/webservices/NFeAutorizacao4/NFeAutorizacao4.asmx',
+      status: '/webservices/NFeStatusServico4/NFeStatusServico4.asmx',
+      query: '/webservices/NFeConsultaProtocolo4/NFeConsultaProtocolo4.asmx',
+      cancellation: '/webservices/NFeRecepcaoEvento4/NFeRecepcaoEvento4.asmx',
+      returnAuthorization:
+        '/webservices/NFeRetAutorizacao4/NFeRetAutorizacao4.asmx',
+      inutilization: '/webservices/NFeInutilizacao4/NFeInutilizacao4.asmx',
+      registrationQuery:
+        '/webservices/CadConsultaCadastro4/CadConsultaCadastro4.asmx',
+    },
+    // TODO: produção BA (modelo 55) não configurada
+  },
   SVRS: {
     staging: {
       authorization: '/ws/NfeAutorizacao/NFeAutorizacao4.asmx',
@@ -130,6 +144,10 @@ export const NFE_HOSTS: typeof HOSTS = {
   MG: {
     staging: 'hnfe.fazenda.mg.gov.br',
   },
+  BA: {
+    staging: 'hnfe.sefaz.ba.gov.br',
+    production: 'nfe.sefaz.ba.gov.br',
+  },
   SVRS: {
     staging: 'nfe-homologacao.svrs.rs.gov.br',
     production: 'nfe.svrs.rs.gov.br',
@@ -137,7 +155,7 @@ export const NFE_HOSTS: typeof HOSTS = {
 };
 
 // TODO: não verificado — copiado da lista da NFC-e. Confirmar no Portal Nacional da NF-e.
-export const NFE_SVRS_STATES = [...SVRS_STATES];
+export const NFE_SVRS_STATES = SVRS_STATES.filter((uf) => uf !== 'BA');
 
 export const WEBSERVICES_BY_MODEL: Record<NfeModel, typeof WEBSERVICES> = {
   '65': WEBSERVICES,

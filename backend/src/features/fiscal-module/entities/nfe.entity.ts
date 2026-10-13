@@ -97,6 +97,7 @@ export interface Nfe55Options {
     indIEDest: string;
     IE?: string;
   };
+  cnpjContador?: string; // CNPJ do escritório de contabilidade (autXML). Na BA, se omitido, usa o CNPJ da SEFAZ-BA.
   produtos: Nfe55Item[];
   transp: {
     modFrete: string;

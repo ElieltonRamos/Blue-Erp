@@ -278,6 +278,17 @@ function buildDetPag(pag: Nfe55Options['pag']) {
 
 // ---------- Gerador ----------
 
+const SEFAZ_BA_CNPJ = '13937073000156';
+
+function buildAutXml(uf: string, cnpjContador?: string) {
+  const cnpj = cnpjContador
+    ? digits(cnpjContador)
+    : uf === 'BA'
+      ? SEFAZ_BA_CNPJ
+      : undefined;
+  return cnpj ? { autXML: [{ CNPJ: cnpj }] } : {};
+}
+
 /** Gera o XML <NFe> (sem assinatura e sem nfeProc) da NF-e modelo 55. Não altera `data`. */
 export function generateNFe55XML(data: Nfe55Options): string {
   const { ide, emit } = data;
@@ -424,6 +435,7 @@ export function generateNFe55XML(data: Nfe55Options): string {
           CRT: emit.CRT,
         },
         dest: buildDest(data.dest, isHomolog),
+        ...buildAutXml(emit.enderEmit.UF, data.cnpjContador),
         det,
         total: {
           ICMSTot: {

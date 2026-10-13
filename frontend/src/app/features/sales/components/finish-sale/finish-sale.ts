@@ -155,8 +155,7 @@ export class FinishSale {
   private emitPayments(): void {
     const payments: SalePaymentDto[] = this.paymentEntries.map((p) => ({
       method: p.paymentMethod,
-      amount: p.value,
-      change: p.change,
+      amount: Number((p.value - p.change).toFixed(2)),
     }));
     this.paymentsChange.emit(payments);
   }
