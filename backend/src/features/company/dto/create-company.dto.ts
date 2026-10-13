@@ -10,6 +10,7 @@ import {
   IsNumber,
   IsDateString,
   Min,
+  Max,
   Matches,
 } from 'class-validator';
 import { BusinessType } from 'generated/prisma/enums';
@@ -114,6 +115,7 @@ export class CreateCompanyDto {
   @IsOptional()
   email?: string;
 
+  // NFC-e
   @ApiProperty({ example: '001' })
   @IsString({ message: ValidationMessages.IS_STRING('Série NFC-e') })
   @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Série NFC-e') })
@@ -121,7 +123,7 @@ export class CreateCompanyDto {
 
   @ApiProperty({ example: 1 })
   @IsNumber({}, { message: ValidationMessages.IS_NUMBER('Número atual NFC-e') })
-  @Min(1)
+  @Min(1, { message: 'Número atual NFC-e deve ser maior ou igual a 1' })
   @IsNotEmpty({
     message: ValidationMessages.IS_NOT_EMPTY('Número atual NFC-e'),
   })
@@ -129,7 +131,7 @@ export class CreateCompanyDto {
 
   @ApiProperty({ enum: ['production', 'staging'], example: 'production' })
   @IsEnum(['production', 'staging'], {
-    message: 'Ambiente deve ser production ou staging',
+    message: 'Ambiente NFC-e deve ser production ou staging',
   })
   @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Ambiente NFC-e') })
   nfceEnvironment: 'production' | 'staging';
@@ -144,6 +146,51 @@ export class CreateCompanyDto {
   @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('ID CSC NFC-e') })
   nfceCscId: string;
 
+  // NF-e
+  @ApiProperty({ required: false, example: '1', default: '1' })
+  @IsString({ message: ValidationMessages.IS_STRING('Série NF-e') })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Série NF-e') })
+  @IsOptional()
+  nfeSeries?: string;
+
+  @ApiProperty({ required: false, example: 0, default: 0 })
+  @IsNumber({}, { message: ValidationMessages.IS_NUMBER('Número atual NF-e') })
+  @Min(0, { message: 'Número atual NF-e deve ser maior ou igual a 0' })
+  @IsOptional()
+  nfeCurrentNumber?: number;
+
+  @ApiProperty({
+    required: false,
+    enum: ['production', 'staging'],
+    example: 'staging',
+    default: 'staging',
+  })
+  @IsEnum(['production', 'staging'], {
+    message: 'Ambiente NF-e deve ser production ou staging',
+  })
+  @IsOptional()
+  nfeEnvironment?: 'production' | 'staging';
+
+  @ApiProperty({
+    required: false,
+    example: 1.25,
+    description: 'Alíquota de crédito do Simples Nacional (pCredSN), em %',
+  })
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    {
+      message:
+        'Alíquota de crédito do Simples deve ser um número com até 2 casas decimais',
+    },
+  )
+  @Min(0, { message: 'Alíquota de crédito do Simples deve ser no mínimo 0' })
+  @Max(100, {
+    message: 'Alíquota de crédito do Simples deve ser no máximo 100',
+  })
+  @IsOptional()
+  simplesCreditRate?: number;
+
+  // Certificado
   @ApiProperty({ example: '/certs/certificado.pfx' })
   @IsString({ message: ValidationMessages.IS_STRING('Caminho certificado') })
   @IsNotEmpty({
@@ -157,7 +204,10 @@ export class CreateCompanyDto {
   certificatePassword: string;
 
   @ApiProperty({ required: false, example: '2026-12-31T23:59:59' })
-  @IsDateString()
+  @IsDateString(
+    {},
+    { message: 'Data de validade do certificado deve ser uma data ISO válida' },
+  )
   @IsOptional()
   certificateExpirationDate?: string;
 

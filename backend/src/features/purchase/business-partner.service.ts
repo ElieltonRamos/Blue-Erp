@@ -40,11 +40,28 @@ export class BusinessPartnerService {
     return partner;
   }
 
-  async findAll(filters: { type?: PartnerType; active?: boolean } = {}) {
+  async findAll(
+    filters: { type?: PartnerType; active?: boolean; search?: string } = {},
+  ) {
     const where: Prisma.BusinessPartnerWhereInput = {
       ...(filters.type && { type: filters.type }),
       ...(filters.active !== undefined && { active: filters.active }),
     };
+
+    const search = filters.search?.trim();
+    if (search) {
+      const searchConditions: Prisma.BusinessPartnerWhereInput[] = [
+        { name: { contains: search } },
+      ];
+
+      // document é salvo só com dígitos; busca por CNPJ/CPF aceita texto formatado
+      const searchDigits = this.cleanDocument(search);
+      if (searchDigits) {
+        searchConditions.push({ document: { contains: searchDigits } });
+      }
+
+      where.OR = searchConditions;
+    }
 
     return this.prisma.client.businessPartner.findMany({
       where,
@@ -108,11 +125,41 @@ export class BusinessPartnerService {
   /**
    * Usado pelo PurchaseService dentro da transação de importação de NFe.
    * Recebe o client de transação (tx) — mesmo padrão de stockService/productionService.
+   *
+   * Cria apenas o fornecedor (emitente da NFe, type SUPPLIER). Se o parceiro
+   * já existe, ele é retornado sem ser atualizado.
+   *
+   * TODO: cadastrar a transportadora automaticamente na importação.
+   *
+   * Relação atual no schema:
+   *  - BusinessPartner tem PartnerType.CARRIER e o campo `rntc` (código ANTT,
+   *    só transportadora), mas Purchase só se liga a BusinessPartner por
+   *    `supplierId` (fornecedor).
+   *  - Purchase possui `stateRegistration`, `city`, `state` e `rntc` soltos,
+   *    preenchidos hoje a partir de `transp.transporta` (IE, xMun, UF) e
+   *    `transp.veicTransp.RNTC` do XML. Nome e CNPJ/CPF da transportadora
+   *    não são guardados (só existem dentro de `fiscalXml`).
+   *
+   * Para fazer depois:
+   *  1. NfeXmlParserService: extrair CNPJ/CPF e xNome de `transp.transporta`
+   *     e incluir no ParsedNfeDto / CreatePurchaseFromXmlDto.
+   *  2. Este método: receber o `type` por parâmetro (hoje fixo em SUPPLIER)
+   *     e usar PartnerType.CARRIER para a transportadora.
+   *  3. Schema: criar `carrierId` (opcional) em Purchase apontando para
+   *     BusinessPartner, com relation nomeada (ex.: "PurchaseCarrier") para
+   *     não colidir com `supplier`, e o lado inverso em BusinessPartner.
+   *  4. Avaliar remover de Purchase os campos soltos (`stateRegistration`,
+   *     `city`, `state`, `rntc`) se passarem a ser lidos da transportadora.
    */
   async findOrCreateByCnpj(
     tx: Prisma.TransactionClient,
     cnpj: string,
     name: string,
+    extra: {
+      stateRegistration?: string;
+      city?: string;
+      state?: string;
+    } = {},
   ): Promise<BusinessPartner> {
     const cleanCnpj = this.cleanDocument(cnpj);
 
@@ -129,6 +176,9 @@ export class BusinessPartnerService {
         type: PartnerType.SUPPLIER,
         name,
         document: cleanCnpj,
+        stateRegistration: extra.stateRegistration ?? null,
+        city: extra.city ?? null,
+        state: extra.state ?? null,
       },
     });
 

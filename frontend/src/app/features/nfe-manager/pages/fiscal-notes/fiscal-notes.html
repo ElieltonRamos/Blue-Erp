@@ -5,7 +5,7 @@
   >
     <div>
       <h2 class="text-3xl font-bold text-text-primary mb-2">Gestão de Notas Fiscais</h2>
-      <p class="text-text-secondary text-sm">Visualize, cancele e baixe suas NFC-e</p>
+      <p class="text-text-secondary text-sm">Visualize, cancele e baixe suas NF-e e NFC-e</p>
     </div>
 
     <div class="flex items-center gap-3">
@@ -180,7 +180,9 @@
               class="border-t border-border text-text-secondary"
             >
               <td class="px-4 py-3 font-mono font-semibold text-info">#{{ nota.nNF }}</td>
-              <td class="px-4 py-3">{{ nota.fiscalEmitDate | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="px-4 py-3">
+                {{ nota.fiscalEmitDate | date: 'dd/MM/yyyy HH:mm' : '-0300' }}
+              </td>
               <td class="px-4 py-3">{{ nota.clientName }}</td>
               <td class="px-4 py-3 text-right font-semibold text-success">R$ {{ nota.total }}</td>
               <td class="px-4 py-3 text-center">
@@ -307,7 +309,7 @@
       <div class="border-b border-border pb-4">
         <h3 class="text-xl font-bold text-text-primary">Cancelar Nota Fiscal</h3>
         <p class="text-text-secondary text-sm mt-1">
-          NF-e #{{ cancelTarget.nNF }} — {{ cancelTarget.clientName }}
+          {{ modelLabel(cancelTarget) }} #{{ cancelTarget.nNF }} — {{ cancelTarget.clientName }}
         </p>
       </div>
 

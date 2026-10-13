@@ -1,0 +1,304 @@
+import { create } from 'xmlbuilder2';
+import { createHash } from 'crypto';
+import { NFeOptions, NFeProduct } from '../../entities/fiscal-module.entity';
+import { PORTAL_URLS } from '../transport/nfe-endpoints.config';
+import { formatDateTimeBR, generateAccessKey } from './xml-common';
+
+function buildIcmsGroup(item: NFeProduct): Record<string, any> {
+  const orig = item.origem.toString();
+  const csosn = item.csosn;
+
+  switch (csosn) {
+    case '500':
+      return { ICMSSN500: { orig, CSOSN: csosn } };
+    case '400':
+      return { ICMSSN400: { orig, CSOSN: csosn } };
+    case '201':
+      return {
+        ICMSSN201: {
+          orig,
+          CSOSN: csosn,
+          modBCST: '3',
+          pMVAST: '0.00',
+          pRedBCST: '0.00',
+          vBCST: '0.00',
+          pICMSST: '0.00',
+          vICMSST: '0.00',
+        },
+      };
+    case '202':
+    case '203':
+      return {
+        ICMSSN202: {
+          orig,
+          CSOSN: csosn,
+          modBCST: '3',
+          pMVAST: '0.00',
+          pRedBCST: '0.00',
+          vBCST: '0.00',
+          pICMSST: '0.00',
+          vICMSST: '0.00',
+        },
+      };
+    case '300':
+      return { ICMSSN300: { orig, CSOSN: csosn } };
+    case '900':
+      return {
+        ICMSSN900: {
+          orig,
+          CSOSN: csosn,
+          modBC: '3',
+          vBC: '0.00',
+          pRedBC: '0.00',
+          pICMS: '0.00',
+          vICMS: '0.00',
+          modBCST: '3',
+          pMVAST: '0.00',
+          pRedBCST: '0.00',
+          vBCST: '0.00',
+          pICMSST: '0.00',
+          vICMSST: '0.00',
+        },
+      };
+    case '102':
+    default:
+      return { ICMSSN102: { orig, CSOSN: csosn } };
+  }
+}
+
+function buildItemTax(item: NFeProduct) {
+  const vProd = item.qCom * item.vUnCom;
+  const totalRate =
+    (item.aliqFederal ?? 0) +
+    (item.aliqEstadual ?? 0) +
+    (item.aliqMunicipal ?? 0);
+
+  if (totalRate === 0) {
+    throw new Error(
+      `Produto "${item.xProd}" (NCM: ${item.ncm}) com totalRate zero. Verifique as alíquotas IBPT.`,
+    );
+  }
+
+  const vTotTrib = vProd * (totalRate / 100);
+
+  if (vTotTrib <= 0) {
+    throw new Error(
+      `Produto "${item.xProd}" (NCM: ${item.ncm}) com vTotTrib inválido: ${vTotTrib}. Verifique qCom, vUnCom e alíquotas.`,
+    );
+  }
+
+  return {
+    vTotTrib: vTotTrib.toFixed(2),
+    ICMS: buildIcmsGroup(item),
+    PIS: {
+      PISOutr: {
+        CST: item.pisCst || '49',
+        vBC: '0.00',
+        pPIS: '0.00',
+        vPIS: '0.00',
+      },
+    },
+    COFINS: {
+      COFINSOutr: {
+        CST: item.cofinsCst || '49',
+        vBC: '0.00',
+        pCOFINS: '0.00',
+        vCOFINS: '0.00',
+      },
+    },
+  };
+}
+
+function buildDest(data: NFeOptions) {
+  const cpf = data.dest.CPF?.replace(/\D/g, '');
+  const hasCpf = cpf && cpf.length === 11 && cpf !== '00000000000';
+  const isHomolog = data.ide.tpAmb === '2';
+
+  if (hasCpf) {
+    return {
+      CPF: cpf,
+      xNome: isHomolog
+        ? 'NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL'
+        : data.dest.xNome,
+      indIEDest: '9',
+    };
+  }
+
+  return undefined;
+}
+
+export function buildQrCodeUrl(params: {
+  accessKey: string;
+  tpAmb: string;
+  idCSC: string;
+  csc: string;
+  uf: string;
+  offline?: boolean;
+  dhEmi?: string;
+  vNF?: string;
+  digVal?: string;
+}): string {
+  const { accessKey, tpAmb, idCSC, csc, uf } = params;
+
+  let payload: string;
+
+  if (params.offline && params.dhEmi && params.vNF && params.digVal) {
+    const dhEmiHex = Buffer.from(params.dhEmi, 'utf-8').toString('hex');
+    const digValHex = Buffer.from(params.digVal, 'utf-8').toString('hex');
+    payload = `${accessKey}|2|${tpAmb}|${dhEmiHex}|${params.vNF}|${digValHex}|${idCSC}`;
+  } else {
+    payload = `${accessKey}|2|${tpAmb}|${idCSC}`;
+  }
+
+  const hash = createHash('sha1')
+    .update(payload + csc)
+    .digest('hex')
+    .toUpperCase();
+
+  const qrBaseUrl =
+    PORTAL_URLS[uf.toUpperCase()]?.[tpAmb === '1' ? 'production' : 'staging'];
+  if (!qrBaseUrl) {
+    throw new Error(`QR-Code base URL not configured for state: ${uf}`);
+  }
+
+  return `${qrBaseUrl}?p=${payload}|${hash}`;
+}
+
+function buildDetPag(data: NFeOptions) {
+  return data.pag.detPag.map((p) => ({
+    indPag: p.indPag,
+    tPag: p.tPag,
+    ...(p.tPag === '99' && p.xPag ? { xPag: p.xPag } : {}),
+    vPag: p.vPag.toFixed(2),
+    ...(p.card ? { card: p.card } : {}),
+  }));
+}
+
+export function generateNFeXML(data: NFeOptions): string {
+  data.ide.dhEmi = formatDateTimeBR(data.ide.dhEmi);
+  const accessKey = generateAccessKey({
+    cUF: data.ide.cUF,
+    dhEmiBR: data.ide.dhEmi,
+    cnpj: data.emit.CNPJ,
+    mod: data.ide.mod,
+    serie: data.ide.serie,
+    nNF: data.ide.nNF,
+    tpEmis: data.ide.tpEmis,
+    cNF: data.ide.cNF,
+  });
+  data.ide.cDV = accessKey.slice(-1);
+  data.ide.nNF = parseInt(data.ide.nNF, 10).toString();
+  const taxPerItem = data.produtos.map((p) => buildItemTax(p));
+
+  const totalProducts = data.produtos.reduce(
+    (sum, p) => sum + p.qCom * p.vUnCom,
+    0,
+  );
+
+  const totalVOutro = data.produtos.reduce((sum, p) => sum + p.vOutro, 0);
+  const totalVDesc = data.produtos.reduce((sum, p) => sum + p.vDesc, 0); // <- adicionar aqui
+
+  const totalTax = taxPerItem.reduce((sum, t) => sum + Number(t.vTotTrib), 0);
+
+  const dest = buildDest(data);
+
+  const isHomolog = data.ide.tpAmb === '2';
+
+  const root = {
+    NFe: {
+      '@xmlns': 'http://www.portalfiscal.inf.br/nfe',
+      infNFe: {
+        '@Id': `NFe${accessKey}`,
+        '@versao': '4.00',
+        ide: {
+          cUF: data.ide.cUF,
+          cNF: data.ide.cNF,
+          natOp: data.ide.natOp,
+          mod: data.ide.mod,
+          serie: data.ide.serie,
+          nNF: data.ide.nNF,
+          dhEmi: data.ide.dhEmi,
+          tpNF: data.ide.tpNF,
+          idDest: data.ide.idDest,
+          cMunFG: data.ide.cMunFG,
+          tpImp: data.ide.tpImp,
+          tpEmis: data.ide.tpEmis,
+          cDV: data.ide.cDV,
+          tpAmb: data.ide.tpAmb,
+          finNFe: data.ide.finNFe,
+          indFinal: data.ide.indFinal,
+          indPres: data.ide.indPres,
+          indIntermed: data.ide.indIntermed || '0',
+          procEmi: data.ide.procEmi,
+          verProc: data.ide.verProc,
+        },
+        emit: {
+          CNPJ: data.emit.CNPJ,
+          xNome: data.emit.xNome,
+          xFant: data.emit.xFant,
+          enderEmit: data.emit.enderEmit,
+          IE: data.emit.IE,
+          CRT: data.emit.CRT,
+        },
+        ...(dest ? { dest } : {}),
+        det: data.produtos.map((p, index) => ({
+          '@nItem': p.nItem.toString(),
+          prod: {
+            cProd: p.cProd,
+            cEAN: 'SEM GTIN',
+            xProd:
+              isHomolog && index === 0
+                ? 'NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL'
+                : p.xProd,
+            NCM: p.ncm,
+            CFOP: p.cfop,
+            uCom: p.uCom,
+            qCom: p.qCom.toFixed(4),
+            vUnCom: p.vUnCom.toFixed(5),
+            vProd: (p.qCom * p.vUnCom).toFixed(2),
+            cEANTrib: 'SEM GTIN',
+            uTrib: p.uTrib,
+            qTrib: p.qTrib.toFixed(4),
+            vUnTrib: p.vUnTrib.toFixed(5),
+            ...(p.vDesc > 0 ? { vDesc: p.vDesc.toFixed(2) } : {}),
+            ...(p.vOutro > 0 ? { vOutro: p.vOutro.toFixed(2) } : {}),
+            indTot: p.indTot.toString(),
+          },
+          imposto: taxPerItem[index],
+        })),
+        total: {
+          ICMSTot: {
+            vBC: '0.00',
+            vICMS: '0.00',
+            vICMSDeson: '0.00',
+            vFCP: '0.00',
+            vBCST: '0.00',
+            vST: '0.00',
+            vFCPST: '0.00',
+            vFCPSTRet: '0.00',
+            vProd: totalProducts.toFixed(2),
+            vFrete: '0.00',
+            vSeg: '0.00',
+            vDesc: totalVDesc.toFixed(2),
+            vII: '0.00',
+            vIPI: '0.00',
+            vIPIDevol: '0.00',
+            vPIS: '0.00',
+            vCOFINS: '0.00',
+            vOutro: totalVOutro.toFixed(2),
+            vNF: (totalProducts - totalVDesc + totalVOutro).toFixed(2), // era totalProducts + totalVOutro
+            vTotTrib: totalTax.toFixed(2),
+          },
+        },
+        transp: { modFrete: '9' },
+        pag: {
+          detPag: buildDetPag(data),
+          vTroco: '0.00',
+        },
+        infAdic: data.infAdic ? { infCpl: data.infAdic } : undefined,
+      },
+    },
+  };
+
+  return create(root).end({ prettyPrint: false, headless: true });
+}

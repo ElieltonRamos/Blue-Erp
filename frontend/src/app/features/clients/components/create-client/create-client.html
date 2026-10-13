@@ -32,18 +32,49 @@
     </div>
 
     <div>
-      <label class="block text-text-secondary text-sm mb-1">CPF (opcional)</label>
-      <input
-        formControlName="cpf"
-        type="text"
-        mask="000.000.000-00"
-        placeholder="Digite o CPF"
-        class="w-full p-2.5 rounded-lg bg-surface text-text-primary placeholder:text-text-muted border border-border focus:border-accent outline-none"
-      />
+      <label class="block text-text-secondary text-sm mb-1">Tipo de pessoa</label>
+      <select
+        formControlName="personType"
+        (change)="onPersonTypeChange()"
+        class="w-full p-2.5 rounded-lg bg-surface text-text-primary border border-border focus:border-accent outline-none"
+      >
+        <option value="PF">Pessoa física</option>
+        <option value="PJ">Pessoa jurídica</option>
+      </select>
     </div>
 
-    <div>
-      <label class="block text-text-secondary text-sm mb-1">Endereço (opcional)</label>
+    @if (isPessoaJuridica) {
+      <div>
+        <label class="block text-text-secondary text-sm mb-1">CNPJ (opcional)</label>
+        <input
+          formControlName="cnpj"
+          type="text"
+          mask="00.000.000/0000-00"
+          placeholder="Digite o CNPJ"
+          class="w-full p-2.5 rounded-lg bg-surface text-text-primary placeholder:text-text-muted border border-border focus:border-accent outline-none"
+        />
+        @if (formCreateClient.get('cnpj')?.touched && formCreateClient.get('cnpj')?.invalid) {
+          <p class="msg-error">CNPJ deve ter 14 dígitos!</p>
+        }
+      </div>
+    } @else {
+      <div>
+        <label class="block text-text-secondary text-sm mb-1">CPF (opcional)</label>
+        <input
+          formControlName="cpf"
+          type="text"
+          mask="000.000.000-00"
+          placeholder="Digite o CPF"
+          class="w-full p-2.5 rounded-lg bg-surface text-text-primary placeholder:text-text-muted border border-border focus:border-accent outline-none"
+        />
+        @if (formCreateClient.get('cpf')?.touched && formCreateClient.get('cpf')?.invalid) {
+          <p class="msg-error">CPF deve ter 11 dígitos!</p>
+        }
+      </div>
+    }
+
+    <div class="md:col-span-2">
+      <label class="block text-text-secondary text-sm mb-1">Endereço resumido (opcional)</label>
       <input
         formControlName="address"
         type="text"
@@ -52,6 +83,132 @@
       />
     </div>
   </div>
+
+  <button type="button" (click)="toggleFiscal()" class="text-sm text-accent hover:underline">
+    {{ showFiscal ? 'Ocultar dados fiscais (NF-e)' : 'Adicionar dados fiscais (NF-e)' }}
+  </button>
+
+  @if (showFiscal) {
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 border-t border-border pt-3">
+      <div>
+        <label class="block text-text-secondary text-sm mb-1">Inscrição estadual</label>
+        <input
+          formControlName="stateRegistration"
+          type="text"
+          maxlength="20"
+          placeholder="IE"
+          class="w-full p-2.5 rounded-lg bg-surface text-text-primary placeholder:text-text-muted border border-border focus:border-accent outline-none"
+        />
+      </div>
+
+      <div>
+        <label class="block text-text-secondary text-sm mb-1">Indicador de IE</label>
+        <select
+          formControlName="ieIndicator"
+          class="w-full p-2.5 rounded-lg bg-surface text-text-primary border border-border focus:border-accent outline-none"
+        >
+          <option value="">Não informado</option>
+          <option value="1">1 - Contribuinte</option>
+          <option value="2">2 - Isento</option>
+          <option value="9">9 - Não contribuinte</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-text-secondary text-sm mb-1">CEP</label>
+        <input
+          formControlName="zipCode"
+          type="text"
+          mask="00000-000"
+          placeholder="00000-000"
+          class="w-full p-2.5 rounded-lg bg-surface text-text-primary placeholder:text-text-muted border border-border focus:border-accent outline-none"
+        />
+        @if (formCreateClient.get('zipCode')?.touched && formCreateClient.get('zipCode')?.invalid) {
+          <p class="msg-error">CEP deve ter 8 dígitos!</p>
+        }
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="block text-text-secondary text-sm mb-1">Logradouro</label>
+        <input
+          formControlName="street"
+          type="text"
+          placeholder="Rua, avenida..."
+          class="w-full p-2.5 rounded-lg bg-surface text-text-primary placeholder:text-text-muted border border-border focus:border-accent outline-none"
+        />
+      </div>
+
+      <div>
+        <label class="block text-text-secondary text-sm mb-1">Número</label>
+        <input
+          formControlName="number"
+          type="text"
+          placeholder="Número"
+          class="w-full p-2.5 rounded-lg bg-surface text-text-primary placeholder:text-text-muted border border-border focus:border-accent outline-none"
+        />
+      </div>
+
+      <div>
+        <label class="block text-text-secondary text-sm mb-1">Complemento</label>
+        <input
+          formControlName="complement"
+          type="text"
+          placeholder="Complemento"
+          class="w-full p-2.5 rounded-lg bg-surface text-text-primary placeholder:text-text-muted border border-border focus:border-accent outline-none"
+        />
+      </div>
+
+      <div>
+        <label class="block text-text-secondary text-sm mb-1">Bairro</label>
+        <input
+          formControlName="neighborhood"
+          type="text"
+          placeholder="Bairro"
+          class="w-full p-2.5 rounded-lg bg-surface text-text-primary placeholder:text-text-muted border border-border focus:border-accent outline-none"
+        />
+      </div>
+
+      <div>
+        <label class="block text-text-secondary text-sm mb-1">Cidade</label>
+        <input
+          formControlName="city"
+          type="text"
+          placeholder="Cidade"
+          class="w-full p-2.5 rounded-lg bg-surface text-text-primary placeholder:text-text-muted border border-border focus:border-accent outline-none"
+        />
+      </div>
+
+      <div>
+        <label class="block text-text-secondary text-sm mb-1">Código IBGE do município</label>
+        <input
+          formControlName="cityCode"
+          type="text"
+          mask="0000000"
+          placeholder="3106200"
+          class="w-full p-2.5 rounded-lg bg-surface text-text-primary placeholder:text-text-muted border border-border focus:border-accent outline-none"
+        />
+        @if (
+          formCreateClient.get('cityCode')?.touched && formCreateClient.get('cityCode')?.invalid
+        ) {
+          <p class="msg-error">Código IBGE deve ter 7 dígitos!</p>
+        }
+      </div>
+
+      <div>
+        <label class="block text-text-secondary text-sm mb-1">UF</label>
+        <input
+          formControlName="state"
+          type="text"
+          mask="AA"
+          placeholder="MG"
+          class="w-full p-2.5 rounded-lg bg-surface text-text-primary placeholder:text-text-muted border border-border focus:border-accent outline-none uppercase"
+        />
+        @if (formCreateClient.get('state')?.touched && formCreateClient.get('state')?.invalid) {
+          <p class="msg-error">UF deve ter 2 letras!</p>
+        }
+      </div>
+    </div>
+  }
 
   <div class="flex justify-end gap-3">
     <button

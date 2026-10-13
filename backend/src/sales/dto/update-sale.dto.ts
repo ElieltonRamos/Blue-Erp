@@ -8,6 +8,7 @@ import {
   ValidateNested,
   Min,
   IsInt,
+  IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { FiscalStatus } from 'generated/prisma/client';
@@ -19,8 +20,21 @@ export class UpdateSaleItemDto {
   @IsOptional()
   id?: number;
 
+  @IsIn(['PRODUCT', 'SERVICE'])
+  @IsOptional()
+  type?: 'PRODUCT' | 'SERVICE';
+
   @IsInt()
-  productId: number;
+  @IsOptional()
+  productId?: number;
+
+  @IsInt()
+  @IsOptional()
+  serviceId?: number;
+
+  @IsInt()
+  @IsOptional()
+  userId?: number;
 
   @IsNumber()
   @Min(0.01)

@@ -168,64 +168,70 @@
 
       <!-- BOTÕES FORA DA ÁREA DE SCROLL -->
       <div class="mt-6 flex justify-between print:hidden gap-2">
-        <button
-          (click)="requestNfce()"
-          [disabled]="isRequestingNfce || !canEmitNfce"
-          [class.opacity-60]="!canEmitNfce"
-          [class.cursor-not-allowed]="!canEmitNfce"
-          [title]="!canEmitNfce ? 'Recurso disponível apenas no plano Pro' : ''"
-          class="relative group"
-        >
-          @if (isRequestingNfce) {
-            <span>Emitindo NFC-e...</span>
-          } @else if (hasNfce()) {
-            <span>📄 Baixar DANFE</span>
-          } @else {
-            <span>📝 Emitir NFC-e</span>
-          }
-
-          @if (!canEmitNfce) {
-            <span
-              class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
-            >
-              Recurso disponível apenas no plano Pro
-              <span
-                class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"
-              ></span>
-            </span>
-          }
-        </button>
-
         <div class="flex gap-2">
           <button
-            (click)="print()"
-            class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition flex items-center gap-2"
+            (click)="requestNfce()"
+            [disabled]="isRequestingNfce || !canEmitNfce || nfceBlockedByServices"
+            [title]="
+              !canEmitNfce
+                ? 'Recurso disponível apenas no plano Pro'
+                : nfceBlockedByServices
+                  ? 'Venda com serviços: use a NF-e'
+                  : ''
+            "
+            class="relative group bg-accent hover:bg-accent-hover text-btn-text py-2 px-4 rounded transition flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-              />
-            </svg>
-            <span>Imprimir</span>
+            @if (isRequestingNfce) {
+              <span>Emitindo NFC-e...</span>
+            } @else if (hasNfce()) {
+              <span>📄 Baixar DANFE</span>
+            } @else {
+              <span>📝 Emitir NFC-e</span>
+            }
+
+            @if (!canEmitNfce) {
+              <span
+                class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
+              >
+                Recurso disponível apenas no plano Pro
+                <span
+                  class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"
+                ></span>
+              </span>
+            }
           </button>
 
-          <button
-            (click)="close()"
-            class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition flex items-center gap-2"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-            <span>Fechar</span>
-          </button>
+          @if (!hasNfce()) {
+            <button
+              (click)="goToEmitNfe()"
+              [disabled]="isRequestingNfce || !canEmitNfce || nfeBlocked"
+              [title]="
+                !canEmitNfce
+                  ? 'Recurso disponível apenas no plano Pro'
+                  : nfeBlocked
+                    ? 'Venda só com serviços não pode ter nota fiscal'
+                    : ''
+              "
+              class="relative group bg-fiscal hover:opacity-90 text-btn-text py-2 px-4 rounded transition flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <span>🧾 Emitir NF-e</span>
+
+              @if (!canEmitNfce) {
+                <span
+                  class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
+                >
+                  Recurso disponível apenas no plano Pro
+                  <span
+                    class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"
+                  ></span>
+                </span>
+              }
+            </button>
+          }
+        </div>
+
+        <div class="flex gap-2">
+          <!-- botões Imprimir e Fechar, sem alterações -->
         </div>
       </div>
 

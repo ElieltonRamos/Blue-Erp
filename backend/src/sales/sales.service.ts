@@ -410,6 +410,11 @@ export class SalesService {
       }
     }
 
+    const itemKey = (i: {
+      productId?: number | null;
+      serviceId?: number | null;
+    }) => (i.productId != null ? `p${i.productId}` : `s${i.serviceId}`);
+
     let saleItemsCreateData: Prisma.SaleItemCreateManySaleInput[] | null = null;
     let orderItemsCreateData: Prisma.OrderItemCreateManyOrderInput[] | null =
       null;
@@ -431,24 +436,53 @@ export class SalesService {
       !newServiceCharge.equals(new Decimal(existingSale.serviceCharge));
 
     if (updateSaleDto.items) {
-      const productIds = updateSaleDto.items.map((item) => item.productId);
-      const products = await this.prisma.client.product.findMany({
-        where: { id: { in: productIds } },
-        select: {
-          id: true,
-          name: true,
-          code: true,
-          costPrice: true,
-          unit: true,
-        },
-      });
+      const dtoItems = updateSaleDto.items;
 
-      const foundIds = products.map((p) => p.id);
-      const missingIds = productIds.filter((pid) => !foundIds.includes(pid));
-
-      if (missingIds.length > 0) {
+      if (dtoItems.some((i) => i.productId == null && i.serviceId == null)) {
         throw new BadRequestException(
-          `Produtos não encontrados: ${missingIds.join(', ')}`,
+          'Todo item deve informar productId ou serviceId',
+        );
+      }
+
+      const productIds = dtoItems
+        .filter((i) => i.productId != null)
+        .map((i) => i.productId!);
+      const serviceIds = dtoItems
+        .filter((i) => i.serviceId != null)
+        .map((i) => i.serviceId!);
+
+      const [products, services] = await Promise.all([
+        this.prisma.client.product.findMany({
+          where: { id: { in: productIds } },
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            costPrice: true,
+            unit: true,
+          },
+        }),
+        this.prisma.client.service.findMany({
+          where: { id: { in: serviceIds } },
+          select: { id: true, name: true },
+        }),
+      ]);
+
+      const missingProducts = productIds.filter(
+        (pid) => !products.some((p) => p.id === pid),
+      );
+      if (missingProducts.length > 0) {
+        throw new BadRequestException(
+          `Produtos não encontrados: ${missingProducts.join(', ')}`,
+        );
+      }
+
+      const missingServices = serviceIds.filter(
+        (sid) => !services.some((s) => s.id === sid),
+      );
+      if (missingServices.length > 0) {
+        throw new BadRequestException(
+          `Serviços não encontrados: ${missingServices.join(', ')}`,
         );
       }
 
@@ -457,14 +491,23 @@ export class SalesService {
       totalProductsWithoutDiscount = new Decimal(0);
       let rawProfit = new Decimal(0);
 
-      saleItemsCreateData = updateSaleDto.items.map((item, index) => {
-        const product = products.find((p) => p.id === item.productId)!;
-        const totalPrice = new Decimal(item.quantity).times(
-          new Decimal(item.unitPrice),
-        );
-        const itemCost = new Decimal(product.costPrice).times(
-          new Decimal(item.quantity),
-        );
+      saleItemsCreateData = dtoItems.map((item, index) => {
+        const quantity = new Decimal(item.quantity);
+        const unitPrice = new Decimal(item.unitPrice);
+        const totalPrice = quantity.times(unitPrice);
+
+        let xProd: string;
+        let taxUnit: string | null = null;
+        let itemCost = new Decimal(0);
+
+        if (item.productId != null) {
+          const product = products.find((p) => p.id === item.productId)!;
+          xProd = product.name;
+          taxUnit = product.unit;
+          itemCost = new Decimal(product.costPrice).times(quantity);
+        } else {
+          xProd = services.find((s) => s.id === item.serviceId)!.name;
+        }
 
         totalProductsWithoutDiscount =
           totalProductsWithoutDiscount.plus(totalPrice);
@@ -472,14 +515,16 @@ export class SalesService {
 
         return {
           itemNumber: index + 1,
-          productId: item.productId,
-          xProd: product.name,
-          quantity: new Decimal(item.quantity),
-          unitPrice: new Decimal(item.unitPrice),
+          productId: item.productId ?? null,
+          serviceId: item.serviceId ?? null,
+          userId: item.userId ?? null,
+          xProd,
+          quantity,
+          unitPrice,
           totalPrice,
-          taxUnit: product.unit,
-          taxQuantity: new Decimal(item.quantity),
-          taxUnitPrice: new Decimal(item.unitPrice),
+          taxUnit,
+          taxQuantity: quantity,
+          taxUnitPrice: unitPrice,
           composesTotal: 1,
           cfop,
           totalTaxValue: null,
@@ -498,19 +543,17 @@ export class SalesService {
           serviceCharge: shares[index],
         }));
       } else {
-        const oldByProduct = new Map(
+        const oldByItem = new Map(
           existingSale.items.map((i) => [
-            i.productId,
+            itemKey(i),
             new Decimal(i.serviceCharge),
           ]),
         );
-        const newProductIds = new Set(
-          saleItemsCreateData.map((i) => i.productId),
-        );
+        const newKeys = new Set(saleItemsCreateData.map((i) => itemKey(i)));
 
         let removedServiceCharge = new Decimal(0);
         for (const oldItem of existingSale.items) {
-          if (!newProductIds.has(oldItem.productId)) {
+          if (!newKeys.has(itemKey(oldItem))) {
             removedServiceCharge = removedServiceCharge.plus(
               new Decimal(oldItem.serviceCharge),
             );
@@ -519,7 +562,7 @@ export class SalesService {
 
         saleItemsCreateData = saleItemsCreateData.map((item) => ({
           ...item,
-          serviceCharge: oldByProduct.get(item.productId!) ?? new Decimal(0),
+          serviceCharge: oldByItem.get(itemKey(item)) ?? new Decimal(0),
         }));
 
         if (
@@ -539,20 +582,22 @@ export class SalesService {
         }
       }
 
-      orderItemsCreateData = updateSaleDto.items.map((item) => {
-        const product = products.find((p) => p.id === item.productId)!;
-        const total = new Decimal(item.quantity).times(
-          new Decimal(item.unitPrice),
-        );
-        return {
-          code: product.code,
-          name: product.name,
-          productId: item.productId,
-          quantity: new Decimal(item.quantity),
-          unitPrice: new Decimal(item.unitPrice),
-          total,
-        };
-      });
+      // OrderItem exige productId: apenas produtos
+      orderItemsCreateData = dtoItems
+        .filter((item) => item.productId != null)
+        .map((item) => {
+          const product = products.find((p) => p.id === item.productId)!;
+          return {
+            code: product.code,
+            name: product.name,
+            productId: item.productId!,
+            quantity: new Decimal(item.quantity),
+            unitPrice: new Decimal(item.unitPrice),
+            total: new Decimal(item.quantity).times(
+              new Decimal(item.unitPrice),
+            ),
+          };
+        });
 
       recalculatedProfit = rawProfit.minus(newDiscount);
     } else {

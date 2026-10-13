@@ -1,16 +1,24 @@
 // types/purchase.ts
+import { BusinessPartner } from './business-partner';
+
+// Re-export para não quebrar imports existentes de BusinessPartner a partir deste arquivo
+export type { BusinessPartner } from './business-partner';
 
 export type PurchaseStatus = 'RECEIVED' | 'CANCELED';
 
-export interface BusinessPartner {
-  id: number;
-  type: 'SUPPLIER' | 'EMPLOYEE' | 'CARRIER' | 'ACCOUNTANT' | 'BANK';
-  name: string;
-  document?: string;
-  phone?: string;
-  email?: string;
-  address?: string;
-  active: boolean;
+// Dados do emitente (fornecedor) extraídos do XML: emit.IE, emit.enderEmit.xMun, emit.enderEmit.UF
+export interface NfeSupplierData {
+  supplierStateRegistration?: string;
+  supplierCity?: string;
+  supplierState?: string;
+}
+
+// Dados de transporte da compra: transp.transporta (IE, xMun, UF) e transp.veicTransp.RNTC
+export interface PurchaseTransportData {
+  transportStateRegistration?: string;
+  transportCity?: string;
+  transportState?: string;
+  transportRntc?: string;
 }
 
 export interface ParsedNfeItem {
@@ -41,7 +49,7 @@ export interface ReconciledPurchaseItem {
 }
 
 // Retorno de POST /purchases/parse-xml
-export interface ParsedPurchasePreview {
+export interface ParsedPurchasePreview extends NfeSupplierData, PurchaseTransportData {
   supplierCnpj: string;
   supplierName: string;
   destCnpj: string;
@@ -54,7 +62,7 @@ export interface ParsedPurchasePreview {
 }
 
 // Payload de POST /purchases
-export interface CreatePurchaseFromXml {
+export interface CreatePurchaseFromXml extends NfeSupplierData, PurchaseTransportData {
   supplierCnpj: string;
   supplierName: string;
   destCnpj: string;
@@ -85,6 +93,11 @@ export interface Purchase {
   invoiceNumber?: string;
   fiscalKey?: string;
   supplierCnpj?: string;
+  // Dados de transporte da compra
+  stateRegistration?: string;
+  city?: string;
+  state?: string;
+  rntc?: string;
   receivedAt: string;
   items: PurchaseItem[];
   expenses: Expense[];
@@ -111,7 +124,6 @@ export interface PurchaseFilters {
   endDate?: string;
 }
 
-// types/purchase.ts — adicionar
 export interface ManualPurchaseItem {
   description: string;
   quantity: number;
@@ -127,7 +139,7 @@ export interface ManualInstallment {
   value: number;
 }
 
-export interface CreateManualPurchase {
+export interface CreateManualPurchase extends PurchaseTransportData {
   supplierId: number;
   invoiceNumber?: string;
   items: ManualPurchaseItem[];

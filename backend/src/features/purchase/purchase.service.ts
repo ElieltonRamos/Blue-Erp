@@ -58,6 +58,11 @@ export class PurchaseService {
           tx,
           dto.supplierCnpj,
           dto.supplierName,
+          {
+            stateRegistration: dto.supplierStateRegistration,
+            city: dto.supplierCity,
+            state: dto.supplierState,
+          },
         );
 
         const total = dto.items.reduce((sum, i) => sum + i.total, 0);
@@ -72,6 +77,11 @@ export class PurchaseService {
             fiscalKey: dto.fiscalKey,
             fiscalXml: dto.fiscalXml,
             supplierCnpj: dto.supplierCnpj,
+            // Dados de transporte (transp.transporta / transp.veicTransp do XML)
+            stateRegistration: dto.transportStateRegistration ?? null,
+            city: dto.transportCity ?? null,
+            state: dto.transportState ?? null,
+            rntc: dto.transportRntc ?? null,
             items: {
               create: dto.items.map((item) => ({
                 productId: item.productId ?? null,
@@ -283,8 +293,6 @@ export class PurchaseService {
     });
   }
 
-  // purchase.service.ts — cancel() atualizado
-
   async cancel(id: number): Promise<void> {
     const start = Date.now();
 
@@ -330,6 +338,7 @@ export class PurchaseService {
       `[Compra ${id}] cancelada: estoque estornado (${purchase.items.length} item(ns)), ${purchase.expenses.length} expense(s) removida(s) em ${Date.now() - start}ms`,
     );
   }
+
   private async validateDestination(destCnpj: string): Promise<void> {
     const company = await this.prisma.client.company.findUnique({
       where: { id: 1 },
@@ -377,6 +386,10 @@ export class PurchaseService {
           responsibleId: responsibleId ?? null,
           total,
           invoiceNumber: dto.invoiceNumber ?? null,
+          stateRegistration: dto.transportStateRegistration ?? null,
+          city: dto.transportCity ?? null,
+          state: dto.transportState ?? null,
+          rntc: dto.transportRntc ?? null,
           items: {
             create: dto.items.map((item) => ({
               productId: item.productId ?? null,

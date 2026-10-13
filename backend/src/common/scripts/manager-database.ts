@@ -452,6 +452,9 @@ async function restoreBackup(): Promise<void> {
   console.log(`   📁 Arquivo encontrado: ${backupFile}`);
   console.log(`   📊 Tamanho: ${sizeMB} MB\n`);
 
+  console.log('📋 Removendo tabelas existentes...\n');
+  await dropAllTables();
+
   const conn = await mariadb.createConnection(dbConfig);
 
   try {

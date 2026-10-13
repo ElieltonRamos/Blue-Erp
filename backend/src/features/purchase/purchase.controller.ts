@@ -55,10 +55,12 @@ export class PurchaseController {
   findAllPartners(
     @Query('type') type?: PartnerType,
     @Query('active') active?: string,
+    @Query('search') search?: string,
   ) {
     return this.businessPartnerService.findAll({
       type,
       active: active !== undefined ? active === 'true' : undefined,
+      search,
     });
   }
 

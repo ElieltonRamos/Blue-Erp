@@ -32,14 +32,25 @@ export class BusinessPartnerService {
   }
 
   create(dto: CreateBusinessPartnerDTO): Observable<BusinessPartner> {
-    return this.client.post<BusinessPartner>(this.apiUrl, dto);
+    return this.client.post<BusinessPartner>(this.apiUrl, this.cleanPayload(dto));
   }
 
   update(id: number, dto: UpdateBusinessPartnerDTO): Observable<BusinessPartner> {
-    return this.client.patch<BusinessPartner>(`${this.apiUrl}/${id}`, dto);
+    return this.client.patch<BusinessPartner>(`${this.apiUrl}/${id}`, this.cleanPayload(dto));
   }
 
   remove(id: number): Observable<{ message: string }> {
     return this.client.delete<{ message: string }>(`${this.apiUrl}/${id}`);
+  }
+
+  // Remove campos vazios ('' / null / undefined) para não falhar nos validadores opcionais do backend
+  private cleanPayload<T extends object>(dto: T): Partial<T> {
+    const payload: Partial<T> = {};
+    for (const [key, value] of Object.entries(dto)) {
+      if (value !== '' && value !== null && value !== undefined) {
+        payload[key as keyof T] = value as T[keyof T];
+      }
+    }
+    return payload;
   }
 }
