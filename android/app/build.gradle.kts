@@ -19,8 +19,9 @@ android {
 
 //        buildConfigField("String", "BASE_URL", "\"https://socadinha-motos.tail240759.ts.net/api/\"") // oficina
 //        buildConfigField("String", "BASE_URL", "\"https://blue-erp-api.portfoliostudio.cfd/api/\"") // teste nuvem
-        buildConfigField("String", "BASE_URL", "\"https://mick-gelas-disk.tail240759.ts.net/api/\"") // vpn casa do lago
+//        buildConfigField("String", "BASE_URL", "\"https://mick-gelas-disk.tail240759.ts.net/api/\"") // mickgelas externo
 //        buildConfigField("String", "BASE_URL", "\"http://192.168.0.219:3000/api/\"") // casa do lago
+        buildConfigField("String", "BASE_URL", "\"http://192.168.18.85:3000/api/\"") // mickgelas interno
     }
 
     buildTypes {
