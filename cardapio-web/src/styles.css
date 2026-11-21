@@ -1,3 +1,68 @@
-/* You can add global styles to this file, and also import other style files */
+@import 'tailwindcss';
 
-@import "tailwindcss";
+@theme {
+  /* Fundos */
+  --color-base: #fcfaf7;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f6f1ea;
+  --color-surface-hover: #f5f5f5;
+  --color-overlay: #eeeff1;
+
+  /* Bordas */
+  --color-border: #c4cbd1;
+  --color-border-subtle: #dee1e4;
+
+  /* Texto */
+  --color-text-primary: #222932;
+  --color-text-secondary: #656f77;
+  --color-text-muted: #8f9fac;
+  --color-text-strong: #1a1a1a;
+
+  /* Ação / marca */
+  --color-accent: #ef4342;
+  --color-accent-hover: #e22f28;
+  --color-accent-soft: #fff1f1;
+  --color-on-accent: #ffffff;
+
+  /* Estados */
+  --color-danger: #dc2626;
+  --color-success: #00b833;
+  --color-warning: #d97706;
+
+  /* Avisos */
+  --color-notice-bg: #fef8f3;
+  --color-notice-border: #fde4d2;
+
+  /* Produto indisponível */
+  --color-disabled-bg: #cecece;
+  --color-disabled-text: #888888;
+
+  /* Barras fixas */
+  --color-cart-bar: #252525;
+  --color-cashback: #1d1d1d;
+  --color-on-dark: #ffffff;
+
+  /* Modal */
+  --color-backdrop: rgb(0 0 0 / 0.5);
+
+  --color-whatsapp: #0dc143;
+
+  /* Fonte */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  /* Sombras */
+  --shadow-card: 1px 1px 5px rgb(0 0 0 / 0.1);
+  --shadow-header: 0 1px 4px rgb(0 0 0 / 0.15);
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-base text-text-primary font-sans;
+}
+
+button {
+  @apply cursor-pointer;
+}

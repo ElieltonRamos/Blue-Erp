@@ -1,0 +1,40 @@
+@if (loading()) {
+  <p class="p-6 text-center text-text-secondary">Carregando o cardápio…</p>
+} @else if (error()) {
+  <div class="flex flex-col items-center gap-3 p-6 text-center">
+    <p class="text-text-secondary">Não foi possível carregar o cardápio.</p>
+    <button
+      type="button"
+      class="rounded bg-accent px-6 py-3 text-on-accent hover:bg-accent-hover"
+      (click)="load()"
+    >
+      Tentar novamente
+    </button>
+  </div>
+} @else if (menu(); as menu) {
+  <app-store-header [store]="menu.store" />
+
+  <div class="sticky top-0 z-10 mt-4 border-b border-border-subtle bg-surface px-3 py-3">
+    <app-category-nav
+      [categories]="visibleCategories()"
+      [activeId]="activeCategoryId()"
+      (selected)="scrollToCategory($event)"
+    />
+  </div>
+
+  <div class="px-3 pt-3">
+    <app-menu-search [(value)]="search" />
+  </div>
+
+  @if (!search() && featured().length) {
+    <app-featured-carousel [products]="featured()" />
+  }
+
+  @for (category of visibleCategories(); track category.id) {
+    <app-category-section [category]="category" />
+  } @empty {
+    <p class="p-6 text-center text-text-secondary">Nenhum item encontrado.</p>
+  }
+
+  <app-menu-footer [storeName]="menu.store.name" />
+}
