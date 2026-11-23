@@ -10,6 +10,7 @@
     [class.opacity-70]="!product.available"
     [class.cursor-not-allowed]="!product.available"
     [disabled]="!product.available"
+    (click)="addToCart(product)"
   >
     <div class="flex min-w-0 flex-1 flex-col gap-1">
       <h3

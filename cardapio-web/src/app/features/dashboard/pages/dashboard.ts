@@ -1,9 +1,10 @@
 import { CurrencyPipe, DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DashboardService } from '../services/dashboard.service';
-import { Category, Menu } from '../types/dashboard';
+import { Category, Menu, Product } from '../types/dashboard';
 import { AboutModal } from '../../../shared/components/about-modal/about-modal';
 import { RouterLink } from '@angular/router';
+import { CartService } from '../../cart/services/cart.service';
 
 const normalize = (text: string) =>
   text
@@ -21,6 +22,7 @@ const normalize = (text: string) =>
 export class Dashboard {
   private readonly dashboardService = inject(DashboardService);
   private readonly document = inject(DOCUMENT);
+  private readonly cartService = inject(CartService);
 
   protected readonly year = new Date().getFullYear();
 
@@ -78,5 +80,9 @@ export class Dashboard {
     this.document
       .getElementById(`category-${id}`)
       ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  protected addToCart(product: Product) {
+    this.cartService.add(product);
   }
 }
