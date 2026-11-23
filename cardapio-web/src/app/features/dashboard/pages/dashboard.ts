@@ -1,13 +1,7 @@
-import { DOCUMENT } from '@angular/common';
+import { CurrencyPipe, DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { CategoryNav } from '../../components/category-nav/category-nav';
-import { CategorySection } from '../../components/category-section/category-section';
-import { FeaturedCarousel } from '../../components/featured-carousel/featured-carousel';
-import { MenuFooter } from '../../components/menu-footer/menu-footer';
-import { MenuSearch } from '../../components/menu-search/menu-search';
-import { StoreHeader } from '../../components/store-header/store-header';
-import { Category, Menu } from '../../models/menu.models';
-import { MenuService } from '../../services/menu.service';
+import { DashboardService } from '../services/dashboard.service';
+import { Category, Menu } from '../types/dashboard';
 
 const normalize = (text: string) =>
   text
@@ -18,12 +12,15 @@ const normalize = (text: string) =>
 
 @Component({
   selector: 'app-dashboard',
-  imports: [StoreHeader, CategoryNav, MenuSearch, FeaturedCarousel, CategorySection, MenuFooter],
+  imports: [CurrencyPipe, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: 'dashboard.html',
 })
 export class Dashboard {
-  private readonly menuService = inject(MenuService);
+  private readonly dashboardService = inject(DashboardService);
   private readonly document = inject(DOCUMENT);
+
+  protected readonly year = new Date().getFullYear();
 
   protected readonly menu = signal<Menu | null>(null);
   protected readonly loading = signal(true);
@@ -61,7 +58,7 @@ export class Dashboard {
     this.loading.set(true);
     this.error.set(false);
 
-    this.menuService.getMenu().subscribe({
+    this.dashboardService.getMenu().subscribe({
       next: (menu) => {
         this.menu.set(menu);
         this.activeCategoryId.set(menu.categories[0]?.id ?? null);

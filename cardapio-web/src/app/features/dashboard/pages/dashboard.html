@@ -1,3 +1,55 @@
+<!-- Card de produto (lista e carrossel) -->
+<ng-template #productCard let-product let-compact="compact">
+  <button
+    type="button"
+    class="flex gap-3 rounded-lg border border-border bg-surface p-3 text-left shadow-card"
+    [class]="compact ? 'w-42.5 shrink-0 flex-col-reverse' : 'w-full'"
+    [class.bg-disabled-bg]="!product.available"
+    [class.text-disabled-text]="!product.available"
+    [class.opacity-70]="!product.available"
+    [class.cursor-not-allowed]="!product.available"
+    [disabled]="!product.available"
+  >
+    <div class="flex min-w-0 flex-1 flex-col gap-1">
+      <h3
+        class="line-clamp-2 font-semibold"
+        [class.text-text-primary]="product.available"
+        [class.text-lg]="!compact"
+        [class.text-sm]="compact"
+      >
+        {{ product.name }}
+      </h3>
+
+      @if (!product.available) {
+        <p class="text-xs font-semibold text-text-muted">Indisponível</p>
+      }
+
+      @if (product.description) {
+        <p class="line-clamp-2 text-sm text-text-muted">{{ product.description }}</p>
+      }
+
+      <p class="mt-auto pt-1 text-sm font-semibold">
+        @if (product.priceFrom) {
+          <span class="text-text-primary">A partir de </span>
+        }
+        <span [class.text-accent]="product.available">
+          {{ product.price | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+        </span>
+      </p>
+    </div>
+
+    @if (product.imageUrl) {
+      <img
+        [src]="product.imageUrl"
+        [alt]="product.name"
+        loading="lazy"
+        class="shrink-0 rounded-lg object-cover"
+        [class]="compact ? 'h-30 w-full' : 'size-28'"
+      />
+    }
+  </button>
+</ng-template>
+
 @if (loading()) {
   <p class="p-6 text-center text-text-secondary">Carregando o cardápio…</p>
 } @else if (error()) {
@@ -12,29 +64,121 @@
     </button>
   </div>
 } @else if (menu(); as menu) {
-  <app-store-header [store]="menu.store" />
+  <!-- Cabeçalho da loja -->
+  <header class="mx-3 mt-5 rounded-lg border border-border bg-surface shadow-header">
+    <h1 class="px-4 pt-3 text-base font-semibold">{{ menu.store.name }}</h1>
 
+    <div class="flex flex-col gap-1 px-4 pt-2 pb-3 text-xs text-text-secondary">
+      <p>{{ menu.store.address }}</p>
+
+      <p class="flex items-center gap-2">
+        <span>{{ menu.store.openingHours }}</span>
+        <span
+          class="inline-flex items-center gap-1.5"
+          [class.text-success]="menu.store.isOpen"
+          [class.text-danger]="!menu.store.isOpen"
+        >
+          <span
+            class="size-2.5 rounded-full"
+            [class.bg-success]="menu.store.isOpen"
+            [class.bg-danger]="!menu.store.isOpen"
+          ></span>
+          {{ menu.store.isOpen ? 'Aberto' : 'Fechado' }}
+        </span>
+      </p>
+
+      <p class="flex flex-wrap gap-x-3">
+        <span>Entrega: {{ menu.store.deliveryTime }}</span>
+        <span>Retirada: {{ menu.store.takeoutTime }}</span>
+      </p>
+    </div>
+  </header>
+
+  <!-- Navegação de categorias -->
   <div class="sticky top-0 z-10 mt-4 border-b border-border-subtle bg-surface px-3 py-3">
-    <app-category-nav
-      [categories]="visibleCategories()"
-      [activeId]="activeCategoryId()"
-      (selected)="scrollToCategory($event)"
-    />
+    <nav class="no-scrollbar overflow-x-auto" aria-label="Categorias">
+      <ul class="flex w-max gap-2">
+        @for (category of visibleCategories(); track category.id) {
+          <li>
+            <button
+              type="button"
+              class="whitespace-nowrap rounded-full px-6 py-3 text-base"
+              [class.bg-accent]="category.id === activeCategoryId()"
+              [class.text-on-accent]="category.id === activeCategoryId()"
+              [class.font-semibold]="category.id === activeCategoryId()"
+              [class.bg-surface-alt]="category.id !== activeCategoryId()"
+              [class.text-text-primary]="category.id !== activeCategoryId()"
+              [attr.aria-current]="category.id === activeCategoryId() ? 'true' : null"
+              (click)="scrollToCategory(category.id)"
+            >
+              {{ category.name }}
+            </button>
+          </li>
+        }
+      </ul>
+    </nav>
   </div>
 
+  <!-- Busca -->
   <div class="px-3 pt-3">
-    <app-menu-search [(value)]="search" />
+    <label
+      class="flex h-10 items-center gap-2 rounded border border-border bg-surface px-4 focus-within:border-accent"
+    >
+      <svg viewBox="0 0 512 512" class="size-4 shrink-0 fill-accent" aria-hidden="true">
+        <path
+          d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"
+        />
+      </svg>
+      <input
+        type="search"
+        class="min-w-0 flex-1 bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
+        placeholder="Pesquisar"
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+      />
+    </label>
   </div>
 
+  <!-- Destaques -->
   @if (!search() && featured().length) {
-    <app-featured-carousel [products]="featured()" />
+    <section aria-labelledby="featured-title">
+      <h2 id="featured-title" class="mx-3 mt-5 mb-3 text-3xl font-semibold text-text-primary">
+        Promoção
+      </h2>
+
+      <div class="no-scrollbar flex gap-2 overflow-x-auto px-3 pb-1">
+        @for (product of featured(); track product.id) {
+          <ng-container
+            [ngTemplateOutlet]="productCard"
+            [ngTemplateOutletContext]="{ $implicit: product, compact: true }"
+          />
+        }
+      </div>
+    </section>
   }
 
+  <!-- Categorias e produtos -->
   @for (category of visibleCategories(); track category.id) {
-    <app-category-section [category]="category" />
+    <section [id]="'category-' + category.id" class="scroll-mt-20">
+      <h2 class="mx-3 mt-5 mb-3 text-3xl font-semibold text-text-primary">
+        {{ category.name }}
+      </h2>
+
+      <div class="flex flex-col gap-2 px-3">
+        @for (product of category.products; track product.id) {
+          <ng-container
+            [ngTemplateOutlet]="productCard"
+            [ngTemplateOutletContext]="{ $implicit: product, compact: false }"
+          />
+        }
+      </div>
+    </section>
   } @empty {
     <p class="p-6 text-center text-text-secondary">Nenhum item encontrado.</p>
   }
 
-  <app-menu-footer [storeName]="menu.store.name" />
+  <!-- Rodapé -->
+  <footer class="mt-10 border-t border-border-subtle px-3 py-6 text-center text-xs text-text-muted">
+    © {{ year }} {{ menu.store.name }}
+  </footer>
 }
