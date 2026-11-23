@@ -5,6 +5,7 @@ import { Category, Menu, Product } from '../types/dashboard';
 import { AboutModal } from '../../../shared/components/about-modal/about-modal';
 import { RouterLink } from '@angular/router';
 import { CartService } from '../../cart/services/cart.service';
+import { CartBar } from '../../cart/components/cart-bar';
 
 const normalize = (text: string) =>
   text
@@ -15,7 +16,7 @@ const normalize = (text: string) =>
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CurrencyPipe, NgTemplateOutlet, AboutModal, RouterLink],
+  imports: [CurrencyPipe, NgTemplateOutlet, AboutModal, RouterLink, CartBar],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'dashboard.html',
 })
@@ -83,6 +84,7 @@ export class Dashboard {
   }
 
   protected addToCart(product: Product) {
+    if (product.priceFrom) return;
     this.cartService.add(product);
   }
 }
