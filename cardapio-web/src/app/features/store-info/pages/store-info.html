@@ -1,0 +1,129 @@
+@if (loading()) {
+  <p class="p-6 text-center text-text-secondary">Carregando…</p>
+} @else if (error()) {
+  <div class="flex flex-col items-center gap-3 p-6 text-center">
+    <p class="text-text-secondary">Não foi possível carregar as informações.</p>
+    <button
+      type="button"
+      class="rounded bg-accent px-6 py-3 text-on-accent hover:bg-accent-hover"
+      (click)="load()"
+    >
+      Tentar novamente
+    </button>
+  </div>
+} @else if (store(); as store) {
+  <header class="flex items-center justify-between gap-3 px-4 py-3">
+    <h1 class="text-base font-semibold">{{ store.name }}</h1>
+    <a
+      routerLink="/"
+      aria-label="Voltar ao cardápio"
+      class="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-alt text-text-secondary hover:bg-overlay"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        class="size-5"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        aria-hidden="true"
+      >
+        <path d="M6 6l12 12M18 6L6 18" />
+      </svg>
+    </a>
+  </header>
+
+  <div role="tablist" class="flex border-b border-border-subtle">
+    @for (tab of tabs; track tab.id) {
+      <button
+        type="button"
+        role="tab"
+        class="flex-1 border-b-2 py-3 text-sm font-medium"
+        [class.border-accent]="activeTab() === tab.id"
+        [class.text-accent]="activeTab() === tab.id"
+        [class.border-transparent]="activeTab() !== tab.id"
+        [class.text-text-primary]="activeTab() !== tab.id"
+        [attr.aria-selected]="activeTab() === tab.id"
+        (click)="activeTab.set(tab.id)"
+      >
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  <div class="flex flex-col gap-6 p-4">
+    @switch (activeTab()) {
+      @case ('about') {
+        <section class="flex flex-col gap-2">
+          <h2 class="text-xl font-semibold">Endereço</h2>
+          <p class="text-text-secondary">{{ store.address }}</p>
+          <a
+            [href]="mapUrl(store)"
+            target="_blank"
+            rel="noopener"
+            class="w-fit text-sm font-semibold text-accent hover:text-accent-hover"
+          >
+            Ver no mapa
+          </a>
+        </section>
+
+        <section class="flex flex-col gap-2">
+          <h2 class="text-xl font-semibold">Contato</h2>
+          <a
+            [href]="'https://wa.me/' + store.whatsapp"
+            target="_blank"
+            rel="noopener"
+            class="w-fit text-text-secondary hover:text-text-primary"
+          >
+            WhatsApp: {{ store.phone }}
+          </a>
+          <a
+            [href]="'tel:' + store.phone"
+            class="w-fit text-text-secondary hover:text-text-primary"
+          >
+            Telefone: {{ store.phone }}
+          </a>
+        </section>
+
+        @if (store.instagram) {
+          <section class="flex flex-col gap-2">
+            <h2 class="text-xl font-semibold">Redes sociais</h2>
+            <a
+              [href]="'https://instagram.com/' + store.instagram"
+              target="_blank"
+              rel="noopener"
+              class="w-fit text-text-secondary hover:text-text-primary"
+            >
+              Instagram: {{ store.instagram }}
+            </a>
+          </section>
+        }
+      }
+
+      @case ('hours') {
+        <section class="flex flex-col gap-2">
+          <h2 class="text-xl font-semibold">Horários</h2>
+          <ul class="flex flex-col divide-y divide-border-subtle">
+            @for (item of store.hours; track item.day) {
+              <li class="flex justify-between py-2 text-text-secondary">
+                <span>{{ item.day }}</span>
+                <span>{{ item.open }} - {{ item.close }}</span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @case ('payment') {
+        <section class="flex flex-col gap-2">
+          <h2 class="text-xl font-semibold">Formas de pagamento</h2>
+          <ul class="flex flex-col divide-y divide-border-subtle">
+            @for (method of store.paymentMethods; track method) {
+              <li class="py-2 text-text-secondary">{{ method }}</li>
+            }
+          </ul>
+        </section>
+      }
+    }
+  </div>
+}

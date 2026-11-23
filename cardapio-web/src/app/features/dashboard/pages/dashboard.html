@@ -2,8 +2,9 @@
 <ng-template #productCard let-product let-compact="compact">
   <button
     type="button"
-    class="flex gap-3 rounded-lg border border-border bg-surface p-3 text-left shadow-card"
+    class="flex gap-3 rounded-lg border border-border p-3 text-left shadow-card"
     [class]="compact ? 'w-42.5 shrink-0 flex-col-reverse' : 'w-full'"
+    [class.bg-surface]="product.available"
     [class.bg-disabled-bg]="!product.available"
     [class.text-disabled-text]="!product.available"
     [class.opacity-70]="!product.available"
@@ -66,12 +67,62 @@
 } @else if (menu(); as menu) {
   <!-- Cabeçalho da loja -->
   <header class="mx-3 mt-5 rounded-lg border border-border bg-surface shadow-header">
-    <h1 class="px-4 pt-3 text-base font-semibold">{{ menu.store.name }}</h1>
+    <div class="flex items-center justify-between gap-3 px-4 py-3">
+      <h1 class="text-base font-semibold">{{ menu.store.name }}</h1>
 
-    <div class="flex flex-col gap-1 px-4 pt-2 pb-3 text-xs text-text-secondary">
-      <p>{{ menu.store.address }}</p>
+      <a
+        routerLink="/informacoes"
+        class="inline-flex shrink-0 items-center gap-2 rounded border border-border bg-surface p-2 text-xs font-semibold hover:bg-surface-hover"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          class="size-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="16" x2="12" y2="12" />
+          <line x1="12" y1="8" x2="12.01" y2="8" />
+        </svg>
+        Informações
+      </a>
+    </div>
+
+    <div class="flex flex-col gap-3 border-t border-border px-4 py-3 text-sm text-text-secondary">
+      <p class="flex items-start gap-2">
+        <svg
+          viewBox="0 0 24 24"
+          class="mt-0.5 size-4 shrink-0"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+        <span>{{ menu.store.address }}</span>
+      </p>
 
       <p class="flex items-center gap-2">
+        <svg
+          viewBox="0 0 24 24"
+          class="size-4 shrink-0"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
         <span>{{ menu.store.openingHours }}</span>
         <span
           class="inline-flex items-center gap-1.5"
@@ -87,8 +138,40 @@
         </span>
       </p>
 
-      <p class="flex flex-wrap gap-x-3">
+      <p class="flex items-center gap-2">
+        <svg
+          viewBox="0 0 24 24"
+          class="size-4 shrink-0"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="18.5" cy="17.5" r="3.5" />
+          <circle cx="5.5" cy="17.5" r="3.5" />
+          <circle cx="15" cy="5" r="1" />
+          <path d="M12 17.5V14l-3-3 4-3 2 3h2" />
+        </svg>
         <span>Entrega: {{ menu.store.deliveryTime }}</span>
+      </p>
+
+      <p class="flex items-center gap-2">
+        <svg
+          viewBox="0 0 24 24"
+          class="size-4 shrink-0"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+          <path d="M3 6h18" />
+          <path d="M16 10a4 4 0 0 1-8 0" />
+        </svg>
         <span>Retirada: {{ menu.store.takeoutTime }}</span>
       </p>
     </div>
@@ -178,7 +261,20 @@
   }
 
   <!-- Rodapé -->
-  <footer class="mt-10 border-t border-border-subtle px-3 py-6 text-center text-xs text-text-muted">
-    © {{ year }} {{ menu.store.name }}
+  <footer class="mt-10 border-t border-border-subtle bg-surface-hover px-3 py-6 text-center">
+    <p class="text-xs text-text-muted">Desenvolvido por</p>
+    <p class="mt-1 text-lg font-semibold text-text-secondary">Grupo Sae</p>
+
+    <button
+      type="button"
+      class="mt-4 rounded-full border border-border bg-surface px-5 py-2 text-sm font-semibold text-text-secondary hover:bg-surface-hover"
+      (click)="about.open()"
+    >
+      Crie seu cardápio
+    </button>
+
+    <p class="mt-5 text-xs text-text-muted">© {{ year }} Grupo Sae Soluções Empresariais</p>
   </footer>
+
+  <app-about-modal #about ctaUrl="https://COLOQUE-A-URL-AQUI" />
 }

@@ -2,6 +2,8 @@ import { CurrencyPipe, DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DashboardService } from '../services/dashboard.service';
 import { Category, Menu } from '../types/dashboard';
+import { AboutModal } from '../../../shared/components/about-modal/about-modal';
+import { RouterLink } from '@angular/router';
 
 const normalize = (text: string) =>
   text
@@ -12,7 +14,7 @@ const normalize = (text: string) =>
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CurrencyPipe, NgTemplateOutlet],
+  imports: [CurrencyPipe, NgTemplateOutlet, AboutModal, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'dashboard.html',
 })

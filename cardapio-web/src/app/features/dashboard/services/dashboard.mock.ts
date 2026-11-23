@@ -14,6 +14,17 @@ export const MOCK_MENU: Menu = {
     isOpen: true,
     deliveryTime: '50min - 1h 0min',
     takeoutTime: '45min',
+    phone: '(38) 99262-7635',
+    whatsapp: '5538992627635',
+    instagram: 'lacasa_hamburgueria_',
+    latitude: -14.9284137,
+    longitude: -42.8171793,
+    hours: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'].map((day) => ({
+      day,
+      open: '18:50',
+      close: '23:00',
+    })),
+    paymentMethods: ['Pix', 'Cartão', 'Dinheiro'],
   },
   categories: [
     {

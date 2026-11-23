@@ -1,3 +1,5 @@
+import { StoreInfo } from "../../store-info/types/store";
+
 export interface Product {
   id: number;
   name: string;
@@ -14,15 +16,6 @@ export interface Category {
   id: number;
   name: string;
   products: Product[];
-}
-
-export interface StoreInfo {
-  name: string;
-  address: string;
-  openingHours: string;
-  isOpen: boolean;
-  deliveryTime: string;
-  takeoutTime: string;
 }
 
 export interface Menu {
