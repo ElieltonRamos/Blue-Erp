@@ -10,7 +10,7 @@
     [class.opacity-70]="!product.available"
     [class.cursor-not-allowed]="!product.available"
     [disabled]="!product.available"
-    (click)="addToCart(product)"
+    (click)="openDetail(product)"
   >
     <div class="flex min-w-0 flex-1 flex-col gap-1">
       <h3
@@ -31,11 +31,11 @@
       }
 
       <p class="mt-auto pt-1 text-sm font-semibold">
-        @if (product.priceFrom) {
+        @if (product.startingPrice !== null) {
           <span class="text-text-primary">A partir de </span>
         }
         <span [class.text-accent]="product.available">
-          {{ product.price | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+          {{ (product.startingPrice ?? product.price) | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
         </span>
       </p>
     </div>
@@ -278,5 +278,6 @@
   </footer>
 
   <app-about-modal #about ctaUrl="https://COLOQUE-A-URL-AQUI" />
+  <app-product-detail />
   <app-cart-bar />
 }

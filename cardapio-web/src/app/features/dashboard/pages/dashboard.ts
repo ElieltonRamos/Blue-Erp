@@ -1,11 +1,11 @@
 import { CurrencyPipe, DOCUMENT, NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { DashboardService } from '../services/dashboard.service';
 import { Category, Menu, Product } from '../types/dashboard';
 import { AboutModal } from '../../../shared/components/about-modal/about-modal';
 import { RouterLink } from '@angular/router';
-import { CartService } from '../../cart/services/cart.service';
 import { CartBar } from '../../cart/components/cart-bar';
+import { ProductDetail } from '../../../shared/components/product-detail/product-detail';
 
 const normalize = (text: string) =>
   text
@@ -16,14 +16,15 @@ const normalize = (text: string) =>
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CurrencyPipe, NgTemplateOutlet, AboutModal, RouterLink, CartBar],
+  imports: [CurrencyPipe, NgTemplateOutlet, AboutModal, RouterLink, CartBar, ProductDetail],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'dashboard.html',
 })
 export class Dashboard {
   private readonly dashboardService = inject(DashboardService);
   private readonly document = inject(DOCUMENT);
-  private readonly cartService = inject(CartService);
+
+  private readonly productDetail = viewChild(ProductDetail);
 
   protected readonly year = new Date().getFullYear();
 
@@ -83,8 +84,7 @@ export class Dashboard {
       ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  protected addToCart(product: Product) {
-    if (product.priceFrom) return;
-    this.cartService.add(product);
+  protected openDetail(product: Product) {
+    this.productDetail()?.open(product);
   }
 }

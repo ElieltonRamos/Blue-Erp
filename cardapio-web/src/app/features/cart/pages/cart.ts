@@ -1,7 +1,7 @@
 import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CartService } from '../services/cart.service';
+import { CartService, CartItem } from '../services/cart.service';
 
 @Component({
   selector: 'app-cart',
@@ -12,10 +12,18 @@ import { CartService } from '../services/cart.service';
 export class CartPage {
   protected readonly cart = inject(CartService);
 
-  /** Id do produto cuja observação está em edição. */
-  protected readonly editingNoteId = signal<number | null>(null);
+  /** Id da linha cuja observação está em edição. */
+  protected readonly editingNoteId = signal<string | null>(null);
 
-  protected toggleNote(productId: number) {
-    this.editingNoteId.update((current) => (current === productId ? null : productId));
+  protected toggleNote(lineId: string) {
+    this.editingNoteId.update((current) => (current === lineId ? null : lineId));
+  }
+
+  protected unitPrice(item: CartItem) {
+    return this.cart.unitPrice(item);
+  }
+
+  protected lineTotal(item: CartItem) {
+    return this.cart.lineTotal(item);
   }
 }
