@@ -6,6 +6,7 @@ import { AboutModal } from '../../../shared/components/about-modal/about-modal';
 import { RouterLink } from '@angular/router';
 import { CartBar } from '../../cart/components/cart-bar';
 import { ProductDetail } from '../../../shared/components/product-detail/product-detail';
+import { OrderService } from '../../order/services/order.service';
 
 const normalize = (text: string) =>
   text
@@ -25,6 +26,8 @@ export class Dashboard {
   private readonly document = inject(DOCUMENT);
 
   private readonly productDetail = viewChild(ProductDetail);
+
+  protected readonly lastOrderId = inject(OrderService).lastOrderId;
 
   protected readonly year = new Date().getFullYear();
 

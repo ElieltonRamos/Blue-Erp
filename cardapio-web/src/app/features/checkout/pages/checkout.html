@@ -1,0 +1,285 @@
+<div class="flex min-h-dvh flex-col">
+  <header
+    class="relative flex items-center justify-center border-b border-border-subtle bg-surface px-12 py-3"
+  >
+    <a
+      routerLink="/carrinho"
+      aria-label="Voltar ao carrinho"
+      class="absolute left-3 inline-flex size-9 items-center justify-center rounded-full bg-surface-alt text-text-secondary hover:bg-overlay"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        class="size-5"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+    </a>
+    <h1 class="text-base font-semibold">Finalizar pedido</h1>
+  </header>
+
+  @if (loading()) {
+    <p class="p-6 text-center text-text-secondary">Carregando…</p>
+  } @else if (loadError() || !store()) {
+    <p class="p-6 text-center text-text-secondary">Não foi possível carregar o checkout.</p>
+  } @else if (!cart.items().length) {
+    <main class="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
+      <p class="text-text-secondary">Seu carrinho está vazio.</p>
+      <a
+        routerLink="/"
+        class="rounded bg-accent px-6 py-3 font-semibold text-on-accent hover:bg-accent-hover"
+      >
+        Ver cardápio
+      </a>
+    </main>
+  } @else if (store(); as store) {
+    <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-1 flex-col" novalidate>
+      <main class="flex flex-1 flex-col gap-6 p-4">
+        @if (!store.isOpen) {
+          <div
+            role="alert"
+            class="rounded border border-notice-border bg-notice-bg p-3 text-center text-sm"
+          >
+            <p class="font-semibold">Loja fechada no momento</p>
+            <p class="text-text-secondary">Horário de funcionamento: {{ store.openingHours }}</p>
+          </div>
+        }
+
+        <!-- Recebimento -->
+        <section class="flex flex-col gap-3">
+          <h2 class="text-lg font-semibold">Como quer receber?</h2>
+
+          <div class="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Recebimento">
+            <button
+              type="button"
+              role="radio"
+              class="rounded border px-3 py-3 font-semibold"
+              [class]="
+                fulfillment() === 'delivery'
+                  ? 'border-accent bg-accent-soft text-accent'
+                  : 'border-border bg-surface text-text-primary'
+              "
+              [attr.aria-checked]="fulfillment() === 'delivery'"
+              (click)="setFulfillment('delivery')"
+            >
+              Entrega
+              <span class="block text-xs font-normal text-text-secondary">{{
+                store.deliveryTime
+              }}</span>
+            </button>
+
+            <button
+              type="button"
+              role="radio"
+              class="rounded border px-3 py-3 font-semibold"
+              [class]="
+                fulfillment() === 'pickup'
+                  ? 'border-accent bg-accent-soft text-accent'
+                  : 'border-border bg-surface text-text-primary'
+              "
+              [attr.aria-checked]="fulfillment() === 'pickup'"
+              (click)="setFulfillment('pickup')"
+            >
+              Retirada
+              <span class="block text-xs font-normal text-text-secondary">{{
+                store.takeoutTime
+              }}</span>
+            </button>
+          </div>
+
+          @if (fulfillment() === 'delivery') {
+            <div class="flex flex-col gap-3">
+              <div>
+                <input
+                  type="text"
+                  formControlName="street"
+                  placeholder="Rua"
+                  autocomplete="address-line1"
+                  [class]="inputClass"
+                />
+                @if (showError('street')) {
+                  <p class="mt-1 text-xs text-danger">Informe a rua.</p>
+                }
+              </div>
+
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <input
+                    type="text"
+                    formControlName="number"
+                    placeholder="Número"
+                    [class]="inputClass"
+                  />
+                  @if (showError('number')) {
+                    <p class="mt-1 text-xs text-danger">Informe o número.</p>
+                  }
+                </div>
+
+                <div class="col-span-2">
+                  <input
+                    type="text"
+                    formControlName="neighborhood"
+                    placeholder="Bairro"
+                    [class]="inputClass"
+                  />
+                  @if (showError('neighborhood')) {
+                    <p class="mt-1 text-xs text-danger">Informe o bairro.</p>
+                  }
+                </div>
+              </div>
+
+              <input
+                type="text"
+                formControlName="complement"
+                placeholder="Complemento / ponto de referência (opcional)"
+                [class]="inputClass"
+              />
+            </div>
+          } @else {
+            <p class="rounded border border-border bg-surface p-3 text-sm text-text-secondary">
+              Retire em: {{ store.address }}
+            </p>
+          }
+        </section>
+
+        <!-- Dados do cliente -->
+        <section class="flex flex-col gap-3">
+          <h2 class="text-lg font-semibold">Seus dados</h2>
+
+          <div>
+            <input
+              type="text"
+              formControlName="name"
+              placeholder="Nome"
+              autocomplete="name"
+              [class]="inputClass"
+            />
+            @if (showError('name')) {
+              <p class="mt-1 text-xs text-danger">Informe seu nome.</p>
+            }
+          </div>
+
+          <div>
+            <input
+              type="tel"
+              inputmode="numeric"
+              formControlName="phone"
+              placeholder="Telefone com DDD"
+              autocomplete="tel"
+              [class]="inputClass"
+            />
+            @if (showError('phone')) {
+              <p class="mt-1 text-xs text-danger">Informe um telefone válido com DDD.</p>
+            }
+          </div>
+        </section>
+
+        <!-- Pagamento -->
+        <section class="flex flex-col gap-3">
+          <h2 class="text-lg font-semibold">Pagamento</h2>
+
+          <div class="flex flex-col gap-2" role="radiogroup" aria-label="Forma de pagamento">
+            @for (method of store.paymentMethods; track method.type) {
+              <label
+                class="flex cursor-pointer items-center gap-3 rounded border px-3 py-3"
+                [class]="
+                  paymentType() === method.type
+                    ? 'border-accent bg-accent-soft'
+                    : 'border-border bg-surface'
+                "
+              >
+                <input
+                  type="radio"
+                  formControlName="payment"
+                  [value]="method.type"
+                  class="size-4 accent-accent"
+                />
+                <span class="font-medium">{{ method.label }}</span>
+              </label>
+            }
+          </div>
+
+          @if (showError('payment')) {
+            <p class="text-xs text-danger">Escolha a forma de pagamento.</p>
+          }
+
+          @if (paymentType() === 'cash') {
+            <div>
+              <input
+                type="text"
+                inputmode="decimal"
+                formControlName="changeFor"
+                placeholder="Troco para quanto? (opcional)"
+                [class]="inputClass"
+              />
+              @if (changeForInvalid()) {
+                <p class="mt-1 text-xs text-danger">
+                  O valor deve ser maior ou igual ao total ({{
+                    total() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+                  }}).
+                </p>
+              }
+            </div>
+          }
+        </section>
+
+        <!-- Resumo -->
+        <section
+          class="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4 shadow-card"
+        >
+          <h2 class="text-lg font-semibold">Resumo</h2>
+
+          <dl class="flex flex-col gap-1 text-sm text-text-secondary">
+            <div class="flex justify-between">
+              <dt>Itens ({{ cart.count() }})</dt>
+              <dd>{{ cart.total() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</dd>
+            </div>
+
+            @if (fulfillment() === 'delivery') {
+              <div class="flex justify-between">
+                <dt>Taxa de entrega</dt>
+                <dd>{{ deliveryFee() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</dd>
+              </div>
+            }
+
+            <div
+              class="flex justify-between border-t border-border-subtle pt-2 text-base font-semibold text-text-primary"
+            >
+              <dt>Total</dt>
+              <dd>{{ total() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</dd>
+            </div>
+          </dl>
+        </section>
+      </main>
+
+      <footer class="sticky bottom-0 border-t border-border-subtle bg-surface p-4">
+        @if (submitError()) {
+          <p role="alert" class="mb-3 text-center text-sm text-danger">
+            Não foi possível enviar o pedido. Tente novamente.
+          </p>
+        }
+
+        <button
+          type="submit"
+          class="w-full rounded px-4 py-3 font-semibold"
+          [class]="
+            store.isOpen && !submitting()
+              ? 'bg-accent text-on-accent hover:bg-accent-hover'
+              : 'cursor-not-allowed bg-disabled-bg text-disabled-text'
+          "
+          [disabled]="!store.isOpen || submitting()"
+        >
+          {{ submitting() ? 'Enviando…' : 'Enviar pedido' }}
+          @if (!submitting()) {
+            • {{ total() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+          }
+        </button>
+      </footer>
+    </form>
+  }
+</div>

@@ -65,6 +65,7 @@ export const MOCK_MENU: Menu = {
     isOpen: true,
     deliveryTime: '50min - 1h 0min',
     takeoutTime: '45min',
+    deliveryFee: 5, // valor fictício do mock
     phone: '(38) 99262-7635',
     whatsapp: '5538992627635',
     instagram: 'lacasa_hamburgueria_',
@@ -75,7 +76,11 @@ export const MOCK_MENU: Menu = {
       open: '18:50',
       close: '23:00',
     })),
-    paymentMethods: ['Pix', 'Cartão', 'Dinheiro'],
+    paymentMethods: [
+      { type: 'pix', label: 'Pix' },
+      { type: 'card', label: 'Cartão' },
+      { type: 'cash', label: 'Dinheiro' },
+    ],
   },
   categories: [
     {

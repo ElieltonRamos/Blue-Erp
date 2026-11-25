@@ -178,6 +178,18 @@
     </div>
   </header>
 
+  @if (lastOrderId(); as orderId) {
+    <a
+      [routerLink]="['/pedido', orderId]"
+      class="mx-3 mt-4 flex items-center justify-between rounded-lg border border-accent bg-accent-soft px-4 py-3 text-sm font-semibold text-accent"
+    >
+      <span>Acompanhar pedido #{{ orderId }}</span>
+      <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 18l6-6-6-6" />
+      </svg>
+    </a>
+  }
+
   <!-- Navegação de categorias -->
   <div class="sticky top-0 z-10 mt-4 border-b border-border-subtle bg-surface px-3 py-3">
     <nav class="no-scrollbar overflow-x-auto" aria-label="Categorias">

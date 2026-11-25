@@ -118,8 +118,8 @@
         <section class="flex flex-col gap-2">
           <h2 class="text-xl font-semibold">Formas de pagamento</h2>
           <ul class="flex flex-col divide-y divide-border-subtle">
-            @for (method of store.paymentMethods; track method) {
-              <li class="py-2 text-text-secondary">{{ method }}</li>
+            @for (method of store.paymentMethods; track method.type) {
+              <li class="py-2 text-text-secondary">{{ method.label }}</li>
             }
           </ul>
         </section>

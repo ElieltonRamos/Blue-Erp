@@ -1,3 +1,5 @@
+import { PaymentMethod } from '../../checkout/types/checkout';
+
 export interface StoreHours {
   day: string;
   open: string;
@@ -11,11 +13,13 @@ export interface StoreInfo {
   isOpen: boolean;
   deliveryTime: string;
   takeoutTime: string;
-  phone: string; // exibido: "(38) 99262-7635"
-  whatsapp: string; // só dígitos com país: "5538992627635"
-  instagram: string | null; // só o usuário: "lacasa_hamburgueria_"
+  /** Taxa de entrega fixa. */
+  deliveryFee: number;
+  phone: string;
+  whatsapp: string;
+  instagram: string | null;
   latitude: number;
   longitude: number;
   hours: StoreHours[];
-  paymentMethods: string[];
+  paymentMethods: PaymentMethod[];
 }

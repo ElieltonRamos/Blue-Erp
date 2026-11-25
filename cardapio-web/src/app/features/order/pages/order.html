@@ -1,0 +1,162 @@
+<div class="flex min-h-dvh flex-col">
+  <header
+    class="flex items-center justify-between border-b border-border-subtle bg-surface px-4 py-3"
+  >
+    <h1 class="text-base font-semibold">Acompanhar pedido</h1>
+    <a
+      routerLink="/"
+      aria-label="Voltar ao cardápio"
+      class="inline-flex size-9 items-center justify-center rounded-full bg-surface-alt text-text-secondary hover:bg-overlay"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        class="size-5"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        aria-hidden="true"
+      >
+        <path d="M6 6l12 12M18 6L6 18" />
+      </svg>
+    </a>
+  </header>
+
+  @if (loading()) {
+    <p class="p-6 text-center text-text-secondary">Carregando pedido…</p>
+  } @else if (error() || !order()) {
+    <main class="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
+      <p class="text-text-secondary">Não foi possível encontrar este pedido.</p>
+      <a
+        routerLink="/"
+        class="rounded bg-accent px-6 py-3 font-semibold text-on-accent hover:bg-accent-hover"
+      >
+        Ver cardápio
+      </a>
+    </main>
+  } @else if (order(); as order) {
+    <main class="flex flex-1 flex-col gap-6 p-4">
+      <section
+        class="flex flex-col items-center gap-2 rounded-lg border border-border bg-surface p-5 text-center shadow-card"
+      >
+        <p class="text-sm text-text-secondary">Pedido #{{ order.id }}</p>
+        <p
+          class="text-2xl font-semibold"
+          [class.text-danger]="order.status === 'canceled'"
+          [class.text-accent]="order.status !== 'canceled'"
+        >
+          {{ statusLabel() }}
+        </p>
+        <p class="text-xs text-text-muted">{{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
+      </section>
+
+      <section class="flex flex-col gap-2">
+        <h2 class="text-lg font-semibold">Itens</h2>
+
+        <ul
+          class="flex flex-col divide-y divide-border-subtle rounded-lg border border-border bg-surface"
+        >
+          @for (item of order.items; track $index) {
+            <li class="flex justify-between gap-3 p-3">
+              <div class="min-w-0">
+                <p>
+                  <span class="font-bold">{{ item.quantity }}X</span> {{ item.name }}
+                </p>
+
+                @for (selection of item.selections; track selection.name) {
+                  <p class="text-sm text-text-secondary">
+                    {{ selection.quantity > 1 ? selection.quantity + 'x ' : ''
+                    }}{{ selection.name }}
+                  </p>
+                }
+
+                @if (item.observation) {
+                  <p class="text-sm text-text-secondary">Obs.: {{ item.observation }}</p>
+                }
+              </div>
+
+              <span class="shrink-0 font-semibold">
+                {{ item.total | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              </span>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section class="flex flex-col gap-2">
+        <h2 class="text-lg font-semibold">
+          {{ order.fulfillment === 'delivery' ? 'Entrega' : 'Retirada' }}
+        </h2>
+
+        <div class="rounded-lg border border-border bg-surface p-3 text-sm text-text-secondary">
+          @if (order.address; as address) {
+            <p>
+              {{ address.street }}, {{ address.number }} - {{ address.neighborhood }}
+              @if (address.complement) {
+                <span> ({{ address.complement }})</span>
+              }
+            </p>
+          } @else if (store(); as store) {
+            <p>Retire em: {{ store.address }}</p>
+          }
+        </div>
+      </section>
+
+      <section
+        class="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4 shadow-card"
+      >
+        <h2 class="text-lg font-semibold">Pagamento</h2>
+
+        <dl class="flex flex-col gap-1 text-sm text-text-secondary">
+          <div class="flex justify-between">
+            <dt>Forma</dt>
+            <dd>{{ order.payment.label }}</dd>
+          </div>
+
+          @if (order.payment.changeFor) {
+            <div class="flex justify-between">
+              <dt>Troco para</dt>
+              <dd>
+                {{ order.payment.changeFor | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              </dd>
+            </div>
+          }
+
+          <div class="flex justify-between">
+            <dt>Itens</dt>
+            <dd>{{ order.subtotal | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</dd>
+          </div>
+
+          @if (order.fulfillment === 'delivery') {
+            <div class="flex justify-between">
+              <dt>Taxa de entrega</dt>
+              <dd>{{ order.deliveryFee | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</dd>
+            </div>
+          }
+
+          <div
+            class="flex justify-between border-t border-border-subtle pt-2 text-base font-semibold text-text-primary"
+          >
+            <dt>Total</dt>
+            <dd>{{ order.total | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      @if (whatsappUrl(); as url) {
+        <a
+          [href]="url"
+          target="_blank"
+          rel="noopener"
+          class="rounded bg-accent px-4 py-3 text-center font-semibold text-on-accent hover:bg-accent-hover"
+        >
+          Falar com a loja no WhatsApp
+        </a>
+      }
+
+      <a routerLink="/" class="text-center font-semibold text-accent hover:text-accent-hover">
+        Voltar ao cardápio
+      </a>
+    </main>
+  }
+</div>
