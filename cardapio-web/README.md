@@ -67,12 +67,15 @@ src/app/
     ├── cart/
     │   ├── pages/cart.ts + .html           # página do carrinho
     │   ├── components/cart-bar.ts          # barra fixa com total
-    │   └── services/cart.service.ts        # estado do carrinho
+    │   ├── services/cart.service.ts        # estado do carrinho
+    │   └── types/cart.ts                   # CartItem
     └── checkout/
         ├── pages/checkout.ts + .html       # finalizar pedido
         ├── pages/order.ts + .html          # acompanhamento do pedido
         ├── services/order.service.ts       # create/get (mock ou HTTP)
-        └── types/order.ts                  # tipos do pedido
+        └── types/
+            ├── checkout.ts                 # PaymentType, PaymentMethod
+            └── order.ts                    # tipos do pedido
 ```
 
 ## 5. Rotas
@@ -107,82 +110,19 @@ O detalhe do produto **não** é rota: é um modal (`<dialog>`), para preservar 
 - **Não existe `--color-base`.** Esse nome gerava `text-base` como cor (colidindo com o tamanho de fonte) e deixava títulos quase brancos. O fundo da página é `--color-page`.
 - `accent` é fixo. Se um dia vier da API por loja, sobrescrever em runtime (`document.documentElement.style.setProperty`).
 
-## 7. Modelo de dados (contrato que o backend vai espelhar)
+## 7. Modelo de dados e API
 
-```typescript
-interface Option { id; name; price; available }            // acréscimo por unidade
-interface OptionGroup {
-  id; name;
-  type: 'single' | 'multiple';   // radio | + / −
-  min: number;                   // 0 = opcional; > 0 = obrigatório
-  max: number | null;            // total do grupo (o "0/20")
-  maxPerOption: number | null;   // por opção
-  options: Option[];
-}
-interface Product {
-  id; name; description | null;
-  price: number;                 // preço BASE (usado no cálculo)
-  startingPrice: number | null;  // se não nulo, exibe "A partir de R$ X"
-  imageUrl | null; available; featured;
-  optionGroups: OptionGroup[];   // [] = produto simples
-}
-interface Category { id; name; products: Product[] }
-type PaymentType = 'pix' | 'card' | 'cash';
-interface PaymentMethod { type: PaymentType; label: string }
-interface StoreInfo {
-  name; address; openingHours; isOpen; deliveryTime; takeoutTime;
-  deliveryFee: number;           // taxa fixa
-  minOrderValue: number;         // mínimo dos itens p/ entrega (0 = sem mínimo)
-  logoUrl: string | null;        // favicon
-  phone; whatsapp /* dígitos com 55 */; instagram | null;
-  latitude; longitude;
-  hours: { day; open; close }[];
-  paymentMethods: PaymentMethod[];
-}
-interface Menu { store: StoreInfo; categories: Category[] }
-```
+Os tipos ficam no código (`features/*/types/`) e as relações entre eles estão em `schema.txt`. O backend deve espelhá-los.
 
-```typescript
-type FulfillmentType = 'delivery' | 'pickup';
-type OrderStatus =
-  | 'received'
-  | 'preparing'
-  | 'out_for_delivery'
-  | 'ready_for_pickup'
-  | 'completed'
-  | 'canceled';
-
-interface OrderRequest {
-  // POST: só ids e quantidades; backend recalcula preços
-  fulfillment;
-  customer: { name; phone /* só dígitos */ };
-  address: { street; number; neighborhood; complement } | null;
-  payment: { type: PaymentType; changeFor: number | null };
-  items: { productId; quantity; observation; selections: { optionId; quantity }[] }[];
-}
-interface Order {
-  // resposta do POST e do GET
-  id;
-  status;
-  createdAt;
-  fulfillment;
-  customer;
-  address;
-  payment: { type; changeFor; label };
-  items: { name; quantity; observation; selections: { name; quantity }[]; total }[];
-  subtotal;
-  deliveryFee;
-  total;
-}
-```
+- O `POST` do pedido envia só ids e quantidades; o backend recalcula os preços.
+- `Order` é a resposta do `POST` e do `GET`.
+- Imagens (`imageUrl`) vêm do backend. Se houver miniaturas para listas, o contrato ganha um `thumbUrl`.
 
 | Método | Rota                     | Resposta |
 | ------ | ------------------------ | -------- |
 | GET    | `/api/public/menu`       | `Menu`   |
 | POST   | `/api/public/orders`     | `Order`  |
 | GET    | `/api/public/orders/:id` | `Order`  |
-
-Imagens (`imageUrl`) vêm do backend. Se houver miniaturas para listas, o contrato ganha um `thumbUrl`.
 
 ## 8. Configuração do produto
 
@@ -257,8 +197,7 @@ Componente único (os componentes filhos iniciais foram fundidos nele).
 
 - Linhas com quantidade, opções escolhidas, total por linha, stepper (com 1, o `−` remove), Editar, observação inline, Limpar, "Adicionar mais itens", total e "Finalizar pedido" (link para `/checkout`). Estado vazio.
 - `CartService` (signals): `items`, `count`, `total`; `add`, `replace`, `increment`, `decrement`, `setObservation`, `clear`.
-- `CartItem` = `lineId` + `product` + `selections` (nome e preço "congelados") + `quantity` + `observation`. Mesma assinatura (produto + opções + observação) agrupa na mesma linha.
-- `lineId` é um contador (não `crypto.randomUUID`, que não existe em HTTP fora de localhost).
+- `CartItem` = `product` + `quantity` + `observation` + `selectedOptions` (`optionId` + `quantity`). Mesma assinatura (produto + opções + observação) agrupa na mesma linha.
 - `CartBar`: barra fixa escura com badge e total, aparece com itens no carrinho e leva a `/carrinho`.
 
 ### Informações (`/informacoes`)
@@ -368,4 +307,4 @@ Status atual, itens com opções e observações, entrega/retirada, pagamento, t
 
 Preferências do desenvolvedor: respostas objetivas, sem inferências, perguntar em caso de dúvida e evitar gerar documentação além do que for pedido. Entregas de página em arquivos separados (`.ts` e `.html`); ele ajusta os caminhos. Nao execute comandos, nao execute build, lint, tests.
 
-Para retomar em outra conversa, enviar este README e o arquivo que será alterado.
+Para retomar em outra conversa, enviar este README, o `schema.txt` e o arquivo que será alterado.
