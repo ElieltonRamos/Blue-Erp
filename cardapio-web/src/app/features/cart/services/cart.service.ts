@@ -36,6 +36,13 @@ export const unitPrice = (item: Pick<CartItem, 'product' | 'selections'>) =>
 /** Total da linha: preço unitário × quantidade. */
 export const lineTotal = (item: CartItem) => unitPrice(item) * item.quantity;
 
+const normalize = (input: AddToCartInput): Required<AddToCartInput> => ({
+  product: input.product,
+  selections: input.selections ?? [],
+  quantity: input.quantity ?? 1,
+  observation: input.observation ?? '',
+});
+
 /** Duas adições com a mesma assinatura viram a mesma linha. */
 const signature = (input: Required<AddToCartInput>) =>
   [
@@ -61,12 +68,7 @@ export class CartService {
   readonly lineTotal = lineTotal;
 
   add(input: AddToCartInput) {
-    const normalized: Required<AddToCartInput> = {
-      product: input.product,
-      selections: input.selections ?? [],
-      quantity: input.quantity ?? 1,
-      observation: input.observation ?? '',
-    };
+    const normalized = normalize(input);
     const key = signature(normalized);
 
     this.items.update((items) => {
@@ -81,6 +83,33 @@ export class CartService {
       }
 
       return [...items, { lineId: String(this.nextLineId++), ...normalized }];
+    });
+  }
+
+  /**
+   * Substitui o conteúdo de uma linha (edição do item).
+   * Se o resultado ficar igual a outra linha, as duas viram uma só.
+   */
+  replace(lineId: string, input: AddToCartInput) {
+    const normalized = normalize(input);
+    const key = signature(normalized);
+
+    this.items.update((items) => {
+      if (!items.some((item) => item.lineId === lineId)) return items;
+
+      const duplicate = items.find((item) => item.lineId !== lineId && signature(item) === key);
+
+      if (duplicate) {
+        return items
+          .filter((item) => item.lineId !== lineId)
+          .map((item) =>
+            item.lineId === duplicate.lineId
+              ? { ...item, quantity: item.quantity + normalized.quantity }
+              : item,
+          );
+      }
+
+      return items.map((item) => (item.lineId === lineId ? { ...item, ...normalized } : item));
     });
   }
 

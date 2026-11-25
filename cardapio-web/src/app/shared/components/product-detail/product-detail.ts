@@ -1,179 +1,185 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
-import { CurrencyPipe, NgTemplateOutlet } from '@angular/common';
-import { Product, Option, OptionGroup } from '../../../features/dashboard/types/dashboard';
-import { CartService, CartSelection, AddToCartInput } from '../../../features/cart/services/cart.service';
+import { CurrencyPipe } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  computed,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { CartItem, CartSelection, CartService } from '../../../features/cart/services/cart.service';
+import { StoreInfo } from '../../../features/store-info/types/store';
+import { OptionGroup, Product, Option } from '../../../features/dashboard/types/dashboard';
+
+const OBSERVATION_MAX_LENGTH = 100;
 
 @Component({
   selector: 'app-product-detail',
-  imports: [CurrencyPipe, NgTemplateOutlet],
+  imports: [CurrencyPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: 'product-detail.html',
 })
 export class ProductDetail {
-  private readonly cartService = inject(CartService);
+  private readonly cart = inject(CartService);
 
-  readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
+  private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
+  private readonly scroller = viewChild<ElementRef<HTMLElement>>('scroller');
+
+  /**
+   * Loja usada para validar o horário ao adicionar um item novo.
+   * Sem loja, a validação não é feita (ex.: edição no carrinho).
+   */
+  readonly store = input<StoreInfo | null>(null);
+
+  protected readonly observationMaxLength = OBSERVATION_MAX_LENGTH;
 
   protected readonly product = signal<Product | null>(null);
   protected readonly quantity = signal(1);
   protected readonly observation = signal('');
-  protected readonly selectedOptions = signal<Map<number, number>>(new Map());
-  protected readonly observationMaxLength = 100;
+  /** Quantidade escolhida por opção: optionId → quantidade. */
+  protected readonly selected = signal<Record<number, number>>({});
+  /** Linha do carrinho em edição. null = adicionando um item novo. */
+  protected readonly editingLineId = signal<string | null>(null);
+  protected readonly closedNotice = signal(false);
 
-  protected readonly showPrice = computed(() => this.product()?.startingPrice === null);
+  /** Todos os grupos respeitam mínimo e máximo. */
+  protected readonly valid = computed(() =>
+    (this.product()?.optionGroups ?? []).every((group) => this.groupValid(group)),
+  );
 
+  /** Preço de uma unidade: preço base + opções escolhidas. */
   protected readonly unitPrice = computed(() => {
     const product = this.product();
     if (!product) return 0;
-    let price = product.price;
-    this.selectedOptions().forEach((qty, optionId) => {
-      const option = this.findOption(product, optionId);
-      if (option) {
-        price += option.price * qty;
-      }
-    });
-    return price;
+
+    const extras = product.optionGroups
+      .flatMap((group) => group.options)
+      .reduce((sum, option) => sum + option.price * this.qty(option.id), 0);
+
+    return product.price + extras;
   });
 
   protected readonly total = computed(() => this.unitPrice() * this.quantity());
 
-  protected readonly valid = computed(() => {
-    const product = this.product();
-    if (!product) return false;
-    for (const group of product.optionGroups) {
-      let count = 0;
-      for (const option of group.options) {
-        count += this.qty(option.id);
-      }
-      if (count < group.min) return false;
-      if (group.max !== null && count > group.max) return false;
-    }
-    return true;
-  });
+  /** Em produtos "A partir de", o preço só é confiável depois de montar o item. */
+  protected readonly showPrice = computed(
+    () => this.valid() || this.product()?.startingPrice === null,
+  );
 
-  protected findOption(product: Product, optionId: number): Option | undefined {
-    for (const group of product.optionGroups) {
-      const option = group.options.find((o) => o.id === optionId);
-      if (option) return option;
-    }
-    return undefined;
-  }
-
-  protected groupCount(group: OptionGroup): number {
-    let count = 0;
-    for (const option of group.options) {
-      count += this.qty(option.id);
-    }
-    return count;
-  }
-
-  protected qty(optionId: number): number {
-    return this.selectedOptions().get(optionId) ?? 0;
-  }
-
-  protected canIncrement(group: OptionGroup, option: Option): boolean {
-    if (!option.available) return false;
-
-    const currentGroupCount = this.groupCount(group);
-    if (group.max !== null && currentGroupCount >= group.max) return false;
-
-    const currentOptionQty = this.qty(option.id);
-    if (group.maxPerOption !== null && currentOptionQty >= group.maxPerOption) return false;
-
-    return true;
-  }
-
-  protected selectSingle(group: OptionGroup, option: Option): void {
-    if (!option.available) return;
-
-    this.selectedOptions.update((map) => {
-      const newMap = new Map(map);
-      const currentQty = newMap.get(option.id) ?? 0;
-
-      if (group.min === 0 && currentQty > 0) {
-        newMap.delete(option.id);
-      } else {
-        newMap.set(option.id, 1);
-        for (const opt of group.options) {
-          if (opt.id !== option.id) {
-            newMap.delete(opt.id);
-          }
-        }
-      }
-      return newMap;
-    });
-  }
-
-  protected adjust(group: OptionGroup, option: Option, delta: number): void {
-    if (!option.available) return;
-    if (delta > 0 && !this.canIncrement(group, option)) return;
-
-    this.selectedOptions.update((map) => {
-      const newMap = new Map(map);
-      const currentQty = newMap.get(option.id) ?? 0;
-      const newQty = currentQty + delta;
-
-      if (newQty <= 0) {
-        newMap.delete(option.id);
-      } else {
-        newMap.set(option.id, newQty);
-      }
-      return newMap;
-    });
-  }
-
-  protected changeQuantity(delta: number): void {
-    this.quantity.update((q) => Math.max(1, q + delta));
-  }
-
-  open(product: Product): void {
+  /** Sem `line`, adiciona um item novo. Com `line`, edita aquela linha do carrinho. */
+  open(product: Product, line?: CartItem) {
     this.product.set(product);
-    this.quantity.set(1);
-    this.observation.set('');
-    this.selectedOptions.set(new Map());
+    this.closedNotice.set(false);
+    this.editingLineId.set(line?.lineId ?? null);
+    this.quantity.set(line?.quantity ?? 1);
+    this.observation.set(line?.observation ?? '');
+    this.selected.set(
+      Object.fromEntries((line?.selections ?? []).map((item) => [item.optionId, item.quantity])),
+    );
     this.dialog().nativeElement.showModal();
+    this.scroller()?.nativeElement.scrollTo({ top: 0 });
   }
 
-  close(): void {
+  close() {
     this.dialog().nativeElement.close();
-    this.product.set(null);
-    this.quantity.set(1);
-    this.observation.set('');
-    this.selectedOptions.set(new Map());
   }
 
-  protected add(): void {
+  protected qty(optionId: number) {
+    return this.selected()[optionId] ?? 0;
+  }
+
+  protected groupCount(group: OptionGroup) {
+    return group.options.reduce((sum, option) => sum + this.qty(option.id), 0);
+  }
+
+  protected groupValid(group: OptionGroup) {
+    const count = this.groupCount(group);
+    return count >= group.min && (group.max === null || count <= group.max);
+  }
+
+  protected canIncrement(group: OptionGroup, option: Option) {
+    if (!option.available) return false;
+    if (group.max !== null && this.groupCount(group) >= group.max) return false;
+    return group.maxPerOption === null || this.qty(option.id) < group.maxPerOption;
+  }
+
+  /** Grupo `single`: escolhe uma opção (e, se for opcional, permite desmarcar). */
+  protected selectSingle(group: OptionGroup, option: Option) {
+    if (!option.available) return;
+
+    this.selected.update((current) => {
+      const next = { ...current };
+      const wasSelected = (next[option.id] ?? 0) > 0;
+
+      for (const item of group.options) {
+        delete next[item.id];
+      }
+      if (!(wasSelected && group.min === 0)) {
+        next[option.id] = 1;
+      }
+      return next;
+    });
+  }
+
+  /** Grupo `multiple`: soma ou subtrai uma unidade da opção. */
+  protected adjust(group: OptionGroup, option: Option, delta: 1 | -1) {
+    if (delta === 1 && !this.canIncrement(group, option)) return;
+
+    this.selected.update((current) => {
+      const next = { ...current };
+      const value = (next[option.id] ?? 0) + delta;
+
+      if (value > 0) {
+        next[option.id] = value;
+      } else {
+        delete next[option.id];
+      }
+      return next;
+    });
+  }
+
+  protected changeQuantity(delta: 1 | -1) {
+    this.quantity.update((value) => Math.max(1, value + delta));
+  }
+
+  protected add() {
     const product = this.product();
     if (!product || !this.valid()) return;
 
-    const selections: CartSelection[] = [];
-    this.selectedOptions().forEach((qty, optionId) => {
-      if (qty > 0) {
-        const option = this.findOption(product, optionId);
-        if (option) {
-          const group = product.optionGroups.find((g) => g.options.some((o) => o.id === optionId));
-          if (group) {
-            selections.push({
-              groupId: group.id,
-              groupName: group.name,
-              optionId: option.id,
-              name: option.name,
-              price: option.price,
-              quantity: qty,
-            });
-          }
-        }
-      }
-    });
+    const editingLineId = this.editingLineId();
+    const store = this.store();
+    if (!editingLineId && store && !store.isOpen) {
+      this.closedNotice.set(true);
+      return;
+    }
 
-    const input: AddToCartInput = {
+    const selections: CartSelection[] = product.optionGroups.flatMap((group) =>
+      group.options
+        .filter((option) => this.qty(option.id) > 0)
+        .map((option) => ({
+          groupId: group.id,
+          groupName: group.name,
+          optionId: option.id,
+          name: option.name,
+          price: option.price,
+          quantity: this.qty(option.id),
+        })),
+    );
+
+    const input = {
       product,
       selections,
       quantity: this.quantity(),
-      observation: this.observation(),
+      observation: this.observation().trim(),
     };
 
-    this.cartService.add(input);
+    if (editingLineId) {
+      this.cart.replace(editingLineId, input);
+    } else {
+      this.cart.add(input);
+    }
     this.close();
   }
 }

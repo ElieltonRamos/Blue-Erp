@@ -185,6 +185,16 @@
           }
         </div>
 
+        @if (closedNotice()) {
+          <div
+            role="alert"
+            class="mx-4 mb-3 rounded border border-notice-border bg-notice-bg p-3 text-center text-sm"
+          >
+            <p class="font-semibold">Loja fechada no momento</p>
+            <p class="text-text-secondary">Horário de funcionamento: {{ store()?.openingHours }}</p>
+          </div>
+        }
+
         <div class="flex gap-3 px-4 pb-4">
           <div class="inline-flex items-center rounded bg-surface-alt">
             <button
@@ -239,7 +249,7 @@
             [disabled]="!valid()"
             (click)="add()"
           >
-            Adicionar
+            {{ editingLineId() ? 'Salvar alterações' : 'Adicionar' }}
             @if (showPrice()) {
               • {{ total() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
             }
