@@ -1,5 +1,5 @@
 import { CurrencyPipe, DOCUMENT, NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, afterRenderEffect, computed, inject, signal, viewChild } from '@angular/core';
 import { DashboardService } from '../services/dashboard.service';
 import { Category, Menu, Product } from '../types/dashboard';
 import { AboutModal } from '../../../shared/components/about-modal/about-modal';
@@ -37,6 +37,8 @@ export class Dashboard {
   protected readonly search = signal('');
   protected readonly activeCategoryId = signal<number | null>(null);
 
+  private spyPausedUntil = 0;
+
   protected readonly featured = computed(() =>
     (this.menu()?.categories ?? [])
       .flatMap((category) => category.products)
@@ -61,6 +63,47 @@ export class Dashboard {
 
   constructor() {
     this.load();
+
+    // Marca como ativa a primeira categoria que cruza a faixa logo abaixo da barra sticky.
+    afterRenderEffect((onCleanup) => {
+      const ids = this.visibleCategories().map((category) => category.id);
+      if (!ids.length) return;
+
+      const inBand = new Set<number>();
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            const id = Number(entry.target.id.replace('category-', ''));
+            if (entry.isIntersecting) inBand.add(id);
+            else inBand.delete(id);
+          }
+          if (Date.now() < this.spyPausedUntil) return;
+
+          const active = ids.find((id) => inBand.has(id));
+          if (active !== undefined) this.activeCategoryId.set(active);
+        },
+        { rootMargin: '-80px 0px -60% 0px' },
+      );
+
+      for (const id of ids) {
+        const section = this.document.getElementById(`category-${id}`);
+        if (section) observer.observe(section);
+      }
+      onCleanup(() => observer.disconnect());
+    });
+
+    // Mantém a pill ativa visível no scroll horizontal da barra.
+    afterRenderEffect(() => {
+      const id = this.activeCategoryId();
+      const pill = id === null ? null : this.document.getElementById(`nav-category-${id}`);
+      const nav = pill?.closest('nav');
+      if (pill && nav) {
+        nav.scrollTo({
+          left: pill.offsetLeft - (nav.clientWidth - pill.offsetWidth) / 2,
+          behavior: 'smooth',
+        });
+      }
+    });
   }
 
   protected load() {
@@ -81,6 +124,7 @@ export class Dashboard {
   }
 
   protected scrollToCategory(id: number) {
+    this.spyPausedUntil = Date.now() + 800;
     this.activeCategoryId.set(id);
     this.document
       .getElementById(`category-${id}`)

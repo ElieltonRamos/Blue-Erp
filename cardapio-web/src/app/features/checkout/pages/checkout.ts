@@ -78,6 +78,20 @@ export class CheckoutPage {
 
   protected readonly total = computed(() => this.cart.total() + this.deliveryFee());
 
+  /** Valor mínimo dos itens para entrega, definido pela loja (0 = sem mínimo). */
+  protected readonly minOrderValue = computed(() => this.store()?.minOrderValue ?? 0);
+
+  protected readonly belowMinimum = computed(
+    () =>
+      this.fulfillment() === 'delivery' &&
+      this.minOrderValue() > 0 &&
+      this.cart.total() < this.minOrderValue(),
+  );
+
+  protected readonly missingToMinimum = computed(() =>
+    Math.max(0, this.minOrderValue() - this.cart.total()),
+  );
+
   /** Troco informado, em número (null se vazio ou inválido). */
   private readonly changeForValue = computed(() => {
     const text = this.changeForText().trim().replace(',', '.');
@@ -127,6 +141,7 @@ export class CheckoutPage {
     if (
       !store ||
       !store.isOpen ||
+      this.belowMinimum() ||
       this.form.invalid ||
       this.changeForInvalid() ||
       !this.cart.items().length ||

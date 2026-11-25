@@ -15,6 +15,10 @@ export interface StoreInfo {
   takeoutTime: string;
   /** Taxa de entrega fixa. */
   deliveryFee: number;
+  /** Valor mínimo dos itens para pedidos de entrega. 0 = sem mínimo. */
+  minOrderValue: number;
+  /** Logo da loja (favicon e identidade). */
+  logoUrl: string | null;
   phone: string;
   whatsapp: string;
   instagram: string | null;

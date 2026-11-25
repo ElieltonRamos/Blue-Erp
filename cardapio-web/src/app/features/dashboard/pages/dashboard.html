@@ -66,6 +66,13 @@
     </button>
   </div>
 } @else if (menu(); as menu) {
+  @if (!menu.store.isOpen) {
+    <div role="status" class="mx-3 mt-5 rounded border border-notice-border bg-notice-bg p-3 text-center text-sm">
+      <p class="font-semibold">Loja fechada no momento</p>
+      <p class="text-text-secondary">Horário de funcionamento: {{ menu.store.openingHours }}</p>
+    </div>
+  }
+
   <!-- Cabeçalho da loja -->
   <header class="mx-3 mt-5 rounded-lg border border-border bg-surface shadow-header">
     <div class="flex items-center justify-between gap-3 px-4 py-3">
@@ -192,12 +199,13 @@
 
   <!-- Navegação de categorias -->
   <div class="sticky top-0 z-10 mt-4 border-b border-border-subtle bg-surface px-3 py-3">
-    <nav class="no-scrollbar overflow-x-auto" aria-label="Categorias">
+    <nav class="no-scrollbar relative overflow-x-auto" aria-label="Categorias">
       <ul class="flex w-max gap-2">
         @for (category of visibleCategories(); track category.id) {
           <li>
             <button
               type="button"
+              [id]="'nav-category-' + category.id"
               class="whitespace-nowrap rounded-full px-6 py-3 text-base"
               [class.bg-accent]="category.id === activeCategoryId()"
               [class.text-on-accent]="category.id === activeCategoryId()"
