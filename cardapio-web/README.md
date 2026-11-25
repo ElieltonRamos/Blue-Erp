@@ -27,7 +27,7 @@ ng serve --host 0.0.0.0     # testar no celular (mesma rede)
 ng build                    # build
 ```
 
-A URL da API fica em `src/environments/` (dev: `http://localhost:3000/api`).
+A URL da API fica em `src/core/services/environment.ts/` (dev: `http://localhost:3000/api`).
 
 ## 3. Stack e convenções
 
@@ -366,6 +366,6 @@ Status atual, itens com opções e observações, entrega/retirada, pagamento, t
 
 ## 15. Como trabalhar neste projeto
 
-Preferências do desenvolvedor: respostas objetivas, sem inferências, perguntar em caso de dúvida e evitar gerar documentação além do que for pedido. Entregas de página em arquivos separados (`.ts` e `.html`); ele ajusta os caminhos.
+Preferências do desenvolvedor: respostas objetivas, sem inferências, perguntar em caso de dúvida e evitar gerar documentação além do que for pedido. Entregas de página em arquivos separados (`.ts` e `.html`); ele ajusta os caminhos. Nao execute comandos, nao execute build, lint, tests.
 
 Para retomar em outra conversa, enviar este README e o arquivo que será alterado.

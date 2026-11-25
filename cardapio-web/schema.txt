@@ -1,0 +1,223 @@
+// ============ ENUMS / UNIONS ============
+
+enum PaymentType {
+  pix
+  card
+  cash
+}
+
+enum FulfillmentType {
+  delivery
+  pickup
+}
+
+enum OrderStatus {
+  received
+  preparing
+  out_for_delivery
+  ready_for_pickup
+  completed
+  canceled
+}
+
+enum OptionGroupType {
+  single
+  multiple
+}
+
+// ============ CARDAPIO (features/dashboard/types) ============
+
+model Menu {
+  store       StoreInfo
+  categories  Category[]
+}
+
+model Category {
+  id        Int
+  name      String
+  products  Product[]
+}
+
+model Product {
+  id             Int
+  name           String
+  description    String?
+  price          Float                 // preco base, usado no calculo
+  startingPrice  Float?                // exibe "A partir de"
+  imageUrl       String?
+  available      Boolean
+  featured       Boolean
+  optionGroups   OptionGroup[]
+}
+
+model OptionGroup {
+  id            Int
+  name          String
+  type          OptionGroupType
+  min           Int                    // 0 = opcional
+  max           Int?                   // soma do grupo; null = sem limite
+  maxPerOption  Int?                   // por opcao; null = sem limite
+  options       Option[]
+}
+
+model Option {
+  id         Int
+  name       String
+  price      Float                     // acrescimo por unidade
+  available  Boolean
+}
+
+// ============ LOJA (features/store-info/types) ============
+
+model StoreInfo {
+  name            String
+  address         String
+  openingHours    String
+  isOpen          Boolean
+  deliveryTime    String
+  takeoutTime     String
+  deliveryFee     Float                // taxa fixa
+  minOrderValue   Float                // 0 = sem minimo
+  logoUrl         String?
+  phone           String
+  whatsapp        String
+  instagram       String?
+  latitude        Float
+  longitude       Float
+  hours           StoreHours[]
+  paymentMethods  PaymentMethod[]
+}
+
+model StoreHours {
+  day    String
+  open   String
+  close  String
+}
+
+// ============ PAGAMENTO (features/checkout/types/checkout) ============
+
+model PaymentMethod {
+  type   PaymentType
+  label  String
+}
+
+// ============ CARRINHO (features/cart/types) ============
+
+model CartItem {
+  product          Product
+  quantity         Int
+  observation      String
+  selectedOptions  CartSelection[]
+}
+
+model CartSelection {
+  optionId  Int      // -> Option.id
+  quantity  Int
+}
+
+// ============ PEDIDO: REQUEST ============
+// POST /api/public/orders
+
+model OrderRequest {
+  fulfillment  FulfillmentType
+  customer     OrderCustomer
+  address      OrderAddress?           // null na retirada
+  payment      OrderPayment
+  items        OrderItemRequest[]
+}
+
+model OrderItemRequest {
+  productId   Int                      // -> Product.id
+  quantity    Int
+  observation String
+  selections  OrderSelectionRequest[]
+}
+
+model OrderSelectionRequest {
+  optionId  Int                        // -> Option.id
+  quantity  Int
+}
+
+// ============ PEDIDO: RESPONSE ============
+// POST /api/public/orders  e  GET /api/public/orders/:id
+
+model Order {
+  id           String
+  status       OrderStatus
+  createdAt    String
+  fulfillment  FulfillmentType
+  customer     OrderCustomer
+  address      OrderAddress?
+  payment      OrderPaymentResponse
+  items        OrderItem[]
+  subtotal     Float
+  deliveryFee  Float
+  total        Float
+}
+
+model OrderItem {
+  name         String
+  quantity     Int
+  observation  String
+  selections   OrderSelection[]
+  total        Float                   // total da linha (ja x quantity)
+}
+
+model OrderSelection {
+  name      String
+  quantity  Int
+}
+
+// ============ PEDIDO: COMPARTILHADOS ============
+
+model OrderCustomer {
+  name   String
+  phone  String                        // so digitos, com DDD
+}
+
+model OrderAddress {
+  street        String
+  number        String
+  neighborhood  String
+  complement    String
+}
+
+model OrderPayment {
+  type       PaymentType
+  changeFor  Float?                    // so em dinheiro
+}
+
+model OrderPaymentResponse {           // OrderPayment & { label }
+  type       PaymentType
+  changeFor  Float?
+  label      String
+}
+
+// ============ RELACOES ============
+//
+// Menu 1─1 StoreInfo
+// Menu 1─N Category
+// Category 1─N Product
+// Product 1─N OptionGroup
+// OptionGroup 1─N Option
+// StoreInfo 1─N StoreHours
+// StoreInfo 1─N PaymentMethod
+// PaymentMethod.type ─> PaymentType
+//
+// CartItem N─1 Product
+// CartItem 1─N CartSelection
+// CartSelection.optionId ─> Option.id
+//
+// OrderRequest 1─1 OrderCustomer
+// OrderRequest 1─0..1 OrderAddress
+// OrderRequest 1─1 OrderPayment
+// OrderRequest 1─N OrderItemRequest
+// OrderItemRequest.productId ─> Product.id
+// OrderItemRequest 1─N OrderSelectionRequest
+// OrderSelectionRequest.optionId ─> Option.id
+//
+// Order 1─1 OrderCustomer
+// Order 1─0..1 OrderAddress
+// Order 1─1 OrderPaymentResponse
+// Order 1─N OrderItem
+// OrderItem 1─N OrderSelection
