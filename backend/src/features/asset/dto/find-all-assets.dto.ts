@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
-import { ValidationMessages } from 'src/common/validation-messages';
+import { ValidationMessages } from 'src/common/utils/validation';
 
 export class FindAllAssetsDto {
   @ApiPropertyOptional({ example: 1, default: 1 })

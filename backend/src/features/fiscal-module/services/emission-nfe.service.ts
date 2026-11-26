@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { promises as fs } from 'fs';
 import { PrismaService } from 'src/database/prisma.service';
-import { nowBrasilia } from 'src/common/date-utils';
 import { CompanyResponseDto } from 'src/features/company/dto/company-response.dto';
 import { CompanyService } from '../../company/company.service';
 import { SaleConverterNFeService } from '../../../sales/sale-converte-nfe.service';
@@ -23,6 +22,7 @@ import {
   saveXmlDebug,
   validateCertificate,
 } from '../lib/nfe-utils';
+import { nowBrasilia } from 'src/common/utils/date-utils';
 
 @Injectable()
 export class EmissionNfeService {

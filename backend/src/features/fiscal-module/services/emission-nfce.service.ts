@@ -29,8 +29,8 @@ import {
   saveXmlDebug,
   validateCertificate,
 } from '../lib/nfe-utils';
-import { nowBrasilia } from 'src/common/date-utils';
 import { CompanyResponseDto } from 'src/features/company/dto/company-response.dto';
+import { nowBrasilia } from 'src/common/utils/date-utils';
 
 @Injectable()
 export class EmissionNfceService {

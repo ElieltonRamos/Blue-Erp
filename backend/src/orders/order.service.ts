@@ -11,7 +11,6 @@ import { OrderStatus, ProductType, Prisma } from 'generated/prisma/client';
 import { OrderFiltersDto } from './dto/order-filters.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { ReprintOrderDto } from './dto/reprint-order.dto';
-import { resolveLogicalDateTime } from '../common/date-utils';
 import { OrderProductionService } from './order-production.service';
 import { OrderStockService } from './order-stock.service';
 import { OrderTableService } from './order-table.service';
@@ -21,6 +20,7 @@ import {
   ORDER_INCLUDE_BASIC,
   ORDER_INCLUDE_FULL,
 } from './order.mapper';
+import { resolveLogicalDateTime } from 'src/common/utils/date-utils';
 
 @Injectable()
 export class OrdersService {

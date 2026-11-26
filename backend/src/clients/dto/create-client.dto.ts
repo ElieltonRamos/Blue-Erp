@@ -10,7 +10,7 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator';
-import { ValidationMessages } from '../../common/validation-messages.js';
+import { ValidationMessages } from 'src/common/utils/validation';
 
 export class CreateClientDto {
   @ApiProperty({ example: 'João Silva' })

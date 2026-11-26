@@ -20,8 +20,8 @@ import {
 } from './dto/response-sale.dto.js';
 import { SaleFiltersDto } from './dto/filters-sale.dto.js';
 import { ConvertOrderToSaleDto } from '../orders/dto/convert-order-to-sale.js';
-import { resolveLogicalDateTime } from '../common/date-utils.js';
 import { CreateDirectSaleDto } from './dto/create-direct-sale.dto.js';
+import { resolveLogicalDateTime } from '../common/utils/date-utils.js';
 
 @Injectable()
 export class SalesService {

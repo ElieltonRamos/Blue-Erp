@@ -8,7 +8,6 @@ import {
 import { NfeSigner } from './nfe-signer';
 import { NfeHttpClient } from './nfe-http.client';
 import { NfeResponseParser } from './nfe-response.parser';
-import { nowBrasilia, toSefazDateTime } from 'src/common/date-utils';
 import {
   HOSTS_BY_MODEL,
   WEBSERVICES_BY_MODEL,
@@ -22,6 +21,7 @@ import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { Logger } from '@nestjs/common';
 import { buildQrCodeUrl } from '../xml/nfce-xml-builder';
+import { nowBrasilia, toSefazDateTime } from 'src/common/utils/date-utils';
 
 export type NfeSendResult = SefazReturn & { nfeProcXml?: string };
 

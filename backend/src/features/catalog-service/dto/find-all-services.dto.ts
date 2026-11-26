@@ -8,7 +8,7 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { ValidationMessages } from 'src/common/validation-messages';
+import { ValidationMessages } from 'src/common/utils/validation';
 
 export class FindAllServicesDto {
   @ApiPropertyOptional({ example: 1, default: 1 })

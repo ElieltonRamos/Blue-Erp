@@ -8,8 +8,8 @@ import {
   IsArray,
   ValidateNested,
 } from 'class-validator';
-import { ValidationMessages } from 'src/common/validation-messages';
 import { AssetAttributeDto } from './asset-attribute.dto';
+import { ValidationMessages } from 'src/common/utils/validation';
 
 export class CreateAssetDto {
   @ApiProperty({ example: 'VEHICLE' })

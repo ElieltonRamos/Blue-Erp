@@ -5,7 +5,6 @@ import type {
   Product,
   SaleItem,
 } from '../../generated/prisma/client';
-import { nowBrasilia, toSefazDateTime } from '../common/date-utils';
 import { PrismaService } from '../database/prisma.service';
 import { CompanyService } from '../features/company/company.service';
 import type {
@@ -30,6 +29,7 @@ import {
   resolveCsosn,
   toGtin,
 } from '../features/fiscal-module/lib/nfe-utils';
+import { nowBrasilia, toSefazDateTime } from 'src/common/utils/date-utils';
 
 const CARD_PAYMENT_METHODS = ['CARTAO_CREDITO', 'CARTAO_DEBITO', 'PIX'];
 

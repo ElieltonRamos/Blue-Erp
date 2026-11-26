@@ -6,11 +6,11 @@ import {
 import { PrismaService } from '../database/prisma.service.js';
 import { Prisma } from 'generated/prisma/client.js';
 
-import { PaginatedResponse } from 'src/common/paginated-response.js';
 import { CreateExpenseDto } from 'src/expenses/dto/create-expense.dto.js';
 import { ExpenseResponseDto } from './dto/response-expense.dto.js';
 import { UpdateExpenseDto } from 'src/expenses/dto/update-expense.dto.js';
 import { ExpenseFilters } from './entities/expense.entity.js';
+import { PaginatedResponseDto } from 'src/common/utils/paginated-response.js';
 
 @Injectable()
 export class ExpensesService {
@@ -118,7 +118,7 @@ export class ExpensesService {
       sortBy?: string;
       sortOrder?: 'asc' | 'desc';
     },
-  ): Promise<PaginatedResponse<ExpenseResponseDto>> {
+  ): Promise<PaginatedResponseDto<ExpenseResponseDto>> {
     if (page < 1 || limit < 1 || isNaN(page) || isNaN(limit)) {
       throw new BadRequestException('Página ou limite inválidos');
     }

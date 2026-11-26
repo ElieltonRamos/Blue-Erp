@@ -132,10 +132,40 @@ model Company {
   licenseToken              String?      @map("license_token") @db.Text
   businessType              BusinessType @default(PDV) @map("business_type")
   enabledMenus              Json?        @map("enabled_menus")
-  createdAt                 DateTime     @default(now()) @map("created_at")
-  updatedAt                 DateTime     @updatedAt @map("updated_at")
+
+  // Cardápio online
+  onlineMenuEnabled    Boolean       @default(false) @map("online_menu_enabled")
+  onlineOrdersPaused   Boolean       @default(false) @map("online_orders_paused")
+  timezone             String        @default("America/Sao_Paulo")
+  whatsapp             String?
+  instagram            String?
+  logoUrl              String?       @map("logo_url")
+  latitude             Decimal?      @db.Decimal(10, 7)
+  longitude            Decimal?      @db.Decimal(10, 7)
+  deliveryTimeMin      Int?          @map("delivery_time_min")
+  deliveryTimeMax      Int?          @map("delivery_time_max")
+  takeoutTime          Int?          @map("takeout_time")
+  deliveryFee          Decimal       @default(0) @map("delivery_fee") @db.Decimal(10, 2)
+  minOrderValue        Decimal       @default(0) @map("min_order_value") @db.Decimal(10, 2)
+  onlinePaymentMethods Json?         @map("online_payment_methods") // [{ type, label }]
+  openingHours         OpeningHour[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("companies")
+}
+
+model OpeningHour {
+  id        Int     @id @default(autoincrement())
+  companyId Int     @map("company_id")
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  weekday   Int // 0 = domingo ... 6 = sábado
+  opensAt   String  @map("opens_at") // "HH:mm"
+  closesAt  String  @map("closes_at") // "HH:mm"; menor que opensAt = termina no dia seguinte
+
+  @@index([companyId, weekday])
+  @@map("opening_hours")
 }
 
 // Cliente do restaurante/PDV/oficina — mantido como está, sem alteração

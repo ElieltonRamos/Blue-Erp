@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Patch,
+  Put,
   HttpStatus,
   Delete,
   UseInterceptors,
@@ -14,36 +15,38 @@ import {
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CompanyService } from './company.service.js';
-import { CreateCompanyDto } from './dto/create-company.dto.js';
+import { OnlineMenuSettingsService } from './online-menu-settings.service.js';
 import { UpdateCompanyDto } from './dto/update-company.dto.js';
+import { UpdateOnlineMenuSettingsDto } from './dto/update-online-menu-settings.dto.js';
+import { ReplaceOpeningHoursDto } from './dto/opening-hour.dto.js';
+import { OnlineMenuSettingsResponseDto } from './dto/online-menu-settings-response.dto.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Public } from '../../common/decorators/public.decorator.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+
+interface AuthenticatedUser {
+  userId: number;
+}
 
 @ApiTags('company')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('company')
 export class CompanyController {
-  constructor(private readonly companyService: CompanyService) {}
+  constructor(
+    private readonly companyService: CompanyService,
+    private readonly onlineMenuSettingsService: OnlineMenuSettingsService,
+  ) {}
+
+  // Quem executou a ação, para os logs dos services
+  private actorOf(user: AuthenticatedUser): string {
+    return String(user.userId);
+  }
 
   @Public()
   @Get('business-type')
   getBusinessType() {
     return this.companyService.getBusinessType();
-  }
-
-  @Post()
-  @ApiOperation({ summary: 'Configurar empresa (apenas primeira vez)' })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: 'Empresa configurada com sucesso',
-  })
-  @ApiResponse({
-    status: HttpStatus.CONFLICT,
-    description: 'Empresa já cadastrada',
-  })
-  create(@Body() createCompanyDto: CreateCompanyDto) {
-    return this.companyService.create(createCompanyDto);
   }
 
   @Get()
@@ -56,8 +59,8 @@ export class CompanyController {
     status: HttpStatus.NOT_FOUND,
     description: 'Empresa não configurada',
   })
-  getCompany() {
-    return this.companyService.getCompany();
+  getCompany(@CurrentUser() user: AuthenticatedUser) {
+    return this.companyService.getCompany(this.actorOf(user));
   }
 
   @Patch()
@@ -70,8 +73,11 @@ export class CompanyController {
     status: HttpStatus.NOT_FOUND,
     description: 'Empresa não configurada',
   })
-  update(@Body() updateCompanyDto: UpdateCompanyDto) {
-    return this.companyService.update(updateCompanyDto);
+  update(
+    @Body() updateCompanyDto: UpdateCompanyDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.companyService.update(updateCompanyDto, this.actorOf(user));
   }
 
   @Delete()
@@ -80,8 +86,8 @@ export class CompanyController {
     status: HttpStatus.OK,
     description: 'Empresa deletada com sucesso',
   })
-  deleteCompany() {
-    return this.companyService.deleteCompany();
+  deleteCompany(@CurrentUser() user: AuthenticatedUser) {
+    return this.companyService.deleteCompany(this.actorOf(user));
   }
 
   @Get('configured')
@@ -150,15 +156,14 @@ export class CompanyController {
   @UseInterceptors(FileInterceptor('certificado'))
   uploadCompanyCertificate(
     @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: AuthenticatedUser,
     @Body('certificadoSenha') certificadoSenha: string,
     @Body('expirationDate') expirationDate?: string,
   ) {
-    // Valida se o arquivo existe
     if (!file) {
       throw new BadRequestException('Arquivo não fornecido');
     }
 
-    // Converte para o formato esperado pelo service
     const uploadedFile = {
       originalname: file.originalname,
       buffer: file.buffer,
@@ -169,6 +174,7 @@ export class CompanyController {
     return this.companyService.uploadCompanyCertificate(
       uploadedFile,
       certificadoSenha,
+      this.actorOf(user),
       expirationDate ? new Date(expirationDate) : undefined,
     );
   }
@@ -183,7 +189,79 @@ export class CompanyController {
     status: HttpStatus.NOT_FOUND,
     description: 'Certificado não encontrado',
   })
-  deleteCertificate() {
-    return this.companyService.deleteCertificate();
+  deleteCertificate(@CurrentUser() user: AuthenticatedUser) {
+    return this.companyService.deleteCertificate(this.actorOf(user));
+  }
+
+  @Get('online-menu')
+  @ApiOperation({ summary: 'Buscar configurações do cardápio online' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Configurações e horários de funcionamento',
+    type: OnlineMenuSettingsResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Empresa não cadastrada',
+  })
+  getOnlineMenuSettings(@CurrentUser() user: AuthenticatedUser) {
+    return this.onlineMenuSettingsService.getSettings(this.actorOf(user));
+  }
+
+  @Patch('online-menu')
+  @ApiOperation({
+    summary: 'Atualizar configurações do cardápio online',
+    description:
+      'Todos os campos são opcionais. Enviar `null` em um campo opcional limpa o valor.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Configurações atualizadas',
+    type: OnlineMenuSettingsResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Dados inválidos',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Empresa não cadastrada',
+  })
+  updateOnlineMenuSettings(
+    @Body() dto: UpdateOnlineMenuSettingsDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.onlineMenuSettingsService.updateSettings(
+      dto,
+      this.actorOf(user),
+    );
+  }
+
+  @Put('online-menu/opening-hours')
+  @ApiOperation({
+    summary: 'Substituir todos os horários de funcionamento',
+    description: 'Envie `{ "hours": [] }` para remover todos os horários.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Horários substituídos',
+    type: OnlineMenuSettingsResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Horários inválidos ou sobrepostos',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Empresa não cadastrada',
+  })
+  replaceOpeningHours(
+    @Body() dto: ReplaceOpeningHoursDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.onlineMenuSettingsService.replaceOpeningHours(
+      dto,
+      this.actorOf(user),
+    );
   }
 }

@@ -3,8 +3,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { SingleInstance } from '../common/decorators/single-instance.decorator';
 import { PrismaService } from 'src/database/prisma.service';
-import { resolveLogicalDateTime } from '../common/date-utils';
 import { AutoClosedOrderDto } from './dto/auto-closed-order.dto';
+import { resolveLogicalDateTime } from 'src/common/utils/date-utils';
 
 const SYSTEM_OPERATOR_ID = 1;
 

@@ -12,8 +12,8 @@ import {
   TaxSummary,
   UF_CODES,
 } from './entities/sale-converter-nfe';
-import { nowBrasilia, toSefazDateTime } from 'src/common/date-utils';
 import { CompanyService } from 'src/features/company/company.service';
+import { nowBrasilia, toSefazDateTime } from 'src/common/utils/date-utils';
 
 const CARD_PAYMENT_METHODS = ['CARTAO_CREDITO', 'CARTAO_DEBITO', 'PIX'];
 

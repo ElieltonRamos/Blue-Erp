@@ -16,9 +16,9 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { FilterCategoryDto } from './dto/filter-category.dto';
 import { CategoryResponseDto } from './dto/response-category.dto';
-import { PaginatedResponse } from 'src/common/paginated-response';
 import { CategoryService } from './category-product.service';
 import { UpdateCategoryDto } from './dto/update-category-product.dto';
+import { PaginatedResponseDto } from 'src/common/utils/paginated-response';
 
 @ApiTags('Categories')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -46,7 +46,7 @@ export class CategoryController {
   })
   findAll(
     @Query() filters: FilterCategoryDto,
-  ): Promise<PaginatedResponse<CategoryResponseDto>> {
+  ): Promise<PaginatedResponseDto<CategoryResponseDto>> {
     const {
       page = 1,
       limit = 10,

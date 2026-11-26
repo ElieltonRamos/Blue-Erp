@@ -5,8 +5,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service.js';
-import { PaginatedResponse } from 'src/common/paginated-response.js';
 import { Ibpt } from './entities/ibpt.js';
+import { PaginatedResponseDto } from 'src/common/utils/paginated-response.js';
 
 @Injectable()
 export class IbptService {
@@ -53,7 +53,7 @@ export class IbptService {
     total: number,
     page: number,
     limit: number,
-  ): PaginatedResponse<T> {
+  ): PaginatedResponseDto<T> {
     const totalPages = Math.ceil(total / limit);
 
     return {
@@ -76,7 +76,7 @@ export class IbptService {
     limit: number = 10,
     sortKey: string = 'id',
     sortOrder: string = 'asc',
-  ): Promise<PaginatedResponse<Ibpt>> {
+  ): Promise<PaginatedResponseDto<Ibpt>> {
     this.validatePagination(page, limit);
 
     const { safeSortKey, safeSortOrder } = this.sanitizeSortParams(

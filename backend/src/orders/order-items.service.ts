@@ -8,7 +8,6 @@ import { PrismaService } from 'src/database/prisma.service';
 import { OrderEntity } from './entities/order.entity';
 import { OrderStatus, ProductType } from 'generated/prisma/client';
 import { RemoveOrderItemsDto } from './dto/remove-order-items.dto';
-import { resolveLogicalDateTime } from '../common/date-utils';
 import { OrderProductionService } from './order-production.service';
 import { OrderStockService } from './order-stock.service';
 import { OrderPrintService } from './order-print.service';
@@ -19,6 +18,7 @@ import {
 } from './order.mapper';
 import { AddOrderItemsDto } from './dto/add-order-itens.dto';
 import { UpdateServiceChargeDto } from './dto/update-service-charge.dto';
+import { resolveLogicalDateTime } from 'src/common/utils/date-utils';
 
 @Injectable()
 export class OrderItemsService {

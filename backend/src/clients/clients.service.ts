@@ -8,9 +8,9 @@ import {
 import { PrismaService } from '../database/prisma.service.js';
 import { CreateClientDto } from './dto/create-client.dto.js';
 import { ClientResponseDto } from './dto/client-response.dto.js';
-import { PaginatedResponse } from 'src/common/paginated-response.js';
 import { UpdateClientDto } from './dto/update-client.dto.js';
 import { Prisma } from 'generated/prisma/client.js';
+import { PaginatedResponseDto } from 'src/common/utils/paginated-response.js';
 
 @Injectable()
 export class ClientsService {
@@ -180,7 +180,7 @@ export class ClientsService {
     limit: number = 10,
     name?: string,
     active?: boolean,
-  ): Promise<PaginatedResponse<ClientResponseDto>> {
+  ): Promise<PaginatedResponseDto<ClientResponseDto>> {
     if (page < 1 || limit < 1 || isNaN(page) || isNaN(limit)) {
       throw new BadRequestException(
         'A página ou a quantidade de itens por página está incorreta',

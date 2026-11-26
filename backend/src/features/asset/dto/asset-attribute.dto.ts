@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty } from 'class-validator';
-import { ValidationMessages } from 'src/common/validation-messages';
+import { ValidationMessages } from 'src/common/utils/validation';
 
 export class AssetAttributeDto {
   @ApiProperty({ example: 'marca' })

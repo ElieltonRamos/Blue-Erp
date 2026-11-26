@@ -15,13 +15,13 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductService } from './products.service';
 import { ProductResponseDto } from './dto/response-product.dto';
-import { PaginatedResponse } from 'src/common/paginated-response';
 import { FilterProductDto } from './dto/filter-product.dto';
 import { ProduceProductDto } from './dto/produce-product.dto';
 import { UpdatePreparationDto } from './dto/update-preparation.dto';
 import { UpdateCompositionDto } from './dto/update-composition.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { PaginatedResponseDto } from 'src/common/utils/paginated-response';
 
 @ApiTags('Products')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -49,7 +49,7 @@ export class ProductController {
   })
   findAll(
     @Query() filters: FilterProductDto,
-  ): Promise<PaginatedResponse<ProductResponseDto>> {
+  ): Promise<PaginatedResponseDto<ProductResponseDto>> {
     const {
       page = 1,
       limit = 10,

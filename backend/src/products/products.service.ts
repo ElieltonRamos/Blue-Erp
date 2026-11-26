@@ -13,8 +13,8 @@ import { UpdatePreparationDto } from './dto/update-preparation.dto';
 import { ProduceProductDto } from './dto/produce-product.dto';
 import { Prisma, ProductType } from 'generated/prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
-import { PaginatedResponse } from 'src/common/paginated-response';
 import { ProductResponseDto } from './dto/response-product.dto';
+import { PaginatedResponseDto } from 'src/common/utils/paginated-response';
 
 const COMPOSITION_INCLUDE = {
   compositionItems: {
@@ -173,7 +173,7 @@ export class ProductService {
     filters?: FilterProductDto,
     sortKey: string = 'name',
     sortOrder: string = 'asc',
-  ): Promise<PaginatedResponse<ProductResponseDto>> {
+  ): Promise<PaginatedResponseDto<ProductResponseDto>> {
     if (page < 1 || limit < 1 || isNaN(page) || isNaN(limit)) {
       throw new BadRequestException(
         'A página ou a quantidade de itens por página está incorreta',

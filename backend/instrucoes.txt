@@ -1,0 +1,251 @@
+COMO TRABALHAR NO BACKEND (BLUE ERP)
+====================================
+
+1. ESTRUTURA DE PASTAS
+----------------------
+
+backend/
+  prisma/        schema.prisma e migrations
+  generated/     client do Prisma (gerado)
+  src/
+    features/    módulos de domínio (ex.: features/company)
+    common/      código compartilhado
+      decorators/
+      guards/
+      scripts/
+      date-utils.ts
+      paginated-response.ts
+      validation-messages.ts
+    database/    PrismaService (será movido para common)
+    category-product, clients, expenses, ibpt, license-system,
+    order-production, orders, ...   (ainda fora de features)
+
+Migração em andamento:
+- Os módulos estão sendo movidos aos poucos para src/features.
+- A pasta database vai para common.
+- Módulos novos ficam em src/features/<modulo>.
+- Ao mover um módulo ou o database, os imports relativos mudam (por exemplo,
+  o caminho para o PrismaService). Revise os imports de quem os usa.
+
+Dentro de cada módulo: module, controller, service, dto/ (e entities/ quando
+existir). Sem Repository: o service usa o PrismaService direto
+(this.prisma.client).
+
+
+2. LOGS E ATORES
+----------------
+
+Todo log de ação informa QUEM fez. Esse "quem" é o actor.
+
+2.1 De onde vem o actor
+- O controller recebe o usuário autenticado com @CurrentUser() e converte em
+  texto (no CompanyController, o método privado actorOf devolve
+  String(user.userId), pois o JwtPayload tem userId e role).
+- O controller passa o actor ao service como parâmetro. Em métodos com
+  parâmetros opcionais, o actor vem antes deles.
+- Todo método do service disparado por um usuário recebe o actor, inclusive
+  as leituras.
+- Chamadas internas, sem usuário (módulo fiscal, numeração de NFC-e/NF-e,
+  jobs), não recebem actor. Quando precisam logar, usam o actor padrão
+  'sistema' (constante SYSTEM_ACTOR).
+
+2.2 Formato da mensagem
+Mensagem (actor=X, id=Y, campos=a,b)
+
+Pares chave=valor entre parênteses, sempre com o actor. Exemplos:
+  Empresa editada (actor=3, id=1, campos=phone,city)
+  Certificado da empresa removido (actor=3, id=1)
+  Nenhum certificado cadastrado (actor=3)
+
+O módulo de pedidos mantém o formato próprio:
+  [Pedido {id}] operador={id} | mensagem | {ms}ms
+
+2.3 Níveis
+- log   : ação concluída com sucesso (mutações).
+- warn  : decisão do próprio service. Exemplos: registro não encontrado,
+          conflito, validação negada, edição sem alterações, mudança
+          sensível (alteração de CNPJ, ativar/desativar cardápio, pausar
+          pedidos). O warn vem ANTES do throw.
+- error : somente falha inesperada (banco, bug), via rethrow.
+
+2.4 Estrutura do service
+
+  private readonly logger = new Logger(MeuService.name);
+
+  // Loga como error só o que não foi decisão do próprio service.
+  // HttpException já foi logada como warn onde foi lançada.
+  private rethrow(error: unknown, context: string): never {
+    if (!(error instanceof HttpException)) {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.logger.error(`${context}: ${reason}`);
+    }
+    throw error;
+  }
+
+  // Busca de registro: loga warn antes do NotFoundException
+  private async findCompany(actor: string) {
+    const company = await this.prisma.client.company.findUnique({ ... });
+    if (!company) {
+      this.logger.warn(`Empresa não cadastrada (actor=${actor})`);
+      throw new NotFoundException('Empresa não cadastrada');
+    }
+    return company;
+  }
+
+  // Todo método que escreve
+  async update(dto: UpdateXDto, actor: string) {
+    try {
+      const current = await this.findCompany(actor);
+      ...
+      this.logger.log(`Empresa editada (actor=${actor}, id=${current.id}, campos=${fields.join(',')})`);
+      return result;
+    } catch (error) {
+      this.rethrow(error, `Falha ao editar empresa (actor=${actor})`);
+    }
+  }
+
+Regras:
+- Métodos que escrevem têm try/catch e terminam em rethrow(error, contexto).
+- Leituras não precisam de try/catch. O findCompany já registra o warn.
+- Validações do service que lançam exceção registram warn antes
+  (ex.: this.logger.warn(...); throw new BadRequestException(...)).
+
+2.5 O que logar numa edição
+- Calcular o diff: gravar e logar só os campos enviados que realmente
+  mudaram em relação ao registro atual.
+- Sem alterações: logar warn ("... sem alterações") e retornar sem gravar.
+- Logar só os NOMES dos campos, nunca os valores. Exceção: valor de
+  identificação de negócio, como o de/para do CNPJ.
+
+2.6 O que nunca logar
+- Senhas, tokens, chaves de licença, caminho do certificado digital.
+- XML fiscal completo (somente chave e protocolo).
+- Dados pessoais de clientes (telefone, endereço).
+
+2.7 Arquivos em disco
+- Ordem: gravar o arquivo novo, atualizar o banco e só então apagar o
+  arquivo antigo.
+- Falha ao apagar arquivo antigo vira warn (com o motivo) e não interrompe
+  a operação. Arquivo inexistente (ENOENT) também é warn.
+
+2.8 Resposta
+- Nunca devolver segredos nas respostas (licenseToken, certificatePassword),
+  e mascarar o que for sensível (ex.: licenseKey com **** + 4 últimos
+  caracteres).
+
+
+3. MODELO DE DTO
+----------------
+
+Modelo de referência: wms-server (core/utils/validation.ts,
+core/utils/paginated-response.ts e core/utils/pagination-query.dto.ts).
+
+Princípios:
+- DTOs base globais quando fizer sentido: o que se repete em vários módulos
+  (paginação, resposta paginada) vive em um DTO único e compartilhado.
+- Validações repetitivas centralizadas: mensagens e transformações de
+  entrada não são escritas à mão em cada DTO.
+
+3.1 Mensagens de validação (ValidationMessages)
+Funções que recebem o nome do campo e devolvem a mensagem em pt-br. O nome
+do campo vai com artigo ("A página", "O limite", "O telefone").
+
+  IS_NOT_EMPTY(campo)          IS_NOT_BLANK(campo)
+  IS_STRING(campo)             IS_EMAIL(campo = 'Email')
+  IS_NUMBER(campo)             IS_INT(campo)
+  MIN(campo, min)              MAX(campo, max)
+  MIN_LENGTH(campo, min)       MAX_LENGTH(campo, max)
+  IS_ENUM(campo)               IS_BOOLEAN(campo)
+  EXACT_DIGITS(campo, dígitos) DATE_ONLY(campo)
+  IS_ARRAY(campo)              ARRAY_NOT_EMPTY(campo)
+  IS_DECIMAL(campo, casas)
+
+Uso:
+  @IsInt({ message: ValidationMessages.IS_INT('A página') })
+  @Min(1, { message: ValidationMessages.MIN('A página', 1) })
+
+Regra: não escrever texto de mensagem direto no DTO. Se a mesma mensagem
+aparecer em mais de um lugar, criar a função em ValidationMessages.
+
+3.2 Transformações de entrada (@Transform)
+Funções reutilizáveis, usadas com @Transform do class-transformer:
+
+  trim          remove espaços das pontas
+  trimOrNull    igual ao trim; texto vazio vira null (limpa campo opcional)
+  digitsOrNull  mantém só os dígitos; vazio vira null
+  upperOrNull   maiúsculas e trim; vazio vira null
+  digits        mantém só os dígitos
+
+Decorator de validação reutilizável:
+  IsDateOnly(campo)   data no formato AAAA-MM-DD, e precisa ser data real
+
+Exemplo:
+  @ApiPropertyOptional({ example: '31999999999' })
+  @IsOptional()
+  @Transform(digitsOrNull)
+  @IsString({ message: ValidationMessages.IS_STRING('O telefone') })
+  phone?: string | null;
+
+3.3 DTO base de paginação (PaginationQueryDto)
+Query de toda listagem paginada:
+- page: padrão 1, mínimo 1.
+- limit: padrão 10, mínimo 1, máximo 100.
+- Os dois usam @Type(() => Number), @IsOptional e valores padrão na própria
+  propriedade (page: number = 1).
+
+3.4 Resposta paginada
+- PaginatedResponseDto<T>: data, total, page, limit e totalPages.
+- ApiPaginatedResponse(Modelo, descrição): decorator do controller que
+  documenta no Swagger o tipo de data (generics não geram schema).
+
+  @Get()
+  @ApiPaginatedResponse(ClientResponseDto)
+  findAll(@Query() query: PaginationQueryDto) { ... }
+
+3.5 Regras de todo DTO
+- Todo campo com Swagger: @ApiProperty ou @ApiPropertyOptional, com
+  description, example e, quando existir, default, minimum e maximum.
+- Toda mensagem vem de ValidationMessages, em pt-br.
+- Toda limpeza de entrada (trim, dígitos, maiúsculas) vem das funções da
+  seção 3.2, nunca de lógica repetida no DTO ou no service.
+- Campo opcional que pode ser limpo pelo usuário: @IsOptional + função
+  *OrNull, para que texto vazio chegue como null.
+- Antes de criar uma validação ou DTO novo, verificar se já existe um
+  equivalente compartilhado. Se o padrão se repetir em mais de um módulo,
+  extrair para o DTO base ou para ValidationMessages.
+
+
+4. MENSAGENS DE ERRO EM PT-BR
+-----------------------------
+
+Toda mensagem de erro que chega ao usuário é escrita em português do Brasil:
+validações de DTO, exceptions do Nest e erros de regra de negócio.
+
+- Validação de DTO: sempre via ValidationMessages (seção 3.1).
+- Exceptions no service (NotFoundException, BadRequestException,
+  ConflictException etc.): texto em pt-br direto no throw, dizendo o que
+  aconteceu.
+    throw new ConflictException('CNPJ já está cadastrado');
+    throw new NotFoundException('Empresa não cadastrada');
+- Mensagem usada em mais de um ponto do mesmo service vira constante no topo
+  do arquivo:
+    const COMPANY_NOT_CONFIGURED = 'Empresa não configurada';
+- Não repassar erro técnico (do Prisma, do banco, do sistema de arquivos)
+  como mensagem para o usuário. Esse tipo de erro é propagado e logado como
+  error (seção 2.3).
+- O texto do log também é em pt-br, no formato da seção 2.2.
+- Em toda exception lançada pelo service, registrar o warn antes do throw
+  (seção 2.3), com a mesma mensagem.
+
+
+5. CONVENÇÕES GERAIS
+--------------------
+
+- DTOs: class-validator + class-transformer + Swagger, seguindo a seção 3.
+- ValidationPipe global: whitelist, forbidNonWhitelisted e transform.
+  Campo extra no body = 400.
+- Auth: @UseGuards(JwtAuthGuard, RolesGuard), @Roles(...), @Public() para
+  rotas abertas.
+- Transações com $transaction; serviços auxiliares recebem o tx.
+- Datas de negócio: resolveLogicalDateTime() (common/date-utils).
+- Decimal do Prisma deve ser serializado como número nas respostas.

@@ -6,7 +6,7 @@ import {
   IsOptional,
   Min,
 } from 'class-validator';
-import { ValidationMessages } from 'src/common/validation-messages';
+import { ValidationMessages } from 'src/common/utils/validation';
 
 export class CreateServiceDto {
   @ApiProperty({ example: 'Troca de óleo' })

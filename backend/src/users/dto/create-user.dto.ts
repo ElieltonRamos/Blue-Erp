@@ -10,7 +10,7 @@ import {
   Min,
   Max,
 } from 'class-validator';
-import { ValidationMessages } from '../../common/validation-messages.js';
+import { ValidationMessages } from 'src/common/utils/validation';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'john_doe', description: 'Nome de usuário único' })

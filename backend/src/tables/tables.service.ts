@@ -19,7 +19,7 @@ import {
 } from './dto/response-table.dto.js';
 import { CloseTabDto } from './dto/close-tab.dto.js';
 import { TableStatus, OrderStatus } from 'generated/prisma/client';
-import { resolveLogicalDateTime } from '../common/date-utils.js';
+import { resolveLogicalDateTime } from '../common/utils/date-utils.js';
 
 @Injectable()
 export class TablesService {

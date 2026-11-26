@@ -12,8 +12,8 @@ import { MaterialSummaryResponseDto } from './dto/material-summary-response.dto'
 import { StockAlertResponseDto } from './dto/stock-alert-response.dto';
 import { PrismaService } from 'src/database/prisma.service';
 import { Prisma } from 'generated/prisma/client';
-import { PaginatedResponse } from 'src/common/paginated-response';
 import { PrimaryMaterialResponseDto } from './dto/primary-material-list-response.dto';
+import { PaginatedResponseDto } from 'src/common/utils/paginated-response';
 
 @Injectable()
 export class PrimaryMaterialsService {
@@ -62,7 +62,7 @@ export class PrimaryMaterialsService {
     filters?: FilterPrimaryMaterialDto,
     sortKey: string = 'name',
     sortOrder: string = 'asc',
-  ): Promise<PaginatedResponse<PrimaryMaterialResponseDto>> {
+  ): Promise<PaginatedResponseDto<PrimaryMaterialResponseDto>> {
     if (page < 1 || limit < 1 || isNaN(page) || isNaN(limit)) {
       throw new BadRequestException(
         'A página ou a quantidade de itens por página está incorreta',

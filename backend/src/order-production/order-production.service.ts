@@ -7,9 +7,9 @@ import {
 import { PrismaService } from 'src/database/prisma.service';
 import { ProductionStatus, ProductType } from 'generated/prisma/client';
 import { Decimal } from '@prisma/client/runtime/client';
-import { resolveLogicalDateTime } from '../common/date-utils';
 import { Cron } from '@nestjs/schedule';
 import { SingleInstance } from 'src/common/decorators/single-instance.decorator';
+import { resolveLogicalDateTime } from 'src/common/utils/date-utils';
 
 @Injectable()
 export class ProductionService {

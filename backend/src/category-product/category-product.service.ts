@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { Prisma } from 'generated/prisma/client';
 import { PrismaService } from 'src/database/prisma.service';
-import { PaginatedResponse } from 'src/common/paginated-response';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category-product.dto';
 import { FilterCategoryDto } from './dto/filter-category.dto';
 import { CategoryResponseDto } from './dto/response-category.dto';
+import { PaginatedResponseDto } from 'src/common/utils/paginated-response';
 
 @Injectable()
 export class CategoryService {
@@ -41,7 +41,7 @@ export class CategoryService {
     filters?: FilterCategoryDto,
     sortKey: string = 'name',
     sortOrder: string = 'asc',
-  ): Promise<PaginatedResponse<CategoryResponseDto>> {
+  ): Promise<PaginatedResponseDto<CategoryResponseDto>> {
     if (page < 1 || limit < 1 || isNaN(page) || isNaN(limit)) {
       throw new BadRequestException(
         'A página ou a quantidade de itens por página está incorreta',
