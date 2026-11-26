@@ -13,9 +13,10 @@ backend/
       decorators/
       guards/
       scripts/
-      date-utils.ts
+      utils/
+        date-utils.ts
+        validation.ts   ValidationMessages, transformações e validadores
       paginated-response.ts
-      validation-messages.ts
     database/    PrismaService (será movido para common)
     category-product, clients, expenses, ibpt, license-system,
     order-production, orders, ...   (ainda fora de features)
@@ -129,9 +130,7 @@ Regras:
   a operação. Arquivo inexistente (ENOENT) também é warn.
 
 2.8 Resposta
-- Nunca devolver segredos nas respostas (licenseToken, certificatePassword),
-  e mascarar o que for sensível (ex.: licenseKey com **** + 4 últimos
-  caracteres).
+- Regras do DTO de resposta (segredos, máscara, flags): seção 3.6.
 
 
 3. MODELO DE DTO
@@ -139,6 +138,8 @@ Regras:
 
 Modelo de referência: wms-server (core/utils/validation.ts,
 core/utils/paginated-response.ts e core/utils/pagination-query.dto.ts).
+No Blue ERP, mensagens, transformações e validadores ficam em
+common/utils/validation.ts.
 
 Princípios:
 - DTOs base globais quando fizer sentido: o que se repete em vários módulos
@@ -158,7 +159,8 @@ do campo vai com artigo ("A página", "O limite", "O telefone").
   IS_ENUM(campo)               IS_BOOLEAN(campo)
   EXACT_DIGITS(campo, dígitos) DATE_ONLY(campo)
   IS_ARRAY(campo)              ARRAY_NOT_EMPTY(campo)
-  IS_DECIMAL(campo, casas)
+  IS_DECIMAL(campo, casas)     TIME_ONLY(campo)
+  ARRAY_MAX_SIZE(campo, max)   ARRAY_UNIQUE(campo)
 
 Uso:
   @IsInt({ message: ValidationMessages.IS_INT('A página') })
@@ -176,8 +178,12 @@ Funções reutilizáveis, usadas com @Transform do class-transformer:
   upperOrNull   maiúsculas e trim; vazio vira null
   digits        mantém só os dígitos
 
-Decorator de validação reutilizável:
+Decorators de validação reutilizáveis:
   IsDateOnly(campo)   data no formato AAAA-MM-DD, e precisa ser data real
+  IsTimeOnly(campo)   horário no formato HH:mm
+
+Função de apoio para @ValidateIf (ver seção 3.5):
+  notUndefined        só valida o campo se ele foi enviado (null é validado)
 
 Exemplo:
   @ApiPropertyOptional({ example: '31999999999' })
@@ -213,6 +219,33 @@ Query de toda listagem paginada:
 - Antes de criar uma validação ou DTO novo, verificar se já existe um
   equivalente compartilhado. Se o padrão se repetir em mais de um módulo,
   extrair para o DTO base ou para ValidationMessages.
+- DTO de edição (campos opcionais), conforme a coluna do banco:
+    coluna obrigatória (não nula): @ValidateIf(notUndefined). Só undefined é
+      ignorado; null é rejeitado na validação.
+    coluna que aceita null: @IsOptional + função *OrNull.
+  Motivo: @IsOptional também deixa passar null, e o Prisma recusa null em
+  coluna obrigatória (erro 500).
+- Coluna Int: @IsInt (não @IsNumber). Coluna Decimal: @IsNumber com
+  maxDecimalPlaces.
+- Coluna DateTime: o DTO recebe a data como texto ISO, e o service converte
+  para Date antes de gravar (o Prisma não aceita só a data, sem hora).
+- Campo que aceita null: informar o tipo no Swagger, por exemplo
+  @ApiPropertyOptional({ type: String, nullable: true }). Sem o type, o
+  Swagger documenta o campo como object.
+
+3.6 DTO de resposta
+- O construtor recebe o model do Prisma e atribui campo a campo. Não usar
+  Object.assign(this, model): ele copia tudo, inclusive campos que o DTO não
+  declara (e que ficam sem documentação no Swagger).
+- Segredos nunca entram no DTO: licenseToken, certificatePassword, CSC e
+  caminho do certificado. Quando o front precisa saber se existe, usar flag
+  (nfceCscConfigured, certificateConfigured etc.).
+- Chave de licença sai mascarada (**** + 4 últimos caracteres).
+- Decimal do Prisma vira number (toNumber()).
+- Código interno que precisa do segredo (emissão fiscal, DANFE) usa método
+  próprio do service (getCscConfig, getCertificateBuffer), nunca o DTO de
+  resposta.
+- Campo | null com type explícito no @ApiProperty, como na seção 3.5.
 
 
 4. MENSAGENS DE ERRO EM PT-BR
@@ -247,5 +280,10 @@ validações de DTO, exceptions do Nest e erros de regra de negócio.
 - Auth: @UseGuards(JwtAuthGuard, RolesGuard), @Roles(...), @Public() para
   rotas abertas.
 - Transações com $transaction; serviços auxiliares recebem o tx.
-- Datas de negócio: resolveLogicalDateTime() (common/date-utils).
+- Datas de negócio: resolveLogicalDateTime() (common/utils/date-utils).
 - Decimal do Prisma deve ser serializado como número nas respostas.
+- Company é uma linha única (id 1), criada pelo seed. Não existe rota de
+  criação; a edição trata só os campos enviados.
+- Imports que começam em src/ ou generated/ não levam .js no final. Com .js
+  o build passa, mas a aplicação quebra ao subir (MODULE_NOT_FOUND) quando o
+  import é de valor, como uma função.
