@@ -25,6 +25,7 @@ const MINUTES_IN_WEEK = 7 * MINUTES_IN_DAY;
 const SETTINGS_FIELDS = [
   'onlineMenuEnabled',
   'onlineOrdersPaused',
+  'onlineMenuControlStock',
   'timezone',
   'whatsapp',
   'instagram',
@@ -87,6 +88,7 @@ export class OnlineMenuSettingsService {
     const currentValues: Record<SettingsField, unknown> = {
       onlineMenuEnabled: current.onlineMenuEnabled,
       onlineOrdersPaused: current.onlineOrdersPaused,
+      onlineMenuControlStock: current.onlineMenuControlStock,
       timezone: current.timezone,
       whatsapp: current.whatsapp,
       instagram: current.instagram,
@@ -231,6 +233,11 @@ export class OnlineMenuSettingsService {
       if (changes.onlineOrdersPaused !== undefined) {
         this.logger.warn(
           `Pedidos online ${updated.onlineOrdersPaused ? 'pausados' : 'retomados'} (actor=${actor}, id=${company.id})`,
+        );
+      }
+      if (changes.onlineMenuControlStock !== undefined) {
+        this.logger.warn(
+          `Controle de estoque do cardápio online ${updated.onlineMenuControlStock ? 'ativado' : 'desativado'} (actor=${actor}, id=${company.id})`,
         );
       }
 

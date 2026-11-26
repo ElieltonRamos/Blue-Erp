@@ -6,6 +6,7 @@ type DecimalLike = { toNumber(): number };
 export interface OnlineMenuSettingsSource {
   onlineMenuEnabled: boolean;
   onlineOrdersPaused: boolean;
+  onlineMenuControlStock: boolean;
   timezone: string;
   whatsapp: string | null;
   instagram: string | null;
@@ -58,6 +59,12 @@ export class OnlineMenuSettingsResponseDto {
     example: false,
   })
   onlineOrdersPaused: boolean;
+
+  @ApiProperty({
+    example: true,
+    description: 'Se o cardápio online considera o estoque na disponibilidade',
+  })
+  onlineMenuControlStock: boolean;
 
   @ApiProperty({
     description: 'Fuso horário da loja',
@@ -135,6 +142,7 @@ export class OnlineMenuSettingsResponseDto {
   constructor(company: OnlineMenuSettingsSource) {
     this.onlineMenuEnabled = company.onlineMenuEnabled;
     this.onlineOrdersPaused = company.onlineOrdersPaused;
+    this.onlineMenuControlStock = company.onlineMenuControlStock;
     this.timezone = company.timezone;
     this.whatsapp = company.whatsapp;
     this.instagram = company.instagram;

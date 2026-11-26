@@ -98,6 +98,11 @@ enum PurchaseStatus {
   CANCELED
 }
 
+enum OptionGroupType {
+  SINGLE
+  MULTIPLE
+}
+
 model Company {
   id                        Int          @id @default(autoincrement())
   cnpj                      String       @unique
@@ -134,21 +139,22 @@ model Company {
   enabledMenus              Json?        @map("enabled_menus")
 
   // Cardápio online
-  onlineMenuEnabled    Boolean       @default(false) @map("online_menu_enabled")
-  onlineOrdersPaused   Boolean       @default(false) @map("online_orders_paused")
-  timezone             String        @default("America/Sao_Paulo")
-  whatsapp             String?
-  instagram            String?
-  logoUrl              String?       @map("logo_url")
-  latitude             Decimal?      @db.Decimal(10, 7)
-  longitude            Decimal?      @db.Decimal(10, 7)
-  deliveryTimeMin      Int?          @map("delivery_time_min")
-  deliveryTimeMax      Int?          @map("delivery_time_max")
-  takeoutTime          Int?          @map("takeout_time")
-  deliveryFee          Decimal       @default(0) @map("delivery_fee") @db.Decimal(10, 2)
-  minOrderValue        Decimal       @default(0) @map("min_order_value") @db.Decimal(10, 2)
-  onlinePaymentMethods Json?         @map("online_payment_methods") // [{ type, label }]
-  openingHours         OpeningHour[]
+  onlineMenuEnabled      Boolean       @default(false) @map("online_menu_enabled")
+  onlineOrdersPaused     Boolean       @default(false) @map("online_orders_paused")
+  timezone               String        @default("America/Sao_Paulo")
+  whatsapp               String?
+  instagram              String?
+  logoUrl                String?       @map("logo_url")
+  latitude               Decimal?      @db.Decimal(10, 7)
+  longitude              Decimal?      @db.Decimal(10, 7)
+  deliveryTimeMin        Int?          @map("delivery_time_min")
+  deliveryTimeMax        Int?          @map("delivery_time_max")
+  takeoutTime            Int?          @map("takeout_time")
+  deliveryFee            Decimal       @default(0) @map("delivery_fee") @db.Decimal(10, 2)
+  minOrderValue          Decimal       @default(0) @map("min_order_value") @db.Decimal(10, 2)
+  onlinePaymentMethods   Json?         @map("online_payment_methods") // [{ type, label }]
+  openingHours           OpeningHour[]
+  onlineMenuControlStock Boolean       @default(true) @map("online_menu_control_stock")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -304,6 +310,55 @@ model ProductionLocation {
   @@map("production_locations")
 }
 
+model OptionGroup {
+  id           Int                  @id @default(autoincrement())
+  name         String
+  type         OptionGroupType
+  min          Int                  @default(0)
+  max          Int?
+  maxPerOption Int?                 @map("max_per_option")
+  options      Option[]
+  products     ProductOptionGroup[]
+  createdAt    DateTime             @default(now()) @map("created_at")
+  updatedAt    DateTime             @updatedAt @map("updated_at")
+
+  @@map("option_groups")
+}
+
+model Option {
+  id         Int              @id @default(autoincrement())
+  groupId    Int              @map("group_id")
+  group      OptionGroup      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  name       String
+  price      Decimal          @default(0) @db.Decimal(10, 2)
+  available  Boolean          @default(true)
+  sortOrder  Int              @default(0) @map("sort_order")
+  materialId Int?             @map("material_id")
+  material   PrimaryMaterial? @relation(fields: [materialId], references: [id], onDelete: SetNull)
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime         @updatedAt @map("updated_at")
+
+  @@index([groupId])
+  @@index([materialId])
+  @@map("options")
+}
+
+model ProductOptionGroup {
+  id                   Int         @id @default(autoincrement())
+  productId            Int         @map("product_id")
+  product              Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  groupId              Int         @map("group_id")
+  group                OptionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  sortOrder            Int         @default(0) @map("sort_order")
+  minOverride          Int?        @map("min_override")
+  maxOverride          Int?        @map("max_override")
+  maxPerOptionOverride Int?        @map("max_per_option_override")
+
+  @@unique([productId, groupId])
+  @@index([groupId])
+  @@map("product_option_groups")
+}
+
 model Product {
   id                 Int               @id @default(autoincrement())
   name               String
@@ -345,6 +400,18 @@ model Product {
   createdAt          DateTime          @default(now()) @map("created_at")
   updatedAt          DateTime          @updatedAt @map("updated_at")
 
+  // Cardápio online
+  description     String?              @db.Text
+  imageUrl        String?              @map("image_url")
+  featured        Boolean              @default(false)
+  onlineVisible   Boolean              @default(false) @map("online_visible")
+  onlineSortOrder Int                  @default(0) @map("online_sort_order")
+  promoPrice      Decimal?             @map("promo_price") @db.Decimal(10, 2)
+  promoStartsAt   DateTime?            @map("promo_starts_at")
+  promoEndsAt     DateTime?            @map("promo_ends_at")
+  optionGroups    ProductOptionGroup[]
+
+  @@index([onlineVisible, categoryId])
   @@index([code])
   @@index([ncm])
   @@index([active])
@@ -353,12 +420,14 @@ model Product {
 }
 
 model Category {
-  id        Int       @id @default(autoincrement())
-  name      String
-  active    Boolean   @default(true)
-  products  Product[]
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  id              Int       @id @default(autoincrement())
+  name            String
+  active          Boolean   @default(true)
+  products        Product[]
+  onlineVisible   Boolean   @default(false) @map("online_visible")
+  onlineSortOrder Int       @default(0) @map("online_sort_order")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   @@map("categories")
 }
@@ -549,6 +618,7 @@ model PrimaryMaterial {
   purchaseItems    PurchaseItem[]
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
+  options          Option[]
 
   @@index([code])
   @@index([active])

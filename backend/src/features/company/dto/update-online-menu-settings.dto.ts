@@ -41,6 +41,17 @@ export class UpdateOnlineMenuSettingsDto {
   })
   onlineOrdersPaused?: boolean;
 
+  @ApiPropertyOptional({
+    example: true,
+    description:
+      'Quando ligado, o cardápio online considera o estoque na disponibilidade. Desligado, sempre mostra.',
+  })
+  @ValidateIf(notUndefined)
+  @IsBoolean({
+    message: ValidationMessages.IS_BOOLEAN('O controle de estoque do cardápio online'),
+  })
+  onlineMenuControlStock?: boolean;
+
   @ApiPropertyOptional({ example: 'America/Sao_Paulo' })
   @ValidateIf(notUndefined)
   @Transform(trim)
