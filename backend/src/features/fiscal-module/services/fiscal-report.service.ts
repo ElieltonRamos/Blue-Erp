@@ -171,9 +171,8 @@ export class FiscalReportsService {
       `PDF não encontrado em disco — regenerando para chave ${sale.fiscalKey}`,
     );
 
-    const company = await this.companyService.getCompany();
-
     if (isNfe) {
+      const company = await this.companyService.getCompany();
       const danfe = new DanfeNfeGenerator({
         emitterEmail: company.email ?? undefined,
       });
@@ -181,9 +180,11 @@ export class FiscalReportsService {
       return { pdfPath, filename };
     }
 
+    const { nfceCsc, nfceCscId } = await this.companyService.getCscConfig();
+
     const danfe = new DanfeGenerator({
-      csc: company.nfceCsc,
-      idCSC: company.nfceCscId,
+      csc: nfceCsc,
+      idCSC: nfceCscId,
       widthMM: 80,
     });
 

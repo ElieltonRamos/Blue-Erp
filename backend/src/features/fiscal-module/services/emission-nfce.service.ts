@@ -29,7 +29,6 @@ import {
   saveXmlDebug,
   validateCertificate,
 } from '../lib/nfe-utils';
-import { CompanyResponseDto } from 'src/features/company/dto/company-response.dto';
 import { nowBrasilia } from 'src/common/utils/date-utils';
 
 @Injectable()
@@ -127,7 +126,6 @@ export class EmissionNfceService {
     if (dto.generateDanfe && storagePaths.pdfPath) {
       try {
         pdfPath = await this.generateDanfe(
-          company,
           nfeData,
           accessKey,
           sefazReturn.signedXml,
@@ -289,15 +287,16 @@ export class EmissionNfceService {
   }
 
   private async generateDanfe(
-    company: CompanyResponseDto,
     nfeData: NFeOptions,
     accessKey: string,
     signedXml: string,
     pdfPath: string,
   ): Promise<string> {
+    const { nfceCsc, nfceCscId } = await this.companyService.getCscConfig();
+
     const danfeConfig: DanfeConfig = {
-      csc: company.nfceCsc,
-      idCSC: company.nfceCscId,
+      csc: nfceCsc,
+      idCSC: nfceCscId,
       widthMM: 80,
     };
 

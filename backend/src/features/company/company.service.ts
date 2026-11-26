@@ -93,18 +93,6 @@ export class CompanyService {
       .replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
   }
 
-  private cleanUpdateData(data: UpdateCompanyDto): UpdateCompanyDto {
-    const cleanedData = { ...data };
-
-    Object.keys(cleanedData).forEach((key) => {
-      if (cleanedData[key as keyof UpdateCompanyDto] === '') {
-        delete cleanedData[key as keyof UpdateCompanyDto];
-      }
-    });
-
-    return cleanedData;
-  }
-
   async getCompany(actor: string = 'system'): Promise<CompanyResponseDto> {
     const company = await this.findCompanyOrFail(
       actor,
@@ -133,7 +121,15 @@ export class CompanyService {
         }
       }
 
-      const data = this.cleanUpdateData(updateCompanyDto);
+      const { certificateExpirationDate, ...rest } = updateCompanyDto;
+      const data = {
+        ...rest,
+        ...(certificateExpirationDate !== undefined && {
+          certificateExpirationDate: certificateExpirationDate
+            ? new Date(certificateExpirationDate)
+            : null,
+        }),
+      };
       const fields = Object.keys(data);
 
       if (fields.length === 0) {

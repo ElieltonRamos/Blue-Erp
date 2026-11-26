@@ -1,16 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
   IsInt,
-  Matches,
   Max,
   Min,
   ValidateNested,
 } from 'class-validator';
-
-const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
+import {
+  IsTimeOnly,
+  ValidationMessages,
+  trim,
+} from '../../../common/utils/validation';
 
 export class OpeningHourDto {
   @ApiProperty({
@@ -19,19 +21,14 @@ export class OpeningHourDto {
     maximum: 6,
     example: 1,
   })
-  @IsInt({ message: 'O dia da semana deve ser um número inteiro' })
-  @Min(0, {
-    message: 'O dia da semana deve ser entre 0 (domingo) e 6 (sábado)',
-  })
-  @Max(6, {
-    message: 'O dia da semana deve ser entre 0 (domingo) e 6 (sábado)',
-  })
+  @IsInt({ message: ValidationMessages.IS_INT('O dia da semana') })
+  @Min(0, { message: ValidationMessages.MIN('O dia da semana', 0) })
+  @Max(6, { message: ValidationMessages.MAX('O dia da semana', 6) })
   weekday: number;
 
   @ApiProperty({ example: '18:00', description: 'Formato HH:mm' })
-  @Matches(TIME_REGEX, {
-    message: 'Horário de abertura inválido. Use o formato HH:mm',
-  })
+  @Transform(trim)
+  @IsTimeOnly('O horário de abertura')
   opensAt: string;
 
   @ApiProperty({
@@ -39,16 +36,17 @@ export class OpeningHourDto {
     description:
       'Formato HH:mm. Menor que a abertura = termina no dia seguinte',
   })
-  @Matches(TIME_REGEX, {
-    message: 'Horário de fechamento inválido. Use o formato HH:mm',
-  })
+  @Transform(trim)
+  @IsTimeOnly('O horário de fechamento')
   closesAt: string;
 }
 
 export class ReplaceOpeningHoursDto {
   @ApiProperty({ type: [OpeningHourDto] })
-  @IsArray({ message: 'Os horários devem ser uma lista' })
-  @ArrayMaxSize(35, { message: 'Informe no máximo 35 intervalos de horário' })
+  @IsArray({ message: ValidationMessages.IS_ARRAY('Os horários') })
+  @ArrayMaxSize(35, {
+    message: ValidationMessages.ARRAY_MAX_SIZE('Os horários', 35),
+  })
   @ValidateNested({ each: true })
   @Type(() => OpeningHourDto)
   hours: OpeningHourDto[];

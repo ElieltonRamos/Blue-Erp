@@ -1,61 +1,78 @@
-// src/company/dto/update-company.dto.ts
+// src/features/company/dto/update-company.dto.ts
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
-  IsString,
-  IsEmail,
-  IsNotEmpty,
-  IsOptional,
-  Length,
-  IsEnum,
-  IsNumber,
   IsDateString,
-  Min,
+  IsEmail,
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+  Length,
   Max,
-  Matches,
+  Min,
+  ValidateIf,
 } from 'class-validator';
 import { BusinessType } from 'generated/prisma/enums';
 import { Prisma } from 'generated/prisma/client';
-import { ValidationMessages } from 'src/common/utils/validation';
+import {
+  ValidationMessages,
+  digits,
+  notUndefined,
+  trim,
+  trimOrNull,
+} from 'src/common/utils/validation';
 
 export class UpdateCompanyDto {
-  @ApiPropertyOptional({ example: '12345678000190' }) // SEM formatação
-  @IsString({ message: ValidationMessages.IS_STRING('CNPJ') })
-  @Length(14, 14, { message: 'CNPJ deve ter exatamente 14 dígitos' })
-  @Matches(/^\d{14}$/, { message: 'CNPJ deve conter apenas 14 números' })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('CNPJ') })
-  @IsOptional()
+  @ApiPropertyOptional({
+    example: '12345678000190',
+    description: 'Somente dígitos',
+  })
+  @ValidateIf(notUndefined)
+  @Transform(digits)
+  @IsString({ message: ValidationMessages.IS_STRING('O CNPJ') })
+  @Length(14, 14, { message: ValidationMessages.EXACT_DIGITS('O CNPJ', 14) })
   cnpj?: string;
 
   @ApiPropertyOptional({
     enum: BusinessType,
     example: BusinessType.RESTAURANTE,
   })
-  @IsEnum(BusinessType, { message: 'businessType inválido' })
-  @IsOptional()
+  @ValidateIf(notUndefined)
+  @IsEnum(BusinessType, {
+    message: ValidationMessages.IS_ENUM('O tipo de negócio'),
+  })
   businessType?: BusinessType;
 
   @ApiPropertyOptional({ example: { comandas: true, cozinha: true } })
-  @IsOptional()
-  enabledMenus?: Prisma.InputJsonValue;
+  @ValidateIf(notUndefined)
+  @IsObject({ message: ValidationMessages.IS_OBJECT('Os menus habilitados') })
+  enabledMenus?: Prisma.InputJsonObject;
 
   @ApiPropertyOptional({ example: 'Blue Restaurante Ltda' })
-  @IsString({ message: ValidationMessages.IS_STRING('Razão social') })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Razão social') })
-  @IsOptional()
+  @ValidateIf(notUndefined)
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('A razão social') })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('A razão social') })
   corporateName?: string;
 
   @ApiPropertyOptional({ example: 'Restaurante Blue PDV' })
-  @IsString({ message: ValidationMessages.IS_STRING('Nome fantasia') })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Nome fantasia') })
-  @IsOptional()
+  @ValidateIf(notUndefined)
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('O nome fantasia') })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('O nome fantasia') })
   tradeName?: string;
 
   @ApiPropertyOptional({ example: '123456789' })
-  @IsString({ message: ValidationMessages.IS_STRING('Inscrição estadual') })
+  @ValidateIf(notUndefined)
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('A inscrição estadual') })
   @IsNotEmpty({
-    message: ValidationMessages.IS_NOT_EMPTY('Inscrição estadual'),
+    message: ValidationMessages.IS_NOT_BLANK('A inscrição estadual'),
   })
-  @IsOptional()
   stateRegistration?: string;
 
   @ApiPropertyOptional({
@@ -64,152 +81,189 @@ export class UpdateCompanyDto {
       '1=Simples Nacional, 2=Simples Nacional - Excesso, 3=Regime Normal',
     example: '1',
   })
-  @IsEnum(['1', '2', '3'], { message: 'Regime tributário deve ser 1, 2 ou 3' })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Regime tributário') })
-  @IsOptional()
+  @ValidateIf(notUndefined)
+  @IsEnum(['1', '2', '3'], {
+    message: ValidationMessages.IS_ENUM('O regime tributário'),
+  })
   taxRegime?: '1' | '2' | '3';
 
   @ApiPropertyOptional({ example: 'Rua das Flores' })
-  @IsString({ message: ValidationMessages.IS_STRING('Logradouro') })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Logradouro') })
-  @IsOptional()
+  @ValidateIf(notUndefined)
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('O logradouro') })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('O logradouro') })
   street?: string;
 
   @ApiPropertyOptional({ example: '123' })
-  @IsString({ message: ValidationMessages.IS_STRING('Número') })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Número') })
-  @IsOptional()
+  @ValidateIf(notUndefined)
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('O número') })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('O número') })
   number?: string;
 
-  @ApiPropertyOptional({ example: 'Apt 101' })
-  @IsString({ message: ValidationMessages.IS_STRING('Complemento') })
+  @ApiPropertyOptional({ example: 'Apt 101', type: String, nullable: true })
   @IsOptional()
-  complement?: string;
+  @Transform(trimOrNull)
+  @IsString({ message: ValidationMessages.IS_STRING('O complemento') })
+  complement?: string | null;
 
   @ApiPropertyOptional({ example: 'Centro' })
-  @IsString({ message: ValidationMessages.IS_STRING('Bairro') })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Bairro') })
-  @IsOptional()
+  @ValidateIf(notUndefined)
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('O bairro') })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('O bairro') })
   neighborhood?: string;
 
   @ApiPropertyOptional({ example: 'Belo Horizonte' })
-  @IsString({ message: ValidationMessages.IS_STRING('Cidade') })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Cidade') })
-  @IsOptional()
+  @ValidateIf(notUndefined)
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('A cidade') })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('A cidade') })
   city?: string;
 
-  @ApiPropertyOptional({ example: '3106705' })
-  @IsString({ message: ValidationMessages.IS_STRING('Código IBGE') })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Código IBGE') })
-  @IsOptional()
+  @ApiPropertyOptional({
+    example: '3106705',
+    description: 'Código IBGE do município',
+  })
+  @ValidateIf(notUndefined)
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('O código IBGE') })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('O código IBGE') })
   cityCode?: string;
 
-  @ApiPropertyOptional({ example: 'MG' })
-  @IsString({ message: ValidationMessages.IS_STRING('Estado') })
-  @Length(2, 2, { message: 'Estado deve ter 2 caracteres (UF)' })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Estado') })
-  @IsOptional()
+  @ApiPropertyOptional({ example: 'MG', description: 'UF' })
+  @ValidateIf(notUndefined)
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('O estado') })
+  @Length(2, 2, { message: ValidationMessages.EXACT_LENGTH('O estado', 2) })
   state?: string;
 
   @ApiPropertyOptional({ example: '30130-000' })
-  @IsString({ message: ValidationMessages.IS_STRING('CEP') })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('CEP') })
-  @IsOptional()
+  @ValidateIf(notUndefined)
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('O CEP') })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('O CEP') })
   zipCode?: string;
 
   @ApiPropertyOptional({ example: '(31) 3333-4444' })
-  @IsString({ message: ValidationMessages.IS_STRING('Telefone') })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Telefone') })
-  @IsOptional()
+  @ValidateIf(notUndefined)
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('O telefone') })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('O telefone') })
   phone?: string;
 
-  @ApiPropertyOptional({ example: 'contato@bluepdv.com.br' })
-  @IsEmail({}, { message: ValidationMessages.IS_EMAIL() })
+  @ApiPropertyOptional({
+    example: 'contato@bluepdv.com.br',
+    type: String,
+    nullable: true,
+  })
   @IsOptional()
-  email?: string;
+  @Transform(trimOrNull)
+  @IsEmail({}, { message: ValidationMessages.IS_EMAIL() })
+  email?: string | null;
 
   // NFC-e
   @ApiPropertyOptional({ example: '001' })
-  @IsString({ message: ValidationMessages.IS_STRING('Série NFC-e') })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Série NFC-e') })
-  @IsOptional()
+  @ValidateIf(notUndefined)
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('A série da NFC-e') })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('A série da NFC-e') })
   nfceSeries?: string;
 
-  @ApiPropertyOptional({ example: 1 })
-  @IsNumber({}, { message: ValidationMessages.IS_NUMBER('Número atual NFC-e') })
-  @Min(1, { message: 'Número atual NFC-e deve ser maior ou igual a 1' })
-  @IsOptional()
+  @ApiPropertyOptional({ example: 1, minimum: 1 })
+  @ValidateIf(notUndefined)
+  @IsInt({ message: ValidationMessages.IS_INT('O número atual da NFC-e') })
+  @Min(1, { message: ValidationMessages.MIN('O número atual da NFC-e', 1) })
   nfceCurrentNumber?: number;
 
   @ApiPropertyOptional({
     enum: ['production', 'staging'],
     example: 'production',
   })
+  @ValidateIf(notUndefined)
   @IsEnum(['production', 'staging'], {
-    message: 'Ambiente NFC-e deve ser production ou staging',
+    message: ValidationMessages.IS_ENUM('O ambiente da NFC-e'),
   })
-  @IsOptional()
   nfceEnvironment?: 'production' | 'staging';
 
   @ApiPropertyOptional({ example: 'CSC_TOKEN_123456' })
-  @IsString({ message: ValidationMessages.IS_STRING('CSC NFC-e') })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('CSC NFC-e') })
-  @IsOptional()
+  @ValidateIf(notUndefined)
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('O CSC da NFC-e') })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('O CSC da NFC-e') })
   nfceCsc?: string;
 
   @ApiPropertyOptional({ example: '000001' })
-  @IsString({ message: ValidationMessages.IS_STRING('ID CSC NFC-e') })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('ID CSC NFC-e') })
-  @IsOptional()
+  @ValidateIf(notUndefined)
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('O ID do CSC da NFC-e') })
+  @IsNotEmpty({
+    message: ValidationMessages.IS_NOT_BLANK('O ID do CSC da NFC-e'),
+  })
   nfceCscId?: string;
 
   // NF-e
   @ApiPropertyOptional({ example: '1' })
-  @IsString({ message: ValidationMessages.IS_STRING('Série NF-e') })
-  @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Série NF-e') })
-  @IsOptional()
+  @ValidateIf(notUndefined)
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('A série da NF-e') })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('A série da NF-e') })
   nfeSeries?: string;
 
-  @ApiPropertyOptional({ example: 0 })
-  @IsNumber({}, { message: ValidationMessages.IS_NUMBER('Número atual NF-e') })
-  @Min(0, { message: 'Número atual NF-e deve ser maior ou igual a 0' })
-  @IsOptional()
+  @ApiPropertyOptional({ example: 0, minimum: 0 })
+  @ValidateIf(notUndefined)
+  @IsInt({ message: ValidationMessages.IS_INT('O número atual da NF-e') })
+  @Min(0, { message: ValidationMessages.MIN('O número atual da NF-e', 0) })
   nfeCurrentNumber?: number;
 
   @ApiPropertyOptional({
     enum: ['production', 'staging'],
     example: 'staging',
   })
+  @ValidateIf(notUndefined)
   @IsEnum(['production', 'staging'], {
-    message: 'Ambiente NF-e deve ser production ou staging',
+    message: ValidationMessages.IS_ENUM('O ambiente da NF-e'),
   })
-  @IsOptional()
   nfeEnvironment?: 'production' | 'staging';
 
   @ApiPropertyOptional({
     example: 1.25,
+    minimum: 0,
+    maximum: 100,
+    nullable: true,
     description: 'Alíquota de crédito do Simples Nacional (pCredSN), em %',
   })
+  @IsOptional()
   @IsNumber(
     { maxDecimalPlaces: 2 },
     {
-      message:
-        'Alíquota de crédito do Simples deve ser um número com até 2 casas decimais',
+      message: ValidationMessages.IS_DECIMAL(
+        'A alíquota de crédito do Simples',
+        2,
+      ),
     },
   )
-  @Min(0, { message: 'Alíquota de crédito do Simples deve ser no mínimo 0' })
-  @Max(100, {
-    message: 'Alíquota de crédito do Simples deve ser no máximo 100',
+  @Min(0, {
+    message: ValidationMessages.MIN('A alíquota de crédito do Simples', 0),
   })
-  @IsOptional()
-  simplesCreditRate?: number;
+  @Max(100, {
+    message: ValidationMessages.MAX('A alíquota de crédito do Simples', 100),
+  })
+  simplesCreditRate?: number | null;
 
   // Certificado (arquivo e senha vão pelo upload; aqui só a validade)
-  @ApiPropertyOptional({ example: '2026-12-31T23:59:59' })
+  @ApiPropertyOptional({
+    example: '2026-12-31T23:59:59',
+    type: String,
+    nullable: true,
+  })
+  @IsOptional()
+  @Transform(trimOrNull)
   @IsDateString(
     {},
-    { message: 'Data de validade do certificado deve ser uma data ISO válida' },
+    {
+      message: ValidationMessages.IS_DATE('A data de validade do certificado'),
+    },
   )
-  @IsOptional()
-  certificateExpirationDate?: string;
+  certificateExpirationDate?: string | null;
 }

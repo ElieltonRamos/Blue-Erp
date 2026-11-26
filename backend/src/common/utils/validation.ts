@@ -21,9 +21,35 @@ export const ValidationMessages = {
   DATE_ONLY: (field: string) => `${field} deve estar no formato AAAA-MM-DD`,
   IS_ARRAY: (field: string) => `${field} deve ser uma lista`,
   ARRAY_NOT_EMPTY: (field: string) => `${field} deve ter ao menos um item`,
+  TIME_ONLY: (field: string) => `${field} deve estar no formato HH:mm`,
+  EXACT_LENGTH: (field: string, length: number) =>
+    `${field} deve ter ${length} caracteres`,
+  IS_DATE: (field: string) => `${field} deve ser uma data válida`,
+  IS_OBJECT: (field: string) => `${field} deve ser um objeto`,
+  ARRAY_MAX_SIZE: (field: string, max: number) =>
+    `${field} deve ter no máximo ${max} itens`,
+  ARRAY_UNIQUE: (field: string) => `${field} não pode ter itens repetidos`,
   IS_DECIMAL: (field: string, places: number) =>
     `${field} deve ser um número com até ${places} casas decimais`,
 };
+
+const TIME_ONLY_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+export function IsTimeOnly(field: string) {
+  return (object: object, propertyName: string) =>
+    registerDecorator({
+      name: 'isTimeOnly',
+      target: object.constructor,
+      propertyName,
+      options: { message: ValidationMessages.TIME_ONLY(field) },
+      validator: {
+        validate: (value: unknown) =>
+          typeof value === 'string' && TIME_ONLY_REGEX.test(value),
+      },
+    });
+}
+
+export const notUndefined = (_: unknown, value: unknown) => value !== undefined;
 
 export const trim = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
