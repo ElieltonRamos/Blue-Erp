@@ -7,7 +7,7 @@ import {
   processPaymentAggregation,
 } from './utils/sale-report-utils';
 import { Prisma } from 'generated/prisma/client';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/common/database/prisma.service';
 import { SalesReportResponseDto } from './dto/response-report-sale.dto';
 import { SalesReportFilterDto } from './dto/create-report-sale.dto';
 

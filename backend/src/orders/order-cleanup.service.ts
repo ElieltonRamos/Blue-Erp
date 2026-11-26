@@ -2,7 +2,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { SingleInstance } from '../common/decorators/single-instance.decorator';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/common/database/prisma.service';
 import { AutoClosedOrderDto } from './dto/auto-closed-order.dto';
 import { resolveLogicalDateTime } from 'src/common/utils/date-utils';
 

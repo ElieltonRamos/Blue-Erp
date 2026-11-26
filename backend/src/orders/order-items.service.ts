@@ -4,7 +4,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/common/database/prisma.service';
 import { OrderEntity } from './entities/order.entity';
 import { OrderStatus, ProductType } from 'generated/prisma/client';
 import { RemoveOrderItemsDto } from './dto/remove-order-items.dto';

@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service.js';
+import { PrismaService } from '../../common/database/prisma.service.js';
 import { CloseCommissionDto } from './dto/close-commission.dto.js';
 import { PayCommissionDto } from './dto/pay-commission.dto.js';
 import { FindCommissionItemsDto } from './dto/find-commission-items.dto.js';

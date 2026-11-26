@@ -15,7 +15,7 @@ import {
   SefazReturn,
 } from '../entities/fiscal-module.entity';
 import { EmitNfceDto } from '../dto/emit-nfce.dto';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/common/database/prisma.service';
 import { generateNFeXML } from '../lib/xml/nfce-xml-builder';
 import { NfeSender } from '../lib/transport/nfe-sender';
 import { DanfeGenerator } from '../lib/danfe/nfce-danfe-generator';

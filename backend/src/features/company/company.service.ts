@@ -10,7 +10,7 @@ import {
 import { promises as fs } from 'fs';
 import path from 'path';
 import { BusinessType } from 'generated/prisma/enums.js';
-import { PrismaService } from '../../database/prisma.service.js';
+import { PrismaService } from '../../common/database/prisma.service.js';
 import { CompanyResponseDto } from './dto/company-response.dto.js';
 import { UpdateCompanyDto } from './dto/update-company.dto.js';
 

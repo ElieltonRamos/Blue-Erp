@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Prisma } from 'generated/prisma/client';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/common/database/prisma.service';
 import { validateDateFilters } from './utils/sale-report-utils';
 import { OrderReportFilterDto } from './dto/create-report-order.dto';
 import { OrderReportResponseDto } from './dto/response-report-order.dto';

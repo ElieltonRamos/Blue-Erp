@@ -3,7 +3,7 @@ import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
-import { PrismaService } from './database/prisma.service';
+import { PrismaService } from './common/database/prisma.service';
 import { Cron } from '@nestjs/schedule';
 import { LicenseSystemService } from './license-system/license-system.service';
 import { version } from '../package.json';

@@ -12,7 +12,7 @@ import { UpdateCompositionDto } from './dto/update-composition.dto';
 import { UpdatePreparationDto } from './dto/update-preparation.dto';
 import { ProduceProductDto } from './dto/produce-product.dto';
 import { Prisma, ProductType } from 'generated/prisma/client';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/common/database/prisma.service';
 import { ProductResponseDto } from './dto/response-product.dto';
 import { PaginatedResponseDto } from 'src/common/utils/paginated-response';
 

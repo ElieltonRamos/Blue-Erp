@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { promises as fs } from 'fs';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/common/database/prisma.service';
 import { StorageService } from './storage.service';
 import { DanfeGenerator } from '../lib/danfe/nfce-danfe-generator';
 import { DanfeNfeGenerator } from '../lib/danfe/nfe-danfe-generator';

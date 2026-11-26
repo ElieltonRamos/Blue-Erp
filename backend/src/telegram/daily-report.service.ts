@@ -1,7 +1,7 @@
 // daily-report.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { PrismaService } from '../database/prisma.service';
+import { PrismaService } from '../common/database/prisma.service';
 import { TelegramService } from './telegram.service';
 import { SingleInstance } from 'src/common/decorators/single-instance.decorator';
 

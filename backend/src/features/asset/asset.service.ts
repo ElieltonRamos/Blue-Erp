@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { CreateAssetDto } from './dto/create-asset.dto.js';
 import { UpdateAssetDto } from './dto/update-asset.dto.js';
-import { PrismaService } from '../../database/prisma.service.js';
+import { PrismaService } from '../../common/database/prisma.service.js';
 import { AssetResponseDto } from './dto/asset-response.dto.js';
 import { PaginatedResponseDto } from '../catalog-service/dto/paginated-response.dto.js';
 import { FindAllAssetsDto } from './dto/find-all-assets.dto.js';

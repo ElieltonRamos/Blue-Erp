@@ -1,5 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/common/database/prisma.service';
 import { validateDateFilters } from './utils/sale-report-utils';
 import { LocationReportResponseDto } from './dto/response-report-location.dto';
 import { LocationReportFilterDto } from './dto/create-report-location.dto';

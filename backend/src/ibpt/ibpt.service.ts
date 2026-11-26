@@ -4,7 +4,7 @@ import {
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../database/prisma.service.js';
+import { PrismaService } from '../common/database/prisma.service.js';
 import { Ibpt } from './entities/ibpt.js';
 import { PaginatedResponseDto } from 'src/common/utils/paginated-response.js';
 

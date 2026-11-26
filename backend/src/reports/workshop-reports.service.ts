@@ -1,6 +1,6 @@
 // workshop-reports.service.ts
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/common/database/prisma.service';
 import { validateDateFilters } from './utils/sale-report-utils';
 import { WorkshopReportResponseDto } from './dto/response-report-workshop.dto';
 import { WorkshopReportFilterDto } from './dto/create-report-workshop.dto';

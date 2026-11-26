@@ -6,7 +6,7 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
+import { PrismaService } from '../../common/database/prisma.service';
 import { Prisma, PurchaseStatus } from 'generated/prisma/client';
 import {
   CreatePurchaseFromXmlDto,

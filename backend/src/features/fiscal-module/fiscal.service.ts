@@ -3,7 +3,7 @@ import { StorageService } from './services/storage.service';
 import { EmissionNfceService } from './services/emission-nfce.service';
 import { EmissionNfeService } from './services/emission-nfe.service';
 import { CancellationService } from './services/cancellation.service';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/common/database/prisma.service';
 import { EmissionResult, SefazReturn } from './entities/fiscal-module.entity';
 import { EmitNfceDto } from './dto/emit-nfce.dto';
 import { EmitNfeDto } from './dto/emit-nfe.dto';

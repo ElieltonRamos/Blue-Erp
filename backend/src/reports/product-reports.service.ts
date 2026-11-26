@@ -3,7 +3,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/common/database/prisma.service';
 import { ProductReportFilterDto } from './dto/create-report-product.dto';
 import { ProductReportResponseDto } from './dto/response-report-product.dto';
 import {

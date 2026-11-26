@@ -3,7 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../database/prisma.service.js';
+import { PrismaService } from '../common/database/prisma.service.js';
 import { Prisma } from 'generated/prisma/client.js';
 
 import { CreateExpenseDto } from 'src/expenses/dto/create-expense.dto.js';

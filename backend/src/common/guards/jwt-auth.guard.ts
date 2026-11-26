@@ -15,6 +15,11 @@ export interface JwtPayload {
   role: string;
 }
 
+export interface AuthenticatedUser {
+  userId: number;
+  username: string;
+}
+
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(

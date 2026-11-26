@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Sale } from 'generated/prisma/client';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/common/database/prisma.service';
 import { CompanyService } from 'src/features/company/company.service';
 import {
   FiscalException,

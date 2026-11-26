@@ -20,14 +20,13 @@ import { UpdateCompanyDto } from './dto/update-company.dto.js';
 import { UpdateOnlineMenuSettingsDto } from './dto/update-online-menu-settings.dto.js';
 import { ReplaceOpeningHoursDto } from './dto/opening-hour.dto.js';
 import { OnlineMenuSettingsResponseDto } from './dto/online-menu-settings-response.dto.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import {
+  AuthenticatedUser,
+  JwtAuthGuard,
+} from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Public } from '../../common/decorators/public.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
-
-interface AuthenticatedUser {
-  userId: number;
-}
 
 @ApiTags('company')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -39,8 +38,9 @@ export class CompanyController {
   ) {}
 
   // Quem executou a ação, para os logs dos services
+
   private actorOf(user: AuthenticatedUser): string {
-    return String(user.userId);
+    return `${user.username} (#${user.userId})`;
   }
 
   @Public()

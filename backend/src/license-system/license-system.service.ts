@@ -1,7 +1,7 @@
 // src/license/license.service.ts
 
 import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/common/database/prisma.service';
 import * as jwt from 'jsonwebtoken';
 import axios from 'axios';
 import {

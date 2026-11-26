@@ -3,7 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
-import { PrismaModule } from './database/prisma.module';
+import { PrismaModule } from './common/database/prisma.module';
 import { ClientsModule } from './clients/clients.module';
 import { IbptModule } from './ibpt/ibpt.module';
 import { ExpensesModule } from './expenses/expenses.module';

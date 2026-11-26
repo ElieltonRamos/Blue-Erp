@@ -5,7 +5,7 @@ import type {
   Product,
   SaleItem,
 } from '../../generated/prisma/client';
-import { PrismaService } from '../database/prisma.service';
+import { PrismaService } from '../common/database/prisma.service';
 import { CompanyService } from '../features/company/company.service';
 import type {
   Nfe55Ipi,

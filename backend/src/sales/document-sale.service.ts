@@ -14,7 +14,7 @@ import {
 import { FiscalStatus } from '../../generated/prisma/enums.js';
 import { CreateSalePaymentDto } from './dto/create-sale.dto.js';
 import { SaleResponseDto } from './dto/response-sale.dto.js';
-import { PrismaService } from '../database/prisma.service.js';
+import { PrismaService } from '../common/database/prisma.service.js';
 import { resolveLogicalDateTime } from '../common/utils/date-utils.js';
 
 @Injectable()

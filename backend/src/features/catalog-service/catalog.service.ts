@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { CreateServiceDto } from './dto/create-service.dto.js';
 import { UpdateServiceDto } from './dto/update-service.dto.js';
-import { PrismaService } from '../../database/prisma.service.js';
+import { PrismaService } from '../../common/database/prisma.service.js';
 import { ServiceResponseDto } from './dto/service-response.dto.js';
 import { PaginatedResponseDto } from './dto/paginated-response.dto.js';
 import { FindAllServicesDto } from './dto/find-all-services.dto.js';

@@ -16,7 +16,7 @@ import {
   ReplaceOpeningHoursDto,
 } from './dto/opening-hour.dto.js';
 import { UpdateOnlineMenuSettingsDto } from './dto/update-online-menu-settings.dto.js';
-import { PrismaService } from '../../database/prisma.service.js';
+import { PrismaService } from '../../common/database/prisma.service.js';
 import { COMPANY_ID } from './company.service.js';
 
 const MINUTES_IN_DAY = 1440;

@@ -4,7 +4,7 @@ import {
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/common/database/prisma.service';
 import { CreateProductionLocationDto } from './dto/create-production-location.dto';
 import { UpdateProductionLocationDto } from './dto/update-production-location.dto';
 import { ProductionLocation } from 'generated/prisma/browser';

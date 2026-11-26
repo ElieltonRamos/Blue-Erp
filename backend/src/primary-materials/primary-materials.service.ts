@@ -10,7 +10,7 @@ import { FilterPrimaryMaterialDto } from './dto/filter-primary-material.dto';
 import { AdjustStockDto, StockAdjustmentType } from './dto/adjust-stock.dto';
 import { MaterialSummaryResponseDto } from './dto/material-summary-response.dto';
 import { StockAlertResponseDto } from './dto/stock-alert-response.dto';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/common/database/prisma.service';
 import { Prisma } from 'generated/prisma/client';
 import { PrimaryMaterialResponseDto } from './dto/primary-material-list-response.dto';
 import { PaginatedResponseDto } from 'src/common/utils/paginated-response';

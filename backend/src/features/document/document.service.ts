@@ -4,7 +4,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service.js';
+import { PrismaService } from '../../common/database/prisma.service.js';
 import { CreateDocumentDto } from './dto/create-document.dto.js';
 import { PaginatedResponseDto } from '../catalog-service/dto/paginated-response.dto.js';
 import { DocumentResponseDto } from './dto/document-response.dto.js';
