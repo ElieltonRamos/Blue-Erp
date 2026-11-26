@@ -3,6 +3,11 @@ import { environment } from '../../../core/services/environment';
 import { HttpClient } from '@angular/common/http';
 import { Company } from '../types/company';
 
+export type CompanyUpdate = Partial<Company> & {
+  nfceCsc?: string;
+  nfceCscId?: string;
+};
+
 @Injectable({
   providedIn: 'root',
 })
@@ -17,11 +22,6 @@ export class CompanyService {
   // GET /company/:id - Busca uma empresa pelo ID
   getCompanyInfo() {
     return this.client.get<Company>(`${this.apiUrl}/company`);
-  }
-
-  // PUT /company/:id - Atualiza dados da empresa
-  updateCompany(company: Partial<Company>) {
-    return this.client.patch<Company>(`${this.apiUrl}/company`, company);
   }
 
   // DELETE /company/:id - Deleta uma empresa pelo ID
@@ -63,5 +63,9 @@ export class CompanyService {
     formData.append('file', file);
 
     return this.client.post<{ message: string }>(`${this.apiUrl}/ibpt/import-csv`, formData);
+  }
+
+  updateCompany(company: CompanyUpdate) {
+    return this.client.patch<Company>(`${this.apiUrl}/company`, company);
   }
 }

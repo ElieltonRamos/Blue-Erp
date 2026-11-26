@@ -1,0 +1,87 @@
+<form (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
+  <h2 class="text-lg font-semibold" [style.color]="'var(--color-text-primary)'">
+    Tabela IBPT (Impostos)
+  </h2>
+
+  <div>
+    <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'">
+      Arquivo CSV da Tabela IBPT <span [style.color]="'var(--color-danger)'">*</span>
+    </label>
+
+    <input
+      type="file"
+      id="ibptFile"
+      accept=".csv"
+      (change)="onFileSelected($event)"
+      class="hidden"
+    />
+
+    <button
+      type="button"
+      (click)="triggerFileInput()"
+      class="w-full px-4 py-3 rounded-lg border-2 font-medium transition-all duration-200 outline-none flex items-center justify-center gap-2"
+      [style.background-color]="'var(--color-surface-alt)'"
+      [style.color]="'var(--color-text-primary)'"
+      [style.border-color]="'var(--color-border)'"
+    >
+      <i class="fas fa-upload"></i>
+      <span>{{ selectedFile?.name || 'Selecionar arquivo CSV' }}</span>
+    </button>
+
+    @if (selectedFile) {
+      <p class="text-xs mt-2 flex items-center gap-1" [style.color]="'var(--color-success)'">
+        <i class="fas fa-check"></i>
+        Arquivo selecionado: {{ selectedFile.name }}
+      </p>
+    }
+  </div>
+
+  <div class="flex gap-4">
+    <button
+      type="submit"
+      [disabled]="!selectedFile || isUploading"
+      [class.opacity-50]="!selectedFile || isUploading"
+      [class.cursor-not-allowed]="!selectedFile || isUploading"
+      class="px-6 py-3 rounded-lg text-white font-medium transition-all duration-200 shadow-md flex items-center gap-2"
+      [style.background-color]="'var(--color-success)'"
+    >
+      <i class="fas fa-download"></i>
+      {{ isUploading ? 'Atualizando tabela...' : 'Atualizar Tabela IBPT' }}
+    </button>
+
+    @if (selectedFile && !isUploading) {
+      <button
+        type="button"
+        (click)="clear()"
+        class="px-6 py-3 rounded-lg font-medium transition-all duration-200"
+        [style.background-color]="'var(--color-surface-alt)'"
+        [style.color]="'var(--color-text-primary)'"
+      >
+        Limpar
+      </button>
+    }
+  </div>
+
+  <div
+    class="border rounded-lg p-4"
+    [style.background-color]="'var(--color-success)'"
+    [style.border-color]="'var(--color-success)'"
+  >
+    <p class="font-medium text-sm" [style.color]="'var(--color-text-primary)'">
+      Sobre a Tabela IBPT
+    </p>
+    <p class="text-xs mt-1" [style.color]="'var(--color-text-secondary)'">
+      A tabela IBPT contém as alíquotas de impostos aproximados por NCM. Baixe a tabela atualizada
+      em
+      <a
+        href="https://deolhonoimposto.ibpt.org.br"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="underline"
+      >
+        deolhonoimposto.ibpt.org.br
+      </a>
+      e importe o arquivo CSV. Esta operação substitui completamente a tabela anterior.
+    </p>
+  </div>
+</form>

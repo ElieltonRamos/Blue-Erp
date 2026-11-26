@@ -1,0 +1,96 @@
+<form (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
+  <h2 class="text-lg font-semibold" [style.color]="'var(--color-text-primary)'">
+    Certificado Digital
+  </h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'">
+        Arquivo do Certificado (.pfx) <span [style.color]="'var(--color-danger)'">*</span>
+      </label>
+
+      <input
+        type="file"
+        id="certificateFile"
+        accept=".pfx,.p12"
+        (change)="onFileSelected($event)"
+        class="hidden"
+      />
+
+      <button
+        type="button"
+        (click)="triggerFileInput()"
+        class="w-full px-4 py-3 rounded-lg border-2 font-medium transition-all duration-200 outline-none flex items-center justify-center gap-2"
+        [style.background-color]="'var(--color-surface-alt)'"
+        [style.color]="'var(--color-text-primary)'"
+        [style.border-color]="'var(--color-border)'"
+      >
+        <i class="fas fa-upload"></i>
+        <span>{{ selectedFile?.name || 'Selecionar arquivo' }}</span>
+      </button>
+
+      @if (certificateConfigured && !selectedFile) {
+        <p class="text-xs mt-2 flex items-center gap-1" [style.color]="'var(--color-success)'">
+          <i class="fas fa-check"></i>
+          Certificado configurado
+        </p>
+      }
+    </div>
+
+    <div>
+      <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'">
+        Senha do Certificado <span [style.color]="'var(--color-danger)'">*</span>
+      </label>
+      <input
+        type="password"
+        [formControl]="password"
+        placeholder="Digite a senha"
+        autocomplete="new-password"
+        class="w-full px-4 py-3 rounded-lg border-2 outline-none transition-all duration-200"
+        [style.background-color]="'var(--color-surface-alt)'"
+        [style.color]="'var(--color-text-primary)'"
+        [style.border-color]="'var(--color-border)'"
+      />
+    </div>
+  </div>
+
+  <div class="flex gap-4">
+    <button
+      type="submit"
+      [disabled]="!canSubmit"
+      [class.opacity-50]="!canSubmit"
+      [class.cursor-not-allowed]="!canSubmit"
+      class="px-6 py-3 rounded-lg text-white font-medium transition-all duration-200 shadow-md flex items-center gap-2"
+      [style.background-color]="'var(--color-accent)'"
+    >
+      <i class="fas fa-upload"></i>
+      {{ isLoading ? 'Enviando...' : 'Enviar Certificado' }}
+    </button>
+
+    @if (hasPending && !isLoading) {
+      <button
+        type="button"
+        (click)="clear()"
+        class="px-6 py-3 rounded-lg font-medium transition-all duration-200"
+        [style.background-color]="'var(--color-surface-alt)'"
+        [style.color]="'var(--color-text-primary)'"
+      >
+        Limpar
+      </button>
+    }
+  </div>
+
+  <div
+    class="border rounded-lg p-4"
+    [style.background-color]="'var(--color-accent)'"
+    [style.border-color]="'var(--color-accent)'"
+  >
+    <p class="font-medium text-sm" [style.color]="'var(--color-text-primary)'">
+      Importante sobre o certificado digital
+    </p>
+    <p class="text-xs mt-1" [style.color]="'var(--color-text-secondary)'">
+      O certificado digital é necessário para emissão de NFC-e. Certifique-se de que o arquivo está
+      no formato .pfx ou .p12 e que a senha está correta.
+    </p>
+  </div>
+</form>
