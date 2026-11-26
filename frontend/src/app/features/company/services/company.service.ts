@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../core/services/environment';
 import { HttpClient } from '@angular/common/http';
 import { Company } from '../types/company';
+import { OnlineMenuSettings, OnlineMenuSettingsUpdate, OpeningHour } from '../types/online-menu';
 
 export type CompanyUpdate = Partial<Company> & {
   nfceCsc?: string;
@@ -67,5 +68,19 @@ export class CompanyService {
 
   updateCompany(company: CompanyUpdate) {
     return this.client.patch<Company>(`${this.apiUrl}/company`, company);
+  }
+
+  getOnlineMenuSettings() {
+    return this.client.get<OnlineMenuSettings>(`${this.apiUrl}/company/online-menu`);
+  }
+
+  updateOnlineMenuSettings(settings: OnlineMenuSettingsUpdate) {
+    return this.client.patch<OnlineMenuSettings>(`${this.apiUrl}/company/online-menu`, settings);
+  }
+
+  replaceOpeningHours(hours: OpeningHour[]) {
+    return this.client.put<OnlineMenuSettings>(`${this.apiUrl}/company/online-menu/opening-hours`, {
+      hours,
+    });
   }
 }

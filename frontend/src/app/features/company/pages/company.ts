@@ -6,9 +6,10 @@ import { CompanyRegistration } from '../components/company-registration/company-
 import { CompanyFiscal } from '../components/company-fiscal/company-fiscal';
 import { CompanyCertificate } from '../components/company-certificate/company-certificate';
 import { CompanyIbpt } from '../components/company-ibpt/company-ibpt';
+import { CompanyOnlineMenu } from '../components/company-online-menu/company-online-menu';
 // import { CompanyRegistration } from './company-registration/company-registration';
 
-type CompanyTabId = 'registration' | 'fiscal' | 'certificate' | 'ibpt';
+type CompanyTabId = 'registration' | 'fiscal' | 'certificate' | 'ibpt' | 'onlineMenu';
 
 interface CompanyTabItem {
   id: CompanyTabId;
@@ -23,7 +24,8 @@ interface CompanyTabItem {
     CompanyRegistration,
     CompanyFiscal,
     CompanyCertificate,
-    CompanyIbpt
+    CompanyIbpt,
+    CompanyOnlineMenu
 ],
   templateUrl: './company.html',
 })
@@ -39,6 +41,7 @@ export class Company {
     { id: 'fiscal', label: 'Fiscal', icon: 'fa-file-invoice', proOnly: true },
     { id: 'certificate', label: 'Certificado', icon: 'fa-shield-halved', proOnly: true },
     { id: 'ibpt', label: 'Tabela IBPT', icon: 'fa-percent', proOnly: true },
+    { id: 'onlineMenu', label: 'Cardápio Online', icon: 'fa-store', proOnly: false },
   ];
 
   activeTab = signal<CompanyTabId>('registration');
