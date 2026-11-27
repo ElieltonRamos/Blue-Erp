@@ -4,7 +4,30 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
 import { version } from '../package.json';
 
+function assertPublicBaseUrl(): void {
+  const value = process.env.PUBLIC_BASE_URL;
+
+  if (!value) {
+    throw new Error('PUBLIC_BASE_URL não configurada');
+  }
+  if (value.endsWith('/')) {
+    throw new Error('PUBLIC_BASE_URL não pode terminar com barra');
+  }
+
+  try {
+    const { protocol } = new URL(value);
+    if (protocol !== 'http:' && protocol !== 'https:') {
+      throw new Error();
+    }
+  } catch {
+    throw new Error(
+      'PUBLIC_BASE_URL deve ser uma URL absoluta (http ou https)',
+    );
+  }
+}
+
 async function bootstrap() {
+  assertPublicBaseUrl();
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
 
@@ -39,6 +62,7 @@ async function bootstrap() {
     'PRINTER_BAR',
     'PRINTER_COZINHA_DOM_JUAN',
     'MYSQLDUMP_PATH',
+    'PUBLIC_BASE_URL',
   ];
 
   console.log('=== Environment Variables ===');

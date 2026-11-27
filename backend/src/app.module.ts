@@ -28,6 +28,7 @@ import { DocumentModule } from './features/document/document.module';
 import { PurchaseModule } from './features/purchase/purchase.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { UploadsModule } from './common/uploads/uploads.module';
 
 // ScheduleModule.forRoot(): registra o scheduler global do NestJS (@nestjs/schedule).
 // Só pode existir 1x na aplicação — habilita o decorator @Cron nos providers
@@ -42,11 +43,19 @@ import { join } from 'path';
 
 @Module({
   imports: [
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'public', 'frontend', 'browser'),
-      exclude: ['/api/{*any}'],
-    }),
+    ServeStaticModule.forRoot(
+      {
+        rootPath: join(process.cwd(), 'public', 'frontend', 'browser'),
+        exclude: ['/api/{*any}', '/uploads/{*any}'],
+      },
+      {
+        rootPath: join(process.cwd(), 'uploads'),
+        serveRoot: '/uploads',
+        serveStaticOptions: { index: false, fallthrough: false },
+      },
+    ),
     ScheduleModule.forRoot(),
+    UploadsModule,
     UsersModule,
     PrismaModule,
     CompanyModule,

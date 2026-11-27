@@ -20,6 +20,14 @@
         <input type="checkbox" formControlName="onlineOrdersPaused" class="w-5 h-5" />
         Pedidos pausados
       </label>
+      <label
+        class="flex items-center gap-2 cursor-pointer"
+        [style.color]="'var(--color-text-primary)'"
+        title="Desligado: os produtos aparecem sempre disponíveis, sem olhar o estoque"
+      >
+        <input type="checkbox" formControlName="onlineMenuControlStock" class="w-5 h-5" />
+        Considerar estoque na disponibilidade
+      </label>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

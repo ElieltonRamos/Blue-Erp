@@ -55,6 +55,7 @@ export class CompanyOnlineMenu implements OnInit {
   settingsForm = this.fb.group({
     onlineMenuEnabled: this.fb.nonNullable.control(false),
     onlineOrdersPaused: this.fb.nonNullable.control(false),
+    onlineMenuControlStock: this.fb.nonNullable.control(true),
     timezone: this.fb.nonNullable.control('America/Sao_Paulo', Validators.required),
     whatsapp: this.fb.nonNullable.control('', Validators.pattern(/^\d{10,13}$/)),
     instagram: this.fb.nonNullable.control('', Validators.maxLength(100)),
@@ -132,6 +133,7 @@ export class CompanyOnlineMenu implements OnInit {
     this.settingsForm.patchValue({
       onlineMenuEnabled: s.onlineMenuEnabled,
       onlineOrdersPaused: s.onlineOrdersPaused,
+      onlineMenuControlStock: s.onlineMenuControlStock,
       timezone: s.timezone,
       whatsapp: s.whatsapp ?? '',
       instagram: s.instagram ?? '',
@@ -200,6 +202,7 @@ export class CompanyOnlineMenu implements OnInit {
     const payload: OnlineMenuSettingsUpdate = {
       onlineMenuEnabled: v.onlineMenuEnabled,
       onlineOrdersPaused: v.onlineOrdersPaused,
+      onlineMenuControlStock: v.onlineMenuControlStock,
       timezone: v.timezone.trim(),
       whatsapp: v.whatsapp.trim() || null,
       instagram: v.instagram.trim() || null,

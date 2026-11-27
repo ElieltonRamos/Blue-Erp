@@ -186,6 +186,47 @@ Após seguir este guia:
 📌 Guia válido para MySQL 8+ no Windows 10/11.
 
 
+# Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz do backend com as seguintes variáveis:
+
+```env
+# Banco de dados
+DATABASE_URL="mysql://usuario:senha@host:porta/db_name"
+
+# Servidor
+PORT=3000
+ENVIRONMENT=development
+
+# Autenticação
+JWT_SECRET="chave-secreta-jwt"
+LICENSE_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----"
+LICENSING_SERVER="https://licensing.example.com"
+
+# URL pública da aplicação (obrigatória, sem barra final)
+# Exemplo: http://localhost:3000 ou https://api.meudominio.com
+PUBLIC_BASE_URL="http://localhost:3000"
+
+# Banco (para scripts de backup/restore)
+DATABASE_USER="usuario"
+DATABASE_PASSWORD="senha"
+DATABASE_NAME="db_name"
+DATABASE_HOST="localhost"
+DATABASE_PORT=3306
+MYSQLDUMP_PATH="mysqldump"
+
+# Fiscal / Impressão
+PRINTER_BAR="Nome_Impressora_Balcao"
+PRINTER_COZINHA_DOM_JUAN="Nome_Impressora_Cozinha"
+
+# Telegram (opcional)
+TELEGRAM_BOT_TOKEN="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
+TELEGRAM_CHAT_ID="-1001234567890"
+```
+
+⚠️ **Importante**: `PUBLIC_BASE_URL` é validada no bootstrap — a aplicação não sobe sem ela. Deve ser uma URL absoluta (http/https) sem barra final.
+
+
 # Prompts Importantes
 
 Refatore os logs do arquivo [NOME_DO_ARQUIVO] seguindo esta lógica:

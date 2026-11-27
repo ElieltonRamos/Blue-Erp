@@ -15,6 +15,7 @@ export interface OpeningHour {
 export interface OnlineMenuSettings {
   onlineMenuEnabled: boolean;
   onlineOrdersPaused: boolean;
+  onlineMenuControlStock: boolean;
   timezone: string;
   whatsapp: string | null;
   instagram: string | null;
