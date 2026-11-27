@@ -8,7 +8,7 @@ import { ClientsModule } from './clients/clients.module';
 import { IbptModule } from './ibpt/ibpt.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { PrimaryMaterialsModule } from './primary-materials/primary-materials.module';
-import { ProductsModule } from './products/products.module';
+import { ProductsModule } from './features/products/products.module';
 import { OrdersModule } from './orders/orders.module';
 import { OrderProductionModule } from './order-production/order-production.module';
 import { ProductionLocationsModule } from './production-locations/production-locations.module';

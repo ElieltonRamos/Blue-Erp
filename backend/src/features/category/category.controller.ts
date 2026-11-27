@@ -11,7 +11,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { JwtAuthGuard, JwtPayload } from '../../common/guards/jwt-auth.guard';
+import {
+  AuthenticatedUser,
+  JwtAuthGuard,
+  JwtPayload,
+} from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -27,8 +31,8 @@ import { PaginatedResponseDto } from 'src/common/utils/paginated-response';
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
-  private actorOf(user: JwtPayload): string {
-    return String(user.userId);
+  private actorOf(user: AuthenticatedUser): string {
+    return `${user.username} (#${user.userId})`;
   }
 
   @Post()

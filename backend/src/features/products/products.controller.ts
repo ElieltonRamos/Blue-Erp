@@ -19,8 +19,8 @@ import { FilterProductDto } from './dto/filter-product.dto';
 import { ProduceProductDto } from './dto/produce-product.dto';
 import { UpdatePreparationDto } from './dto/update-preparation.dto';
 import { UpdateCompositionDto } from './dto/update-composition.dto';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
 import { PaginatedResponseDto } from 'src/common/utils/paginated-response';
 
 @ApiTags('Products')
