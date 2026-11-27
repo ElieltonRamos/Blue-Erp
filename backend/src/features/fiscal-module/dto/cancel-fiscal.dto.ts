@@ -3,19 +3,13 @@ import { IsString, Length, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CancelFiscalDto {
-  @ApiProperty({
-    description: '44-digit NF-e access key',
-    example: '31240101234567000195650010000000011000000010',
-  })
+  @ApiProperty({ description: '44-digit NF-e access key', example: '31240101234567000195650010000000011000000010' })
   @IsString()
   @Length(44, 44)
   @Matches(/^\d{44}$/)
   accessKey: string;
 
-  @ApiProperty({
-    description: 'Cancellation justification (min 15 chars)',
-    example: 'Erro na emissão da nota fiscal',
-  })
+  @ApiProperty({ description: 'Cancellation justification (min 15 chars)', example: 'Erro na emissão da nota fiscal' })
   @IsString()
   @Length(15, 255)
   justification: string;

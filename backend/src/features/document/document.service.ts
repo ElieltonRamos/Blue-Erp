@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service.js';
 import { CreateDocumentDto } from './dto/create-document.dto.js';
 import { PaginatedResponseDto } from '../catalog-service/dto/paginated-response.dto.js';
@@ -11,24 +6,14 @@ import { DocumentResponseDto } from './dto/document-response.dto.js';
 import { FindAllDocumentsDto } from './dto/find-all-documents.dto.js';
 import { AddDocumentItemDto } from './dto/add-document-item.dto.js';
 import { UpdateDocumentStatusDto } from './dto/update-document-status.dto.js';
-import {
-  DocumentStatus,
-  DocumentType,
-} from '../../../generated/prisma/enums.js';
-import {
-  UpdateDocumentItemDto,
-  UpdateDocumentResponsibleDto,
-} from './dto/update-document-item.dto.js';
+import { DocumentStatus, DocumentType } from '../../../generated/prisma/enums.js';
+import { UpdateDocumentItemDto, UpdateDocumentResponsibleDto } from './dto/update-document-item.dto.js';
 
 const DOCUMENT_INCLUDE = {
   client: true,
   responsible: { select: { username: true } },
   items: {
-    include: {
-      product: { select: { name: true } },
-      service: { select: { name: true } },
-      user: { select: { username: true } },
-    },
+    include: { product: { select: { name: true } }, service: { select: { name: true } }, user: { select: { username: true } } },
   },
 } as const;
 
@@ -38,21 +23,14 @@ export class DocumentService {
 
   constructor(private prisma: PrismaService) {}
 
-  async create(
-    dto: CreateDocumentDto,
-    username: string,
-  ): Promise<DocumentResponseDto> {
-    const client = await this.prisma.client.client.findUnique({
-      where: { id: dto.clientId },
-    });
+  async create(dto: CreateDocumentDto, username: string): Promise<DocumentResponseDto> {
+    const client = await this.prisma.client.client.findUnique({ where: { id: dto.clientId } });
     if (!client) {
       throw new BadRequestException('Cliente não encontrado');
     }
 
     if (dto.assetId) {
-      const asset = await this.prisma.client.asset.findUnique({
-        where: { id: dto.assetId },
-      });
+      const asset = await this.prisma.client.asset.findUnique({ where: { id: dto.assetId } });
       if (!asset) {
         throw new BadRequestException('Veículo não encontrado');
       }
@@ -62,21 +40,14 @@ export class DocumentService {
     }
 
     if (dto.responsibleId) {
-      const responsible = await this.prisma.client.user.findUnique({
-        where: { id: dto.responsibleId },
-      });
+      const responsible = await this.prisma.client.user.findUnique({ where: { id: dto.responsibleId } });
       if (!responsible || !responsible.active) {
         throw new BadRequestException('Responsável não encontrado ou inativo');
       }
     }
 
     const document = await this.prisma.client.document.create({
-      data: {
-        type: dto.type,
-        clientId: dto.clientId,
-        assetId: dto.assetId,
-        responsibleId: dto.responsibleId,
-      },
+      data: { type: dto.type, clientId: dto.clientId, assetId: dto.assetId, responsibleId: dto.responsibleId },
       include: DOCUMENT_INCLUDE,
     });
 
@@ -88,16 +59,12 @@ export class DocumentService {
   }
 
   async reopen(id: number, username: string): Promise<DocumentResponseDto> {
-    const document = await this.prisma.client.document.findUnique({
-      where: { id },
-    });
+    const document = await this.prisma.client.document.findUnique({ where: { id } });
     if (!document) {
       throw new NotFoundException('Documento não encontrado');
     }
     if (document.status !== DocumentStatus.CANCELED) {
-      throw new BadRequestException(
-        'Apenas documento cancelado pode ser reaberto',
-      );
+      throw new BadRequestException('Apenas documento cancelado pode ser reaberto');
     }
 
     const updated = await this.prisma.client.document.update({
@@ -106,9 +73,7 @@ export class DocumentService {
       include: DOCUMENT_INCLUDE,
     });
 
-    this.logger.log(
-      `[Document ${id}] usuario=${username} | reaberto (CANCELED -> DRAFT)`,
-    );
+    this.logger.log(`[Document ${id}] usuario=${username} | reaberto (CANCELED -> DRAFT)`);
 
     return new DocumentResponseDto(updated);
   }
@@ -121,9 +86,7 @@ export class DocumentService {
   ): Promise<DocumentResponseDto> {
     await this.getEditableDocument(documentId);
 
-    const item = await this.prisma.client.documentItem.findUnique({
-      where: { id: itemId },
-    });
+    const item = await this.prisma.client.documentItem.findUnique({ where: { id: itemId } });
     if (!item || item.documentId !== documentId) {
       throw new NotFoundException('Item não encontrado neste documento');
     }
@@ -135,18 +98,10 @@ export class DocumentService {
     const document = await this.prisma.client.$transaction(async (tx) => {
       await tx.documentItem.update({
         where: { id: itemId },
-        data: {
-          quantity,
-          unitPrice,
-          total,
-          userId: dto.userId !== undefined ? dto.userId : undefined,
-        },
+        data: { quantity, unitPrice, total, userId: dto.userId !== undefined ? dto.userId : undefined },
       });
 
-      const aggregate = await tx.documentItem.aggregate({
-        where: { documentId },
-        _sum: { total: true },
-      });
+      const aggregate = await tx.documentItem.aggregate({ where: { documentId }, _sum: { total: true } });
 
       return tx.document.update({
         where: { id: documentId },
@@ -162,16 +117,10 @@ export class DocumentService {
     return new DocumentResponseDto(document);
   }
 
-  async updateResponsible(
-    id: number,
-    dto: UpdateDocumentResponsibleDto,
-    username: string,
-  ): Promise<DocumentResponseDto> {
+  async updateResponsible(id: number, dto: UpdateDocumentResponsibleDto, username: string): Promise<DocumentResponseDto> {
     await this.getEditableDocument(id);
 
-    const responsible = await this.prisma.client.user.findUnique({
-      where: { id: dto.responsibleId },
-    });
+    const responsible = await this.prisma.client.user.findUnique({ where: { id: dto.responsibleId } });
     if (!responsible || !responsible.active) {
       throw new BadRequestException('Responsável não encontrado ou inativo');
     }
@@ -182,29 +131,13 @@ export class DocumentService {
       include: DOCUMENT_INCLUDE,
     });
 
-    this.logger.log(
-      `[Document ${id}] usuario=${username} | responsável atualizado (responsibleId=${dto.responsibleId})`,
-    );
+    this.logger.log(`[Document ${id}] usuario=${username} | responsável atualizado (responsibleId=${dto.responsibleId})`);
 
     return new DocumentResponseDto(document);
   }
 
-  async findAll(
-    query: FindAllDocumentsDto,
-  ): Promise<PaginatedResponseDto<DocumentResponseDto>> {
-    const {
-      page = 1,
-      limit = 10,
-      type,
-      status,
-      clientId,
-      assetId,
-      userId,
-      startDate,
-      endDate,
-      minTotal,
-      maxTotal,
-    } = query;
+  async findAll(query: FindAllDocumentsDto): Promise<PaginatedResponseDto<DocumentResponseDto>> {
+    const { page = 1, limit = 10, type, status, clientId, assetId, userId, startDate, endDate, minTotal, maxTotal } = query;
 
     const where: any = {};
 
@@ -249,10 +182,7 @@ export class DocumentService {
   }
 
   async findOne(id: number): Promise<DocumentResponseDto> {
-    const document = await this.prisma.client.document.findUnique({
-      where: { id },
-      include: DOCUMENT_INCLUDE,
-    });
+    const document = await this.prisma.client.document.findUnique({ where: { id }, include: DOCUMENT_INCLUDE });
     if (!document) {
       throw new NotFoundException('Documento não encontrado');
     }
@@ -260,39 +190,24 @@ export class DocumentService {
   }
 
   private async getEditableDocument(id: number) {
-    const document = await this.prisma.client.document.findUnique({
-      where: { id },
-    });
+    const document = await this.prisma.client.document.findUnique({ where: { id } });
     if (!document) {
       throw new NotFoundException('Documento não encontrado');
     }
-    if (
-      document.status === DocumentStatus.COMPLETED ||
-      document.status === DocumentStatus.CANCELED
-    ) {
-      throw new BadRequestException(
-        'Documento finalizado ou cancelado não pode ser alterado',
-      );
+    if (document.status === DocumentStatus.COMPLETED || document.status === DocumentStatus.CANCELED) {
+      throw new BadRequestException('Documento finalizado ou cancelado não pode ser alterado');
     }
     return document;
   }
 
-  async addItem(
-    documentId: number,
-    dto: AddDocumentItemDto,
-    username: string,
-  ): Promise<DocumentResponseDto> {
+  async addItem(documentId: number, dto: AddDocumentItemDto, username: string): Promise<DocumentResponseDto> {
     await this.getEditableDocument(documentId);
 
     if (dto.type === 'PRODUCT' && !dto.productId) {
-      throw new BadRequestException(
-        'productId é obrigatório para item do tipo PRODUCT',
-      );
+      throw new BadRequestException('productId é obrigatório para item do tipo PRODUCT');
     }
     if (dto.type === 'SERVICE' && !dto.serviceId) {
-      throw new BadRequestException(
-        'serviceId é obrigatório para item do tipo SERVICE',
-      );
+      throw new BadRequestException('serviceId é obrigatório para item do tipo SERVICE');
     }
 
     const total = dto.quantity * dto.unitPrice;
@@ -311,10 +226,7 @@ export class DocumentService {
         },
       });
 
-      const aggregate = await tx.documentItem.aggregate({
-        where: { documentId },
-        _sum: { total: true },
-      });
+      const aggregate = await tx.documentItem.aggregate({ where: { documentId }, _sum: { total: true } });
 
       return tx.document.update({
         where: { id: documentId },
@@ -323,23 +235,15 @@ export class DocumentService {
       });
     });
 
-    this.logger.log(
-      `[Document ${documentId}] usuario=${username} | item adicionado (type=${dto.type}, total=${total})`,
-    );
+    this.logger.log(`[Document ${documentId}] usuario=${username} | item adicionado (type=${dto.type}, total=${total})`);
 
     return new DocumentResponseDto(document);
   }
 
-  async removeItem(
-    documentId: number,
-    itemId: number,
-    username: string,
-  ): Promise<DocumentResponseDto> {
+  async removeItem(documentId: number, itemId: number, username: string): Promise<DocumentResponseDto> {
     await this.getEditableDocument(documentId);
 
-    const item = await this.prisma.client.documentItem.findUnique({
-      where: { id: itemId },
-    });
+    const item = await this.prisma.client.documentItem.findUnique({ where: { id: itemId } });
     if (!item || item.documentId !== documentId) {
       throw new NotFoundException('Item não encontrado neste documento');
     }
@@ -347,10 +251,7 @@ export class DocumentService {
     const document = await this.prisma.client.$transaction(async (tx) => {
       await tx.documentItem.delete({ where: { id: itemId } });
 
-      const aggregate = await tx.documentItem.aggregate({
-        where: { documentId },
-        _sum: { total: true },
-      });
+      const aggregate = await tx.documentItem.aggregate({ where: { documentId }, _sum: { total: true } });
 
       return tx.document.update({
         where: { id: documentId },
@@ -359,63 +260,40 @@ export class DocumentService {
       });
     });
 
-    this.logger.log(
-      `[Document ${documentId}] usuario=${username} | item ${itemId} removido`,
-    );
+    this.logger.log(`[Document ${documentId}] usuario=${username} | item ${itemId} removido`);
 
     return new DocumentResponseDto(document);
   }
 
   async approve(id: number, username: string): Promise<DocumentResponseDto> {
-    const document = await this.prisma.client.document.findUnique({
-      where: { id },
-    });
+    const document = await this.prisma.client.document.findUnique({ where: { id } });
     if (!document) {
       throw new NotFoundException('Documento não encontrado');
     }
     if (document.status !== DocumentStatus.DRAFT) {
-      throw new BadRequestException(
-        'Apenas documento em DRAFT pode ser aprovado',
-      );
+      throw new BadRequestException('Apenas documento em DRAFT pode ser aprovado');
     }
 
     const updated = await this.prisma.client.document.update({
       where: { id },
-      data: {
-        status: DocumentStatus.APPROVED,
-        approvedAt: new Date(),
-        type: DocumentType.SERVICE_ORDER,
-      },
+      data: { status: DocumentStatus.APPROVED, approvedAt: new Date(), type: DocumentType.SERVICE_ORDER },
       include: DOCUMENT_INCLUDE,
     });
 
-    this.logger.log(
-      `[Document ${id}] usuario=${username} | aprovado (type ${document.type} -> SERVICE_ORDER)`,
-    );
+    this.logger.log(`[Document ${id}] usuario=${username} | aprovado (type ${document.type} -> SERVICE_ORDER)`);
 
     return new DocumentResponseDto(updated);
   }
-  async updateStatus(
-    id: number,
-    dto: UpdateDocumentStatusDto,
-    username: string,
-  ): Promise<DocumentResponseDto> {
-    const document = await this.prisma.client.document.findUnique({
-      where: { id },
-    });
+  async updateStatus(id: number, dto: UpdateDocumentStatusDto, username: string): Promise<DocumentResponseDto> {
+    const document = await this.prisma.client.document.findUnique({ where: { id } });
     if (!document) {
       throw new NotFoundException('Documento não encontrado');
     }
 
-    const allowedTransitions: Record<string, DocumentStatus[]> = {
-      APPROVED: [DocumentStatus.IN_PROGRESS],
-      IN_PROGRESS: [],
-    };
+    const allowedTransitions: Record<string, DocumentStatus[]> = { APPROVED: [DocumentStatus.IN_PROGRESS], IN_PROGRESS: [] };
 
     if (dto.status === DocumentStatus.COMPLETED) {
-      throw new BadRequestException(
-        'Use o endpoint de faturamento para concluir a OS',
-      );
+      throw new BadRequestException('Use o endpoint de faturamento para concluir a OS');
     }
     if (dto.status === DocumentStatus.CANCELED) {
       throw new BadRequestException('Use o endpoint de cancelamento');
@@ -423,9 +301,7 @@ export class DocumentService {
 
     const allowed = allowedTransitions[document.status] ?? [];
     if (!allowed.includes(dto.status)) {
-      throw new BadRequestException(
-        `Transição de ${document.status} para ${dto.status} não permitida`,
-      );
+      throw new BadRequestException(`Transição de ${document.status} para ${dto.status} não permitida`);
     }
 
     const updated = await this.prisma.client.document.update({
@@ -434,28 +310,20 @@ export class DocumentService {
       include: DOCUMENT_INCLUDE,
     });
 
-    this.logger.log(
-      `[Document ${id}] usuario=${username} | status ${document.status} -> ${dto.status}`,
-    );
+    this.logger.log(`[Document ${id}] usuario=${username} | status ${document.status} -> ${dto.status}`);
 
     return new DocumentResponseDto(updated);
   }
 
   async cancel(id: number, username: string): Promise<DocumentResponseDto> {
-    const document = await this.prisma.client.document.findUnique({
-      where: { id },
-    });
+    const document = await this.prisma.client.document.findUnique({ where: { id } });
     if (!document) {
       throw new NotFoundException('Documento não encontrado');
     }
 
-    const existingSale = await this.prisma.client.sale.findUnique({
-      where: { documentId: id },
-    });
+    const existingSale = await this.prisma.client.sale.findUnique({ where: { documentId: id } });
     if (existingSale) {
-      throw new BadRequestException(
-        'Documento já possui venda gerada e não pode ser cancelado',
-      );
+      throw new BadRequestException('Documento já possui venda gerada e não pode ser cancelado');
     }
 
     const updated = await this.prisma.client.document.update({

@@ -1,19 +1,8 @@
 import { Logger } from '@nestjs/common';
-import {
-  existsSync,
-  mkdirSync,
-  writeFileSync,
-  readdirSync,
-  statSync,
-  unlinkSync,
-} from 'fs';
+import { existsSync, mkdirSync, writeFileSync, readdirSync, statSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { CertificateException } from '../fiscal.exception';
-import {
-  DigitalCertificate,
-  NFeConfiguration,
-  SefazReturn,
-} from '../entities/fiscal-module.entity';
+import { DigitalCertificate, NFeConfiguration, SefazReturn } from '../entities/fiscal-module.entity';
 import { CompanyResponseDto } from '../../../features/company/dto/company-response.dto';
 
 export const SEFAZ_TEMP_DIR = join(process.cwd(), 'sefaz-temp');
@@ -25,12 +14,7 @@ export function ensureSefazTempDir(): void {
   }
 }
 
-export function saveXmlDebug(
-  logger: Logger,
-  accessKey: string,
-  xml: string,
-  stage: string,
-): void {
+export function saveXmlDebug(logger: Logger, accessKey: string, xml: string, stage: string): void {
   try {
     ensureSefazTempDir();
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -41,10 +25,7 @@ export function saveXmlDebug(
   }
 }
 
-export function cleanOldDebugFiles(
-  logger: Logger,
-  retentionDays = DEBUG_RETENTION_DAYS,
-): void {
+export function cleanOldDebugFiles(logger: Logger, retentionDays = DEBUG_RETENTION_DAYS): void {
   if (!existsSync(SEFAZ_TEMP_DIR)) return;
 
   const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
@@ -63,17 +44,10 @@ export function cleanOldDebugFiles(
 }
 
 export function buildSefazConfig(
-  company: Pick<
-    CompanyResponseDto,
-    'state' | 'nfeEnvironment' | 'nfceEnvironment'
-  >,
+  company: Pick<CompanyResponseDto, 'state' | 'nfeEnvironment' | 'nfceEnvironment'>,
   model: '55' | '65',
 ): NFeConfiguration {
-  return {
-    environment:
-      model === '55' ? company.nfeEnvironment : company.nfceEnvironment,
-    state: company.state,
-  };
+  return { environment: model === '55' ? company.nfeEnvironment : company.nfceEnvironment, state: company.state };
 }
 
 /** Extrai a chave de 44 dígitos de `Id="NFe..."`. Retorna '' se não achar. */
@@ -92,9 +66,7 @@ export function toGtin(code: string | null | undefined): string | undefined {
   const d = (code ?? '').trim();
   if (!/^\d+$/.test(d) || ![8, 12, 13, 14].includes(d.length)) return undefined;
 
-  const sum = [...d.slice(0, -1)]
-    .reverse()
-    .reduce((acc, ch, i) => acc + Number(ch) * (i % 2 === 0 ? 3 : 1), 0);
+  const sum = [...d.slice(0, -1)].reverse().reduce((acc, ch, i) => acc + Number(ch) * (i % 2 === 0 ? 3 : 1), 0);
 
   return (10 - (sum % 10)) % 10 === Number(d[d.length - 1]) ? d : undefined;
 }
@@ -106,22 +78,16 @@ export async function loadCertificate(
     const { pfxBuffer, password } = await getCertificateBuffer();
     return { pfxBuffer, password };
   } catch (error: unknown) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : 'Erro ao carregar certificado digital';
+    const message = error instanceof Error ? error.message : 'Erro ao carregar certificado digital';
     throw new CertificateException(message);
   }
 }
 
-export function validateCertificate(sender: {
-  signer: { validateCertificate(): void };
-}): void {
+export function validateCertificate(sender: { signer: { validateCertificate(): void } }): void {
   try {
     sender.signer.validateCertificate();
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : 'Certificado inválido';
+    const message = error instanceof Error ? error.message : 'Certificado inválido';
     throw new CertificateException(message);
   }
 }
@@ -137,19 +103,14 @@ const SUBSTITUTO = new Set(['201', '202', '203']);
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 const br = (n: number) => n.toFixed(2).replace('.', ',');
 
-export function resolveCsosn(
-  productCsosn: string | null | undefined,
-  allowCredit: boolean,
-): string {
+export function resolveCsosn(productCsosn: string | null | undefined, allowCredit: boolean): string {
   const base = (productCsosn ?? '').trim() || '102';
 
   console.log('funcao resolveCsosn = parametroallowCredit = ' + allowCredit);
   console.log('valor de productCsosn' + productCsosn);
 
   if (SUBSTITUTO.has(base)) {
-    throw new Error(
-      `CSOSN ${base} (substituto tributário) exige dados de ST que o produto não tem.`,
-    );
+    throw new Error(`CSOSN ${base} (substituto tributário) exige dados de ST que o produto não tem.`);
   }
   if (BUYER_DEPENDENT.has(base)) return allowCredit ? '101' : '102';
   return base; // 500, 103, 300, 400, 900 seguem o produto

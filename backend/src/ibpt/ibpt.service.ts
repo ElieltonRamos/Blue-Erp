@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../common/database/prisma.service.js';
 import { Ibpt } from './entities/ibpt.js';
 import { PaginatedResponseDto } from 'src/common/utils/paginated-response.js';
@@ -23,46 +18,24 @@ export class IbptService {
 
   private validatePagination(page: number, limit: number): void {
     if (page < 1 || limit < 1 || isNaN(page) || isNaN(limit)) {
-      throw new BadRequestException(
-        'A página ou a quantidade de itens por página está incorreta',
-      );
+      throw new BadRequestException('A página ou a quantidade de itens por página está incorreta');
     }
   }
 
   private sanitizeSortParams(sortKey: string, sortOrder: string) {
-    const validSortKeys = [
-      'id',
-      'ncm',
-      'federalTaxRate',
-      'stateTaxRate',
-      'municipalTaxRate',
-      'version',
-    ];
+    const validSortKeys = ['id', 'ncm', 'federalTaxRate', 'stateTaxRate', 'municipalTaxRate', 'version'];
     const validSortOrders = ['asc', 'desc'];
 
     const safeSortKey = validSortKeys.includes(sortKey) ? sortKey : 'id';
-    const safeSortOrder = validSortOrders.includes(sortOrder.toLowerCase())
-      ? (sortOrder.toLowerCase() as 'asc' | 'desc')
-      : 'asc';
+    const safeSortOrder = validSortOrders.includes(sortOrder.toLowerCase()) ? (sortOrder.toLowerCase() as 'asc' | 'desc') : 'asc';
 
     return { safeSortKey, safeSortOrder };
   }
 
-  private buildPaginatedResponse<T>(
-    data: T[],
-    total: number,
-    page: number,
-    limit: number,
-  ): PaginatedResponseDto<T> {
+  private buildPaginatedResponse<T>(data: T[], total: number, page: number, limit: number): PaginatedResponseDto<T> {
     const totalPages = Math.ceil(total / limit);
 
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages,
-    };
+    return { data, total, page, limit, totalPages };
   }
 
   private cleanNcm(ncm: string): string {
@@ -79,18 +52,13 @@ export class IbptService {
   ): Promise<PaginatedResponseDto<Ibpt>> {
     this.validatePagination(page, limit);
 
-    const { safeSortKey, safeSortOrder } = this.sanitizeSortParams(
-      sortKey,
-      sortOrder,
-    );
+    const { safeSortKey, safeSortOrder } = this.sanitizeSortParams(sortKey, sortOrder);
     const offset = (page - 1) * limit;
 
     const ibpts = await this.prisma.client.ibpt.findMany({
       skip: offset,
       take: limit,
-      orderBy: {
-        [safeSortKey]: safeSortOrder,
-      },
+      orderBy: { [safeSortKey]: safeSortOrder },
     });
 
     const total = await this.prisma.client.ibpt.count();
@@ -101,9 +69,7 @@ export class IbptService {
   async getByNcm(ncm: string): Promise<Ibpt[]> {
     const cleanedNcm = this.cleanNcm(ncm);
 
-    const registros = await this.prisma.client.ibpt.findMany({
-      where: { ncm: cleanedNcm },
-    });
+    const registros = await this.prisma.client.ibpt.findMany({ where: { ncm: cleanedNcm } });
 
     if (!registros || registros.length === 0) {
       throw new NotFoundException('Registro IBPT não encontrado');
@@ -116,9 +82,7 @@ export class IbptService {
     const cleanedNcm = this.cleanNcm(data.ncm);
 
     // Verifica se já existe registro com esse NCM
-    const existente = await this.prisma.client.ibpt.findFirst({
-      where: { ncm: cleanedNcm },
-    });
+    const existente = await this.prisma.client.ibpt.findFirst({ where: { ncm: cleanedNcm } });
 
     if (existente) {
       throw new ConflictException('NCM já cadastrado na tabela IBPT');
@@ -138,11 +102,7 @@ export class IbptService {
   async updateAliqSale(saleId: number): Promise<void> {
     const sale = await this.prisma.client.sale.findUnique({
       where: { id: saleId },
-      include: {
-        items: {
-          include: { product: true },
-        },
-      },
+      include: { items: { include: { product: true } } },
     });
 
     if (!sale) {
@@ -160,17 +120,13 @@ export class IbptService {
       const ncm = this.cleanNcm(item.product.ncm || '');
 
       if (!ncm || ncm === '00000000') {
-        throw new BadRequestException(
-          `Produto "${item.product.name}" (ID: ${item.productId}) não possui NCM cadastrado`,
-        );
+        throw new BadRequestException(`Produto "${item.product.name}" (ID: ${item.productId}) não possui NCM cadastrado`);
       }
 
       const ibpt = await this.prisma.client.ibpt.findFirst({ where: { ncm } });
 
       if (!ibpt) {
-        throw new NotFoundException(
-          `NCM ${ncm} do produto "${item.product.name}" não encontrado na tabela IBPT`,
-        );
+        throw new NotFoundException(`NCM ${ncm} do produto "${item.product.name}" não encontrado na tabela IBPT`);
       }
 
       const federalTaxRate = ibpt.federalTaxRate;
@@ -192,13 +148,9 @@ export class IbptService {
       const vUnCom = this.toNumber(item.unitPrice, 4);
       const vProd = qCom * vUnCom;
       const totalRate = federalTaxRate + stateTaxRate + municipalTaxRate;
-      const totalTaxValue =
-        totalRate > 0 ? this.toNumber(vProd * (totalRate / 100), 2) : 0;
+      const totalTaxValue = totalRate > 0 ? this.toNumber(vProd * (totalRate / 100), 2) : 0;
 
-      await this.prisma.client.saleItem.update({
-        where: { id: item.id },
-        data: { totalTaxValue },
-      });
+      await this.prisma.client.saleItem.update({ where: { id: item.id }, data: { totalTaxValue } });
     }
   }
 
@@ -214,9 +166,7 @@ export class IbptService {
 
     // Verifica se a primeira linha é cabeçalho (começa com "codigo;")
     const primeira = linhas[0].toLowerCase();
-    const linhasDados = primeira.startsWith('codigo;')
-      ? linhas.slice(1)
-      : linhas;
+    const linhasDados = primeira.startsWith('codigo;') ? linhas.slice(1) : linhas;
 
     const registros: Array<{
       ncm: string;
@@ -247,26 +197,16 @@ export class IbptService {
 
       if (!ncm.trim()) continue;
 
-      const federalTaxRate =
-        Number((nacionalFederal || '0').replace(',', '.')) || 0;
+      const federalTaxRate = Number((nacionalFederal || '0').replace(',', '.')) || 0;
       const stateTaxRate = Number((estadual || '0').replace(',', '.')) || 0;
-      const municipalTaxRate =
-        Number((municipal || '0').replace(',', '.')) || 0;
+      const municipalTaxRate = Number((municipal || '0').replace(',', '.')) || 0;
       const version = (versao || '').trim();
 
-      registros.push({
-        ncm,
-        federalTaxRate,
-        stateTaxRate,
-        municipalTaxRate,
-        version,
-      });
+      registros.push({ ncm, federalTaxRate, stateTaxRate, municipalTaxRate, version });
     }
 
     if (registros.length === 0) {
-      throw new BadRequestException(
-        'Nenhum registro IBPT válido encontrado no CSV',
-      );
+      throw new BadRequestException('Nenhum registro IBPT válido encontrado no CSV');
     }
 
     // Atualiza toda a tabela em transação:
@@ -274,9 +214,7 @@ export class IbptService {
     await this.prisma.client.$transaction(async (tx) => {
       await tx.ibpt.deleteMany({});
 
-      await tx.ibpt.createMany({
-        data: registros,
-      });
+      await tx.ibpt.createMany({ data: registros });
     });
   }
 }

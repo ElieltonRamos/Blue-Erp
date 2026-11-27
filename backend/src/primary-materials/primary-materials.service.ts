@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { CreatePrimaryMaterialDto } from './dto/create-primary-material.dto';
 import { UpdatePrimaryMaterialDto } from './dto/update-primary-material.dto';
 import { FilterPrimaryMaterialDto } from './dto/filter-primary-material.dto';
@@ -20,24 +15,16 @@ export class PrimaryMaterialsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createDto: CreatePrimaryMaterialDto) {
-    const existingCode = await this.prisma.client.primaryMaterial.findUnique({
-      where: { code: createDto.code },
-    });
+    const existingCode = await this.prisma.client.primaryMaterial.findUnique({ where: { code: createDto.code } });
 
     if (existingCode) {
-      throw new ConflictException(
-        `Matéria-prima com código ${createDto.code} já existe`,
-      );
+      throw new ConflictException(`Matéria-prima com código ${createDto.code} já existe`);
     }
 
-    const existingName = await this.prisma.client.primaryMaterial.findFirst({
-      where: { name: { equals: createDto.name } },
-    });
+    const existingName = await this.prisma.client.primaryMaterial.findFirst({ where: { name: { equals: createDto.name } } });
 
     if (existingName) {
-      throw new ConflictException(
-        `Matéria-prima com nome "${createDto.name}" já existe`,
-      );
+      throw new ConflictException(`Matéria-prima com nome "${createDto.name}" já existe`);
     }
 
     return this.prisma.client.primaryMaterial.create({
@@ -64,9 +51,7 @@ export class PrimaryMaterialsService {
     sortOrder: string = 'asc',
   ): Promise<PaginatedResponseDto<PrimaryMaterialResponseDto>> {
     if (page < 1 || limit < 1 || isNaN(page) || isNaN(limit)) {
-      throw new BadRequestException(
-        'A página ou a quantidade de itens por página está incorreta',
-      );
+      throw new BadRequestException('A página ou a quantidade de itens por página está incorreta');
     }
 
     const offset = (page - 1) * limit;
@@ -84,21 +69,11 @@ export class PrimaryMaterialsService {
     }
 
     if (filters?.search) {
-      where.OR = [
-        { name: { contains: filters.search } },
-        { code: { contains: filters.search } },
-      ];
+      where.OR = [{ name: { contains: filters.search } }, { code: { contains: filters.search } }];
     }
 
     if (filters?.lowStock) {
-      where.AND = [
-        {
-          currentStock: {
-            lte: this.prisma.client.primaryMaterial.fields.minStock,
-          },
-        },
-        { minStock: { not: null } },
-      ];
+      where.AND = [{ currentStock: { lte: this.prisma.client.primaryMaterial.fields.minStock } }, { minStock: { not: null } }];
     }
 
     const materials = await this.prisma.client.primaryMaterial.findMany({
@@ -110,9 +85,7 @@ export class PrimaryMaterialsService {
 
     const total = await this.prisma.client.primaryMaterial.count({ where });
 
-    const data = materials.map(
-      (material) => new PrimaryMaterialResponseDto(material),
-    );
+    const data = materials.map((material) => new PrimaryMaterialResponseDto(material));
     const totalPages = Math.ceil(total / limit);
 
     return { data, total, page, limit, totalPages };
@@ -121,15 +94,7 @@ export class PrimaryMaterialsService {
   async findOne(id: number) {
     const material = await this.prisma.client.primaryMaterial.findUnique({
       where: { id },
-      include: {
-        compositionItems: {
-          include: {
-            product: {
-              select: { id: true, name: true, code: true },
-            },
-          },
-        },
-      },
+      include: { compositionItems: { include: { product: { select: { id: true, name: true, code: true } } } } },
     });
 
     if (!material) {
@@ -149,14 +114,10 @@ export class PrimaryMaterialsService {
   }
 
   async findByCode(code: string) {
-    const material = await this.prisma.client.primaryMaterial.findUnique({
-      where: { code },
-    });
+    const material = await this.prisma.client.primaryMaterial.findUnique({ where: { code } });
 
     if (!material) {
-      throw new NotFoundException(
-        `Matéria-prima com código ${code} não encontrada`,
-      );
+      throw new NotFoundException(`Matéria-prima com código ${code} não encontrada`);
     }
 
     return material;
@@ -171,9 +132,7 @@ export class PrimaryMaterialsService {
       });
 
       if (existingCode) {
-        throw new ConflictException(
-          `Matéria-prima com código ${updateDto.code} já existe`,
-        );
+        throw new ConflictException(`Matéria-prima com código ${updateDto.code} já existe`);
       }
     }
 
@@ -183,16 +142,11 @@ export class PrimaryMaterialsService {
       });
 
       if (existingName) {
-        throw new ConflictException(
-          `Matéria-prima com nome "${updateDto.name}" já existe`,
-        );
+        throw new ConflictException(`Matéria-prima com nome "${updateDto.name}" já existe`);
       }
     }
 
-    const updatedMaterial = await this.prisma.client.primaryMaterial.update({
-      where: { id },
-      data: updateDto,
-    });
+    const updatedMaterial = await this.prisma.client.primaryMaterial.update({ where: { id }, data: updateDto });
 
     if (updateDto.unitCost !== undefined) {
       await this.updateProductsCost(id);
@@ -210,16 +164,7 @@ export class PrimaryMaterialsService {
       where: { materialId },
       include: {
         product: {
-          include: {
-            compositionItems: {
-              include: {
-                material: true,
-                subProduct: {
-                  select: { id: true, costPrice: true },
-                },
-              },
-            },
-          },
+          include: { compositionItems: { include: { material: true, subProduct: { select: { id: true, costPrice: true } } } } },
         },
       },
     });
@@ -227,35 +172,27 @@ export class PrimaryMaterialsService {
     const updates = compositionItems.map(async (item) => {
       const product = item.product;
 
-      const totalCost = product.compositionItems.reduce(
-        (sum: number, compItem): number => {
-          const quantity = compItem.quantity.toNumber();
+      const totalCost = product.compositionItems.reduce((sum: number, compItem): number => {
+        const quantity = compItem.quantity.toNumber();
 
-          if (compItem.materialId && compItem.material) {
-            return sum + compItem.material.unitCost.toNumber() * quantity;
-          }
+        if (compItem.materialId && compItem.material) {
+          return sum + compItem.material.unitCost.toNumber() * quantity;
+        }
 
-          if (compItem.subProductId && compItem.subProduct) {
-            return sum + compItem.subProduct.costPrice.toNumber() * quantity;
-          }
+        if (compItem.subProductId && compItem.subProduct) {
+          return sum + compItem.subProduct.costPrice.toNumber() * quantity;
+        }
 
-          return sum;
-        },
-        0,
-      );
+        return sum;
+      }, 0);
 
-      return this.prisma.client.product.update({
-        where: { id: product.id },
-        data: { costPrice: totalCost },
-      });
+      return this.prisma.client.product.update({ where: { id: product.id }, data: { costPrice: totalCost } });
     });
 
     await Promise.all(updates);
 
     if (compositionItems.length > 0) {
-      console.log(
-        `Custos atualizados para ${compositionItems.length} produto(s) que usam a matéria-prima #${materialId}`,
-      );
+      console.log(`Custos atualizados para ${compositionItems.length} produto(s) que usam a matéria-prima #${materialId}`);
     }
   }
 
@@ -268,10 +205,7 @@ export class PrimaryMaterialsService {
       );
     }
 
-    return this.prisma.client.primaryMaterial.update({
-      where: { id },
-      data: { active: false },
-    });
+    return this.prisma.client.primaryMaterial.update({ where: { id }, data: { active: false } });
   }
 
   async forceDelete(id: number) {
@@ -287,9 +221,7 @@ export class PrimaryMaterialsService {
   }
 
   async adjustStock(id: number, adjustDto: AdjustStockDto) {
-    const material = await this.prisma.client.primaryMaterial.findUnique({
-      where: { id },
-    });
+    const material = await this.prisma.client.primaryMaterial.findUnique({ where: { id } });
 
     if (!material) {
       throw new NotFoundException(`Matéria-prima com ID ${id} não encontrada`);
@@ -320,10 +252,7 @@ export class PrimaryMaterialsService {
         throw new BadRequestException('Tipo de ajuste inválido');
     }
 
-    const updatedMaterial = await this.prisma.client.primaryMaterial.update({
-      where: { id },
-      data: { currentStock: newStock },
-    });
+    const updatedMaterial = await this.prisma.client.primaryMaterial.update({ where: { id }, data: { currentStock: newStock } });
 
     return {
       materialId: updatedMaterial.id,
@@ -338,9 +267,7 @@ export class PrimaryMaterialsService {
   }
 
   async getSuggestedCode() {
-    const lastMaterial = await this.prisma.client.primaryMaterial.findFirst({
-      orderBy: { createdAt: 'desc' },
-    });
+    const lastMaterial = await this.prisma.client.primaryMaterial.findFirst({ orderBy: { createdAt: 'desc' } });
 
     if (lastMaterial && lastMaterial.code) {
       const match = lastMaterial.code.match(/\d+/);
@@ -362,19 +289,11 @@ export class PrimaryMaterialsService {
     const activeMaterials = materials.filter((m) => m.active).length;
     const inactiveMaterials = totalMaterials - activeMaterials;
 
-    const totalStockValue = materials.reduce(
-      (sum, m) => sum + Number(m.currentStock) * Number(m.unitCost),
-      0,
-    );
+    const totalStockValue = materials.reduce((sum, m) => sum + Number(m.currentStock) * Number(m.unitCost), 0);
 
-    const totalItems = materials.reduce(
-      (sum, m) => sum + Number(m.currentStock),
-      0,
-    );
+    const totalItems = materials.reduce((sum, m) => sum + Number(m.currentStock), 0);
 
-    const materialsLowStock = materials.filter(
-      (m) => Number(m.currentStock) === 0,
-    ).length;
+    const materialsLowStock = materials.filter((m) => Number(m.currentStock) === 0).length;
 
     return {
       totalMaterials,

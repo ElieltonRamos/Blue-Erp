@@ -3,18 +3,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { StoragePaths } from '../entities/fiscal-module.entity';
 import { modelFromAccessKey } from '../lib/nfe-utils';
-import {
-  FiscalException,
-  InvalidAccessKeyException,
-} from '../fiscal.exception';
+import { FiscalException, InvalidAccessKeyException } from '../fiscal.exception';
 
 type StorageModel = '55' | '65';
 type StorageKind = 'xml' | 'pdf';
 
-const MODEL_FOLDER: Record<StorageModel, string> = {
-  '55': 'nfe',
-  '65': 'nfce',
-};
+const MODEL_FOLDER: Record<StorageModel, string> = { '55': 'nfe', '65': 'nfce' };
 
 @Injectable()
 export class StorageService {
@@ -22,12 +16,7 @@ export class StorageService {
 
   constructor() {
     const models = Object.keys(MODEL_FOLDER) as StorageModel[];
-    this.ensureDirectoriesExist(
-      models.flatMap((model) => [
-        this.baseDir(model, 'xml'),
-        this.baseDir(model, 'pdf'),
-      ]),
-    );
+    this.ensureDirectoriesExist(models.flatMap((model) => [this.baseDir(model, 'xml'), this.baseDir(model, 'pdf')]));
   }
 
   private baseDir(model: StorageModel, kind: StorageKind): string {
@@ -65,12 +54,7 @@ export class StorageService {
 
     this.ensureDirectoriesExist([xmlDir, pdfDir]);
 
-    return {
-      xmlDir,
-      pdfDir,
-      xmlPath: path.join(xmlDir, `${accessKey}.xml`),
-      pdfPath: path.join(pdfDir, `${accessKey}.pdf`),
-    };
+    return { xmlDir, pdfDir, xmlPath: path.join(xmlDir, `${accessKey}.xml`), pdfPath: path.join(pdfDir, `${accessKey}.pdf`) };
   }
 
   async saveXml(xmlPath: string, xmlContent: string): Promise<void> {

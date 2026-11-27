@@ -8,18 +8,12 @@ export class UserFiltersDto {
   @IsString()
   username?: string;
 
-  @ApiPropertyOptional({
-    example: 'caixa',
-    enum: ['caixa', 'garcom', 'admin', 'mechanic'],
-  })
+  @ApiPropertyOptional({ example: 'caixa', enum: ['caixa', 'garcom', 'admin', 'mechanic'] })
   @IsOptional()
   @IsEnum(['caixa', 'garcom', 'admin', 'mechanic'])
   role?: string;
 
-  @ApiPropertyOptional({
-    example: 'local1',
-    enum: ['local1', 'local2', 'local3'],
-  })
+  @ApiPropertyOptional({ example: 'local1', enum: ['local1', 'local2', 'local3'] })
   @IsOptional()
   workplace?: string;
 

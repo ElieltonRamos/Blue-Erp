@@ -1,12 +1,5 @@
 // src/company/company.service.ts
-import {
-  BadRequestException,
-  ConflictException,
-  HttpException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { BusinessType } from 'generated/prisma/enums.js';
@@ -25,8 +18,7 @@ interface UploadedFile {
 
 const SYSTEM_ACTOR = 'sistema';
 const COMPANY_NOT_CONFIGURED = 'Empresa não configurada';
-const COMPANY_NOT_FOUND_SETUP =
-  'Empresa não encontrada. Configure os dados da empresa primeiro.';
+const COMPANY_NOT_FOUND_SETUP = 'Empresa não encontrada. Configure os dados da empresa primeiro.';
 
 @Injectable()
 export class CompanyService {
@@ -45,13 +37,8 @@ export class CompanyService {
   }
 
   // Chamadas internas (fiscal, numeração) usam o actor padrão
-  private async findCompanyOrFail(
-    actor = SYSTEM_ACTOR,
-    message = COMPANY_NOT_CONFIGURED,
-  ) {
-    const company = await this.prisma.client.company.findUnique({
-      where: { id: COMPANY_ID },
-    });
+  private async findCompanyOrFail(actor = SYSTEM_ACTOR, message = COMPANY_NOT_CONFIGURED) {
+    const company = await this.prisma.client.company.findUnique({ where: { id: COMPANY_ID } });
 
     if (!company) {
       this.logger.warn(`${message} (actor=${actor})`);
@@ -72,11 +59,7 @@ export class CompanyService {
     }
   }
 
-  private async removeFileSafely(
-    filePath: string | null,
-    warnMessage: string,
-    actor: string,
-  ): Promise<void> {
+  private async removeFileSafely(filePath: string | null, warnMessage: string, actor: string): Promise<void> {
     if (!filePath) return;
 
     try {
@@ -88,28 +71,17 @@ export class CompanyService {
   }
 
   private formatCnpj(cnpj: string): string {
-    return cnpj
-      .replace(/\D/g, '')
-      .replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    return cnpj.replace(/\D/g, '').replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
   }
 
   async getCompany(actor: string = 'system'): Promise<CompanyResponseDto> {
-    const company = await this.findCompanyOrFail(
-      actor,
-      COMPANY_NOT_FOUND_SETUP,
-    );
+    const company = await this.findCompanyOrFail(actor, COMPANY_NOT_FOUND_SETUP);
     return new CompanyResponseDto(company);
   }
 
-  async update(
-    updateCompanyDto: UpdateCompanyDto,
-    actor: string,
-  ): Promise<CompanyResponseDto> {
+  async update(updateCompanyDto: UpdateCompanyDto, actor: string): Promise<CompanyResponseDto> {
     try {
-      const existing = await this.findCompanyOrFail(
-        actor,
-        COMPANY_NOT_FOUND_SETUP,
-      );
+      const existing = await this.findCompanyOrFail(actor, COMPANY_NOT_FOUND_SETUP);
 
       if (updateCompanyDto.cnpj && updateCompanyDto.cnpj !== existing.cnpj) {
         const cnpjExists = await this.prisma.client.company.findFirst({
@@ -125,34 +97,23 @@ export class CompanyService {
       const data = {
         ...rest,
         ...(certificateExpirationDate !== undefined && {
-          certificateExpirationDate: certificateExpirationDate
-            ? new Date(certificateExpirationDate)
-            : null,
+          certificateExpirationDate: certificateExpirationDate ? new Date(certificateExpirationDate) : null,
         }),
       };
       const fields = Object.keys(data);
 
       if (fields.length === 0) {
-        this.logger.warn(
-          `Edição da empresa sem alterações (actor=${actor}, id=${existing.id})`,
-        );
+        this.logger.warn(`Edição da empresa sem alterações (actor=${actor}, id=${existing.id})`);
         return new CompanyResponseDto(existing);
       }
 
-      const company = await this.prisma.client.company.update({
-        where: { id: existing.id },
-        data,
-      });
+      const company = await this.prisma.client.company.update({ where: { id: existing.id }, data });
 
       // Só nomes dos campos, nunca valores
-      this.logger.log(
-        `Empresa editada (actor=${actor}, id=${company.id}, campos=${fields.join(',')})`,
-      );
+      this.logger.log(`Empresa editada (actor=${actor}, id=${company.id}, campos=${fields.join(',')})`);
 
       if (data.cnpj !== undefined && data.cnpj !== existing.cnpj) {
-        this.logger.warn(
-          `CNPJ da empresa alterado (actor=${actor}, de=${existing.cnpj}, para=${company.cnpj})`,
-        );
+        this.logger.warn(`CNPJ da empresa alterado (actor=${actor}, de=${existing.cnpj}, para=${company.cnpj})`);
       }
 
       return new CompanyResponseDto(company);
@@ -162,24 +123,15 @@ export class CompanyService {
   }
 
   async isCompanyConfigured(): Promise<boolean> {
-    const count = await this.prisma.client.company.count({
-      where: { id: COMPANY_ID },
-    });
+    const count = await this.prisma.client.company.count({ where: { id: COMPANY_ID } });
     return count > 0;
   }
 
   async deleteCompany(actor: string): Promise<{ message: string }> {
     try {
-      const company = await this.findCompanyOrFail(
-        actor,
-        'Nenhuma empresa para deletar',
-      );
+      const company = await this.findCompanyOrFail(actor, 'Nenhuma empresa para deletar');
 
-      await this.removeFileSafely(
-        company.certificatePath,
-        'Certificado não encontrado para remoção',
-        actor,
-      );
+      await this.removeFileSafely(company.certificatePath, 'Certificado não encontrado para remoção', actor);
 
       await this.prisma.client.company.delete({ where: { id: company.id } });
 
@@ -228,9 +180,7 @@ export class CompanyService {
     exists: boolean;
     certificateInfo?: { hasPassword: boolean; expirationDate?: Date | null };
   }> {
-    const company = await this.prisma.client.company.findUnique({
-      where: { id: COMPANY_ID },
-    });
+    const company = await this.prisma.client.company.findUnique({ where: { id: COMPANY_ID } });
 
     if (!company || !company.certificatePath) {
       return { exists: false };
@@ -243,17 +193,13 @@ export class CompanyService {
     return {
       exists: true,
       certificateInfo: {
-        hasPassword:
-          String(company.certificatePassword ?? '').trim().length > 0,
+        hasPassword: String(company.certificatePassword ?? '').trim().length > 0,
         expirationDate: company.certificateExpirationDate,
       },
     };
   }
 
-  async getCertificateBuffer(): Promise<{
-    pfxBuffer: Buffer;
-    password: string;
-  }> {
+  async getCertificateBuffer(): Promise<{ pfxBuffer: Buffer; password: string }> {
     const company = await this.findCompanyOrFail();
 
     if (!company.certificatePath) {
@@ -264,10 +210,7 @@ export class CompanyService {
       throw new NotFoundException('Arquivo de certificado não encontrado');
     }
 
-    return {
-      pfxBuffer: await fs.readFile(company.certificatePath),
-      password: company.certificatePassword || '',
-    };
+    return { pfxBuffer: await fs.readFile(company.certificatePath), password: company.certificatePassword || '' };
   }
 
   async uploadCompanyCertificate(
@@ -286,48 +229,28 @@ export class CompanyService {
 
       const fileExtension = path.extname(file.originalname).toLowerCase();
       if (!['.pfx', '.p12'].includes(fileExtension)) {
-        this.logger.warn(
-          `Formato de certificado inválido (actor=${actor}, ext=${fileExtension})`,
-        );
-        throw new BadRequestException(
-          'Formato de certificado inválido. Use .pfx ou .p12',
-        );
+        this.logger.warn(`Formato de certificado inválido (actor=${actor}, ext=${fileExtension})`);
+        throw new BadRequestException('Formato de certificado inválido. Use .pfx ou .p12');
       }
 
       const certsDir = path.join(process.cwd(), 'certs');
-      const filePath = path.join(
-        certsDir,
-        `cert_${Date.now()}_${company.cnpj}${fileExtension}`,
-      );
+      const filePath = path.join(certsDir, `cert_${Date.now()}_${company.cnpj}${fileExtension}`);
 
       await fs.mkdir(certsDir, { recursive: true });
       await fs.writeFile(filePath, file.buffer);
 
       const updatedCompany = await this.prisma.client.company.update({
         where: { id: company.id },
-        data: {
-          certificatePath: filePath,
-          certificatePassword,
-          certificateExpirationDate: expirationDate || null,
-        },
+        data: { certificatePath: filePath, certificatePassword, certificateExpirationDate: expirationDate || null },
       });
 
       // Apaga o antigo só depois de gravar o novo no banco
-      await this.removeFileSafely(
-        company.certificatePath,
-        'Certificado antigo não encontrado',
-        actor,
-      );
+      await this.removeFileSafely(company.certificatePath, 'Certificado antigo não encontrado', actor);
 
       // Nunca logar a senha nem o caminho do certificado
-      this.logger.log(
-        `Certificado da empresa atualizado (actor=${actor}, id=${company.id})`,
-      );
+      this.logger.log(`Certificado da empresa atualizado (actor=${actor}, id=${company.id})`);
 
-      return new CompanyResponseDto({
-        ...updatedCompany,
-        cnpj: this.formatCnpj(updatedCompany.cnpj),
-      });
+      return new CompanyResponseDto({ ...updatedCompany, cnpj: this.formatCnpj(updatedCompany.cnpj) });
     } catch (error) {
       this.rethrow(error, `Falha ao enviar certificado (actor=${actor})`);
     }
@@ -356,22 +279,12 @@ export class CompanyService {
 
       await this.prisma.client.company.update({
         where: { id: company.id },
-        data: {
-          certificatePath: '',
-          certificatePassword: '',
-          certificateExpirationDate: null,
-        },
+        data: { certificatePath: '', certificatePassword: '', certificateExpirationDate: null },
       });
 
-      await this.removeFileSafely(
-        company.certificatePath,
-        'Erro ao remover certificado',
-        actor,
-      );
+      await this.removeFileSafely(company.certificatePath, 'Erro ao remover certificado', actor);
 
-      this.logger.log(
-        `Certificado da empresa removido (actor=${actor}, id=${company.id})`,
-      );
+      this.logger.log(`Certificado da empresa removido (actor=${actor}, id=${company.id})`);
       return { message: 'Certificado removido com sucesso' };
     } catch (error) {
       this.rethrow(error, `Falha ao remover certificado (actor=${actor})`);
@@ -379,10 +292,7 @@ export class CompanyService {
   }
 
   async getBusinessType(): Promise<{ businessType: BusinessType | null }> {
-    const company = await this.prisma.client.company.findUnique({
-      where: { id: COMPANY_ID },
-      select: { businessType: true },
-    });
+    const company = await this.prisma.client.company.findUnique({ where: { id: COMPANY_ID }, select: { businessType: true } });
     return { businessType: company?.businessType ?? null };
   }
 }

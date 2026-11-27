@@ -3,11 +3,9 @@ import type { BusinessPartner } from 'generated/prisma/client';
 import type { Nfe55Options } from 'src/features/fiscal-module/entities/nfe.entity';
 import { FiscalException } from 'src/features/fiscal-module/fiscal.exception';
 
-export const digits = (s?: string | null): string =>
-  (s ?? '').replace(/\D/g, '');
+export const digits = (s?: string | null): string => (s ?? '').replace(/\D/g, '');
 
-export const round2 = (n: number): number =>
-  Math.round((n + Number.EPSILON) * 100) / 100;
+export const round2 = (n: number): number => Math.round((n + Number.EPSILON) * 100) / 100;
 
 export function toNumber(value: unknown, decimals: number): number {
   let n: number;
@@ -38,9 +36,7 @@ export function distributeDiscount<T extends { qCom: number; vUnCom: number }>(
     const itemProd = item.qCom * item.vUnCom;
     const isLast = index === items.length - 1;
 
-    const vDesc = isLast
-      ? toNumber(totalDiscount - allocated, 2)
-      : toNumber((itemProd / totalProd) * totalDiscount, 2);
+    const vDesc = isLast ? toNumber(totalDiscount - allocated, 2) : toNumber((itemProd / totalProd) * totalDiscount, 2);
 
     allocated += vDesc;
     return { ...item, vDesc };
@@ -52,15 +48,10 @@ type Transporta = NonNullable<Nfe55Options['transp']['transporta']>;
 export function toTransporta(p: BusinessPartner): Transporta {
   const doc = digits(p.document);
   if (doc.length !== 11 && doc.length !== 14) {
-    throw new FiscalException(
-      `Transportadora "${p.name}" sem CNPJ/CPF válido no cadastro`,
-    );
+    throw new FiscalException(`Transportadora "${p.name}" sem CNPJ/CPF válido no cadastro`);
   }
 
-  const ie =
-    p.stateRegistration?.trim().toUpperCase() === 'ISENTO'
-      ? 'ISENTO'
-      : digits(p.stateRegistration);
+  const ie = p.stateRegistration?.trim().toUpperCase() === 'ISENTO' ? 'ISENTO' : digits(p.stateRegistration);
 
   return {
     ...(doc.length === 14 ? { CNPJ: doc } : { CPF: doc }),

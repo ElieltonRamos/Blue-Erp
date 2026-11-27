@@ -1,12 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import {
-  IsNumber,
-  IsOptional,
-  Min,
-  IsArray,
-  ValidateNested,
-} from 'class-validator';
+import { IsNumber, IsOptional, Min, IsArray, ValidateNested } from 'class-validator';
 
 export class CloseTabItemDto {
   @IsNumber()

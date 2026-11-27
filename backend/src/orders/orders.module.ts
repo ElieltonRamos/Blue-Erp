@@ -14,10 +14,7 @@ import { OrderCleanupService } from './order-cleanup.service';
 @Module({
   imports: [
     PrinterModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key',
-      signOptions: { expiresIn: '24h' },
-    }),
+    JwtModule.register({ secret: process.env.JWT_SECRET || 'your-secret-key', signOptions: { expiresIn: '24h' } }),
   ],
   controllers: [OrdersController],
   providers: [

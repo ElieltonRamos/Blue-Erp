@@ -1,13 +1,4 @@
-import {
-  IsString,
-  IsOptional,
-  IsArray,
-  ValidateNested,
-  IsNumber,
-  Min,
-  IsNotEmpty,
-  ValidateIf,
-} from 'class-validator';
+import { IsString, IsOptional, IsArray, ValidateNested, IsNumber, Min, IsNotEmpty, ValidateIf } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { OrderType } from 'generated/prisma/client';
@@ -23,10 +14,7 @@ export class CreateOrderItemDto {
   @IsNotEmpty()
   code: string;
 
-  @ApiPropertyOptional({
-    description: 'Observação do item',
-    example: 'Sem cebola',
-  })
+  @ApiPropertyOptional({ description: 'Observação do item', example: 'Sem cebola' })
   @IsString()
   @IsOptional()
   observation?: string;
@@ -51,11 +39,7 @@ export class CreateOrderItemDto {
   @Min(0)
   total: number;
 
-  @ApiPropertyOptional({
-    description: 'Taxa de serviço do item',
-    example: 4.5,
-    minimum: 0,
-  })
+  @ApiPropertyOptional({ description: 'Taxa de serviço do item', example: 4.5, minimum: 0 })
   @IsNumber()
   @Min(0)
   @IsOptional()
@@ -63,35 +47,22 @@ export class CreateOrderItemDto {
 }
 
 export class CreateOrderDto {
-  @ApiProperty({
-    description: 'Tipo do pedido',
-    enum: OrderType,
-    example: 'DINE_IN',
-  })
+  @ApiProperty({ description: 'Tipo do pedido', enum: OrderType, example: 'DINE_IN' })
   @IsString()
   @IsNotEmpty()
   type: OrderType;
 
-  @ApiProperty({
-    description: 'Local do pedido (código)',
-    example: 'LOCAL_01',
-  })
+  @ApiProperty({ description: 'Local do pedido (código)', example: 'LOCAL_01' })
   @IsString()
   @IsNotEmpty()
   locationId: string;
 
-  @ApiPropertyOptional({
-    description: 'Nome do cliente',
-    example: 'João Silva',
-  })
+  @ApiPropertyOptional({ description: 'Nome do cliente', example: 'João Silva' })
   @IsString()
   @IsOptional()
   customerName?: string;
 
-  @ApiPropertyOptional({
-    description: 'Mesa (obrigatório se type === DINE_IN)',
-    example: 'Mesa 5',
-  })
+  @ApiPropertyOptional({ description: 'Mesa (obrigatório se type === DINE_IN)', example: 'Mesa 5' })
   @ValidateIf((o) => o.type === 'DINE_IN')
   @IsString()
   @IsNotEmpty()
@@ -109,44 +80,24 @@ export class CreateOrderDto {
   @ApiProperty({
     description: 'Itens do pedido',
     type: [CreateOrderItemDto],
-    example: [
-      {
-        productId: 1,
-        code: 'PROD-001',
-        name: 'Filé Mignon',
-        quantity: 2,
-        unitPrice: 45.0,
-        total: 90.0,
-      },
-    ],
+    example: [{ productId: 1, code: 'PROD-001', name: 'Filé Mignon', quantity: 2, unitPrice: 45.0, total: 90.0 }],
   })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateOrderItemDto)
   items: CreateOrderItemDto[];
 
-  @ApiProperty({
-    description: 'Total do pedido',
-    example: 90.0,
-    minimum: 0,
-  })
+  @ApiProperty({ description: 'Total do pedido', example: 90.0, minimum: 0 })
   @IsNumber()
   @Min(0)
   total: number;
 
-  @ApiPropertyOptional({
-    description: 'ID do operador',
-    example: 1,
-  })
+  @ApiPropertyOptional({ description: 'ID do operador', example: 1 })
   @IsNumber()
   @IsOptional()
   operatorId?: number;
 
-  @ApiProperty({
-    description: 'Valor da taxa de serviço (10%)',
-    example: 9.0,
-    minimum: 0,
-  })
+  @ApiProperty({ description: 'Valor da taxa de serviço (10%)', example: 9.0, minimum: 0 })
   @IsNumber()
   @Min(0)
   serviceCharge: number;

@@ -7,11 +7,7 @@ import { LicenseSystemModule } from '../license-system/license-system.module';
 @Module({
   imports: [
     LicenseSystemModule,
-    JwtModule.register({
-      global: true,
-      secret: process.env.JWT_SECRET || 'your-secret-key',
-      signOptions: { expiresIn: '24h' },
-    }),
+    JwtModule.register({ global: true, secret: process.env.JWT_SECRET || 'your-secret-key', signOptions: { expiresIn: '24h' } }),
   ],
   controllers: [UsersController],
   providers: [UsersService],

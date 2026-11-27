@@ -33,9 +33,7 @@ export class AssetResponseDto {
   @ApiProperty({ example: '2026-09-10T12:00:00.000Z' })
   updatedAt: Date;
 
-  constructor(
-    partial: Partial<AssetResponseDto> & { client?: { name: string } },
-  ) {
+  constructor(partial: Partial<AssetResponseDto> & { client?: { name: string } }) {
     const { client, ...rest } = partial as any;
     Object.assign(this, rest);
     if (client?.name) {

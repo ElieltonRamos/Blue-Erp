@@ -9,11 +9,7 @@ export class FindCommissionItemsDto {
   @IsInt()
   userId?: number;
 
-  @ApiProperty({
-    enum: ['open', 'closed', 'paid'],
-    required: false,
-    default: 'open',
-  })
+  @ApiProperty({ enum: ['open', 'closed', 'paid'], required: false, default: 'open' })
   @IsOptional()
   @IsIn(['open', 'closed', 'paid'])
   status?: 'open' | 'closed' | 'paid' = 'open';

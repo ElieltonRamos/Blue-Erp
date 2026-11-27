@@ -4,10 +4,7 @@ import { CloseCommissionDto } from './dto/close-commission.dto.js';
 import { PayCommissionDto } from './dto/pay-commission.dto.js';
 import { FindCommissionItemsDto } from './dto/find-commission-items.dto.js';
 import { CommissionSummaryResponseDto } from './dto/commission-summary-response.dto.js';
-import {
-  DocumentItemType,
-  DocumentStatus,
-} from '../../../generated/prisma/client.js';
+import { DocumentItemType, DocumentStatus } from '../../../generated/prisma/client.js';
 
 @Injectable()
 export class DocumentCommissionService {
@@ -15,22 +12,15 @@ export class DocumentCommissionService {
 
   constructor(private prisma: PrismaService) {}
 
-  async closeCommission(
-    dto: CloseCommissionDto,
-    username: string,
-  ): Promise<CommissionSummaryResponseDto> {
-    const user = await this.prisma.client.user.findUnique({
-      where: { id: dto.userId },
-    });
+  async closeCommission(dto: CloseCommissionDto, username: string): Promise<CommissionSummaryResponseDto> {
+    const user = await this.prisma.client.user.findUnique({ where: { id: dto.userId } });
 
     if (!user) {
       throw new BadRequestException('Mecânico não encontrado');
     }
 
     if (user.commissionRate === null || user.commissionRate === undefined) {
-      throw new BadRequestException(
-        'Mecânico não possui percentual de comissão definido',
-      );
+      throw new BadRequestException('Mecânico não possui percentual de comissão definido');
     }
 
     const periodStart = new Date(`${dto.periodStart}T00:00:00`);
@@ -41,17 +31,12 @@ export class DocumentCommissionService {
         type: DocumentItemType.SERVICE,
         userId: dto.userId,
         commissionClosedAt: null,
-        document: {
-          status: DocumentStatus.COMPLETED,
-          finishedAt: { gte: periodStart, lte: periodEnd },
-        },
+        document: { status: DocumentStatus.COMPLETED, finishedAt: { gte: periodStart, lte: periodEnd } },
       },
     });
 
     if (items.length === 0) {
-      throw new BadRequestException(
-        'Nenhum item de serviço encontrado para fechamento neste período',
-      );
+      throw new BadRequestException('Nenhum item de serviço encontrado para fechamento neste período');
     }
 
     const rate = Number(user.commissionRate);
@@ -61,11 +46,7 @@ export class DocumentCommissionService {
       items.map((item) =>
         this.prisma.client.documentItem.update({
           where: { id: item.id },
-          data: {
-            commissionRate: rate,
-            commissionAmount: Number(item.total) * (rate / 100),
-            commissionClosedAt: now,
-          },
+          data: { commissionRate: rate, commissionAmount: Number(item.total) * (rate / 100), commissionClosedAt: now },
         }),
       ),
     );
@@ -87,42 +68,27 @@ export class DocumentCommissionService {
     });
   }
 
-  async payCommission(
-    dto: PayCommissionDto,
-    username: string,
-  ): Promise<CommissionSummaryResponseDto> {
-    const user = await this.prisma.client.user.findUnique({
-      where: { id: dto.userId },
-    });
+  async payCommission(dto: PayCommissionDto, username: string): Promise<CommissionSummaryResponseDto> {
+    const user = await this.prisma.client.user.findUnique({ where: { id: dto.userId } });
 
     if (!user) {
       throw new BadRequestException('Mecânico não encontrado');
     }
 
-    const where: any = {
-      userId: dto.userId,
-      commissionClosedAt: { not: null },
-      commissionPaidAt: null,
-    };
+    const where: any = { userId: dto.userId, commissionClosedAt: { not: null }, commissionPaidAt: null };
 
     if (dto.periodStart || dto.periodEnd) {
       where.commissionClosedAt = {
         ...where.commissionClosedAt,
-        ...(dto.periodStart
-          ? { gte: new Date(`${dto.periodStart}T00:00:00`) }
-          : {}),
-        ...(dto.periodEnd
-          ? { lte: new Date(`${dto.periodEnd}T23:59:59`) }
-          : {}),
+        ...(dto.periodStart ? { gte: new Date(`${dto.periodStart}T00:00:00`) } : {}),
+        ...(dto.periodEnd ? { lte: new Date(`${dto.periodEnd}T23:59:59`) } : {}),
       };
     }
 
     const items = await this.prisma.client.documentItem.findMany({ where });
 
     if (items.length === 0) {
-      throw new BadRequestException(
-        'Nenhuma comissão fechada pendente de pagamento encontrada',
-      );
+      throw new BadRequestException('Nenhuma comissão fechada pendente de pagamento encontrada');
     }
 
     const now = new Date();
@@ -132,10 +98,7 @@ export class DocumentCommissionService {
       data: { commissionPaidAt: now },
     });
 
-    const totalCommission = items.reduce(
-      (sum, item) => sum + Number(item.commissionAmount ?? 0),
-      0,
-    );
+    const totalCommission = items.reduce((sum, item) => sum + Number(item.commissionAmount ?? 0), 0);
 
     this.logger.log(
       `[Commission] usuario=${username} | pagamento mecanico=${dto.userId} | itens=${items.length} | total=${totalCommission.toFixed(2)}`,

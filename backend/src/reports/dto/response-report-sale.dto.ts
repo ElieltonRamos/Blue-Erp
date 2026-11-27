@@ -4,16 +4,10 @@ export class PaymentBreakdownDto {
   @ApiProperty({ description: 'Valor total em dinheiro', example: 800.5 })
   dinheiro: number;
 
-  @ApiProperty({
-    description: 'Valor total em cartão de crédito',
-    example: 1500.0,
-  })
+  @ApiProperty({ description: 'Valor total em cartão de crédito', example: 1500.0 })
   cartaoCredito: number;
 
-  @ApiProperty({
-    description: 'Valor total em cartão de débito',
-    example: 600.25,
-  })
+  @ApiProperty({ description: 'Valor total em cartão de débito', example: 600.25 })
   cartaoDebito: number;
 
   @ApiProperty({ description: 'Valor total em PIX', example: 1250.75 })
@@ -33,18 +27,12 @@ export class OperatorSalesDto {
   @ApiProperty({ description: 'Receita total do operador', example: 3250.75 })
   revenue: number;
 
-  @ApiProperty({
-    description: 'Detalhamento por forma de pagamento',
-    type: PaymentBreakdownDto,
-  })
+  @ApiProperty({ description: 'Detalhamento por forma de pagamento', type: PaymentBreakdownDto })
   paymentBreakdown: PaymentBreakdownDto;
 }
 
 export class SalesReportSummaryDto {
-  @ApiProperty({
-    description: 'Número total de vendas no período',
-    example: 45,
-  })
+  @ApiProperty({ description: 'Número total de vendas no período', example: 45 })
   totalSales: number;
 
   @ApiProperty({ description: 'Receita bruta total', example: 12500.75 })
@@ -56,10 +44,7 @@ export class SalesReportSummaryDto {
   @ApiProperty({ description: 'Total de descontos aplicados', example: 350.5 })
   totalDiscounts: number;
 
-  @ApiProperty({
-    description: 'Vendas por forma de pagamento',
-    type: PaymentBreakdownDto,
-  })
+  @ApiProperty({ description: 'Vendas por forma de pagamento', type: PaymentBreakdownDto })
   salesByPaymentMethod: PaymentBreakdownDto;
 
   @ApiProperty({ description: 'Vendas por operador', type: [OperatorSalesDto] })
@@ -67,18 +52,10 @@ export class SalesReportSummaryDto {
 }
 
 export class SalesReportResponseDto {
-  @ApiProperty({
-    description: 'Status da operação',
-    enum: ['OK', 'ERROR'],
-    example: 'OK',
-  })
+  @ApiProperty({ description: 'Status da operação', enum: ['OK', 'ERROR'], example: 'OK' })
   status: 'OK' | 'ERROR';
 
-  @ApiProperty({
-    description: 'Dados do relatório',
-    type: SalesReportSummaryDto,
-    required: false,
-  })
+  @ApiProperty({ description: 'Dados do relatório', type: SalesReportSummaryDto, required: false })
   data?: SalesReportSummaryDto;
 
   @ApiProperty({ description: 'Mensagem de erro', required: false })

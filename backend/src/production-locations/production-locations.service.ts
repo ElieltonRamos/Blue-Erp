@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from 'src/common/database/prisma.service';
 import { CreateProductionLocationDto } from './dto/create-production-location.dto';
 import { UpdateProductionLocationDto } from './dto/update-production-location.dto';
@@ -13,22 +8,14 @@ import { ProductionLocation } from 'generated/prisma/browser';
 export class ProductionLocationsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(
-    createDto: CreateProductionLocationDto,
-  ): Promise<ProductionLocation> {
-    const existing = await this.prisma.client.productionLocation.findUnique({
-      where: { code: createDto.code },
-    });
+  async create(createDto: CreateProductionLocationDto): Promise<ProductionLocation> {
+    const existing = await this.prisma.client.productionLocation.findUnique({ where: { code: createDto.code } });
 
     if (existing) {
-      throw new BadRequestException(
-        `Local de produção com código ${createDto.code} já existe`,
-      );
+      throw new BadRequestException(`Local de produção com código ${createDto.code} já existe`);
     }
 
-    const location = await this.prisma.client.productionLocation.create({
-      data: createDto,
-    });
+    const location = await this.prisma.client.productionLocation.create({ data: createDto });
 
     if (!location) {
       throw new InternalServerErrorException('Erro ao criar local de produção');
@@ -38,11 +25,10 @@ export class ProductionLocationsService {
   }
 
   async findAll(): Promise<ProductionLocation[]> {
-    const locations: ProductionLocation[] =
-      await this.prisma.client.productionLocation.findMany({
-        where: { active: true },
-        orderBy: { order: 'asc' },
-      });
+    const locations: ProductionLocation[] = await this.prisma.client.productionLocation.findMany({
+      where: { active: true },
+      orderBy: { order: 'asc' },
+    });
 
     if (!locations) {
       return [];
@@ -52,18 +38,13 @@ export class ProductionLocationsService {
   }
 
   async findAllIncludingInactive(): Promise<ProductionLocation[]> {
-    const locations: ProductionLocation[] =
-      await this.prisma.client.productionLocation.findMany({
-        orderBy: { order: 'asc' },
-      });
+    const locations: ProductionLocation[] = await this.prisma.client.productionLocation.findMany({ orderBy: { order: 'asc' } });
 
     return locations;
   }
 
   async findOne(id: number): Promise<ProductionLocation> {
-    const location = await this.prisma.client.productionLocation.findUnique({
-      where: { id },
-    });
+    const location = await this.prisma.client.productionLocation.findUnique({ where: { id } });
 
     if (!location) {
       throw new NotFoundException(`Local de produção ${id} não encontrado`);
@@ -73,40 +54,26 @@ export class ProductionLocationsService {
   }
 
   async findByCode(code: string): Promise<ProductionLocation> {
-    const location = await this.prisma.client.productionLocation.findUnique({
-      where: { code },
-    });
+    const location = await this.prisma.client.productionLocation.findUnique({ where: { code } });
 
     if (!location) {
-      throw new NotFoundException(
-        `Local de produção com código ${code} não encontrado`,
-      );
+      throw new NotFoundException(`Local de produção com código ${code} não encontrado`);
     }
 
     return location;
   }
 
-  async update(
-    id: number,
-    updateDto: UpdateProductionLocationDto,
-  ): Promise<ProductionLocation> {
+  async update(id: number, updateDto: UpdateProductionLocationDto): Promise<ProductionLocation> {
     if (updateDto.code) {
-      const existing = await this.prisma.client.productionLocation.findUnique({
-        where: { code: updateDto.code },
-      });
+      const existing = await this.prisma.client.productionLocation.findUnique({ where: { code: updateDto.code } });
 
       if (existing && existing.id !== id) {
-        throw new BadRequestException(
-          `Código ${updateDto.code} já está em uso`,
-        );
+        throw new BadRequestException(`Código ${updateDto.code} já está em uso`);
       }
     }
 
     try {
-      const updated = await this.prisma.client.productionLocation.update({
-        where: { id },
-        data: updateDto,
-      });
+      const updated = await this.prisma.client.productionLocation.update({ where: { id }, data: updateDto });
 
       if (!updated) {
         throw new NotFoundException(`Local de produção ${id} não encontrado`);
@@ -122,23 +89,15 @@ export class ProductionLocationsService {
     const location = await this.findOne(id);
 
     const [usedInProducts, usedInProduction] = await Promise.all([
-      this.prisma.client.product.count({
-        where: { productionLocation: location.code },
-      }),
-      this.prisma.client.orderProduction.count({
-        where: { productionLocation: location.code },
-      }),
+      this.prisma.client.product.count({ where: { productionLocation: location.code } }),
+      this.prisma.client.orderProduction.count({ where: { productionLocation: location.code } }),
     ]);
 
     if (usedInProducts > 0 || usedInProduction > 0) {
-      throw new BadRequestException(
-        'Não é possível excluir um local de produção em uso. Desative-o ao invés disso.',
-      );
+      throw new BadRequestException('Não é possível excluir um local de produção em uso. Desative-o ao invés disso.');
     }
 
-    await this.prisma.client.productionLocation.delete({
-      where: { id },
-    });
+    await this.prisma.client.productionLocation.delete({ where: { id } });
 
     return { message: 'Local de produção excluído com sucesso' };
   }
@@ -146,15 +105,10 @@ export class ProductionLocationsService {
   async toggleActive(id: number): Promise<ProductionLocation> {
     const location = await this.findOne(id);
 
-    const updated = await this.prisma.client.productionLocation.update({
-      where: { id },
-      data: { active: !location.active },
-    });
+    const updated = await this.prisma.client.productionLocation.update({ where: { id }, data: { active: !location.active } });
 
     if (!updated) {
-      throw new InternalServerErrorException(
-        'Erro ao atualizar local de produção',
-      );
+      throw new InternalServerErrorException('Erro ao atualizar local de produção');
     }
 
     return updated;

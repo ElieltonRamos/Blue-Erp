@@ -2,20 +2,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import {
-  IsBoolean,
-  IsInt,
-  IsOptional,
-  IsString,
-  MaxLength,
-  Min,
-} from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 
 export class FilterCategoryDto {
-  @ApiPropertyOptional({
-    example: true,
-    description: 'Filtrar por status ativo/inativo',
-  })
+  @ApiPropertyOptional({ example: true, description: 'Filtrar por status ativo/inativo' })
   @IsBoolean()
   @IsOptional()
   @Transform(({ value }) => {
@@ -50,11 +40,7 @@ export class FilterCategoryDto {
   @IsOptional()
   sortKey?: string;
 
-  @ApiPropertyOptional({
-    example: 'asc',
-    default: 'asc',
-    enum: ['asc', 'desc'],
-  })
+  @ApiPropertyOptional({ example: 'asc', default: 'asc', enum: ['asc', 'desc'] })
   @IsString()
   @IsOptional()
   sortOrder?: string;

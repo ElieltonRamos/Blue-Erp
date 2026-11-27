@@ -3,10 +3,7 @@ import { Type } from 'class-transformer';
 import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 
 export class SearchProductDto {
-  @ApiPropertyOptional({
-    description: 'Buscar por código',
-    example: 'PROD-001',
-  })
+  @ApiPropertyOptional({ description: 'Buscar por código', example: 'PROD-001' })
   @IsString()
   @IsOptional()
   code?: string;
@@ -16,11 +13,7 @@ export class SearchProductDto {
   @IsOptional()
   name?: string;
 
-  @ApiPropertyOptional({
-    description: 'Limite de resultados',
-    example: 10,
-    minimum: 1,
-  })
+  @ApiPropertyOptional({ description: 'Limite de resultados', example: 10, minimum: 1 })
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -74,39 +67,21 @@ export class ProductResponseDto {
   @ApiPropertyOptional({ description: 'CST COFINS', example: '49' })
   cstCofins?: string;
 
-  @ApiPropertyOptional({
-    description: 'Alíquota tributos federais (%)',
-    example: 13.45,
-  })
+  @ApiPropertyOptional({ description: 'Alíquota tributos federais (%)', example: 13.45 })
   federalTaxRate?: number;
 
-  @ApiPropertyOptional({
-    description: 'Alíquota tributos estaduais (%)',
-    example: 18.0,
-  })
+  @ApiPropertyOptional({ description: 'Alíquota tributos estaduais (%)', example: 18.0 })
   stateTaxRate?: number;
 
-  @ApiPropertyOptional({
-    description: 'Alíquota tributos municipais (%)',
-    example: 5.0,
-  })
+  @ApiPropertyOptional({ description: 'Alíquota tributos municipais (%)', example: 5.0 })
   municipalTaxRate?: number;
 
-  @ApiPropertyOptional({
-    description: 'Local de produção',
-    example: 'cozinha-quente',
-  })
+  @ApiPropertyOptional({ description: 'Local de produção', example: 'cozinha-quente' })
   productionLocation?: string;
 
   @ApiPropertyOptional({ description: 'ID da categoria', example: 1 })
   categoryId?: number;
 
-  @ApiPropertyOptional({
-    description: 'Categoria',
-    example: { id: 1, name: 'Carnes' },
-  })
-  category?: {
-    id: number;
-    name: string;
-  };
+  @ApiPropertyOptional({ description: 'Categoria', example: { id: 1, name: 'Carnes' } })
+  category?: { id: number; name: string };
 }

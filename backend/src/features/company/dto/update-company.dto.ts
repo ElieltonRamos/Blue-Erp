@@ -18,33 +18,19 @@ import {
 } from 'class-validator';
 import { BusinessType } from 'generated/prisma/enums';
 import { Prisma } from 'generated/prisma/client';
-import {
-  ValidationMessages,
-  digits,
-  notUndefined,
-  trim,
-  trimOrNull,
-} from 'src/common/utils/validation';
+import { ValidationMessages, digits, notUndefined, trim, trimOrNull } from 'src/common/utils/validation';
 
 export class UpdateCompanyDto {
-  @ApiPropertyOptional({
-    example: '12345678000190',
-    description: 'Somente dígitos',
-  })
+  @ApiPropertyOptional({ example: '12345678000190', description: 'Somente dígitos' })
   @ValidateIf(notUndefined)
   @Transform(digits)
   @IsString({ message: ValidationMessages.IS_STRING('O CNPJ') })
   @Length(14, 14, { message: ValidationMessages.EXACT_DIGITS('O CNPJ', 14) })
   cnpj?: string;
 
-  @ApiPropertyOptional({
-    enum: BusinessType,
-    example: BusinessType.RESTAURANTE,
-  })
+  @ApiPropertyOptional({ enum: BusinessType, example: BusinessType.RESTAURANTE })
   @ValidateIf(notUndefined)
-  @IsEnum(BusinessType, {
-    message: ValidationMessages.IS_ENUM('O tipo de negócio'),
-  })
+  @IsEnum(BusinessType, { message: ValidationMessages.IS_ENUM('O tipo de negócio') })
   businessType?: BusinessType;
 
   @ApiPropertyOptional({ example: { comandas: true, cozinha: true } })
@@ -70,21 +56,16 @@ export class UpdateCompanyDto {
   @ValidateIf(notUndefined)
   @Transform(trim)
   @IsString({ message: ValidationMessages.IS_STRING('A inscrição estadual') })
-  @IsNotEmpty({
-    message: ValidationMessages.IS_NOT_BLANK('A inscrição estadual'),
-  })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('A inscrição estadual') })
   stateRegistration?: string;
 
   @ApiPropertyOptional({
     enum: ['1', '2', '3'],
-    description:
-      '1=Simples Nacional, 2=Simples Nacional - Excesso, 3=Regime Normal',
+    description: '1=Simples Nacional, 2=Simples Nacional - Excesso, 3=Regime Normal',
     example: '1',
   })
   @ValidateIf(notUndefined)
-  @IsEnum(['1', '2', '3'], {
-    message: ValidationMessages.IS_ENUM('O regime tributário'),
-  })
+  @IsEnum(['1', '2', '3'], { message: ValidationMessages.IS_ENUM('O regime tributário') })
   taxRegime?: '1' | '2' | '3';
 
   @ApiPropertyOptional({ example: 'Rua das Flores' })
@@ -121,10 +102,7 @@ export class UpdateCompanyDto {
   @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('A cidade') })
   city?: string;
 
-  @ApiPropertyOptional({
-    example: '3106705',
-    description: 'Código IBGE do município',
-  })
+  @ApiPropertyOptional({ example: '3106705', description: 'Código IBGE do município' })
   @ValidateIf(notUndefined)
   @Transform(trim)
   @IsString({ message: ValidationMessages.IS_STRING('O código IBGE') })
@@ -152,11 +130,7 @@ export class UpdateCompanyDto {
   @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('O telefone') })
   phone?: string;
 
-  @ApiPropertyOptional({
-    example: 'contato@bluepdv.com.br',
-    type: String,
-    nullable: true,
-  })
+  @ApiPropertyOptional({ example: 'contato@bluepdv.com.br', type: String, nullable: true })
   @IsOptional()
   @Transform(trimOrNull)
   @IsEmail({}, { message: ValidationMessages.IS_EMAIL() })
@@ -176,14 +150,9 @@ export class UpdateCompanyDto {
   @Min(1, { message: ValidationMessages.MIN('O número atual da NFC-e', 1) })
   nfceCurrentNumber?: number;
 
-  @ApiPropertyOptional({
-    enum: ['production', 'staging'],
-    example: 'production',
-  })
+  @ApiPropertyOptional({ enum: ['production', 'staging'], example: 'production' })
   @ValidateIf(notUndefined)
-  @IsEnum(['production', 'staging'], {
-    message: ValidationMessages.IS_ENUM('O ambiente da NFC-e'),
-  })
+  @IsEnum(['production', 'staging'], { message: ValidationMessages.IS_ENUM('O ambiente da NFC-e') })
   nfceEnvironment?: 'production' | 'staging';
 
   @ApiPropertyOptional({ example: 'CSC_TOKEN_123456' })
@@ -197,9 +166,7 @@ export class UpdateCompanyDto {
   @ValidateIf(notUndefined)
   @Transform(trim)
   @IsString({ message: ValidationMessages.IS_STRING('O ID do CSC da NFC-e') })
-  @IsNotEmpty({
-    message: ValidationMessages.IS_NOT_BLANK('O ID do CSC da NFC-e'),
-  })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('O ID do CSC da NFC-e') })
   nfceCscId?: string;
 
   // NF-e
@@ -216,14 +183,9 @@ export class UpdateCompanyDto {
   @Min(0, { message: ValidationMessages.MIN('O número atual da NF-e', 0) })
   nfeCurrentNumber?: number;
 
-  @ApiPropertyOptional({
-    enum: ['production', 'staging'],
-    example: 'staging',
-  })
+  @ApiPropertyOptional({ enum: ['production', 'staging'], example: 'staging' })
   @ValidateIf(notUndefined)
-  @IsEnum(['production', 'staging'], {
-    message: ValidationMessages.IS_ENUM('O ambiente da NF-e'),
-  })
+  @IsEnum(['production', 'staging'], { message: ValidationMessages.IS_ENUM('O ambiente da NF-e') })
   nfeEnvironment?: 'production' | 'staging';
 
   @ApiPropertyOptional({
@@ -234,36 +196,15 @@ export class UpdateCompanyDto {
     description: 'Alíquota de crédito do Simples Nacional (pCredSN), em %',
   })
   @IsOptional()
-  @IsNumber(
-    { maxDecimalPlaces: 2 },
-    {
-      message: ValidationMessages.IS_DECIMAL(
-        'A alíquota de crédito do Simples',
-        2,
-      ),
-    },
-  )
-  @Min(0, {
-    message: ValidationMessages.MIN('A alíquota de crédito do Simples', 0),
-  })
-  @Max(100, {
-    message: ValidationMessages.MAX('A alíquota de crédito do Simples', 100),
-  })
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: ValidationMessages.IS_DECIMAL('A alíquota de crédito do Simples', 2) })
+  @Min(0, { message: ValidationMessages.MIN('A alíquota de crédito do Simples', 0) })
+  @Max(100, { message: ValidationMessages.MAX('A alíquota de crédito do Simples', 100) })
   simplesCreditRate?: number | null;
 
   // Certificado (arquivo e senha vão pelo upload; aqui só a validade)
-  @ApiPropertyOptional({
-    example: '2026-12-31T23:59:59',
-    type: String,
-    nullable: true,
-  })
+  @ApiPropertyOptional({ example: '2026-12-31T23:59:59', type: String, nullable: true })
   @IsOptional()
   @Transform(trimOrNull)
-  @IsDateString(
-    {},
-    {
-      message: ValidationMessages.IS_DATE('A data de validade do certificado'),
-    },
-  )
+  @IsDateString({}, { message: ValidationMessages.IS_DATE('A data de validade do certificado') })
   certificateExpirationDate?: string | null;
 }

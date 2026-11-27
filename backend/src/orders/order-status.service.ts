@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/common/database/prisma.service';
 import { OrderStatus } from 'generated/prisma/client';
 import { OrderEntity } from './entities/order.entity';
@@ -60,16 +55,10 @@ export class OrderStatusService {
         await this.tableService.release(tx, table.id);
       }
 
-      await tx.order.update({
-        where: { id },
-        data: { status: OrderStatus.CANCELED },
-      });
+      await tx.order.update({ where: { id }, data: { status: OrderStatus.CANCELED } });
     });
 
-    const canceledOrder = await this.prisma.client.order.findUnique({
-      where: { id },
-      include: ORDER_INCLUDE,
-    });
+    const canceledOrder = await this.prisma.client.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
 
     this.logger.log(`Pedido ${id} cancelado em ${Date.now() - start}ms`);
 
@@ -108,47 +97,24 @@ export class OrderStatusService {
       const tableNumber = this.tableService.parseTableNumber(order.table);
 
       if (tableNumber !== null) {
-        tableRecord = await this.tableService.findTableRecord(
-          this.prisma.client,
-          order.table,
-          order.locationId,
-        );
+        tableRecord = await this.tableService.findTableRecord(this.prisma.client, order.table, order.locationId);
 
         if (tableRecord?.status === 'OCCUPIED') {
-          this.logger.warn(
-            `Mesa ${tableNumber} do pedido ${id} já ocupada por outro cliente`,
-          );
-          throw new BadRequestException(
-            `Mesa ${tableNumber} já está ocupada por outro cliente`,
-          );
+          this.logger.warn(`Mesa ${tableNumber} do pedido ${id} já ocupada por outro cliente`);
+          throw new BadRequestException(`Mesa ${tableNumber} já está ocupada por outro cliente`);
         }
       }
     }
 
     await this.prisma.client.$transaction(async (tx) => {
-      await tx.order.update({
-        where: { id },
-        data: {
-          status: OrderStatus.OPEN,
-          finishedAt: null,
-          closedByOperatorId: null,
-        },
-      });
+      await tx.order.update({ where: { id }, data: { status: OrderStatus.OPEN, finishedAt: null, closedByOperatorId: null } });
 
       if (tableRecord) {
-        await this.tableService.occupy(
-          tx,
-          tableRecord.id,
-          id,
-          order.customerName,
-        );
+        await this.tableService.occupy(tx, tableRecord.id, id, order.customerName);
       }
     });
 
-    const updated = await this.prisma.client.order.findUnique({
-      where: { id },
-      include: ORDER_INCLUDE,
-    });
+    const updated = await this.prisma.client.order.findUnique({ where: { id }, include: ORDER_INCLUDE });
 
     this.logger.log(`Pedido ${id} reaberto em ${Date.now() - start}ms`);
 

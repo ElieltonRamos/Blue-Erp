@@ -1,10 +1,5 @@
 // business-partner.service.ts
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/common/database/prisma.service';
 import { Prisma, PartnerType, BusinessPartner } from 'generated/prisma/client';
 import { CreateBusinessPartnerDto } from './dto/create-business-partner.dto';
@@ -27,22 +22,15 @@ export class BusinessPartnerService {
     }
 
     const partner = await this.prisma.client.businessPartner.create({
-      data: {
-        ...dto,
-        document: dto.document ? this.cleanDocument(dto.document) : null,
-      },
+      data: { ...dto, document: dto.document ? this.cleanDocument(dto.document) : null },
     });
 
-    this.logger.log(
-      `[Parceiro ${partner.id}] criado: ${partner.name} (${partner.type})`,
-    );
+    this.logger.log(`[Parceiro ${partner.id}] criado: ${partner.name} (${partner.type})`);
 
     return partner;
   }
 
-  async findAll(
-    filters: { type?: PartnerType; active?: boolean; search?: string } = {},
-  ) {
+  async findAll(filters: { type?: PartnerType; active?: boolean; search?: string } = {}) {
     const where: Prisma.BusinessPartnerWhereInput = {
       ...(filters.type && { type: filters.type }),
       ...(filters.active !== undefined && { active: filters.active }),
@@ -50,9 +38,7 @@ export class BusinessPartnerService {
 
     const search = filters.search?.trim();
     if (search) {
-      const searchConditions: Prisma.BusinessPartnerWhereInput[] = [
-        { name: { contains: search } },
-      ];
+      const searchConditions: Prisma.BusinessPartnerWhereInput[] = [{ name: { contains: search } }];
 
       // document é salvo só com dígitos; busca por CNPJ/CPF aceita texto formatado
       const searchDigits = this.cleanDocument(search);
@@ -63,16 +49,11 @@ export class BusinessPartnerService {
       where.OR = searchConditions;
     }
 
-    return this.prisma.client.businessPartner.findMany({
-      where,
-      orderBy: { name: 'asc' },
-    });
+    return this.prisma.client.businessPartner.findMany({ where, orderBy: { name: 'asc' } });
   }
 
   async findOne(id: number): Promise<BusinessPartner> {
-    const partner = await this.prisma.client.businessPartner.findUnique({
-      where: { id },
-    });
+    const partner = await this.prisma.client.businessPartner.findUnique({ where: { id } });
 
     if (!partner) {
       throw new NotFoundException(`Parceiro ${id} não encontrado`);
@@ -81,10 +62,7 @@ export class BusinessPartnerService {
     return partner;
   }
 
-  async update(
-    id: number,
-    dto: UpdateBusinessPartnerDto,
-  ): Promise<BusinessPartner> {
+  async update(id: number, dto: UpdateBusinessPartnerDto): Promise<BusinessPartner> {
     await this.findOne(id);
 
     if (dto.document) {
@@ -98,10 +76,7 @@ export class BusinessPartnerService {
 
     const partner = await this.prisma.client.businessPartner.update({
       where: { id },
-      data: {
-        ...dto,
-        document: dto.document ? this.cleanDocument(dto.document) : undefined,
-      },
+      data: { ...dto, document: dto.document ? this.cleanDocument(dto.document) : undefined },
     });
 
     this.logger.log(`[Parceiro ${id}] atualizado`);
@@ -112,10 +87,7 @@ export class BusinessPartnerService {
   async remove(id: number): Promise<{ message: string }> {
     await this.findOne(id);
 
-    await this.prisma.client.businessPartner.update({
-      where: { id },
-      data: { active: false },
-    });
+    await this.prisma.client.businessPartner.update({ where: { id }, data: { active: false } });
 
     this.logger.log(`[Parceiro ${id}] inativado`);
 
@@ -155,17 +127,11 @@ export class BusinessPartnerService {
     tx: Prisma.TransactionClient,
     cnpj: string,
     name: string,
-    extra: {
-      stateRegistration?: string;
-      city?: string;
-      state?: string;
-    } = {},
+    extra: { stateRegistration?: string; city?: string; state?: string } = {},
   ): Promise<BusinessPartner> {
     const cleanCnpj = this.cleanDocument(cnpj);
 
-    const existing = await tx.businessPartner.findUnique({
-      where: { document: cleanCnpj },
-    });
+    const existing = await tx.businessPartner.findUnique({ where: { document: cleanCnpj } });
 
     if (existing) {
       return existing;
@@ -182,9 +148,7 @@ export class BusinessPartnerService {
       },
     });
 
-    this.logger.log(
-      `[Parceiro ${created.id}] criado automaticamente via NFe: ${name} (${cleanCnpj})`,
-    );
+    this.logger.log(`[Parceiro ${created.id}] criado automaticamente via NFe: ${name} (${cleanCnpj})`);
 
     return created;
   }

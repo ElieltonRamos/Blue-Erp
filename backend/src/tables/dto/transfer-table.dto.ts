@@ -9,10 +9,7 @@ export class TransferTableDto {
   @Min(1)
   targetTableNumber: number;
 
-  @ApiProperty({
-    description: 'Código do local da mesa destino',
-    example: 'LOCAL_01',
-  })
+  @ApiProperty({ description: 'Código do local da mesa destino', example: 'LOCAL_01' })
   @IsString()
   targetLocationCode: string;
 }

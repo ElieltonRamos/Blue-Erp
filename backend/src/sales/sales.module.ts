@@ -9,16 +9,7 @@ import { SaleConverterNFeService } from './sale-converte-nfe.service';
 @Module({
   imports: [CompanyModule],
   controllers: [SalesController],
-  providers: [
-    SalesService,
-    SaleConverterNFCeService,
-    DocumentSaleService,
-    SaleConverterNFeService,
-  ],
-  exports: [
-    SaleConverterNFCeService,
-    DocumentSaleService,
-    SaleConverterNFeService,
-  ],
+  providers: [SalesService, SaleConverterNFCeService, DocumentSaleService, SaleConverterNFeService],
+  exports: [SaleConverterNFCeService, DocumentSaleService, SaleConverterNFeService],
 })
 export class SalesModule {}

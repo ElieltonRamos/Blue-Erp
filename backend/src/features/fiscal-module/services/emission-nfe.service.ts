@@ -44,9 +44,7 @@ export class EmissionNfeService {
     this.checkIfAlreadyEmitted(sale);
 
     const company = await this.companyService.getCompany();
-    const certificate = await loadCertificate(() =>
-      this.companyService.getCertificateBuffer(),
-    );
+    const certificate = await loadCertificate(() => this.companyService.getCertificateBuffer());
 
     const nfeNumber = await this.reserveNfeNumber();
 
@@ -97,41 +95,25 @@ export class EmissionNfeService {
 
     saveXmlDebug(this.logger, accessKey, authorizedXml, 'autorizado');
 
-    const storagePaths = this.storageService.getStoragePaths(
-      accessKey,
-      new Date(nfeData.ide.dhEmi),
-    );
+    const storagePaths = this.storageService.getStoragePaths(accessKey, new Date(nfeData.ide.dhEmi));
 
     try {
       await this.storageService.saveXml(storagePaths.xmlPath, authorizedXml);
     } catch (error) {
-      this.logger.error(
-        `Nota autorizada (${accessKey}) mas falha ao salvar XML: ${error}`,
-      );
+      this.logger.error(`Nota autorizada (${accessKey}) mas falha ao salvar XML: ${error}`);
     }
 
     let pdfPath = '';
     if (dto.generateDanfe && storagePaths.pdfPath && nfeProcXml) {
       try {
-        pdfPath = await this.generateDanfe(
-          company,
-          nfeProcXml,
-          storagePaths.pdfPath,
-        );
+        pdfPath = await this.generateDanfe(company, nfeProcXml, storagePaths.pdfPath);
       } catch (error) {
-        this.logger.error(
-          `Nota autorizada (${accessKey}) mas falha ao gerar DANFE: ${error}`,
-        );
+        this.logger.error(`Nota autorizada (${accessKey}) mas falha ao gerar DANFE: ${error}`);
       }
     }
 
     try {
-      await this.updateSaleAsEmitted(
-        dto.saleId,
-        accessKey,
-        authorizedXml,
-        sefazReturn.protocol,
-      );
+      await this.updateSaleAsEmitted(dto.saleId, accessKey, authorizedXml, sefazReturn.protocol);
     } catch (error) {
       this.logger.error(
         `CRÍTICO: Nota autorizada pelo SEFAZ mas falha ao atualizar venda. ` +
@@ -169,16 +151,12 @@ export class EmissionNfeService {
         data: { nfeCurrentNumber: { decrement: 1 } },
       });
     } catch (error) {
-      this.logger.warn(
-        `Falha ao liberar número NF-e reservado (${number}): ${error}`,
-      );
+      this.logger.warn(`Falha ao liberar número NF-e reservado (${number}): ${error}`);
     }
   }
 
   private async findSale(saleId: number) {
-    const sale = await this.prisma.client.sale.findUnique({
-      where: { id: saleId },
-    });
+    const sale = await this.prisma.client.sale.findUnique({ where: { id: saleId } });
 
     if (!sale) {
       throw new FiscalException('Venda não encontrada', 404);
@@ -187,15 +165,9 @@ export class EmissionNfeService {
     return sale;
   }
 
-  private checkIfAlreadyEmitted(sale: {
-    fiscalStatus: string;
-    fiscalKey: string | null;
-  }): void {
+  private checkIfAlreadyEmitted(sale: { fiscalStatus: string; fiscalKey: string | null }): void {
     if (sale.fiscalStatus === 'EMITIDA' && sale.fiscalKey) {
-      throw new FiscalException(
-        `Venda já possui nota fiscal emitida (chave: ${sale.fiscalKey})`,
-        409,
-      );
+      throw new FiscalException(`Venda já possui nota fiscal emitida (chave: ${sale.fiscalKey})`, 409);
     }
   }
 
@@ -214,12 +186,7 @@ export class EmissionNfeService {
     }
   }
 
-  private async handleRejection(
-    saleId: number,
-    accessKey: string,
-    sefazReturn: SefazReturn,
-    nfeNumber: number,
-  ): Promise<never> {
+  private async handleRejection(saleId: number, accessKey: string, sefazReturn: SefazReturn, nfeNumber: number): Promise<never> {
     await this.releaseNfeNumber(nfeNumber);
     await this.prisma.client.sale.update({
       where: { id: saleId },
@@ -232,31 +199,18 @@ export class EmissionNfeService {
       },
     });
 
-    throw new SefazException(
-      sefazReturn.message || 'NF-e rejeitada pela SEFAZ',
-    );
+    throw new SefazException(sefazReturn.message || 'NF-e rejeitada pela SEFAZ');
   }
 
-  private async generateDanfe(
-    company: CompanyResponseDto,
-    nfeProcXml: string,
-    pdfPath: string,
-  ): Promise<string> {
-    const danfe = new DanfeNfeGenerator({
-      emitterEmail: company.email ?? undefined,
-    });
+  private async generateDanfe(company: CompanyResponseDto, nfeProcXml: string, pdfPath: string): Promise<string> {
+    const danfe = new DanfeNfeGenerator({ emitterEmail: company.email ?? undefined });
 
     await fs.writeFile(pdfPath, await danfe.generate(nfeProcXml));
 
     return pdfPath;
   }
 
-  private async updateSaleAsEmitted(
-    saleId: number,
-    accessKey: string,
-    authorizedXml: string,
-    protocol?: string,
-  ): Promise<void> {
+  private async updateSaleAsEmitted(saleId: number, accessKey: string, authorizedXml: string, protocol?: string): Promise<void> {
     await this.prisma.client.sale.update({
       where: { id: saleId },
       data: {

@@ -73,43 +73,24 @@ export class CreateManualPurchaseDto {
   @IsString({ message: 'Número/referência deve ser texto' })
   invoiceNumber?: string;
 
-  @ApiPropertyOptional({
-    example: '123456789',
-    description: 'Inscrição estadual da transportadora',
-  })
+  @ApiPropertyOptional({ example: '123456789', description: 'Inscrição estadual da transportadora' })
   @IsOptional()
-  @IsString({
-    message: 'Inscrição estadual da transportadora deve ser texto',
-  })
-  @MaxLength(20, {
-    message:
-      'Inscrição estadual da transportadora deve ter no máximo 20 caracteres',
-  })
+  @IsString({ message: 'Inscrição estadual da transportadora deve ser texto' })
+  @MaxLength(20, { message: 'Inscrição estadual da transportadora deve ter no máximo 20 caracteres' })
   transportStateRegistration?: string;
 
-  @ApiPropertyOptional({
-    example: 'Belo Horizonte',
-    description: 'Município da transportadora',
-  })
+  @ApiPropertyOptional({ example: 'Belo Horizonte', description: 'Município da transportadora' })
   @IsOptional()
   @IsString({ message: 'Cidade da transportadora deve ser texto' })
   transportCity?: string;
 
-  @ApiPropertyOptional({
-    example: 'MG',
-    description: 'UF da transportadora',
-  })
+  @ApiPropertyOptional({ example: 'MG', description: 'UF da transportadora' })
   @IsOptional()
   @IsString({ message: 'Estado da transportadora deve ser texto' })
-  @Length(2, 2, {
-    message: 'Estado (UF) da transportadora deve ter 2 caracteres',
-  })
+  @Length(2, 2, { message: 'Estado (UF) da transportadora deve ter 2 caracteres' })
   transportState?: string;
 
-  @ApiPropertyOptional({
-    example: '12345678',
-    description: 'RNTC/ANTT do veículo de transporte',
-  })
+  @ApiPropertyOptional({ example: '12345678', description: 'RNTC/ANTT do veículo de transporte' })
   @IsOptional()
   @IsString({ message: 'RNTC deve ser texto' })
   @MaxLength(20, { message: 'RNTC deve ter no máximo 20 caracteres' })

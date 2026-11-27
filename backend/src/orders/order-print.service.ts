@@ -13,10 +13,7 @@ export interface PrintJobContext {
 export interface PrintJobBuilder {
   map: Map<string, PrintJob>;
   addItem: (location: string, item: PrintItem) => void;
-  addItemIfLocation: (
-    location: string | null | undefined,
-    item: PrintItem,
-  ) => void;
+  addItemIfLocation: (location: string | null | undefined, item: PrintItem) => void;
 }
 
 @Injectable()
@@ -43,10 +40,7 @@ export class OrderPrintService {
       map.get(location)!.items.push(item);
     };
 
-    const addItemIfLocation = (
-      location: string | null | undefined,
-      item: PrintItem,
-    ) => {
+    const addItemIfLocation = (location: string | null | undefined, item: PrintItem) => {
       const loc = location?.trim();
       if (loc) addItem(loc, item);
     };
@@ -63,10 +57,7 @@ export class OrderPrintService {
     });
   }
 
-  async dispatchSync(
-    orderId: number,
-    map: Map<string, PrintJob>,
-  ): Promise<void> {
+  async dispatchSync(orderId: number, map: Map<string, PrintJob>): Promise<void> {
     try {
       await this.printerService.printOrder([...map.values()]);
     } catch (err: any) {

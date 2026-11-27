@@ -1,13 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import {
-  IsString,
-  IsNotEmpty,
-  IsInt,
-  IsOptional,
-  IsArray,
-  ValidateNested,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsInt, IsOptional, IsArray, ValidateNested } from 'class-validator';
 import { AssetAttributeDto } from './asset-attribute.dto';
 import { ValidationMessages } from 'src/common/utils/validation';
 
@@ -17,10 +10,7 @@ export class CreateAssetDto {
   @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Tipo') })
   type: string;
 
-  @ApiProperty({
-    example: 'ABC-1234',
-    description: 'Identificador do asset (ex: placa)',
-  })
+  @ApiProperty({ example: 'ABC-1234', description: 'Identificador do asset (ex: placa)' })
   @IsString({ message: ValidationMessages.IS_STRING('Identificador') })
   @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Identificador') })
   label: string;

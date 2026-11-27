@@ -23,19 +23,12 @@ export class FindAllAssetsDto {
   @IsOptional()
   sortKey?: string = 'label';
 
-  @ApiPropertyOptional({
-    example: 'asc',
-    default: 'asc',
-    enum: ['asc', 'desc'],
-  })
+  @ApiPropertyOptional({ example: 'asc', default: 'asc', enum: ['asc', 'desc'] })
   @IsIn(['asc', 'desc'], { message: ValidationMessages.IS_ENUM('Ordem') })
   @IsOptional()
   sortOrder?: 'asc' | 'desc' = 'asc';
 
-  @ApiPropertyOptional({
-    example: 'ABC-1234',
-    description: 'Busca por label (ex: placa)',
-  })
+  @ApiPropertyOptional({ example: 'ABC-1234', description: 'Busca por label (ex: placa)' })
   @IsString({ message: ValidationMessages.IS_STRING('Busca') })
   @IsOptional()
   search?: string;

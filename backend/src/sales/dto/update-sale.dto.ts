@@ -1,15 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsNumber,
-  IsBoolean,
-  IsEnum,
-  IsOptional,
-  IsArray,
-  ValidateNested,
-  Min,
-  IsInt,
-  IsIn,
-} from 'class-validator';
+import { IsNumber, IsBoolean, IsEnum, IsOptional, IsArray, ValidateNested, Min, IsInt, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 import { FiscalStatus } from 'generated/prisma/client';
 import { CreateSalePaymentDto } from './create-sale.dto';

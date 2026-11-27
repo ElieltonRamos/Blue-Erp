@@ -18,9 +18,7 @@ import {
 export class VehicleDto {
   // Placa antiga (ABC-1234) ou Mercosul (ABC1D23). O converter remove o hífen.
   @IsString()
-  @Matches(/^[A-Za-z]{3}-?\d[A-Za-z0-9]\d{2}$/, {
-    message: 'Placa inválida',
-  })
+  @Matches(/^[A-Za-z]{3}-?\d[A-Za-z0-9]\d{2}$/, { message: 'Placa inválida' })
   plate: string;
 
   @IsString()

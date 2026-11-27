@@ -1,14 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsString,
-  IsNumber,
-  IsOptional,
-  Min,
-  IsArray,
-  ValidateNested,
-  IsInt,
-} from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsOptional, Min, IsArray, ValidateNested, IsInt } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateSaleItemDto {

@@ -14,15 +14,10 @@ interface CompanyRow {
 
 const BUSINESS_TYPES = Object.keys(MENUS_BY_BUSINESS_TYPE) as BusinessTypeKey[];
 
-const ALL_MENUS: string[] = [
-  ...new Set(Object.values(MENUS_BY_BUSINESS_TYPE).flat()),
-];
+const ALL_MENUS: string[] = [...new Set(Object.values(MENUS_BY_BUSINESS_TYPE).flat())];
 
 function ask(question: string): Promise<string> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
   return new Promise((resolve) => {
     rl.question(question, (answer) => {
@@ -44,38 +39,26 @@ function parseMenus(value: CompanyRow['enabled_menus']): string[] {
 }
 
 async function listCompanies(conn: mariadb.Connection): Promise<CompanyRow[]> {
-  const rows = await conn.query<CompanyRow[]>(
-    'SELECT id, trade_name, business_type, enabled_menus FROM companies ORDER BY id',
-  );
+  const rows = await conn.query<CompanyRow[]>('SELECT id, trade_name, business_type, enabled_menus FROM companies ORDER BY id');
 
   console.log('');
   for (const c of rows) {
     const menus = parseMenus(c.enabled_menus);
-    console.log(
-      `   [${c.id}] ${c.trade_name} | ${c.business_type} | menus: ${
-        menus.length ? menus.join(', ') : '(vazio)'
-      }`,
-    );
+    console.log(`   [${c.id}] ${c.trade_name} | ${c.business_type} | menus: ${menus.length ? menus.join(', ') : '(vazio)'}`);
   }
   console.log('');
   return rows;
 }
 
-async function saveCompany(
-  conn: mariadb.Connection,
-  id: number,
-  businessType: string,
-  menus: string[],
-): Promise<void> {
-  await conn.query(
-    'UPDATE companies SET business_type = ?, enabled_menus = ? WHERE id = ?',
-    [businessType, JSON.stringify(menus), id],
-  );
+async function saveCompany(conn: mariadb.Connection, id: number, businessType: string, menus: string[]): Promise<void> {
+  await conn.query('UPDATE companies SET business_type = ?, enabled_menus = ? WHERE id = ?', [
+    businessType,
+    JSON.stringify(menus),
+    id,
+  ]);
 }
 
-async function pickCompany(
-  conn: mariadb.Connection,
-): Promise<CompanyRow | null> {
+async function pickCompany(conn: mariadb.Connection): Promise<CompanyRow | null> {
   const companies = await listCompanies(conn);
   if (companies.length === 0) {
     console.log('❌ Nenhuma empresa cadastrada.\n');
@@ -111,13 +94,9 @@ async function customizeMenus(conn: mariadb.Connection): Promise<void> {
   const current = new Set(parseMenus(company.enabled_menus));
 
   console.log('\n   Menus disponíveis ([x] = habilitado):');
-  ALL_MENUS.forEach((m, i) =>
-    console.log(`   ${i + 1} - [${current.has(m) ? 'x' : ' '}] ${m}`),
-  );
+  ALL_MENUS.forEach((m, i) => console.log(`   ${i + 1} - [${current.has(m) ? 'x' : ' '}] ${m}`));
 
-  const input = await ask(
-    'Números para alternar (ex: 1,3,5) ou Enter para cancelar: ',
-  );
+  const input = await ask('Números para alternar (ex: 1,3,5) ou Enter para cancelar: ');
   if (!input) return;
 
   for (const n of input.split(',').map((s) => Number(s.trim()) - 1)) {
@@ -128,17 +107,14 @@ async function customizeMenus(conn: mariadb.Connection): Promise<void> {
   }
 
   await saveCompany(conn, company.id, company.business_type, [...current]);
-  console.log(
-    `✅ Menus da empresa ${company.id}: ${[...current].join(', ')}\n`,
-  );
+  console.log(`✅ Menus da empresa ${company.id}: ${[...current].join(', ')}\n`);
 }
 
 async function resetMenusToDefault(conn: mariadb.Connection): Promise<void> {
   const company = await pickCompany(conn);
   if (!company) return;
 
-  const menus =
-    MENUS_BY_BUSINESS_TYPE[company.business_type as BusinessTypeKey];
+  const menus = MENUS_BY_BUSINESS_TYPE[company.business_type as BusinessTypeKey];
   if (!menus) {
     console.log(`❌ Sem padrão para '${company.business_type}'.\n`);
     return;

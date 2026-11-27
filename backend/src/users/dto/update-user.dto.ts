@@ -10,10 +10,7 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsOptional()
   password?: string;
 
-  @ApiPropertyOptional({
-    example: 'Ativo',
-    description: 'Status do usuário: Ativo ou Inativo',
-  })
+  @ApiPropertyOptional({ example: 'Ativo', description: 'Status do usuário: Ativo ou Inativo' })
   @IsOptional()
   @Transform(({ value }) => {
     if (value === 'Ativo' || value === true) return true;

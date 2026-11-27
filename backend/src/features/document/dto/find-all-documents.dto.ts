@@ -1,16 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsDateString,
-  IsEnum,
-  IsInt,
-  IsNumber,
-  IsOptional,
-} from 'class-validator';
+import { IsDateString, IsEnum, IsInt, IsNumber, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
-import {
-  DocumentStatus,
-  DocumentType,
-} from '../../../../generated/prisma/enums.js';
+import { DocumentStatus, DocumentType } from '../../../../generated/prisma/enums.js';
 
 export class FindAllDocumentsDto {
   @ApiProperty({ required: false, default: 1 })

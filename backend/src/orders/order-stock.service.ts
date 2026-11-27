@@ -6,25 +6,11 @@ type Numeric = number | Prisma.Decimal;
 
 @Injectable()
 export class OrderStockService {
-  async decrement(
-    tx: TxClient,
-    productId: number,
-    quantity: Numeric,
-  ): Promise<void> {
-    await tx.product.update({
-      where: { id: productId },
-      data: { quantity: { decrement: Number(quantity) } },
-    });
+  async decrement(tx: TxClient, productId: number, quantity: Numeric): Promise<void> {
+    await tx.product.update({ where: { id: productId }, data: { quantity: { decrement: Number(quantity) } } });
   }
 
-  async increment(
-    tx: TxClient,
-    productId: number,
-    quantity: Numeric,
-  ): Promise<void> {
-    await tx.product.update({
-      where: { id: productId },
-      data: { quantity: { increment: Number(quantity) } },
-    });
+  async increment(tx: TxClient, productId: number, quantity: Numeric): Promise<void> {
+    await tx.product.update({ where: { id: productId }, data: { quantity: { increment: Number(quantity) } } });
   }
 }

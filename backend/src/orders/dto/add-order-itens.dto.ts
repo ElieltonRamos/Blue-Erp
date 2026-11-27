@@ -4,10 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { UpdateOrderItemDto } from './update-order.dto';
 
 export class AddOrderItemsDto {
-  @ApiProperty({
-    type: [UpdateOrderItemDto],
-    description: 'Itens novos a adicionar ao pedido',
-  })
+  @ApiProperty({ type: [UpdateOrderItemDto], description: 'Itens novos a adicionar ao pedido' })
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })

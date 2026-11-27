@@ -7,11 +7,7 @@
  * Usar em métodos de @Cron para evitar execução duplicada entre instâncias do cluster.
  */
 export function SingleInstance() {
-  return function (
-    _target: object,
-    _propertyKey: string,
-    descriptor: PropertyDescriptor,
-  ) {
+  return function (_target: object, _propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
     descriptor.value = function (...args: unknown[]) {

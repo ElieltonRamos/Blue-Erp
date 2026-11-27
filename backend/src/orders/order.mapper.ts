@@ -1,26 +1,13 @@
 import { OrderEntity } from './entities/order.entity';
 
 export const ORDER_INCLUDE_FULL = {
-  items: {
-    include: {
-      product: {
-        select: { id: true, productionLocation: true, productType: true },
-      },
-    },
-  },
+  items: { include: { product: { select: { id: true, productionLocation: true, productType: true } } } },
   operator: { select: { id: true, username: true, role: true } },
   closedByOperator: { select: { id: true, username: true, role: true } },
 };
 
 export const ORDER_INCLUDE_ITEMS_FULL = {
-  items: {
-    include: {
-      productions: true,
-      product: {
-        select: { id: true, productType: true, productionLocation: true },
-      },
-    },
-  },
+  items: { include: { productions: true, product: { select: { id: true, productType: true, productionLocation: true } } } },
   operator: { select: { id: true, username: true, role: true } },
   closedByOperator: { select: { id: true, username: true, role: true } },
 };

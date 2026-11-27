@@ -5,9 +5,7 @@ export class NfeHttpClient {
   constructor(private readonly credentials: { key: string; cert: string }) {}
 
   buildSoapEnvelope(action: string, content: string): string {
-    const namespace =
-      SOAP_NAMESPACES[action] ||
-      'http://www.portalfiscal.inf.br/nfe/wsdl/NFeAutorizacao4';
+    const namespace = SOAP_NAMESPACES[action] || 'http://www.portalfiscal.inf.br/nfe/wsdl/NFeAutorizacao4';
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <soap12:Envelope xmlns:soap12="http://www.w3.org/2003/05/soap-envelope" xmlns:nfe="${namespace}">
@@ -17,16 +15,9 @@ export class NfeHttpClient {
 </soap12:Envelope>`;
   }
 
-  postSoap(
-    host: string,
-    path: string,
-    body: string,
-    action: string,
-  ): Promise<string> {
+  postSoap(host: string, path: string, body: string, action: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      const namespace =
-        SOAP_NAMESPACES[action] ||
-        'http://www.portalfiscal.inf.br/nfe/wsdl/NFeAutorizacao4';
+      const namespace = SOAP_NAMESPACES[action] || 'http://www.portalfiscal.inf.br/nfe/wsdl/NFeAutorizacao4';
       const soapAction = `${namespace}/${action}`;
 
       const options: https.RequestOptions = {
@@ -48,9 +39,7 @@ export class NfeHttpClient {
         res.on('data', (chunk) => (data += chunk));
         res.on('end', () => {
           if (res.statusCode && res.statusCode >= 400) {
-            reject(
-              new Error(`HTTP ${res.statusCode}: ${data.substring(0, 200)}`),
-            );
+            reject(new Error(`HTTP ${res.statusCode}: ${data.substring(0, 200)}`));
           } else {
             resolve(data);
           }

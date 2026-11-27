@@ -35,10 +35,7 @@ export class FiscalReportsService {
   }
 
   async list(dto: ListFiscalDto) {
-    const where: any = {
-      ...this.modelWhere(dto.model),
-      fiscalKey: { not: null },
-    };
+    const where: any = { ...this.modelWhere(dto.model), fiscalKey: { not: null } };
 
     if (dto.status) {
       where.fiscalStatus = dto.status;
@@ -80,35 +77,20 @@ export class FiscalReportsService {
       this.prisma.client.sale.count({ where }),
     ]);
 
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
-  async downloadXml(
-    saleId: number,
-  ): Promise<{ xmlPath: string; filename: string }> {
+  async downloadXml(saleId: number): Promise<{ xmlPath: string; filename: string }> {
     const sale = await this.prisma.client.sale.findUnique({
       where: { id: saleId },
-      select: {
-        fiscalKey: true,
-        fiscalEmitDate: true,
-        fiscalXml: true,
-      },
+      select: { fiscalKey: true, fiscalEmitDate: true, fiscalXml: true },
     });
 
     if (!sale?.fiscalKey || !sale.fiscalEmitDate) {
       throw new FiscalNotFoundException(`Venda ${saleId}`);
     }
 
-    const paths = this.storageService.getStoragePaths(
-      sale.fiscalKey,
-      sale.fiscalEmitDate,
-    );
+    const paths = this.storageService.getStoragePaths(sale.fiscalKey, sale.fiscalEmitDate);
     const prefix = modelFromAccessKey(sale.fiscalKey) === '55' ? 'nfe' : 'nfce';
     const filename = `${prefix}-${sale.fiscalKey}.xml`;
 
@@ -125,33 +107,22 @@ export class FiscalReportsService {
     throw new NotFoundException(`XML não encontrado para a venda ${saleId}`);
   }
 
-  async reprintPdf(
-    saleId: number,
-  ): Promise<{ pdfPath: string; filename: string }> {
+  async reprintPdf(saleId: number): Promise<{ pdfPath: string; filename: string }> {
     const sale = await this.prisma.client.sale.findUnique({
       where: { id: saleId },
-      select: {
-        fiscalKey: true,
-        fiscalEmitDate: true,
-        fiscalXml: true,
-      },
+      select: { fiscalKey: true, fiscalEmitDate: true, fiscalXml: true },
     });
 
     if (!sale?.fiscalKey || !sale.fiscalEmitDate) {
       throw new FiscalNotFoundException(`Venda ${saleId}`);
     }
 
-    const paths = this.storageService.getStoragePaths(
-      sale.fiscalKey,
-      sale.fiscalEmitDate,
-    );
+    const paths = this.storageService.getStoragePaths(sale.fiscalKey, sale.fiscalEmitDate);
     const isNfe = modelFromAccessKey(sale.fiscalKey) === '55';
     const filename = `${isNfe ? 'nfe' : 'nfce'}-${sale.fiscalKey}.pdf`;
 
     if (!paths.pdfPath) {
-      throw new NotFoundException(
-        `Caminho de PDF inválido para a venda ${saleId}`,
-      );
+      throw new NotFoundException(`Caminho de PDF inválido para a venda ${saleId}`);
     }
 
     const pdfPath: string = paths.pdfPath;
@@ -162,44 +133,25 @@ export class FiscalReportsService {
     }
 
     if (!sale.fiscalXml) {
-      throw new NotFoundException(
-        `XML não disponível para regenerar PDF da venda ${saleId}`,
-      );
+      throw new NotFoundException(`XML não disponível para regenerar PDF da venda ${saleId}`);
     }
 
-    this.logger.log(
-      `PDF não encontrado em disco — regenerando para chave ${sale.fiscalKey}`,
-    );
+    this.logger.log(`PDF não encontrado em disco — regenerando para chave ${sale.fiscalKey}`);
 
     if (isNfe) {
       const company = await this.companyService.getCompany();
-      const danfe = new DanfeNfeGenerator({
-        emitterEmail: company.email ?? undefined,
-      });
+      const danfe = new DanfeNfeGenerator({ emitterEmail: company.email ?? undefined });
       await fs.writeFile(pdfPath, await danfe.generate(sale.fiscalXml));
       return { pdfPath, filename };
     }
 
     const { nfceCsc, nfceCscId } = await this.companyService.getCscConfig();
 
-    const danfe = new DanfeGenerator({
-      csc: nfceCsc,
-      idCSC: nfceCscId,
-      widthMM: 80,
-    });
+    const danfe = new DanfeGenerator({ csc: nfceCsc, idCSC: nfceCscId, widthMM: 80 });
 
-    const { nfeData, accessKey, totals, qrCodeUrl, urlChave } = danfe.parseXml(
-      sale.fiscalXml,
-    );
+    const { nfeData, accessKey, totals, qrCodeUrl, urlChave } = danfe.parseXml(sale.fiscalXml);
 
-    await danfe.generateDanfe(
-      nfeData,
-      accessKey,
-      totals,
-      qrCodeUrl,
-      urlChave,
-      pdfPath,
-    );
+    await danfe.generateDanfe(nfeData, accessKey, totals, qrCodeUrl, urlChave, pdfPath);
 
     return { pdfPath, filename };
   }
@@ -220,13 +172,7 @@ export class FiscalReportsService {
         fiscalStatus: true,
         total: true,
         cfop: true,
-        items: {
-          select: {
-            cfop: true,
-            totalPrice: true,
-            product: { select: { ncm: true } },
-          },
-        },
+        items: { select: { cfop: true, totalPrice: true, product: { select: { ncm: true } } } },
       },
     });
 
@@ -265,11 +211,7 @@ export class FiscalReportsService {
       }
     }
 
-    const byNcm = Array.from(ncmMap.entries()).map(([ncm, data]) => ({
-      ncm,
-      totalValue: data.totalValue,
-      count: data.count,
-    }));
+    const byNcm = Array.from(ncmMap.entries()).map(([ncm, data]) => ({ ncm, totalValue: data.totalValue, count: data.count }));
 
     return {
       period: `${year}-${month}`,
@@ -298,9 +240,7 @@ export class FiscalReportsService {
     lines.push('Por CFOP');
     lines.push('CFOP;Descrição;Qtd. Itens;Total (R$)');
     for (const row of report.byCfop) {
-      lines.push(
-        `${row.cfop};${row.description};${row.count};${row.totalValue.toFixed(2)}`,
-      );
+      lines.push(`${row.cfop};${row.description};${row.count};${row.totalValue.toFixed(2)}`);
     }
     lines.push('');
 

@@ -1,16 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 // src/production/order-production.controller.ts (atualizado)
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Param,
-  Query,
-  ParseIntPipe,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Query, ParseIntPipe, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ProductionStatus } from 'generated/prisma/client';
 import { ProductionService } from './order-production.service';
@@ -27,9 +17,7 @@ export class ProductionController {
   @Post('batch/start')
   @ApiOperation({ summary: 'Iniciar múltiplas produções' })
   async batchStart(@Body() dto: BatchProductionDto) {
-    const results = await Promise.allSettled(
-      dto.productionIds.map((id) => this.productionService.startProduction(id)),
-    );
+    const results = await Promise.allSettled(dto.productionIds.map((id) => this.productionService.startProduction(id)));
 
     const succeeded = results.filter((r) => r.status === 'fulfilled');
     const failed = results.filter((r) => r.status === 'rejected');
@@ -49,11 +37,7 @@ export class ProductionController {
   @Post('batch/complete')
   @ApiOperation({ summary: 'Completar múltiplas produções' })
   async batchComplete(@Body() dto: BatchProductionDto) {
-    const results = await Promise.allSettled(
-      dto.productionIds.map((id) =>
-        this.productionService.completeProduction(id),
-      ),
-    );
+    const results = await Promise.allSettled(dto.productionIds.map((id) => this.productionService.completeProduction(id)));
 
     const succeeded = results.filter((r) => r.status === 'fulfilled');
     const failed = results.filter((r) => r.status === 'rejected');
@@ -73,11 +57,7 @@ export class ProductionController {
   @Post('batch/deliver')
   @ApiOperation({ summary: 'Entregar múltiplas produções' })
   async batchDeliver(@Body() dto: BatchProductionDto) {
-    const results = await Promise.allSettled(
-      dto.productionIds.map((id) =>
-        this.productionService.deliverProduction(id),
-      ),
-    );
+    const results = await Promise.allSettled(dto.productionIds.map((id) => this.productionService.deliverProduction(id)));
 
     const succeeded = results.filter((r) => r.status === 'fulfilled');
     const failed = results.filter((r) => r.status === 'rejected');
@@ -97,11 +77,7 @@ export class ProductionController {
   @Post('batch/cancel')
   @ApiOperation({ summary: 'Cancelar múltiplas produções' })
   async batchCancel(@Body() dto: BatchProductionDto) {
-    const results = await Promise.allSettled(
-      dto.productionIds.map((id) =>
-        this.productionService.cancelProduction(id),
-      ),
-    );
+    const results = await Promise.allSettled(dto.productionIds.map((id) => this.productionService.cancelProduction(id)));
 
     const succeeded = results.filter((r) => r.status === 'fulfilled');
     const failed = results.filter((r) => r.status === 'rejected');
@@ -122,10 +98,7 @@ export class ProductionController {
   @ApiOperation({ summary: 'Listar todas produções com filtros opcionais' })
   @ApiQuery({ name: 'status', required: false, enum: ProductionStatus })
   @ApiQuery({ name: 'productionLocation', required: false })
-  findAll(
-    @Query('status') status?: ProductionStatus,
-    @Query('productionLocation') productionLocation?: string,
-  ) {
+  findAll(@Query('status') status?: ProductionStatus, @Query('productionLocation') productionLocation?: string) {
     return this.productionService.findAll({ status, productionLocation });
   }
 
@@ -173,17 +146,13 @@ export class ProductionController {
 
   @Post('maintenance/complete-and-deliver-forgotten')
   @ApiOperation({
-    summary:
-      'Finaliza e entrega produções de dias anteriores que ficaram presas em progresso',
+    summary: 'Finaliza e entrega produções de dias anteriores que ficaram presas em progresso',
     description:
       'Busca todas as produções com status IN_PROGRESS e startedAt anterior a hoje, completando-as e marcando como entregues.',
   })
   async completeAndDeliverForgotten() {
     const result = await this.productionService.completeAndDeliverForgotten();
 
-    return {
-      message: 'Processamento de produções esquecidas finalizado',
-      ...result,
-    };
+    return { message: 'Processamento de produções esquecidas finalizado', ...result };
   }
 }

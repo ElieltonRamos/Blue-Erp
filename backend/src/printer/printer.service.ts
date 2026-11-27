@@ -29,16 +29,13 @@ export class PrinterService {
     const FONT_NORMAL = `${ESC}!\x10`;
 
     const line = '-'.repeat(45);
-    const now = new Date().toLocaleString('pt-BR', {
-      timeZone: 'America/Sao_Paulo',
-    });
+    const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
     let text = '';
     if (job.isReprint) {
       text += CENTER + FONT_BIG + BOLD_ON + `#REIMPRESSAO#` + LF;
     }
-    text +=
-      CENTER + FONT_BIG + BOLD_ON + `PEDIDO #${job.orderId}` + BOLD_OFF + LF;
+    text += CENTER + FONT_BIG + BOLD_ON + `PEDIDO #${job.orderId}` + BOLD_OFF + LF;
     text += FONT_BIG + CENTER + now + LF;
     if (job.table) text += CENTER + `Mesa: ${job.table}` + LF;
     if (job.customerName) text += CENTER + `Cliente: ${job.customerName}` + LF;
@@ -46,13 +43,7 @@ export class PrinterService {
     text += FONT_NORMAL + LEFT + line + LF;
 
     for (const item of job.items) {
-      text +=
-        FONT_NORMAL +
-        CENTER +
-        BOLD_ON +
-        `${item.quantity}x ${item.name}` +
-        BOLD_OFF +
-        LF;
+      text += FONT_NORMAL + CENTER + BOLD_ON + `${item.quantity}x ${item.name}` + BOLD_OFF + LF;
       if (item.observation) text += CENTER + `   Obs: ${item.observation}` + LF;
     }
 
@@ -67,9 +58,7 @@ export class PrinterService {
       const ip = this.getIp(job.location);
 
       if (!ip) {
-        this.logger.warn(
-          `Impressora não configurada para location: ${job.location}`,
-        );
+        this.logger.warn(`Impressora não configurada para location: ${job.location}`);
         return resolve();
       }
 
@@ -80,24 +69,17 @@ export class PrinterService {
         if (settled) return;
         settled = true;
         if (success) {
-          this.logger.log(
-            `Impresso pedido #${job.orderId} → ${job.location} (${ip})`,
-          );
+          this.logger.log(`Impresso pedido #${job.orderId} → ${job.location} (${ip})`);
         } else {
-          this.logger.error(
-            `Erro ao imprimir pedido #${job.orderId} → ${job.location}: ${message}`,
-          );
+          this.logger.error(`Erro ao imprimir pedido #${job.orderId} → ${job.location}: ${message}`);
         }
         resolve();
       };
 
-      const client = net.createConnection(
-        { host: ip, port: this.PRINTER_PORT },
-        () => {
-          client.write(data);
-          client.end();
-        },
-      );
+      const client = net.createConnection({ host: ip, port: this.PRINTER_PORT }, () => {
+        client.write(data);
+        client.end();
+      });
 
       client.setTimeout(this.TIMEOUT_MS);
 

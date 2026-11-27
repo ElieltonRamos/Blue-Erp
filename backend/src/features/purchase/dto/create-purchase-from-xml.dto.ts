@@ -1,15 +1,5 @@
 // dto/create-purchase-from-xml.dto.ts — com mensagens em pt-br
-import {
-  IsString,
-  IsNotEmpty,
-  IsArray,
-  ValidateNested,
-  IsNumber,
-  IsOptional,
-  Min,
-  Length,
-  MaxLength,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsArray, ValidateNested, IsNumber, IsOptional, Min, Length, MaxLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ParsedNfeInstallmentDto } from './parsed-nfe.dto';
 import { ApiProperty } from '@nestjs/swagger';
@@ -67,79 +57,41 @@ export class CreatePurchaseFromXmlDto {
   @IsNotEmpty({ message: 'Nome do fornecedor é obrigatório' })
   supplierName: string;
 
-  @ApiProperty({
-    required: false,
-    example: '123456789',
-    description: 'Inscrição estadual do fornecedor (emitente)',
-  })
+  @ApiProperty({ required: false, example: '123456789', description: 'Inscrição estadual do fornecedor (emitente)' })
   @IsString({ message: 'Inscrição estadual do fornecedor deve ser texto' })
-  @MaxLength(20, {
-    message:
-      'Inscrição estadual do fornecedor deve ter no máximo 20 caracteres',
-  })
+  @MaxLength(20, { message: 'Inscrição estadual do fornecedor deve ter no máximo 20 caracteres' })
   @IsOptional()
   supplierStateRegistration?: string;
 
-  @ApiProperty({
-    required: false,
-    example: 'Belo Horizonte',
-    description: 'Município do fornecedor (emitente)',
-  })
+  @ApiProperty({ required: false, example: 'Belo Horizonte', description: 'Município do fornecedor (emitente)' })
   @IsString({ message: 'Cidade do fornecedor deve ser texto' })
   @IsOptional()
   supplierCity?: string;
 
-  @ApiProperty({
-    required: false,
-    example: 'MG',
-    description: 'UF do fornecedor (emitente)',
-  })
+  @ApiProperty({ required: false, example: 'MG', description: 'UF do fornecedor (emitente)' })
   @IsString({ message: 'Estado do fornecedor deve ser texto' })
   @Length(2, 2, { message: 'Estado (UF) do fornecedor deve ter 2 caracteres' })
   @IsOptional()
   supplierState?: string;
 
-  @ApiProperty({
-    required: false,
-    example: '123456789',
-    description: 'Inscrição estadual da transportadora',
-  })
-  @IsString({
-    message: 'Inscrição estadual da transportadora deve ser texto',
-  })
-  @MaxLength(20, {
-    message:
-      'Inscrição estadual da transportadora deve ter no máximo 20 caracteres',
-  })
+  @ApiProperty({ required: false, example: '123456789', description: 'Inscrição estadual da transportadora' })
+  @IsString({ message: 'Inscrição estadual da transportadora deve ser texto' })
+  @MaxLength(20, { message: 'Inscrição estadual da transportadora deve ter no máximo 20 caracteres' })
   @IsOptional()
   transportStateRegistration?: string;
 
-  @ApiProperty({
-    required: false,
-    example: 'Belo Horizonte',
-    description: 'Município da transportadora',
-  })
+  @ApiProperty({ required: false, example: 'Belo Horizonte', description: 'Município da transportadora' })
   @IsString({ message: 'Cidade da transportadora deve ser texto' })
   @IsOptional()
   transportCity?: string;
 
-  @ApiProperty({
-    required: false,
-    example: 'MG',
-    description: 'UF da transportadora',
-  })
+  @ApiProperty({ required: false, example: 'MG', description: 'UF da transportadora' })
   @IsString({ message: 'Estado da transportadora deve ser texto' })
-  @Length(2, 2, {
-    message: 'Estado (UF) da transportadora deve ter 2 caracteres',
-  })
+  @Length(2, 2, { message: 'Estado (UF) da transportadora deve ter 2 caracteres' })
   @IsOptional()
   transportState?: string;
 
-  @ApiProperty({
-    required: false,
-    example: '12345678',
-    description: 'RNTC/ANTT do veículo de transporte',
-  })
+  @ApiProperty({ required: false, example: '12345678', description: 'RNTC/ANTT do veículo de transporte' })
   @IsString({ message: 'RNTC deve ser texto' })
   @MaxLength(20, { message: 'RNTC deve ter no máximo 20 caracteres' })
   @IsOptional()

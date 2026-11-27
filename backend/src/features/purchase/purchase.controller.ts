@@ -52,16 +52,8 @@ export class PurchaseController {
 
   @Get('business-partners')
   @ApiOperation({ summary: 'Listar fornecedores' })
-  findAllPartners(
-    @Query('type') type?: PartnerType,
-    @Query('active') active?: string,
-    @Query('search') search?: string,
-  ) {
-    return this.businessPartnerService.findAll({
-      type,
-      active: active !== undefined ? active === 'true' : undefined,
-      search,
-    });
+  findAllPartners(@Query('type') type?: PartnerType, @Query('active') active?: string, @Query('search') search?: string) {
+    return this.businessPartnerService.findAll({ type, active: active !== undefined ? active === 'true' : undefined, search });
   }
 
   @Get('business-partners/:id')
@@ -79,10 +71,7 @@ export class PurchaseController {
 
   @Patch('business-partners/:id')
   @ApiOperation({ summary: 'Atualizar fornecedor' })
-  updatePartner(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateBusinessPartnerDto,
-  ) {
+  updatePartner(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateBusinessPartnerDto) {
     return this.businessPartnerService.update(id, dto);
   }
 
@@ -105,51 +94,31 @@ export class PurchaseController {
   @Post('manual')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Lançar compra manualmente (sem NF-e)' })
-  createManual(
-    @Body() dto: CreateManualPurchaseDto,
-    @CurrentUser() user: JwtPayload,
-  ) {
+  createManual(@Body() dto: CreateManualPurchaseDto, @CurrentUser() user: JwtPayload) {
     return this.purchaseService.createManual(dto, user.userId);
   }
 
   @Post('parse-xml')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
-  @ApiOperation({
-    summary: 'Parsear XML da NFe e conciliar itens com produtos existentes',
-  })
+  @ApiOperation({ summary: 'Parsear XML da NFe e conciliar itens com produtos existentes' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: { file: { type: 'string', format: 'binary' } },
-    },
-  })
+  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
   async parseXml(@UploadedFile() file: UploadedXmlFile) {
     if (!file?.buffer) {
       throw new BadRequestException('Arquivo XML não enviado');
     }
 
     const parsed = this.nfeXmlParserService.parse(file.buffer);
-    const reconciledItems = await this.purchaseService.reconcileItems(
-      parsed.supplierCnpj,
-      parsed.items,
-    );
+    const reconciledItems = await this.purchaseService.reconcileItems(parsed.supplierCnpj, parsed.items);
 
-    return {
-      ...parsed,
-      items: reconciledItems,
-      fiscalXml: file.buffer.toString('utf-8'),
-    };
+    return { ...parsed, items: reconciledItems, fiscalXml: file.buffer.toString('utf-8') };
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Confirmar conciliação e registrar a compra' })
-  create(
-    @Body() dto: CreatePurchaseFromXmlDto,
-    @CurrentUser() user: JwtPayload,
-  ) {
+  create(@Body() dto: CreatePurchaseFromXmlDto, @CurrentUser() user: JwtPayload) {
     return this.purchaseService.createFromReconciledXml(dto, user.userId);
   }
 

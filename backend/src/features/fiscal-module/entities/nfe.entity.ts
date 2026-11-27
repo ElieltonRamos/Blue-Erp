@@ -81,57 +81,22 @@ export interface Nfe55Options {
     procEmi: string;
     verProc: string;
   };
-  emit: {
-    CNPJ: string;
-    xNome: string;
-    xFant?: string;
-    enderEmit: Nfe55Address;
-    IE: string;
-    CRT: string;
-  };
-  dest: {
-    CNPJ?: string;
-    CPF?: string;
-    xNome: string;
-    enderDest: Nfe55Address;
-    indIEDest: string;
-    IE?: string;
-  };
+  emit: { CNPJ: string; xNome: string; xFant?: string; enderEmit: Nfe55Address; IE: string; CRT: string };
+  dest: { CNPJ?: string; CPF?: string; xNome: string; enderDest: Nfe55Address; indIEDest: string; IE?: string };
   cnpjContador?: string; // CNPJ do escritório de contabilidade (autXML). Na BA, se omitido, usa o CNPJ da SEFAZ-BA.
   produtos: Nfe55Item[];
   transp: {
     modFrete: string;
-    transporta?: {
-      CNPJ?: string;
-      CPF?: string;
-      xNome?: string;
-      IE?: string;
-      xEnder?: string;
-      xMun?: string;
-      UF?: string;
-    };
+    transporta?: { CNPJ?: string; CPF?: string; xNome?: string; IE?: string; xEnder?: string; xMun?: string; UF?: string };
     veicTransp?: { placa: string; UF: string; RNTC?: string };
-    vol?: {
-      qVol?: string;
-      esp?: string;
-      marca?: string;
-      nVol?: string;
-      pesoL?: string;
-      pesoB?: string;
-    };
+    vol?: { qVol?: string; esp?: string; marca?: string; nVol?: string; pesoL?: string; pesoB?: string };
   };
   cobr?: {
     fat?: { nFat: string; vOrig: number; vDesc?: number; vLiq: number };
     dup?: { nDup: string; dVenc: string; vDup: number }[];
   };
   pag: {
-    detPag: {
-      indPag: string;
-      tPag: string;
-      xPag?: string;
-      vPag: number;
-      card?: Record<string, string>;
-    }[];
+    detPag: { indPag: string; tPag: string; xPag?: string; vPag: number; card?: Record<string, string> }[];
     vTroco?: number;
   };
   infAdic?: string;

@@ -27,10 +27,6 @@ export class ExpenseResponseDto {
   updatedAt: Date;
 
   constructor(partial: Expense) {
-    Object.assign(this, {
-      ...partial,
-      value: Number(partial.value),
-      status: partial.status as 'Pago' | 'Pendente' | 'Atrasado',
-    });
+    Object.assign(this, { ...partial, value: Number(partial.value), status: partial.status as 'Pago' | 'Pendente' | 'Atrasado' });
   }
 }

@@ -7,18 +7,10 @@ import { PrismaService } from 'src/common/database/prisma.service';
 import { EmissionResult, SefazReturn } from './entities/fiscal-module.entity';
 import { EmitNfceDto } from './dto/emit-nfce.dto';
 import { EmitNfeDto } from './dto/emit-nfe.dto';
-import {
-  FiscalException,
-  FiscalNotFoundException,
-  InvalidAccessKeyException,
-} from './fiscal.exception';
+import { FiscalException, FiscalNotFoundException, InvalidAccessKeyException } from './fiscal.exception';
 import { NfeSender } from './lib/transport/nfe-sender';
 import { NfeModel } from './lib/transport/nfe-endpoints.config';
-import {
-  buildSefazConfig,
-  loadCertificate,
-  modelFromAccessKey,
-} from './lib/nfe-utils';
+import { buildSefazConfig, loadCertificate, modelFromAccessKey } from './lib/nfe-utils';
 import { CompanyService } from 'src/features/company/company.service';
 import { CancelFiscalDto } from './dto/cancel-fiscal.dto';
 import { QueryFiscalDto } from './dto/query-fiscal.dto';
@@ -44,9 +36,7 @@ export class FiscalService {
     return this.emissionNfeService.emit(dto);
   }
 
-  async cancel(
-    dto: CancelFiscalDto,
-  ): Promise<{ message: string; protocol?: string }> {
+  async cancel(dto: CancelFiscalDto): Promise<{ message: string; protocol?: string }> {
     return this.cancellationService.cancel(dto);
   }
 
@@ -58,9 +48,7 @@ export class FiscalService {
     this.logger.log(`Querying NF modelo ${model}: ${accessKey}`);
 
     const company = await this.companyService.getCompany();
-    const certificate = await loadCertificate(() =>
-      this.companyService.getCertificateBuffer(),
-    );
+    const certificate = await loadCertificate(() => this.companyService.getCertificateBuffer());
 
     const sender = new NfeSender(buildSefazConfig(company, model), certificate);
     const result = await sender.queryNFe(accessKey, model);
@@ -88,25 +76,16 @@ export class FiscalService {
       throw new FiscalNotFoundException(normalizedKey);
     }
 
-    const pdfPath = this.storageService.getPdfPath(
-      normalizedKey,
-      sale.fiscalEmitDate,
-    );
+    const pdfPath = this.storageService.getPdfPath(normalizedKey, sale.fiscalEmitDate);
 
     if (!this.storageService.fileExists(pdfPath)) {
-      throw new FiscalNotFoundException(
-        `PDF not found for key ${normalizedKey}`,
-      );
+      throw new FiscalNotFoundException(`PDF not found for key ${normalizedKey}`);
     }
 
     return pdfPath;
   }
 
-  async queryServiceStatus(model: string = '65'): Promise<{
-    online: boolean;
-    message: string;
-    time?: number;
-  }> {
+  async queryServiceStatus(model: string = '65'): Promise<{ online: boolean; message: string; time?: number }> {
     if (model !== '55' && model !== '65') {
       throw new FiscalException(`Modelo inválido: ${model}`, 400);
     }
@@ -114,9 +93,7 @@ export class FiscalService {
     this.logger.log(`Querying SEFAZ service status (modelo ${model})`);
 
     const company = await this.companyService.getCompany();
-    const certificate = await loadCertificate(() =>
-      this.companyService.getCertificateBuffer(),
-    );
+    const certificate = await loadCertificate(() => this.companyService.getCertificateBuffer());
 
     const sender = new NfeSender(buildSefazConfig(company, model), certificate);
     return sender.queryStatus(model);

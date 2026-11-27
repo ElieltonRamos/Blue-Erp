@@ -16,28 +16,17 @@ export class ExpenseReportService {
     return new Date(`${dateString}T23:59:59.999-03:00`);
   }
 
-  async generateExpenseReport(
-    filters: ExpenseReportFilterDto,
-  ): Promise<ExpenseReportResponseDto> {
-    const validation = validateDateFilters(
-      filters as { startDate: string; endDate: string },
-    );
+  async generateExpenseReport(filters: ExpenseReportFilterDto): Promise<ExpenseReportResponseDto> {
+    const validation = validateDateFilters(filters as { startDate: string; endDate: string });
     if (validation) return validation;
 
     try {
       const expenses = await this.prisma.client.expense.findMany({
         where: {
-          datePayment: {
-            gte: this.getStartOfDay(filters.startDate),
-            lte: this.getEndOfDay(filters.endDate),
-          },
+          datePayment: { gte: this.getStartOfDay(filters.startDate), lte: this.getEndOfDay(filters.endDate) },
           deletedAt: null,
         },
-        select: {
-          value: true,
-          status: true,
-          supplier: true,
-        },
+        select: { value: true, status: true, supplier: true },
       });
 
       const totalByStatus = { pago: 0, pendente: 0, atrasado: 0 };
@@ -58,10 +47,7 @@ export class ExpenseReportService {
       }
 
       const totalBySupplier = Array.from(supplierMap.entries())
-        .map(([supplier, total]) => ({
-          supplier,
-          total: Number(total.toFixed(2)),
-        }))
+        .map(([supplier, total]) => ({ supplier, total: Number(total.toFixed(2)) }))
         .sort((a, b) => b.total - a.total);
 
       return {
@@ -78,9 +64,7 @@ export class ExpenseReportService {
       };
     } catch (error) {
       console.error('Erro ao gerar relatório de despesas:', error);
-      throw new InternalServerErrorException(
-        'Erro interno do servidor ao gerar relatório de despesas',
-      );
+      throw new InternalServerErrorException('Erro interno do servidor ao gerar relatório de despesas');
     }
   }
 }

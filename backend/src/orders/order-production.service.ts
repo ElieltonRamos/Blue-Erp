@@ -21,10 +21,7 @@ interface ProductionForReduction {
 @Injectable()
 export class OrderProductionService {
   isProduced(type: ProductType): boolean {
-    return (
-      type === ProductType.MANUFACTURED ||
-      type === ProductType.SEMI_MANUFACTURED
-    );
+    return type === ProductType.MANUFACTURED || type === ProductType.SEMI_MANUFACTURED;
   }
 
   async create(tx: TxClient, params: CreateProductionParams): Promise<void> {
@@ -41,61 +38,33 @@ export class OrderProductionService {
     });
   }
 
-  async cancelActiveByOrderItem(
-    tx: TxClient,
-    orderItemId: number,
-  ): Promise<void> {
+  async cancelActiveByOrderItem(tx: TxClient, orderItemId: number): Promise<void> {
     await tx.orderProduction.updateMany({
-      where: {
-        orderItemId,
-        status: { in: ['PENDING', 'IN_PROGRESS'] },
-      },
+      where: { orderItemId, status: { in: ['PENDING', 'IN_PROGRESS'] } },
       data: { status: 'CANCELED' },
     });
   }
 
-  async cancelAllByOrderItems(
-    tx: TxClient,
-    orderItemIds: number[],
-  ): Promise<void> {
-    await tx.orderProduction.updateMany({
-      where: { orderItemId: { in: orderItemIds } },
-      data: { status: 'CANCELED' },
-    });
+  async cancelAllByOrderItems(tx: TxClient, orderItemIds: number[]): Promise<void> {
+    await tx.orderProduction.updateMany({ where: { orderItemId: { in: orderItemIds } }, data: { status: 'CANCELED' } });
   }
 
-  async reduceQuantity(
-    tx: TxClient,
-    productions: ProductionForReduction[],
-    quantityToCancel: number,
-  ): Promise<void> {
+  async reduceQuantity(tx: TxClient, productions: ProductionForReduction[], quantityToCancel: number): Promise<void> {
     let restante = quantityToCancel;
-    const statusOrder: ProductionStatus[] = [
-      'PENDING',
-      'IN_PROGRESS',
-      'COMPLETED',
-    ];
+    const statusOrder: ProductionStatus[] = ['PENDING', 'IN_PROGRESS', 'COMPLETED'];
     const ordered = productions
       .filter((p) => statusOrder.includes(p.status))
-      .sort(
-        (a, b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status),
-      );
+      .sort((a, b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status));
 
     for (const prod of ordered) {
       if (restante <= 0) break;
       const qty = Number(prod.quantityRequested);
 
       if (qty <= restante) {
-        await tx.orderProduction.update({
-          where: { id: prod.id },
-          data: { status: 'CANCELED' },
-        });
+        await tx.orderProduction.update({ where: { id: prod.id }, data: { status: 'CANCELED' } });
         restante -= qty;
       } else {
-        await tx.orderProduction.update({
-          where: { id: prod.id },
-          data: { quantityRequested: qty - restante },
-        });
+        await tx.orderProduction.update({ where: { id: prod.id }, data: { quantityRequested: qty - restante } });
         restante = 0;
       }
     }

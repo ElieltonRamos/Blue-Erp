@@ -14,10 +14,7 @@ import { runCompanyMenu } from './database-company';
 // ============================================
 
 const dbConfig = {
-  host: (process.env.DATABASE_HOST || 'localhost').replace(
-    'localhost',
-    '127.0.0.1',
-  ),
+  host: (process.env.DATABASE_HOST || 'localhost').replace('localhost', '127.0.0.1'),
   user: process.env.DATABASE_USER || 'root',
   password: process.env.DATABASE_PASSWORD || 'password',
   database: process.env.DATABASE_NAME || 'db_blue_erp',
@@ -86,9 +83,7 @@ async function ensureMigrationsTable(conn: mariadb.Connection): Promise<void> {
   `);
 }
 
-async function getExecutedMigrations(
-  conn: mariadb.Connection,
-): Promise<string[]> {
+async function getExecutedMigrations(conn: mariadb.Connection): Promise<string[]> {
   const rows = await conn.query<{ migration_name: string }[]>(
     'SELECT migration_name FROM _prisma_migrations WHERE rolled_back_at IS NULL ORDER BY started_at',
   );
@@ -104,10 +99,7 @@ function getMigrationFolders(): string[] {
     .readdirSync(migrationsDir)
     .filter((name) => {
       const fullPath = path.join(migrationsDir, name);
-      return (
-        fs.statSync(fullPath).isDirectory() &&
-        fs.existsSync(path.join(fullPath, 'migration.sql'))
-      );
+      return fs.statSync(fullPath).isDirectory() && fs.existsSync(path.join(fullPath, 'migration.sql'));
     })
     .sort();
 }
@@ -166,19 +158,14 @@ async function runMigrations(): Promise<void> {
     return;
   }
 
-  const conn = await mariadb.createConnection({
-    ...dbConfig,
-    multipleStatements: true,
-  });
+  const conn = await mariadb.createConnection({ ...dbConfig, multipleStatements: true });
 
   try {
     await ensureMigrationsTable(conn);
 
     const executedMigrations = await getExecutedMigrations(conn);
     const allMigrations = getMigrationFolders();
-    const pendingMigrations = allMigrations.filter(
-      (m) => !executedMigrations.includes(m),
-    );
+    const pendingMigrations = allMigrations.filter((m) => !executedMigrations.includes(m));
 
     if (pendingMigrations.length === 0) {
       console.log('✅ Todas as migrations já foram executadas.\n');
@@ -205,24 +192,21 @@ async function runMigrations(): Promise<void> {
       try {
         await conn.query(sqlContent);
 
-        await conn.query(
-          `UPDATE _prisma_migrations SET finished_at = NOW(), applied_steps_count = 1 WHERE id = ?`,
-          [migrationId],
-        );
+        await conn.query(`UPDATE _prisma_migrations SET finished_at = NOW(), applied_steps_count = 1 WHERE id = ?`, [
+          migrationId,
+        ]);
 
         console.log(`   ✅ Concluída: ${migrationName}`);
       } catch (err) {
-        await conn.query(
-          `UPDATE _prisma_migrations SET logs = ? WHERE id = ?`,
-          [err instanceof Error ? err.message : String(err), migrationId],
-        );
+        await conn.query(`UPDATE _prisma_migrations SET logs = ? WHERE id = ?`, [
+          err instanceof Error ? err.message : String(err),
+          migrationId,
+        ]);
         throw err;
       }
     }
 
-    console.log(
-      `\n✅ ${pendingMigrations.length} migrations executadas com sucesso!\n`,
-    );
+    console.log(`\n✅ ${pendingMigrations.length} migrations executadas com sucesso!\n`);
   } finally {
     await conn.end();
   }
@@ -263,9 +247,7 @@ async function dropAllTables(): Promise<void> {
 
 async function resetDatabase(): Promise<void> {
   if (!migrationsDir) {
-    console.log(
-      '❌ Pasta de migrations não encontrada. Reset cancelado, nada foi removido.\n',
-    );
+    console.log('❌ Pasta de migrations não encontrada. Reset cancelado, nada foi removido.\n');
     return;
   }
 
@@ -304,14 +286,10 @@ async function showStatus(): Promise<void> {
 
     const executedMigrations = await getExecutedMigrations(conn);
     const allMigrations = getMigrationFolders();
-    const pendingMigrations = allMigrations.filter(
-      (m) => !executedMigrations.includes(m),
-    );
+    const pendingMigrations = allMigrations.filter((m) => !executedMigrations.includes(m));
 
     console.log('🔹 Conexão:');
-    console.log(
-      `   ✅ Online: ${dbConfig.database}@${dbConfig.host}:${dbConfig.port}`,
-    );
+    console.log(`   ✅ Online: ${dbConfig.database}@${dbConfig.host}:${dbConfig.port}`);
 
     console.log('\n🔹 Migrations:');
     console.log(`   ✅ Executadas: ${executedMigrations.length}`);
@@ -382,9 +360,7 @@ async function execBackup(): Promise<void> {
     console.log(`   📁 Arquivo: ${backupFile}`);
     console.log(`   📊 Tamanho: ${sizeMB} MB\n`);
   } catch (err) {
-    console.log(
-      `   ❌ Erro no backup: ${err instanceof Error ? err.message : err}\n`,
-    );
+    console.log(`   ❌ Erro no backup: ${err instanceof Error ? err.message : err}\n`);
     throw err;
   }
 }
@@ -442,9 +418,7 @@ async function restoreBackup(): Promise<void> {
   if (!fs.existsSync(backupFile)) {
     console.log('   ❌ Arquivo backup.sql não encontrado na raiz.\n');
     console.log('   📍 Esperado em: ' + backupFile);
-    console.log(
-      '   💡 Coloque o arquivo backup.sql na pasta raiz e tente novamente.\n',
-    );
+    console.log('   💡 Coloque o arquivo backup.sql na pasta raiz e tente novamente.\n');
     return;
   }
 
@@ -466,9 +440,7 @@ async function restoreBackup(): Promise<void> {
     }
     console.log(`   ✅ Backup restaurado com sucesso! (${count} statements)\n`);
   } catch (err) {
-    console.log(
-      `   ❌ Erro na restauração: ${err instanceof Error ? err.message : err}\n`,
-    );
+    console.log(`   ❌ Erro na restauração: ${err instanceof Error ? err.message : err}\n`);
     throw err;
   } finally {
     await conn.end().catch(() => undefined);
@@ -496,10 +468,7 @@ function showMenu(): void {
 }
 
 async function promptUser(question: string): Promise<string> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
   return new Promise((resolve) => {
     rl.question(question, (answer) => {
@@ -511,9 +480,7 @@ async function promptUser(question: string): Promise<string> {
 
 async function main(): Promise<void> {
   console.log('\n🚀 Blue ERP - Gerenciador de Banco de Dados\n');
-  console.log(
-    `📍 Banco: ${dbConfig.database}@${dbConfig.host}:${dbConfig.port}`,
-  );
+  console.log(`📍 Banco: ${dbConfig.database}@${dbConfig.host}:${dbConfig.port}`);
 
   while (true) {
     showMenu();
@@ -531,9 +498,7 @@ async function main(): Promise<void> {
           await runSeeds(dbConfig);
           break;
         case '4': {
-          const confirm = await promptUser(
-            '⚠️  ATENÇÃO: Isso vai DELETAR todos os dados! Confirma? (sim/não): ',
-          );
+          const confirm = await promptUser('⚠️  ATENÇÃO: Isso vai DELETAR todos os dados! Confirma? (sim/não): ');
           if (confirm.toLowerCase() === 'sim') {
             await resetDatabase();
           } else {
@@ -548,9 +513,7 @@ async function main(): Promise<void> {
           await execBackup();
           break;
         case '7': {
-          const confirmRestore = await promptUser(
-            '⚠️  ATENÇÃO: Isso vai SOBRESCREVER os dados atuais! Confirma? (sim/não): ',
-          );
+          const confirmRestore = await promptUser('⚠️  ATENÇÃO: Isso vai SOBRESCREVER os dados atuais! Confirma? (sim/não): ');
           if (confirmRestore.toLowerCase() === 'sim') {
             await restoreBackup();
           } else {

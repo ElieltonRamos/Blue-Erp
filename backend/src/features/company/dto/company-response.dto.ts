@@ -26,8 +26,7 @@ export class CompanyResponseDto {
   @ApiProperty({
     enum: ['1', '2', '3'],
     example: '1',
-    description:
-      '1=Simples Nacional, 2=Simples Nacional - Excesso, 3=Regime Normal',
+    description: '1=Simples Nacional, 2=Simples Nacional - Excesso, 3=Regime Normal',
   })
   taxRegime: string;
 
@@ -92,20 +91,13 @@ export class CompanyResponseDto {
   @ApiProperty({ example: '4.0' })
   ibptVersion: string;
 
-  @ApiProperty({
-    example: '****A1B2',
-    description: 'Chave de licença mascarada (apenas os 4 últimos caracteres)',
-  })
+  @ApiProperty({ example: '****A1B2', description: 'Chave de licença mascarada (apenas os 4 últimos caracteres)' })
   licenseKey: string | null;
 
   @ApiProperty({ enum: BusinessType, enumName: 'BusinessType' })
   businessType: BusinessType;
 
-  @ApiProperty({
-    type: Object,
-    nullable: true,
-    example: { comandas: true, cozinha: true },
-  })
+  @ApiProperty({ type: Object, nullable: true, example: { comandas: true, cozinha: true } })
   enabledMenus: Prisma.JsonValue;
 
   @ApiProperty({ type: Date, nullable: true })
@@ -118,14 +110,10 @@ export class CompanyResponseDto {
   @ApiProperty({ description: 'Indica se o ID do CSC está configurado' })
   nfceCscIdConfigured: boolean;
 
-  @ApiProperty({
-    description: 'Indica se a senha do certificado está configurada',
-  })
+  @ApiProperty({ description: 'Indica se a senha do certificado está configurada' })
   certificatePasswordConfigured: boolean;
 
-  @ApiProperty({
-    description: 'Indica se o certificado digital está configurado',
-  })
+  @ApiProperty({ description: 'Indica se o certificado digital está configurado' })
   certificateConfigured: boolean;
 
   constructor(company: Company) {
@@ -160,7 +148,6 @@ export class CompanyResponseDto {
     this.nfceCscConfigured = !!company.nfceCsc;
     this.nfceCscIdConfigured = !!company.nfceCscId;
     this.certificatePasswordConfigured = !!company.certificatePassword;
-    this.certificateConfigured =
-      !!company.certificatePath && !!company.certificatePassword;
+    this.certificateConfigured = !!company.certificatePath && !!company.certificatePassword;
   }
 }

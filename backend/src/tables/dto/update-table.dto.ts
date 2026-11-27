@@ -21,10 +21,7 @@ export class UpdateTableDto {
   @Min(1)
   locationId?: number;
 
-  @ApiPropertyOptional({
-    description: 'Nome do cliente',
-    example: 'João Silva',
-  })
+  @ApiPropertyOptional({ description: 'Nome do cliente', example: 'João Silva' })
   @IsString()
   @IsOptional()
   customer?: string;

@@ -1,11 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  HttpException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Category, Prisma } from 'generated/prisma/client';
 import { PrismaService } from 'src/common/database/prisma.service';
 import { PaginatedResponseDto } from 'src/common/utils/paginated-response';
@@ -14,14 +7,7 @@ import { FilterCategoryDto } from './dto/filter-category.dto';
 import { CategoryResponseDto } from './dto/response-category.dto';
 import { UpdateCategoryDto } from './dto/update-category-product.dto';
 
-const SORT_KEYS = [
-  'id',
-  'name',
-  'active',
-  'onlineSortOrder',
-  'createdAt',
-  'updatedAt',
-] as const;
+const SORT_KEYS = ['id', 'name', 'active', 'onlineSortOrder', 'createdAt', 'updatedAt'] as const;
 
 const SORT_ORDERS = ['asc', 'desc'] as const;
 
@@ -52,9 +38,7 @@ export class CategoryService {
   }
 
   private async findCategory(id: number, actor: string): Promise<Category> {
-    const category = await this.prisma.client.category.findUnique({
-      where: { id },
-    });
+    const category = await this.prisma.client.category.findUnique({ where: { id } });
 
     if (!category) {
       const message = `Categoria com ID ${id} não encontrada`;
@@ -66,10 +50,7 @@ export class CategoryService {
   }
 
   // Só os campos enviados que realmente mudaram em relação ao registro atual
-  private diff(
-    current: Category,
-    dto: UpdateCategoryDto,
-  ): Prisma.CategoryUpdateInput {
+  private diff(current: Category, dto: UpdateCategoryDto): Prisma.CategoryUpdateInput {
     const changes: Prisma.CategoryUpdateInput = {};
 
     if (dto.name !== undefined && dto.name !== current.name) {
@@ -78,32 +59,19 @@ export class CategoryService {
     if (dto.active !== undefined && dto.active !== current.active) {
       changes.active = dto.active;
     }
-    if (
-      dto.onlineVisible !== undefined &&
-      dto.onlineVisible !== current.onlineVisible
-    ) {
+    if (dto.onlineVisible !== undefined && dto.onlineVisible !== current.onlineVisible) {
       changes.onlineVisible = dto.onlineVisible;
     }
-    if (
-      dto.onlineSortOrder !== undefined &&
-      dto.onlineSortOrder !== current.onlineSortOrder
-    ) {
+    if (dto.onlineSortOrder !== undefined && dto.onlineSortOrder !== current.onlineSortOrder) {
       changes.onlineSortOrder = dto.onlineSortOrder;
     }
 
     return changes;
   }
 
-  private async assertNameAvailable(
-    name: string,
-    actor: string,
-    ignoreId?: number,
-  ): Promise<void> {
+  private async assertNameAvailable(name: string, actor: string, ignoreId?: number): Promise<void> {
     const existing = await this.prisma.client.category.findFirst({
-      where: {
-        name: { equals: name },
-        ...(ignoreId !== undefined && { id: { not: ignoreId } }),
-      },
+      where: { name: { equals: name }, ...(ignoreId !== undefined && { id: { not: ignoreId } }) },
       select: { id: true },
     });
 
@@ -142,10 +110,7 @@ export class CategoryService {
     sortOrder: string = 'asc',
   ): Promise<PaginatedResponseDto<CategoryResponseDto>> {
     if (page < 1 || limit < 1 || isNaN(page) || isNaN(limit)) {
-      this.badRequest(
-        'A página ou a quantidade de itens por página está incorreta',
-        actor,
-      );
+      this.badRequest('A página ou a quantidade de itens por página está incorreta', actor);
     }
 
     if (!(SORT_KEYS as readonly string[]).includes(sortKey)) {
@@ -171,22 +136,11 @@ export class CategoryService {
     }
 
     const [categories, total] = await Promise.all([
-      this.prisma.client.category.findMany({
-        where,
-        orderBy: { [sortKey]: sortOrder },
-        skip: offset,
-        take: limit,
-      }),
+      this.prisma.client.category.findMany({ where, orderBy: { [sortKey]: sortOrder }, skip: offset, take: limit }),
       this.prisma.client.category.count({ where }),
     ]);
 
-    return {
-      data: categories,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
+    return { data: categories, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async findOne(id: number, actor: string) {
@@ -200,9 +154,7 @@ export class CategoryService {
       const fields = Object.keys(changes);
 
       if (fields.length === 0) {
-        this.logger.warn(
-          `Edição da categoria sem alterações (actor=${actor}, id=${id})`,
-        );
+        this.logger.warn(`Edição da categoria sem alterações (actor=${actor}, id=${id})`);
         return current;
       }
 
@@ -210,22 +162,14 @@ export class CategoryService {
         await this.assertNameAvailable(changes.name, actor, id);
       }
 
-      const category = await this.prisma.client.category.update({
-        where: { id },
-        data: changes,
-      });
+      const category = await this.prisma.client.category.update({ where: { id }, data: changes });
 
       // Só nomes dos campos, nunca valores
-      this.logger.log(
-        `Categoria editada (actor=${actor}, id=${id}, campos=${fields.join(',')})`,
-      );
+      this.logger.log(`Categoria editada (actor=${actor}, id=${id}, campos=${fields.join(',')})`);
 
       return category;
     } catch (error) {
-      this.rethrow(
-        error,
-        `Falha ao editar categoria (actor=${actor}, id=${id})`,
-      );
+      this.rethrow(error, `Falha ao editar categoria (actor=${actor}, id=${id})`);
     }
   }
 
@@ -233,15 +177,10 @@ export class CategoryService {
     try {
       await this.findCategory(id, actor);
 
-      const hasProducts = await this.prisma.client.product.count({
-        where: { categoryId: id },
-      });
+      const hasProducts = await this.prisma.client.product.count({ where: { categoryId: id } });
 
       if (hasProducts > 0) {
-        this.badRequest(
-          `Categoria possui ${hasProducts} produto(s) vinculado(s) e não pode ser deletada`,
-          actor,
-        );
+        this.badRequest(`Categoria possui ${hasProducts} produto(s) vinculado(s) e não pode ser deletada`, actor);
       }
 
       await this.prisma.client.category.delete({ where: { id } });
@@ -250,10 +189,7 @@ export class CategoryService {
 
       return { message: 'Categoria deletada com sucesso' };
     } catch (error) {
-      this.rethrow(
-        error,
-        `Falha ao remover categoria (actor=${actor}, id=${id})`,
-      );
+      this.rethrow(error, `Falha ao remover categoria (actor=${actor}, id=${id})`);
     }
   }
 }

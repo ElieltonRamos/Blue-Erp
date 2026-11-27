@@ -13,26 +13,17 @@ export class UpdateOrderItemDto {
   @Min(1)
   productId!: number;
 
-  @ApiPropertyOptional({
-    description: 'Observação do item',
-    example: 'Sem cebola',
-  })
+  @ApiPropertyOptional({ description: 'Observação do item', example: 'Sem cebola' })
   @IsString()
   @IsOptional()
   observation?: string;
 
-  @ApiPropertyOptional({
-    description: 'Código do produto',
-    example: 'PROD-001',
-  })
+  @ApiPropertyOptional({ description: 'Código do produto', example: 'PROD-001' })
   @IsString()
   @IsOptional()
   code?: string;
 
-  @ApiPropertyOptional({
-    description: 'Nome do produto',
-    example: 'Filé Mignon',
-  })
+  @ApiPropertyOptional({ description: 'Nome do produto', example: 'Filé Mignon' })
   @IsString()
   @IsOptional()
   name?: string;
@@ -55,11 +46,7 @@ export class UpdateOrderItemDto {
   @IsOptional()
   total?: number;
 
-  @ApiPropertyOptional({
-    description: 'Taxa de serviço do item',
-    example: 4.5,
-    minimum: 0,
-  })
+  @ApiPropertyOptional({ description: 'Taxa de serviço do item', example: 4.5, minimum: 0 })
   @IsNumber()
   @Min(0)
   @IsOptional()
@@ -67,10 +54,7 @@ export class UpdateOrderItemDto {
 }
 
 export class UpdateOrderDto {
-  @ApiPropertyOptional({
-    description: 'Nome do cliente',
-    example: 'João Silva Jr',
-  })
+  @ApiPropertyOptional({ description: 'Nome do cliente', example: 'João Silva Jr' })
   @IsString()
   @IsOptional()
   customerName?: string;
@@ -80,19 +64,12 @@ export class UpdateOrderDto {
   @IsOptional()
   table?: string;
 
-  @ApiPropertyOptional({
-    description: 'Endereço de entrega',
-    example: 'Rua Nova, 456',
-  })
+  @ApiPropertyOptional({ description: 'Endereço de entrega', example: 'Rua Nova, 456' })
   @IsString()
   @IsOptional()
   address?: string;
 
-  @ApiPropertyOptional({
-    description: 'Status do pedido',
-    enum: OrderStatus,
-    example: 'OPEN',
-  })
+  @ApiPropertyOptional({ description: 'Status do pedido', enum: OrderStatus, example: 'OPEN' })
   @IsEnum(OrderStatus)
   @IsOptional()
   status?: OrderStatus;

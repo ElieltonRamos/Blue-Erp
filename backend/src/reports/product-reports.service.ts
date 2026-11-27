@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/common/database/prisma.service';
 import { ProductReportFilterDto } from './dto/create-report-product.dto';
 import { ProductReportResponseDto } from './dto/response-report-product.dto';
@@ -18,12 +14,7 @@ import { validateDateFilters } from './utils/sale-report-utils';
 const EXPIRY_ALERT_DAYS = 30;
 const STOCK_ITEMS_LIMIT = 10;
 
-type ResolvedMaterial = {
-  name: string;
-  unit: string;
-  unitCost: number;
-  quantity: number;
-};
+type ResolvedMaterial = { name: string; unit: string; unitCost: number; quantity: number };
 
 @Injectable()
 export class ProductReportService {
@@ -55,12 +46,8 @@ export class ProductReportService {
       where: { productId },
       select: {
         quantity: true,
-        material: {
-          select: { name: true, unit: true, unitCost: true },
-        },
-        subProduct: {
-          select: { id: true, name: true },
-        },
+        material: { select: { name: true, unit: true, unitCost: true } },
+        subProduct: { select: { id: true, name: true } },
       },
     });
 
@@ -78,11 +65,7 @@ export class ProductReportService {
         });
       } else if (item.subProduct) {
         // SEMI_MANUFACTURED — desce recursivamente
-        const subMaterials = await this.resolveCompositionMaterials(
-          item.subProduct.id,
-          itemQty,
-          visited,
-        );
+        const subMaterials = await this.resolveCompositionMaterials(item.subProduct.id, itemQty, visited);
         resolved.push(...subMaterials);
       }
     }
@@ -93,28 +76,10 @@ export class ProductReportService {
   private async fetchTopSellingProducts(
     startDate: string,
     endDate: string,
-  ): Promise<{
-    items: ProductSalesItem[];
-    totalSold: number;
-    totalRevenue: number;
-  }> {
+  ): Promise<{ items: ProductSalesItem[]; totalSold: number; totalRevenue: number }> {
     const saleItems = await this.prisma.client.saleItem.findMany({
-      where: {
-        sale: {
-          date: {
-            gte: this.getStartOfDay(startDate),
-            lte: this.getEndOfDay(endDate),
-          },
-        },
-        composesTotal: 1,
-      },
-      select: {
-        quantity: true,
-        totalPrice: true,
-        product: {
-          select: { name: true },
-        },
-      },
+      where: { sale: { date: { gte: this.getStartOfDay(startDate), lte: this.getEndOfDay(endDate) } }, composesTotal: 1 },
+      select: { quantity: true, totalPrice: true, product: { select: { name: true } } },
     });
 
     const map = new Map<string, { totalSold: number; revenue: number }>();
@@ -133,10 +98,7 @@ export class ProductReportService {
       totalRevenue += price;
 
       const existing = map.get(name) ?? { totalSold: 0, revenue: 0 };
-      map.set(name, {
-        totalSold: existing.totalSold + qty,
-        revenue: existing.revenue + price,
-      });
+      map.set(name, { totalSold: existing.totalSold + qty, revenue: existing.revenue + price });
     }
 
     const items: ProductSalesItem[] = Array.from(map.entries())
@@ -144,18 +106,11 @@ export class ProductReportService {
         productName,
         totalSold: Number(agg.totalSold.toFixed(3)),
         revenue: Number(agg.revenue.toFixed(2)),
-        averagePrice:
-          agg.totalSold > 0
-            ? Number((agg.revenue / agg.totalSold).toFixed(2))
-            : 0,
+        averagePrice: agg.totalSold > 0 ? Number((agg.revenue / agg.totalSold).toFixed(2)) : 0,
       }))
       .sort((a, b) => b.totalSold - a.totalSold);
 
-    return {
-      items,
-      totalSold: Number(totalSold.toFixed(3)),
-      totalRevenue: Number(totalRevenue.toFixed(2)),
-    };
+    return { items, totalSold: Number(totalSold.toFixed(3)), totalRevenue: Number(totalRevenue.toFixed(2)) };
   }
 
   private async fetchMostUsedRawMaterials(
@@ -163,31 +118,11 @@ export class ProductReportService {
     endDate: string,
   ): Promise<{ items: RawMaterialUsage[]; grandTotalConsumedCost: number }> {
     const saleItems = await this.prisma.client.saleItem.findMany({
-      where: {
-        sale: {
-          date: {
-            gte: this.getStartOfDay(startDate),
-            lte: this.getEndOfDay(endDate),
-          },
-        },
-        composesTotal: 1,
-      },
-      select: {
-        quantity: true,
-        saleId: true,
-        productId: true,
-      },
+      where: { sale: { date: { gte: this.getStartOfDay(startDate), lte: this.getEndOfDay(endDate) } }, composesTotal: 1 },
+      select: { quantity: true, saleId: true, productId: true },
     });
 
-    const map = new Map<
-      string,
-      {
-        totalUsed: number;
-        unit: string;
-        unitCost: number;
-        saleIds: Set<number>;
-      }
-    >();
+    const map = new Map<string, { totalUsed: number; unit: string; unitCost: number; saleIds: Set<number> }>();
 
     for (const saleItem of saleItems) {
       const soldQty = Number(saleItem.quantity);
@@ -195,10 +130,7 @@ export class ProductReportService {
         throw new NotFoundException('Isso nao e um Produto (DEV-MODE)');
       }
 
-      const resolvedMaterials = await this.resolveCompositionMaterials(
-        saleItem.productId,
-        soldQty,
-      );
+      const resolvedMaterials = await this.resolveCompositionMaterials(saleItem.productId, soldQty);
 
       for (const mat of resolvedMaterials) {
         const existing = map.get(mat.name) ?? {
@@ -230,10 +162,7 @@ export class ProductReportService {
       })
       .sort((a, b) => b.totalCost - a.totalCost);
 
-    return {
-      items,
-      grandTotalConsumedCost: Number(grandTotalConsumedCost.toFixed(2)),
-    };
+    return { items, grandTotalConsumedCost: Number(grandTotalConsumedCost.toFixed(2)) };
   }
 
   private async fetchExpiringRawMaterials(): Promise<RawMaterialExpiring[]> {
@@ -241,20 +170,8 @@ export class ProductReportService {
     alertDate.setDate(alertDate.getDate() + EXPIRY_ALERT_DAYS);
 
     const materials = await this.prisma.client.primaryMaterial.findMany({
-      where: {
-        active: true,
-        expiryDate: {
-          not: null,
-          lte: alertDate,
-          gte: new Date(),
-        },
-      },
-      select: {
-        name: true,
-        expiryDate: true,
-        currentStock: true,
-        unit: true,
-      },
+      where: { active: true, expiryDate: { not: null, lte: alertDate, gte: new Date() } },
+      select: { name: true, expiryDate: true, currentStock: true, unit: true },
       orderBy: { expiryDate: 'asc' },
     });
 
@@ -267,11 +184,7 @@ export class ProductReportService {
     }));
   }
 
-  private async fetchStockLevels(): Promise<{
-    lowest: StockLevel[];
-    highest: StockLevel[];
-    totalStockValue: number;
-  }> {
+  private async fetchStockLevels(): Promise<{ lowest: StockLevel[]; highest: StockLevel[]; totalStockValue: number }> {
     const [products, materials] = await Promise.all([
       this.prisma.client.product.findMany({
         where: { active: true, productType: 'RESALE' },
@@ -285,14 +198,8 @@ export class ProductReportService {
 
     const totalStockValue = Number(
       (
-        products.reduce(
-          (acc, p) => acc + Number(p.quantity) * Number(p.costPrice),
-          0,
-        ) +
-        materials.reduce(
-          (acc, m) => acc + Number(m.currentStock) * Number(m.unitCost),
-          0,
-        )
+        products.reduce((acc, p) => acc + Number(p.quantity) * Number(p.costPrice), 0) +
+        materials.reduce((acc, m) => acc + Number(m.currentStock) * Number(m.unitCost), 0)
       ).toFixed(2),
     );
 
@@ -313,47 +220,20 @@ export class ProductReportService {
       })),
     ];
 
-    const sorted = [...allStocks].sort(
-      (a, b) => a.currentStock - b.currentStock,
-    );
+    const sorted = [...allStocks].sort((a, b) => a.currentStock - b.currentStock);
 
-    return {
-      lowest: sorted.slice(0, STOCK_ITEMS_LIMIT),
-      highest: sorted.slice(-STOCK_ITEMS_LIMIT).reverse(),
-      totalStockValue,
-    };
+    return { lowest: sorted.slice(0, STOCK_ITEMS_LIMIT), highest: sorted.slice(-STOCK_ITEMS_LIMIT).reverse(), totalStockValue };
   }
 
-  private async fetchPurchaseSuggestions(): Promise<{
-    items: PurchaseSuggestion[];
-    totalReplenishmentCost: number;
-  }> {
+  private async fetchPurchaseSuggestions(): Promise<{ items: PurchaseSuggestion[]; totalReplenishmentCost: number }> {
     const [products, materials] = await Promise.all([
       this.prisma.client.product.findMany({
-        where: {
-          active: true,
-          minStock: { not: null },
-        },
-        select: {
-          name: true,
-          quantity: true,
-          minStock: true,
-          unit: true,
-          costPrice: true,
-        },
+        where: { active: true, minStock: { not: null } },
+        select: { name: true, quantity: true, minStock: true, unit: true, costPrice: true },
       }),
       this.prisma.client.primaryMaterial.findMany({
-        where: {
-          active: true,
-          minStock: { not: null },
-        },
-        select: {
-          name: true,
-          currentStock: true,
-          minStock: true,
-          unit: true,
-          unitCost: true,
-        },
+        where: { active: true, minStock: { not: null } },
+        select: { name: true, currentStock: true, minStock: true, unit: true, unitCost: true },
       }),
     ]);
 
@@ -367,9 +247,7 @@ export class ProductReportService {
         const deficit = min - current;
         const suggestedQuantity = Number((deficit * 1.5).toFixed(3));
         const unitCost = Number(p.costPrice);
-        const replenishmentCost = Number(
-          (suggestedQuantity * unitCost).toFixed(2),
-        );
+        const replenishmentCost = Number((suggestedQuantity * unitCost).toFixed(2));
         totalReplenishmentCost += replenishmentCost;
 
         suggestions.push({
@@ -377,8 +255,7 @@ export class ProductReportService {
           suggestedQuantity,
           unit: p.unit,
           reason: `Estoque atual (${current}) abaixo do mínimo (${min})`,
-          priority:
-            current === 0 ? 'high' : current < min * 0.5 ? 'high' : 'medium',
+          priority: current === 0 ? 'high' : current < min * 0.5 ? 'high' : 'medium',
           unitCost,
           replenishmentCost,
         });
@@ -392,9 +269,7 @@ export class ProductReportService {
         const deficit = min - current;
         const suggestedQuantity = Number((deficit * 1.5).toFixed(3));
         const unitCost = Number(m.unitCost);
-        const replenishmentCost = Number(
-          (suggestedQuantity * unitCost).toFixed(2),
-        );
+        const replenishmentCost = Number((suggestedQuantity * unitCost).toFixed(2));
         totalReplenishmentCost += replenishmentCost;
 
         suggestions.push({
@@ -402,8 +277,7 @@ export class ProductReportService {
           suggestedQuantity,
           unit: m.unit,
           reason: `Estoque atual (${current}) abaixo do mínimo (${min})`,
-          priority:
-            current === 0 ? 'high' : current < min * 0.5 ? 'high' : 'medium',
+          priority: current === 0 ? 'high' : current < min * 0.5 ? 'high' : 'medium',
           unitCost,
           replenishmentCost,
         });
@@ -415,26 +289,15 @@ export class ProductReportService {
       return order[a.priority] - order[b.priority];
     });
 
-    return {
-      items: sorted,
-      totalReplenishmentCost: Number(totalReplenishmentCost.toFixed(2)),
-    };
+    return { items: sorted, totalReplenishmentCost: Number(totalReplenishmentCost.toFixed(2)) };
   }
 
-  async generateProductReport(
-    filters: ProductReportFilterDto,
-  ): Promise<ProductReportResponseDto> {
+  async generateProductReport(filters: ProductReportFilterDto): Promise<ProductReportResponseDto> {
     const validation = validateDateFilters(filters);
     if (validation) return validation;
 
     try {
-      const [
-        topSelling,
-        rawMaterials,
-        expiringRawMaterials,
-        stocks,
-        purchaseSuggestions,
-      ] = await Promise.all([
+      const [topSelling, rawMaterials, expiringRawMaterials, stocks, purchaseSuggestions] = await Promise.all([
         this.fetchTopSellingProducts(filters.startDate, filters.endDate),
         this.fetchMostUsedRawMaterials(filters.startDate, filters.endDate),
         this.fetchExpiringRawMaterials(),
@@ -460,9 +323,7 @@ export class ProductReportService {
       };
     } catch (error) {
       console.error('Erro ao gerar relatório de produtos:', error);
-      throw new InternalServerErrorException(
-        'Erro interno do servidor ao gerar relatório de produtos',
-      );
+      throw new InternalServerErrorException('Erro interno do servidor ao gerar relatório de produtos');
     }
   }
 }

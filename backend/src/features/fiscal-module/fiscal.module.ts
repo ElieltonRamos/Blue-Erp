@@ -13,14 +13,7 @@ import { EmissionNfeService } from './services/emission-nfe.service';
 @Module({
   imports: [CompanyModule, SalesModule, IbptModule],
   controllers: [FiscalController],
-  providers: [
-    EmissionNfeService,
-    FiscalService,
-    EmissionNfceService,
-    CancellationService,
-    StorageService,
-    FiscalReportsService,
-  ],
+  providers: [EmissionNfeService, FiscalService, EmissionNfceService, CancellationService, StorageService, FiscalReportsService],
   exports: [FiscalService],
 })
 export class FiscalModule {}

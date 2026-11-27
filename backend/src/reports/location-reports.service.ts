@@ -10,12 +10,7 @@ type OrderItem = {
   serviceCharge: number | { toNumber(): number } | null;
   operatorId: number | null;
   operator: { id: number; username: string } | null;
-  product: {
-    id: number;
-    name: string;
-    productionLocation: string | null;
-    category: { name: string } | null;
-  };
+  product: { id: number; name: string; productionLocation: string | null; category: { name: string } | null };
 };
 
 type OrderWithIncludes = {
@@ -32,19 +27,9 @@ type OrderWithIncludes = {
   items: OrderItem[];
 };
 
-type ItemAggregator = {
-  name: string;
-  qty: number;
-  value: number;
-  producedAt: string;
-};
+type ItemAggregator = { name: string; qty: number; value: number; producedAt: string };
 
-type CategoryAggregator = {
-  name: string;
-  totalValue: number;
-  totalQty: number;
-  items: Record<string, ItemAggregator>;
-};
+type CategoryAggregator = { name: string; totalValue: number; totalQty: number; items: Record<string, ItemAggregator> };
 
 type OperatorStats = {
   id: number;
@@ -85,43 +70,23 @@ export class LocationReportService {
 
   private avg(values: number[]): number | null {
     if (values.length === 0) return null;
-    return Number(
-      (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2),
-    );
+    return Number((values.reduce((a, b) => a + b, 0) / values.length).toFixed(2));
   }
 
-  private toNumber(
-    val: number | { toNumber(): number } | null | undefined,
-  ): number {
+  private toNumber(val: number | { toNumber(): number } | null | undefined): number {
     if (val == null) return 0;
     if (typeof val === 'object' && 'toNumber' in val) return val.toNumber();
     return Number(val);
   }
 
-  private async fetchOrdersData(
-    startDate: string,
-    endDate: string,
-  ): Promise<OrderWithIncludes[]> {
+  private async fetchOrdersData(startDate: string, endDate: string): Promise<OrderWithIncludes[]> {
     return this.prisma.client.order.findMany({
-      where: {
-        status: 'PAID',
-        createdAt: {
-          gte: this.getStartOfDay(startDate),
-          lte: this.getEndOfDay(endDate),
-        },
-      },
+      where: { status: 'PAID', createdAt: { gte: this.getStartOfDay(startDate), lte: this.getEndOfDay(endDate) } },
       include: {
         items: {
           include: {
             operator: { select: { id: true, username: true } },
-            product: {
-              select: {
-                id: true,
-                name: true,
-                productionLocation: true,
-                category: { select: { name: true } },
-              },
-            },
+            product: { select: { id: true, name: true, productionLocation: true, category: { select: { name: true } } } },
           },
         },
         operator: { select: { id: true, username: true } },
@@ -131,16 +96,12 @@ export class LocationReportService {
     }) as unknown as Promise<OrderWithIncludes[]>;
   }
 
-  private async fetchLocationNames(): Promise<
-    Record<string, { id: number; name: string }>
-  > {
+  private async fetchLocationNames(): Promise<Record<string, { id: number; name: string }>> {
     const locations = await this.prisma.client.productionLocation.findMany({
       where: { active: true },
       select: { id: true, code: true, name: true },
     });
-    return Object.fromEntries(
-      locations.map((l) => [l.code, { id: l.id, name: l.name }]),
-    );
+    return Object.fromEntries(locations.map((l) => [l.code, { id: l.id, name: l.name }]));
   }
 
   private ensureLocation(
@@ -165,35 +126,16 @@ export class LocationReportService {
     return aggregators[locationCode];
   }
 
-  private ensureCategory(
-    location: LocationAggregator,
-    categoryName: string,
-  ): CategoryAggregator {
+  private ensureCategory(location: LocationAggregator, categoryName: string): CategoryAggregator {
     if (!location.categories[categoryName]) {
-      location.categories[categoryName] = {
-        name: categoryName,
-        totalValue: 0,
-        totalQty: 0,
-        items: {},
-      };
+      location.categories[categoryName] = { name: categoryName, totalValue: 0, totalQty: 0, items: {} };
     }
     return location.categories[categoryName];
   }
 
-  private ensureOperator(
-    location: LocationAggregator,
-    id: number,
-    username: string,
-  ): OperatorStats {
+  private ensureOperator(location: LocationAggregator, id: number, username: string): OperatorStats {
     if (!location.operators[id]) {
-      location.operators[id] = {
-        id,
-        username,
-        opened: 0,
-        closed: 0,
-        totalValue: 0,
-        totalServiceCharge: 0,
-      };
+      location.operators[id] = { id, username, opened: 0, closed: 0, totalValue: 0, totalServiceCharge: 0 };
     }
     return location.operators[id];
   }
@@ -203,43 +145,27 @@ export class LocationReportService {
     aggregators: Record<string, LocationAggregator>,
     locationMap: Record<string, { id: number; name: string }>,
   ): void {
-    const location = this.ensureLocation(
-      aggregators,
-      order.locationId,
-      locationMap,
-    );
+    const location = this.ensureLocation(aggregators, order.locationId, locationMap);
     const orderValue = this.toNumber(order.total);
 
     location.totalOrders += 1;
     location.totalValue += orderValue;
 
     if (order.finishedAt) {
-      location.commandaDurations.push(
-        this.diffMinutes(order.createdAt, order.finishedAt),
-      );
+      location.commandaDurations.push(this.diffMinutes(order.createdAt, order.finishedAt));
     }
 
     if (order.tableOccupiedUntil && order.table) {
-      location.tableOccupationTimes.push(
-        this.diffMinutes(order.createdAt, order.tableOccupiedUntil),
-      );
+      location.tableOccupationTimes.push(this.diffMinutes(order.createdAt, order.tableOccupiedUntil));
     }
 
     if (order.operator) {
-      const op = this.ensureOperator(
-        location,
-        order.operator.id,
-        order.operator.username,
-      );
+      const op = this.ensureOperator(location, order.operator.id, order.operator.username);
       op.opened += 1;
     }
 
     if (order.closedByOperator) {
-      const op = this.ensureOperator(
-        location,
-        order.closedByOperator.id,
-        order.closedByOperator.username,
-      );
+      const op = this.ensureOperator(location, order.closedByOperator.id, order.closedByOperator.username);
       op.closed += 1;
       op.totalValue += orderValue;
     }
@@ -247,8 +173,7 @@ export class LocationReportService {
     for (const item of order.items) {
       const categoryName = item.product.category?.name ?? 'Sem Categoria';
       const producedAt = item.product.productionLocation
-        ? (locationMap[item.product.productionLocation]?.name ??
-          item.product.productionLocation)
+        ? (locationMap[item.product.productionLocation]?.name ?? item.product.productionLocation)
         : location.name;
 
       const qty = this.toNumber(item.quantity);
@@ -259,12 +184,7 @@ export class LocationReportService {
       category.totalQty += qty;
 
       if (!category.items[item.product.name]) {
-        category.items[item.product.name] = {
-          name: item.product.name,
-          qty: 0,
-          value: 0,
-          producedAt,
-        };
+        category.items[item.product.name] = { name: item.product.name, qty: 0, value: 0, producedAt };
       }
       category.items[item.product.name].qty += qty;
       category.items[item.product.name].value += value;
@@ -331,9 +251,7 @@ export class LocationReportService {
     return { locations };
   }
 
-  async generateReportByDate(
-    filters: LocationReportFilterDto,
-  ): Promise<LocationReportResponseDto> {
+  async generateReportByDate(filters: LocationReportFilterDto): Promise<LocationReportResponseDto> {
     const validation = validateDateFilters(filters);
     if (validation) return validation;
 
@@ -353,9 +271,7 @@ export class LocationReportService {
       return { status: 'OK', data };
     } catch (error) {
       console.error('Erro ao gerar relatório por local:', error);
-      throw new InternalServerErrorException(
-        'Erro interno do servidor ao gerar relatório por local',
-      );
+      throw new InternalServerErrorException('Erro interno do servidor ao gerar relatório por local');
     }
   }
 }

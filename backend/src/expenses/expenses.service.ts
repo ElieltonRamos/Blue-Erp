@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/database/prisma.service.js';
 import { Prisma } from 'generated/prisma/client.js';
 
@@ -49,27 +45,16 @@ export class ExpensesService {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     await this.prisma.client.expense.updateMany({
-      where: {
-        status: { not: 'Pago' },
-        datePayment: {
-          lt: today,
-        },
-      },
-      data: {
-        status: 'Atrasado',
-      },
+      where: { status: { not: 'Pago' }, datePayment: { lt: today } },
+      data: { status: 'Atrasado' },
     });
   }
 
-  async create(
-    createExpenseDto: CreateExpenseDto,
-  ): Promise<ExpenseResponseDto> {
+  async create(createExpenseDto: CreateExpenseDto): Promise<ExpenseResponseDto> {
     const { supplier, value, datePayment } = createExpenseDto;
 
     if (!supplier || !value || !datePayment) {
-      throw new BadRequestException(
-        'Campos obrigatórios: fornecedor, valor e data de pagamento',
-      );
+      throw new BadRequestException('Campos obrigatórios: fornecedor, valor e data de pagamento');
     }
 
     if (isNaN(value) || value <= 0) {
@@ -81,11 +66,7 @@ export class ExpensesService {
     }
 
     const expense = await this.prisma.client.expense.create({
-      data: {
-        ...createExpenseDto,
-        status: 'Pendente',
-        datePayment: new Date(datePayment),
-      },
+      data: { ...createExpenseDto, status: 'Pendente', datePayment: new Date(datePayment) },
     });
 
     return new ExpenseResponseDto(expense);
@@ -95,11 +76,7 @@ export class ExpensesService {
     const clean = { ...filters };
 
     for (const key in clean) {
-      if (
-        clean[key] === 'undefined' ||
-        clean[key] === 'null' ||
-        clean[key] === ''
-      ) {
+      if (clean[key] === 'undefined' || clean[key] === 'null' || clean[key] === '') {
         clean[key] = undefined;
       }
     }
@@ -131,56 +108,34 @@ export class ExpensesService {
     const where: Prisma.ExpenseWhereInput = {};
 
     if (cleanFilters?.supplier) {
-      where.supplier = {
-        contains: cleanFilters.supplier,
-      };
+      where.supplier = { contains: cleanFilters.supplier };
     }
 
     if (cleanFilters?.status) {
       where.status = cleanFilters.status;
     }
 
-    if (
-      this.isValidDate(cleanFilters?.startDate) &&
-      this.isValidDate(cleanFilters?.endDate)
-    ) {
-      where.datePayment = {
-        gte: new Date(cleanFilters.startDate),
-        lte: new Date(cleanFilters.endDate),
-      };
+    if (this.isValidDate(cleanFilters?.startDate) && this.isValidDate(cleanFilters?.endDate)) {
+      where.datePayment = { gte: new Date(cleanFilters.startDate), lte: new Date(cleanFilters.endDate) };
     }
 
     const orderBy: Prisma.ExpenseOrderByWithRelationInput = {};
 
     if (cleanFilters?.sortBy) {
-      orderBy[cleanFilters.sortBy] =
-        cleanFilters.sortOrder === 'desc' ? 'desc' : 'asc';
+      orderBy[cleanFilters.sortBy] = cleanFilters.sortOrder === 'desc' ? 'desc' : 'asc';
     } else {
       orderBy.datePayment = 'asc';
     }
 
-    const expenses = await this.prisma.client.expense.findMany({
-      where,
-      orderBy,
-      skip: offset,
-      take: limit,
-    });
+    const expenses = await this.prisma.client.expense.findMany({ where, orderBy, skip: offset, take: limit });
 
-    const total = await this.prisma.client.expense.count({
-      where,
-    });
+    const total = await this.prisma.client.expense.count({ where });
 
     const data = expenses.map((expense) => new ExpenseResponseDto(expense));
 
     const totalPages = Math.ceil(total / limit);
 
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages,
-    };
+    return { data, total, page, limit, totalPages };
   }
 
   async findOne(id: number): Promise<ExpenseResponseDto> {
@@ -188,9 +143,7 @@ export class ExpensesService {
       throw new BadRequestException('ID inválido');
     }
 
-    const expense = await this.prisma.client.expense.findUnique({
-      where: { id },
-    });
+    const expense = await this.prisma.client.expense.findUnique({ where: { id } });
 
     if (!expense) {
       throw new NotFoundException('Despesa não encontrada');
@@ -199,17 +152,12 @@ export class ExpensesService {
     return new ExpenseResponseDto(expense);
   }
 
-  async update(
-    id: number,
-    updateExpenseDto: UpdateExpenseDto,
-  ): Promise<ExpenseResponseDto> {
+  async update(id: number, updateExpenseDto: UpdateExpenseDto): Promise<ExpenseResponseDto> {
     if (isNaN(id) || id <= 0) {
       throw new BadRequestException('ID inválido');
     }
 
-    const existing = await this.prisma.client.expense.findUnique({
-      where: { id },
-    });
+    const existing = await this.prisma.client.expense.findUnique({ where: { id } });
 
     if (!existing) {
       throw new NotFoundException('Despesa não encontrada');
@@ -231,9 +179,7 @@ export class ExpensesService {
       where: { id },
       data: {
         ...updateExpenseDto,
-        datePayment: updateExpenseDto.datePayment
-          ? new Date(updateExpenseDto.datePayment)
-          : undefined,
+        datePayment: updateExpenseDto.datePayment ? new Date(updateExpenseDto.datePayment) : undefined,
       },
     });
 
@@ -245,21 +191,15 @@ export class ExpensesService {
       throw new BadRequestException('ID inválido');
     }
 
-    const expense = await this.prisma.client.expense.findUnique({
-      where: { id },
-    });
+    const expense = await this.prisma.client.expense.findUnique({ where: { id } });
 
     if (!expense) {
       throw new NotFoundException('Despesa não encontrada');
     }
 
-    await this.prisma.client.expense.delete({
-      where: { id },
-    });
+    await this.prisma.client.expense.delete({ where: { id } });
 
-    return {
-      message: 'Despesa removida com sucesso',
-    };
+    return { message: 'Despesa removida com sucesso' };
   }
 
   async getReport(
@@ -267,15 +207,8 @@ export class ExpensesService {
     endDate: string,
   ): Promise<{
     totalValue: number;
-    totalByStatus: {
-      pago: number;
-      pendente: number;
-      atrasado: number;
-    };
-    totalBySupplier: {
-      supplier: string;
-      total: number;
-    }[];
+    totalByStatus: { pago: number; pendente: number; atrasado: number };
+    totalBySupplier: { supplier: string; total: number }[];
   }> {
     if (!startDate || !endDate) {
       throw new BadRequestException('Informe as datas para o relatório');
@@ -286,21 +219,12 @@ export class ExpensesService {
     }
 
     const expenses = await this.prisma.client.expense.findMany({
-      where: {
-        datePayment: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
-        },
-      },
+      where: { datePayment: { gte: new Date(startDate), lte: new Date(endDate) } },
     });
 
     let totalValue = 0;
 
-    const totalByStatus = {
-      pago: 0,
-      pendente: 0,
-      atrasado: 0,
-    };
+    const totalByStatus = { pago: 0, pendente: 0, atrasado: 0 };
 
     const supplierMap: Record<string, number> = {};
 
@@ -316,22 +240,12 @@ export class ExpensesService {
       }
 
       if (expense.supplier) {
-        supplierMap[expense.supplier] =
-          (supplierMap[expense.supplier] || 0) + amount;
+        supplierMap[expense.supplier] = (supplierMap[expense.supplier] || 0) + amount;
       }
     }
 
-    const totalBySupplier = Object.entries(supplierMap).map(
-      ([supplier, total]) => ({
-        supplier,
-        total,
-      }),
-    );
+    const totalBySupplier = Object.entries(supplierMap).map(([supplier, total]) => ({ supplier, total }));
 
-    return {
-      totalValue,
-      totalByStatus,
-      totalBySupplier,
-    };
+    return { totalValue, totalByStatus, totalBySupplier };
   }
 }

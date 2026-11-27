@@ -3,16 +3,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
 
 export class ParsedNfeItemDto {
-  @ApiProperty({
-    description: 'Código do produto no fornecedor (cProd)',
-    example: '01562',
-  })
+  @ApiProperty({ description: 'Código do produto no fornecedor (cProd)', example: '01562' })
   supplierProductCode: string;
 
-  @ApiProperty({
-    description: 'Descrição do produto na nota (xProd)',
-    example: 'TECIDO VELUDO PAVIA 12 MARROM',
-  })
+  @ApiProperty({ description: 'Descrição do produto na nota (xProd)', example: 'TECIDO VELUDO PAVIA 12 MARROM' })
   description: string;
 
   @ApiProperty({ description: 'NCM do produto', example: '60019200' })
@@ -37,10 +31,7 @@ export class ParsedNfeInstallmentDto {
   @IsNotEmpty({ message: 'Número da parcela é obrigatório' })
   number: string;
 
-  @ApiProperty({
-    description: 'Data de vencimento (dVenc)',
-    example: '2026-09-29',
-  })
+  @ApiProperty({ description: 'Data de vencimento (dVenc)', example: '2026-09-29' })
   @IsString({ message: 'Data de vencimento deve ser texto' })
   @IsNotEmpty({ message: 'Data de vencimento é obrigatória' })
   dueDate: string;
@@ -52,37 +43,19 @@ export class ParsedNfeInstallmentDto {
 }
 
 export class ParsedNfeDto {
-  @ApiProperty({
-    description: 'CNPJ do emitente (fornecedor)',
-    example: '16669045000274',
-  })
+  @ApiProperty({ description: 'CNPJ do emitente (fornecedor)', example: '16669045000274' })
   supplierCnpj: string;
 
-  @ApiProperty({
-    description: 'Razão social do emitente',
-    example: 'EDANTEX COMERCIO IMPORTACAO E EXPORTACAO LTDA.',
-  })
+  @ApiProperty({ description: 'Razão social do emitente', example: 'EDANTEX COMERCIO IMPORTACAO E EXPORTACAO LTDA.' })
   supplierName: string;
 
-  @ApiProperty({
-    required: false,
-    description: 'Inscrição estadual do emitente (emit.IE)',
-    example: '123456789',
-  })
+  @ApiProperty({ required: false, description: 'Inscrição estadual do emitente (emit.IE)', example: '123456789' })
   supplierStateRegistration?: string;
 
-  @ApiProperty({
-    required: false,
-    description: 'Município do emitente (emit.enderEmit.xMun)',
-    example: 'Belo Horizonte',
-  })
+  @ApiProperty({ required: false, description: 'Município do emitente (emit.enderEmit.xMun)', example: 'Belo Horizonte' })
   supplierCity?: string;
 
-  @ApiProperty({
-    required: false,
-    description: 'UF do emitente (emit.enderEmit.UF)',
-    example: 'MG',
-  })
+  @ApiProperty({ required: false, description: 'UF do emitente (emit.enderEmit.UF)', example: 'MG' })
   supplierState?: string;
 
   @ApiProperty({
@@ -99,11 +72,7 @@ export class ParsedNfeDto {
   })
   transportCity?: string;
 
-  @ApiProperty({
-    required: false,
-    description: 'UF da transportadora (transp.transporta.UF)',
-    example: 'MG',
-  })
+  @ApiProperty({ required: false, description: 'UF da transportadora (transp.transporta.UF)', example: 'MG' })
   transportState?: string;
 
   @ApiProperty({
@@ -116,21 +85,14 @@ export class ParsedNfeDto {
   @ApiProperty({ description: 'Número da nota fiscal (nNF)', example: '25278' })
   invoiceNumber: string;
 
-  @ApiProperty({
-    description: 'Chave de acesso da NFe (44 dígitos)',
-    example: '31260916669045000274550060000252781383650827',
-  })
+  @ApiProperty({ description: 'Chave de acesso da NFe (44 dígitos)', example: '31260916669045000274550060000252781383650827' })
   fiscalKey: string;
 
-  @ApiProperty({
-    description: 'Itens da nota fiscal',
-    type: [ParsedNfeItemDto],
-  })
+  @ApiProperty({ description: 'Itens da nota fiscal', type: [ParsedNfeItemDto] })
   items: ParsedNfeItemDto[];
 
   @ApiProperty({
-    description:
-      'Parcelas/duplicatas da nota (vazio quando a nota não tem cobr.dup — não gera contas a pagar)',
+    description: 'Parcelas/duplicatas da nota (vazio quando a nota não tem cobr.dup — não gera contas a pagar)',
     type: [ParsedNfeInstallmentDto],
   })
   installments: ParsedNfeInstallmentDto[];
@@ -138,9 +100,6 @@ export class ParsedNfeDto {
   @ApiProperty({ description: 'Valor total da nota (vNF)', example: 9513.6 })
   totalValue: number;
 
-  @ApiProperty({
-    description: 'CNPJ do destinatário da nota (dest.CNPJ)',
-    example: '40771481000153',
-  })
+  @ApiProperty({ description: 'CNPJ do destinatário da nota (dest.CNPJ)', example: '40771481000153' })
   destCnpj: string;
 }

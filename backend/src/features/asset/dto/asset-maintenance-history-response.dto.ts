@@ -61,23 +61,9 @@ class MaintenanceDocumentItemResponseDto {
     this.quantity = Number(item.quantity);
     this.unitPrice = Number(item.unitPrice);
     this.total = Number(item.total);
-    this.product = item.product
-      ? {
-          id: item.product.id,
-          name: item.product.name,
-          code: item.product.code,
-        }
-      : null;
-    this.service = item.service
-      ? {
-          id: item.service.id,
-          name: item.service.name,
-          code: item.service.code,
-        }
-      : null;
-    this.user = item.user
-      ? { id: item.user.id, username: item.user.username }
-      : null;
+    this.product = item.product ? { id: item.product.id, name: item.product.name, code: item.product.code } : null;
+    this.service = item.service ? { id: item.service.id, name: item.service.name, code: item.service.code } : null;
+    this.user = item.user ? { id: item.user.id, username: item.user.username } : null;
   }
 }
 
@@ -88,10 +74,7 @@ export class MaintenanceDocumentResponseDto {
   @ApiProperty({ example: 'SERVICE_ORDER', enum: ['SERVICE_ORDER', 'QUOTE'] })
   type: string;
 
-  @ApiProperty({
-    example: 'COMPLETED',
-    enum: ['DRAFT', 'APPROVED', 'IN_PROGRESS', 'COMPLETED', 'CANCELED'],
-  })
+  @ApiProperty({ example: 'COMPLETED', enum: ['DRAFT', 'APPROVED', 'IN_PROGRESS', 'COMPLETED', 'CANCELED'] })
   status: string;
 
   @ApiProperty({ example: 350.0 })
@@ -114,9 +97,7 @@ export class MaintenanceDocumentResponseDto {
     this.type = document.type;
     this.status = document.status;
     this.total = Number(document.total);
-    this.items = (document.items ?? []).map(
-      (item: any) => new MaintenanceDocumentItemResponseDto(item),
-    );
+    this.items = (document.items ?? []).map((item: any) => new MaintenanceDocumentItemResponseDto(item));
     this.approvedAt = document.approvedAt;
     this.finishedAt = document.finishedAt;
     this.createdAt = document.createdAt;
@@ -140,8 +121,6 @@ export class AssetMaintenanceHistoryResponseDto {
     this.assetId = asset.id;
     this.assetLabel = asset.label;
     this.clientName = asset.client?.name;
-    this.documents = (asset.documents ?? []).map(
-      (doc: any) => new MaintenanceDocumentResponseDto(doc),
-    );
+    this.documents = (asset.documents ?? []).map((doc: any) => new MaintenanceDocumentResponseDto(doc));
   }
 }

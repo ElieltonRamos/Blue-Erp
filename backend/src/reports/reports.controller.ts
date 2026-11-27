@@ -46,28 +46,11 @@ export class ReportsController {
     description: 'Data de início do período (formato: YYYY-MM-DD)',
     example: '2024-01-01',
   })
-  @ApiQuery({
-    name: 'endDate',
-    type: String,
-    description: 'Data de fim do período (formato: YYYY-MM-DD)',
-    example: '2024-01-31',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Relatório gerado com sucesso',
-    type: WorkshopReportResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Parâmetros de filtro inválidos',
-  })
-  @ApiResponse({
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
-    description: 'Erro interno do servidor',
-  })
-  async generateWorkshopReport(
-    @Query() filters: WorkshopReportFilterDto,
-  ): Promise<WorkshopReportResponseDto> {
+  @ApiQuery({ name: 'endDate', type: String, description: 'Data de fim do período (formato: YYYY-MM-DD)', example: '2024-01-31' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Relatório gerado com sucesso', type: WorkshopReportResponseDto })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Parâmetros de filtro inválidos' })
+  @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Erro interno do servidor' })
+  async generateWorkshopReport(@Query() filters: WorkshopReportFilterDto): Promise<WorkshopReportResponseDto> {
     return await this.workshopReportService.generateReportByDate(filters);
   }
 
@@ -83,28 +66,11 @@ export class ReportsController {
     description: 'Data de início do período (formato: YYYY-MM-DD)',
     example: '2024-01-01',
   })
-  @ApiQuery({
-    name: 'endDate',
-    type: String,
-    description: 'Data de fim do período (formato: YYYY-MM-DD)',
-    example: '2024-01-31',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Relatório gerado com sucesso',
-    type: SalesReportResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Parâmetros de filtro inválidos',
-  })
-  @ApiResponse({
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
-    description: 'Erro interno do servidor',
-  })
-  async generateSalesReport(
-    @Query() filters: SalesReportFilterDto,
-  ): Promise<SalesReportResponseDto> {
+  @ApiQuery({ name: 'endDate', type: String, description: 'Data de fim do período (formato: YYYY-MM-DD)', example: '2024-01-31' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Relatório gerado com sucesso', type: SalesReportResponseDto })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Parâmetros de filtro inválidos' })
+  @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Erro interno do servidor' })
+  async generateSalesReport(@Query() filters: SalesReportFilterDto): Promise<SalesReportResponseDto> {
     return await this.salesReportService.generateReportByDate(filters);
   }
 
@@ -120,28 +86,11 @@ export class ReportsController {
     description: 'Data de início do período (formato: YYYY-MM-DD)',
     example: '2024-01-01',
   })
-  @ApiQuery({
-    name: 'endDate',
-    type: String,
-    description: 'Data de fim do período (formato: YYYY-MM-DD)',
-    example: '2024-01-31',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Relatório gerado com sucesso',
-    type: ProductReportResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Parâmetros de filtro inválidos',
-  })
-  @ApiResponse({
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
-    description: 'Erro interno do servidor',
-  })
-  async generateProductReport(
-    @Query() filters: ProductReportFilterDto,
-  ): Promise<ProductReportResponseDto> {
+  @ApiQuery({ name: 'endDate', type: String, description: 'Data de fim do período (formato: YYYY-MM-DD)', example: '2024-01-31' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Relatório gerado com sucesso', type: ProductReportResponseDto })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Parâmetros de filtro inválidos' })
+  @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Erro interno do servidor' })
+  async generateProductReport(@Query() filters: ProductReportFilterDto): Promise<ProductReportResponseDto> {
     return await this.productReportService.generateProductReport(filters);
   }
 
@@ -150,20 +99,10 @@ export class ReportsController {
   @ApiQuery({ name: 'startDate', type: String, example: '2024-01-01' })
   @ApiQuery({ name: 'endDate', type: String, example: '2024-01-31' })
   @ApiResponse({ status: HttpStatus.OK, type: ExpenseReportResponseDto })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Parâmetros de filtro inválidos',
-  })
-  @ApiResponse({
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
-    description: 'Erro interno do servidor',
-  })
-  async generateExpenseReport(
-    @Query() filters: ExpenseReportFilterDto,
-  ): Promise<ExpenseReportResponseDto> {
-    return await this.expenseReportService.generateExpenseReport(
-      filters as { startDate: string; endDate: string },
-    );
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Parâmetros de filtro inválidos' })
+  @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Erro interno do servidor' })
+  async generateExpenseReport(@Query() filters: ExpenseReportFilterDto): Promise<ExpenseReportResponseDto> {
+    return await this.expenseReportService.generateExpenseReport(filters as { startDate: string; endDate: string });
   }
 
   @Get('orders')
@@ -171,17 +110,9 @@ export class ReportsController {
   @ApiQuery({ name: 'startDate', type: String, example: '2024-01-01' })
   @ApiQuery({ name: 'endDate', type: String, example: '2024-01-31' })
   @ApiResponse({ status: HttpStatus.OK, type: OrderReportResponseDto })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Parâmetros de filtro inválidos',
-  })
-  @ApiResponse({
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
-    description: 'Erro interno do servidor',
-  })
-  async generateOrderReport(
-    @Query() filters: OrderReportFilterDto,
-  ): Promise<OrderReportResponseDto> {
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Parâmetros de filtro inválidos' })
+  @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Erro interno do servidor' })
+  async generateOrderReport(@Query() filters: OrderReportFilterDto): Promise<OrderReportResponseDto> {
     return await this.orderReportService.generateOrderReport(filters);
   }
 
@@ -197,28 +128,11 @@ export class ReportsController {
     description: 'Data de início do período (formato: YYYY-MM-DD)',
     example: '2024-01-01',
   })
-  @ApiQuery({
-    name: 'endDate',
-    type: String,
-    description: 'Data de fim do período (formato: YYYY-MM-DD)',
-    example: '2024-01-31',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Relatório gerado com sucesso',
-    type: LocationReportResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Parâmetros de filtro inválidos',
-  })
-  @ApiResponse({
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
-    description: 'Erro interno do servidor',
-  })
-  async generateLocationReport(
-    @Query() filters: LocationReportFilterDto,
-  ): Promise<LocationReportResponseDto> {
+  @ApiQuery({ name: 'endDate', type: String, description: 'Data de fim do período (formato: YYYY-MM-DD)', example: '2024-01-31' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Relatório gerado com sucesso', type: LocationReportResponseDto })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Parâmetros de filtro inválidos' })
+  @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Erro interno do servidor' })
+  async generateLocationReport(@Query() filters: LocationReportFilterDto): Promise<LocationReportResponseDto> {
     return await this.locationReportService.generateReportByDate(filters);
   }
 }

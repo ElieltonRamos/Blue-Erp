@@ -1,11 +1,7 @@
 // nfe-xml-parser.service.ts
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { XMLParser } from 'fast-xml-parser';
-import {
-  ParsedNfeDto,
-  ParsedNfeItemDto,
-  ParsedNfeInstallmentDto,
-} from './dto/parsed-nfe.dto';
+import { ParsedNfeDto, ParsedNfeItemDto, ParsedNfeInstallmentDto } from './dto/parsed-nfe.dto';
 
 @Injectable()
 export class NfeXmlParserService {
@@ -27,19 +23,13 @@ export class NfeXmlParserService {
     const infNFe = nfe?.infNFe;
 
     if (!infNFe) {
-      throw new BadRequestException(
-        'XML não é uma NFe válida (infNFe não encontrado)',
-      );
+      throw new BadRequestException('XML não é uma NFe válida (infNFe não encontrado)');
     }
 
-    const fiscalKey: string =
-      json.nfeProc?.protNFe?.infProt?.chNFe ??
-      (infNFe['@_Id'] as string)?.replace(/^NFe/, '');
+    const fiscalKey: string = json.nfeProc?.protNFe?.infProt?.chNFe ?? (infNFe['@_Id'] as string)?.replace(/^NFe/, '');
 
     if (!fiscalKey) {
-      throw new BadRequestException(
-        'Não foi possível extrair a chave de acesso (chNFe) da NFe',
-      );
+      throw new BadRequestException('Não foi possível extrair a chave de acesso (chNFe) da NFe');
     }
 
     const emit = infNFe.emit;
@@ -56,14 +46,8 @@ export class NfeXmlParserService {
 
     const items: ParsedNfeItemDto[] = detList.map((det: any) => {
       const prod = det.prod;
-      if (
-        !prod?.cProd ||
-        prod.qCom === undefined ||
-        prod.vUnCom === undefined
-      ) {
-        throw new BadRequestException(
-          `Item da NFe com dados incompletos: ${JSON.stringify(prod)}`,
-        );
+      if (!prod?.cProd || prod.qCom === undefined || prod.vUnCom === undefined) {
+        throw new BadRequestException(`Item da NFe com dados incompletos: ${JSON.stringify(prod)}`);
       }
       return {
         supplierProductCode: String(prod.cProd),
@@ -76,9 +60,7 @@ export class NfeXmlParserService {
       };
     });
 
-    const totalValue = Number(
-      infNFe.total?.ICMSTot?.vNF ?? items.reduce((sum, i) => sum + i.total, 0),
-    );
+    const totalValue = Number(infNFe.total?.ICMSTot?.vNF ?? items.reduce((sum, i) => sum + i.total, 0));
 
     const dupRaw = infNFe.cobr?.dup;
     const dupList = Array.isArray(dupRaw) ? dupRaw : dupRaw ? [dupRaw] : [];
@@ -91,9 +73,7 @@ export class NfeXmlParserService {
 
     const dest = infNFe.dest;
     if (!dest?.CNPJ) {
-      throw new BadRequestException(
-        'CNPJ do destinatário não encontrado no XML',
-      );
+      throw new BadRequestException('CNPJ do destinatário não encontrado no XML');
     }
 
     const transporta = infNFe.transp?.transporta;
@@ -105,9 +85,7 @@ export class NfeXmlParserService {
       supplierStateRegistration: emit.IE ? String(emit.IE) : undefined,
       supplierCity: emit.enderEmit?.xMun,
       supplierState: emit.enderEmit?.UF,
-      transportStateRegistration: transporta?.IE
-        ? String(transporta.IE)
-        : undefined,
+      transportStateRegistration: transporta?.IE ? String(transporta.IE) : undefined,
       transportCity: transporta?.xMun,
       transportState: transporta?.UF,
       transportRntc: veicTransp?.RNTC ? String(veicTransp.RNTC) : undefined,

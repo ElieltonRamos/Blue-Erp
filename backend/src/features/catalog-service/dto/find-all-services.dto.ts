@@ -1,13 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import {
-  IsBoolean,
-  IsIn,
-  IsInt,
-  IsOptional,
-  IsString,
-  Min,
-} from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { ValidationMessages } from 'src/common/utils/validation';
 
 export class FindAllServicesDto {
@@ -30,19 +23,12 @@ export class FindAllServicesDto {
   @IsOptional()
   sortKey?: string = 'name';
 
-  @ApiPropertyOptional({
-    example: 'asc',
-    default: 'asc',
-    enum: ['asc', 'desc'],
-  })
+  @ApiPropertyOptional({ example: 'asc', default: 'asc', enum: ['asc', 'desc'] })
   @IsIn(['asc', 'desc'], { message: ValidationMessages.IS_ENUM('Ordem') })
   @IsOptional()
   sortOrder?: 'asc' | 'desc' = 'asc';
 
-  @ApiPropertyOptional({
-    example: 'óleo',
-    description: 'Busca por nome ou código',
-  })
+  @ApiPropertyOptional({ example: 'óleo', description: 'Busca por nome ou código' })
   @IsString({ message: ValidationMessages.IS_STRING('Busca') })
   @IsOptional()
   search?: string;

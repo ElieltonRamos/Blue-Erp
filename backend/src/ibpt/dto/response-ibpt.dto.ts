@@ -3,24 +3,14 @@ import { Type } from 'class-transformer';
 import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export class GetAllIbptQueryDto {
-  @ApiProperty({
-    description: 'Número da página',
-    example: 1,
-    required: false,
-    default: 1,
-  })
+  @ApiProperty({ description: 'Número da página', example: 1, required: false, default: 1 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   page: number = 1;
 
-  @ApiProperty({
-    description: 'Quantidade de itens por página',
-    example: 10,
-    required: false,
-    default: 10,
-  })
+  @ApiProperty({ description: 'Quantidade de itens por página', example: 10, required: false, default: 10 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -32,26 +22,13 @@ export class GetAllIbptQueryDto {
     example: 'ncm',
     required: false,
     default: 'id',
-    enum: [
-      'id',
-      'ncm',
-      'federalTaxRate',
-      'stateTaxRate',
-      'municipalTaxRate',
-      'version',
-    ],
+    enum: ['id', 'ncm', 'federalTaxRate', 'stateTaxRate', 'municipalTaxRate', 'version'],
   })
   @IsOptional()
   @IsString()
   sortKey: string = 'id';
 
-  @ApiProperty({
-    description: 'Ordem da ordenação',
-    example: 'asc',
-    required: false,
-    default: 'asc',
-    enum: ['asc', 'desc'],
-  })
+  @ApiProperty({ description: 'Ordem da ordenação', example: 'asc', required: false, default: 'asc', enum: ['asc', 'desc'] })
   @IsOptional()
   @IsString()
   sortOrder: string = 'asc';

@@ -64,20 +64,13 @@ export interface NFeOptions {
       tPag: string;
       vPag: number;
       xPag?: string;
-      card?: {
-        tpIntegra: string;
-        tBand?: string;
-        cAut?: string;
-      };
+      card?: { tpIntegra: string; tBand?: string; cAut?: string };
     }>;
     vTroco?: number;
   };
   infAdic?: string;
   fonteIBPT?: string;
-  csc: {
-    idCSC: string;
-    csc: string;
-  };
+  csc: { idCSC: string; csc: string };
 }
 
 export interface NFeProduct {

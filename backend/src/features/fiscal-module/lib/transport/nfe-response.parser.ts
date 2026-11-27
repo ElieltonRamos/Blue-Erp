@@ -20,15 +20,9 @@ export class NfeResponseParser {
   async extractAndParseCancellation(responseXml: string): Promise<SefazReturn> {
     const parsed: any = await parseXML(responseXml);
 
-    const envelope =
-      parsed?.['S:Envelope'] ||
-      parsed?.['soap:Envelope'] ||
-      parsed?.['soap12:Envelope'];
+    const envelope = parsed?.['S:Envelope'] || parsed?.['soap:Envelope'] || parsed?.['soap12:Envelope'];
 
-    const body =
-      envelope?.['S:Body']?.[0] ||
-      envelope?.['soap:Body']?.[0] ||
-      envelope?.['soap12:Body']?.[0];
+    const body = envelope?.['S:Body']?.[0] || envelope?.['soap:Body']?.[0] || envelope?.['soap12:Body']?.[0];
 
     const nfeResultMsg = body?.['nfeResultMsg']?.[0];
     const retEnvEvento = nfeResultMsg?.['retEnvEvento']?.[0];
@@ -48,12 +42,7 @@ export class NfeResponseParser {
       const nProt = infRetEvento?.nProt?.[0];
 
       if (eventoCStat === '135') {
-        return {
-          success: true,
-          protocol: nProt,
-          message: eventoXMotivo || 'Cancelamento autorizado',
-          statusCode: eventoCStat,
-        };
+        return { success: true, protocol: nProt, message: eventoXMotivo || 'Cancelamento autorizado', statusCode: eventoCStat };
       }
 
       return {
@@ -72,31 +61,20 @@ export class NfeResponseParser {
     };
   }
 
-  async parseStatusResponse(
-    responseXml: string,
-  ): Promise<{ cStat: string; xMotivo: string }> {
+  async parseStatusResponse(responseXml: string): Promise<{ cStat: string; xMotivo: string }> {
     const parsed: any = await parseXML(responseXml);
     const body = this.extractSoapBody(parsed);
     const ret = body?.retConsStatServ || body;
 
-    return {
-      cStat: ret?.cStat?.[0] || ret?.cStat,
-      xMotivo: ret?.xMotivo?.[0] || ret?.xMotivo,
-    };
+    return { cStat: ret?.cStat?.[0] || ret?.cStat, xMotivo: ret?.xMotivo?.[0] || ret?.xMotivo };
   }
 
   private extractSoapBody(parsed: any): any {
-    const envelope =
-      parsed?.['S:Envelope'] ||
-      parsed?.['soap:Envelope'] ||
-      parsed?.['soap12:Envelope'];
+    const envelope = parsed?.['S:Envelope'] || parsed?.['soap:Envelope'] || parsed?.['soap12:Envelope'];
 
     if (!envelope) return parsed;
 
-    const body =
-      envelope['S:Body']?.[0] ||
-      envelope['soap:Body']?.[0] ||
-      envelope['soap12:Body']?.[0];
+    const body = envelope['S:Body']?.[0] || envelope['soap:Body']?.[0] || envelope['soap12:Body']?.[0];
 
     if (!body) return parsed;
 

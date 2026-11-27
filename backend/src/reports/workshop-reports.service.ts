@@ -36,25 +36,15 @@ export class WorkshopReportService {
     return new Date(`${dateString}T23:59:59.999-03:00`);
   }
 
-  private toNumber(
-    val: number | { toNumber(): number } | null | undefined,
-  ): number {
+  private toNumber(val: number | { toNumber(): number } | null | undefined): number {
     if (val == null) return 0;
     if (typeof val === 'object' && 'toNumber' in val) return val.toNumber();
     return Number(val);
   }
 
-  private async fetchDocumentsData(
-    startDate: string,
-    endDate: string,
-  ): Promise<DocumentWithIncludes[]> {
+  private async fetchDocumentsData(startDate: string, endDate: string): Promise<DocumentWithIncludes[]> {
     return this.prisma.client.document.findMany({
-      where: {
-        createdAt: {
-          gte: this.getStartOfDay(startDate),
-          lte: this.getEndOfDay(endDate),
-        },
-      },
+      where: { createdAt: { gte: this.getStartOfDay(startDate), lte: this.getEndOfDay(endDate) } },
       select: {
         id: true,
         assetId: true,
@@ -72,12 +62,8 @@ export class WorkshopReportService {
     const fmt = (v: number) => Number(v.toFixed(2));
 
     const totalDocuments = documents.length;
-    const totalRevenue = documents.reduce(
-      (sum, d) => sum + this.toNumber(d.total),
-      0,
-    );
-    const averageTicket =
-      totalDocuments > 0 ? totalRevenue / totalDocuments : 0;
+    const totalRevenue = documents.reduce((sum, d) => sum + this.toNumber(d.total), 0);
+    const averageTicket = totalDocuments > 0 ? totalRevenue / totalDocuments : 0;
 
     const vehicleAggregators: Record<number, VehicleAggregator> = {};
     let noVehicleCount = 0;
@@ -136,31 +122,21 @@ export class WorkshopReportService {
       },
       topVehicles,
       vehicles,
-      noVehicle: {
-        totalDocuments: noVehicleCount,
-        totalValue: fmt(noVehicleValue),
-      },
+      noVehicle: { totalDocuments: noVehicleCount, totalValue: fmt(noVehicleValue) },
     };
   }
 
-  async generateReportByDate(
-    filters: WorkshopReportFilterDto,
-  ): Promise<WorkshopReportResponseDto> {
+  async generateReportByDate(filters: WorkshopReportFilterDto): Promise<WorkshopReportResponseDto> {
     const validation = validateDateFilters(filters);
     if (validation) return validation;
 
     try {
-      const documents = await this.fetchDocumentsData(
-        filters.startDate,
-        filters.endDate,
-      );
+      const documents = await this.fetchDocumentsData(filters.startDate, filters.endDate);
       const data = this.buildResponse(documents);
       return { status: 'OK', data };
     } catch (error) {
       console.error('Erro ao gerar relatório da oficina:', error);
-      throw new InternalServerErrorException(
-        'Erro interno do servidor ao gerar relatório da oficina',
-      );
+      throw new InternalServerErrorException('Erro interno do servidor ao gerar relatório da oficina');
     }
   }
 }

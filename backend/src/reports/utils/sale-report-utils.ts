@@ -23,37 +23,21 @@ export function normalizePaymentMethod(method: string): PaymentMethodKey {
 }
 
 export function createEmptyBreakdown(): PaymentBreakdown {
-  return {
-    dinheiro: 0,
-    cartaoCredito: 0,
-    cartaoDebito: 0,
-    pix: 0,
-    creditoLoja: 0,
-  };
+  return { dinheiro: 0, cartaoCredito: 0, cartaoDebito: 0, pix: 0, creditoLoja: 0 };
 }
 
-export function validateDateFilters(filters: {
-  startDate: string;
-  endDate: string;
-}) {
+export function validateDateFilters(filters: { startDate: string; endDate: string }) {
   const startDate = new Date(filters.startDate + ' 00:00:00');
   const endDate = new Date(filters.endDate + ' 23:59:59');
 
   if (startDate > endDate) {
-    return {
-      status: 'ERROR' as const,
-      message: 'Data de início não pode ser maior que a data de fim',
-    };
+    return { status: 'ERROR' as const, message: 'Data de início não pode ser maior que a data de fim' };
   }
 
   return null;
 }
 
-export function processOperatorAggregation(
-  operatorName: string,
-  total: number,
-  salesByOperator: Record<string, any>,
-) {
+export function processOperatorAggregation(operatorName: string, total: number, salesByOperator: Record<string, any>) {
   if (!salesByOperator[operatorName]) {
     salesByOperator[operatorName] = {
       operator: operatorName,

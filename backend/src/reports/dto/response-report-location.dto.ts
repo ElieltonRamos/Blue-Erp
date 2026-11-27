@@ -41,16 +41,10 @@ export class LocationReportOperatorDto {
   @ApiProperty({ example: 10, description: 'Comandas fechadas' })
   closed: number;
 
-  @ApiProperty({
-    example: 1840.5,
-    description: 'Valor total das comandas abertas',
-  })
+  @ApiProperty({ example: 1840.5, description: 'Valor total das comandas abertas' })
   totalValue: number;
 
-  @ApiProperty({
-    example: 184.05,
-    description: 'Total de gorjeta (service charge)',
-  })
+  @ApiProperty({ example: 184.05, description: 'Total de gorjeta (service charge)' })
   totalServiceCharge: number;
 }
 
@@ -73,16 +67,10 @@ export class LocationReportLocationDto {
   @ApiProperty({ example: 'Cerveja Long Neck' })
   topProduct: string;
 
-  @ApiPropertyOptional({
-    example: 47.5,
-    description: 'Tempo médio de comanda em minutos',
-  })
+  @ApiPropertyOptional({ example: 47.5, description: 'Tempo médio de comanda em minutos' })
   averageCommandaMinutes: number | null;
 
-  @ApiPropertyOptional({
-    example: 62.3,
-    description: 'Tempo médio de ocupação de mesa em minutos',
-  })
+  @ApiPropertyOptional({ example: 62.3, description: 'Tempo médio de ocupação de mesa em minutos' })
   averageTableOccupationMinutes: number | null;
 
   @ApiProperty({ type: () => [LocationReportOperatorDto] })

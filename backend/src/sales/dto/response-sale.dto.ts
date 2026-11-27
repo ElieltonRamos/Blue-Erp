@@ -120,9 +120,7 @@ export class SaleItemResponseDto {
     this.composesTotal = data.composesTotal;
     this.cfop = data.cfop;
     this.totalTaxValue = data.totalTaxValue ? Number(data.totalTaxValue) : null;
-    this.importTaxValue = data.importTaxValue
-      ? Number(data.importTaxValue)
-      : null;
+    this.importTaxValue = data.importTaxValue ? Number(data.importTaxValue) : null;
     this.iofValue = data.iofValue ? Number(data.iofValue) : null;
     this.createdAt = data.createdAt;
     this.updatedAt = data.updatedAt;
@@ -186,11 +184,8 @@ export class SaleResponseDto {
     this.operatorId = data.operatorId;
     this.operator = data.operator ? new SaleOperatorDto(data.operator) : null;
     this.date = data.date;
-    this.payments =
-      data.payments?.map((p: any) => new SalePaymentResponseDto(p)) ?? [];
-    this.totalProductsWithoutDiscount = Number(
-      data.totalProductsWithoutDiscount,
-    );
+    this.payments = data.payments?.map((p: any) => new SalePaymentResponseDto(p)) ?? [];
+    this.totalProductsWithoutDiscount = Number(data.totalProductsWithoutDiscount);
     this.discount = Number(data.discount);
     this.total = Number(data.total);
     this.profitSale = Number(data.profitSale);

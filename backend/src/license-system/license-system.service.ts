@@ -4,10 +4,7 @@ import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/common/database/prisma.service';
 import * as jwt from 'jsonwebtoken';
 import axios from 'axios';
-import {
-  LicenseStatus,
-  LicenseTokenPayload,
-} from './entities/license-system.entity';
+import { LicenseStatus, LicenseTokenPayload } from './entities/license-system.entity';
 import { version } from '../../package.json';
 
 const DAY_MS = 1000 * 60 * 60 * 24;
@@ -15,8 +12,7 @@ const DAY_MS = 1000 * 60 * 60 * 24;
 @Injectable()
 export class LicenseSystemService {
   private readonly logger = new Logger(LicenseSystemService.name);
-  private readonly licensingServer =
-    'https://licensing-service-blue-pdv.vercel.app';
+  private readonly licensingServer = 'https://licensing-service-blue-pdv.vercel.app';
   publicKey = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyIWwh09J45ZEL1yM2bbD
 YzEL/X+Kq06HCMClCu0MGBAGwsi6rYN+PKH3B3YBZsAG4TW3jCOdE5F5Ekb4gqP8
@@ -42,26 +38,12 @@ rwIDAQAB
   private async fetchToken(
     cnpj: string,
     licenseKey: string,
-  ): Promise<{
-    success: boolean;
-    token?: string;
-    serverRejected: boolean;
-  }> {
+  ): Promise<{ success: boolean; token?: string; serverRejected: boolean }> {
     try {
-      const response = await axios.get(
-        `${this.licensingServer}/api/license/${cnpj}`,
-        {
-          params: { licenseKey },
-          timeout: 10000,
-        },
-      );
+      const response = await axios.get(`${this.licensingServer}/api/license/${cnpj}`, { params: { licenseKey }, timeout: 10000 });
 
       if (response.data.licenseToken) {
-        return {
-          success: true,
-          token: response.data.licenseToken,
-          serverRejected: false,
-        };
+        return { success: true, token: response.data.licenseToken, serverRejected: false };
       }
 
       return { success: false, serverRejected: true };
@@ -71,24 +53,17 @@ rwIDAQAB
 
         // Só 4xx é rejeição explícita. 5xx (servidor/proxy fora), 408 e 429
         // são tratados como indisponibilidade e mantêm o token em cache.
-        const rejected =
-          status >= 400 && status < 500 && status !== 408 && status !== 429;
+        const rejected = status >= 400 && status < 500 && status !== 408 && status !== 429;
 
         if (!rejected) {
-          this.logger.warn(
-            `Servidor de licenças indisponível (HTTP ${status}), usando cache`,
-          );
+          this.logger.warn(`Servidor de licenças indisponível (HTTP ${status}), usando cache`);
         }
 
         return { success: false, serverRejected: rejected };
       }
 
       // Sem resposta (timeout, DNS, rede fora) = falha de rede, não rejeição
-      this.logger.warn(
-        `Falha de rede ao validar licença: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
+      this.logger.warn(`Falha de rede ao validar licença: ${error instanceof Error ? error.message : String(error)}`);
       return { success: false, serverRejected: false };
     }
   }
@@ -113,13 +88,7 @@ rwIDAQAB
 
       // Claim ausente ou inválido vira NaN e faria as comparações de data
       // retornarem sempre false (licença válida para sempre)
-      const numericClaims = [
-        payload.companyId,
-        payload.licenseValidUntil,
-        payload.maxOfflineDays,
-        payload.iat,
-        payload.exp,
-      ];
+      const numericClaims = [payload.companyId, payload.licenseValidUntil, payload.maxOfflineDays, payload.iat, payload.exp];
 
       if (!numericClaims.every((value) => Number.isFinite(value))) {
         return null;
@@ -140,20 +109,12 @@ rwIDAQAB
     return !!payload && payload.cnpj === cnpj;
   }
 
-  private graceDaysRemaining(
-    payload: LicenseTokenPayload,
-    sinceMs: number,
-    now: number,
-  ): number {
+  private graceDaysRemaining(payload: LicenseTokenPayload, sinceMs: number, now: number): number {
     const elapsedDays = Math.max(0, Math.floor((now - sinceMs) / DAY_MS));
     return payload.maxOfflineDays - elapsedDays;
   }
 
-  private checkToken(
-    token: string,
-    cnpj: string,
-    cached = false,
-  ): LicenseStatus {
+  private checkToken(token: string, cnpj: string, cached = false): LicenseStatus {
     const payload = this.verifyToken(token);
 
     if (!payload || payload.cnpj !== cnpj) {
@@ -165,11 +126,7 @@ rwIDAQAB
 
     // Licença expirada — grace period conta a partir do vencimento da licença
     if (licenseExpired) {
-      const daysRemaining = this.graceDaysRemaining(
-        payload,
-        payload.licenseValidUntil,
-        now,
-      );
+      const daysRemaining = this.graceDaysRemaining(payload, payload.licenseValidUntil, now);
 
       if (daysRemaining > 0) {
         return {
@@ -187,11 +144,7 @@ rwIDAQAB
     // Sem conexão (token do cache) — tolerância conta a partir da última
     // sincronização com o servidor (iat)
     if (cached) {
-      const daysRemaining = this.graceDaysRemaining(
-        payload,
-        payload.iat * 1000,
-        now,
-      );
+      const daysRemaining = this.graceDaysRemaining(payload, payload.iat * 1000, now);
 
       if (daysRemaining > 0) {
         return {
@@ -226,17 +179,11 @@ rwIDAQAB
   // Usa as duas últimas vendas como marco de tempo: se o relógio atual está
   // anterior a elas, a data do computador foi voltada
   private async isClockRolledBack(): Promise<boolean> {
-    const lastSales = await this.prisma.client.sale.findMany({
-      select: { createdAt: true },
-      orderBy: { id: 'desc' },
-      take: 2,
-    });
+    const lastSales = await this.prisma.client.sale.findMany({ select: { createdAt: true }, orderBy: { id: 'desc' }, take: 2 });
 
     if (lastSales.length === 0) return false;
 
-    const reference = Math.max(
-      ...lastSales.map((sale) => sale.createdAt.getTime()),
-    );
+    const reference = Math.max(...lastSales.map((sale) => sale.createdAt.getTime()));
 
     return Date.now() + this.clockToleranceMs < reference;
   }
@@ -263,19 +210,13 @@ rwIDAQAB
         return this.expiredStatus();
       }
 
-      await this.prisma.client.company.update({
-        where: { id: company.id },
-        data: { licenseToken: result.token },
-      });
+      await this.prisma.client.company.update({ where: { id: company.id }, data: { licenseToken: result.token } });
       return this.checkToken(result.token, cnpj);
     }
 
     // Servidor rejeitou explicitamente (4xx) - limpa token e invalida
     if (result.serverRejected) {
-      await this.prisma.client.company.update({
-        where: { id: company.id },
-        data: { licenseToken: '' },
-      });
+      await this.prisma.client.company.update({ where: { id: company.id }, data: { licenseToken: '' } });
       return this.expiredStatus();
     }
 
@@ -286,9 +227,7 @@ rwIDAQAB
 
     if (await this.isClockRolledBack()) {
       this.logger.warn('Relógio do sistema anterior à última venda registrada');
-      return this.expiredStatus(
-        'Não foi possível validar a licença. Conecte-se à internet para regularizar.',
-      );
+      return this.expiredStatus('Não foi possível validar a licença. Conecte-se à internet para regularizar.');
     }
 
     return this.checkToken(licenseToken, cnpj, true);
@@ -323,9 +262,7 @@ rwIDAQAB
   }
 
   private async collectUsage(): Promise<Record<string, number>> {
-    const rows = await this.prisma.client.$queryRaw<
-      { tabela: string; linhas: bigint | number | null }[]
-    >`
+    const rows = await this.prisma.client.$queryRaw<{ tabela: string; linhas: bigint | number | null }[]>`
       SELECT CAST(TABLE_NAME AS CHAR) AS tabela, TABLE_ROWS AS linhas
       FROM information_schema.TABLES
       WHERE TABLE_SCHEMA = DATABASE()
@@ -334,9 +271,7 @@ rwIDAQAB
       ORDER BY TABLE_NAME
     `;
 
-    return Object.fromEntries(
-      rows.map((row) => [row.tabela, Number(row.linhas ?? 0)]),
-    );
+    return Object.fromEntries(rows.map((row) => [row.tabela, Number(row.linhas ?? 0)]));
   }
 
   // Nunca lança erro: pode ser chamado sem await
@@ -354,9 +289,7 @@ rwIDAQAB
       const company = await this.prisma.client.company.findFirst();
 
       if (!company || !company.licenseKey) {
-        this.logger.warn(
-          'Resumo de uso não enviado: empresa ou licenseKey ausente',
-        );
+        this.logger.warn('Resumo de uso não enviado: empresa ou licenseKey ausente');
         return;
       }
 
@@ -375,13 +308,9 @@ rwIDAQAB
         { timeout: this.usageReportTimeoutMs },
       );
 
-      this.logger.log(
-        `Resumo de uso enviado (${Object.keys(usage).length} tabelas)`,
-      );
+      this.logger.log(`Resumo de uso enviado (${Object.keys(usage).length} tabelas)`);
     } catch (error) {
-      const status = axios.isAxiosError(error)
-        ? error.response?.status
-        : undefined;
+      const status = axios.isAxiosError(error) ? error.response?.status : undefined;
       const retryable = !status || status >= 500;
 
       // Libera nova tentativa no mesmo dia só se a falha for transitória

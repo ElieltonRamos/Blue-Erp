@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { CreateServiceDto } from './dto/create-service.dto.js';
 import { UpdateServiceDto } from './dto/update-service.dto.js';
 import { PrismaService } from '../../common/database/prisma.service.js';
@@ -18,9 +13,7 @@ export class CatalogService {
   constructor(private prisma: PrismaService) {}
 
   private async getNextCode(): Promise<string> {
-    const services = await this.prisma.client.service.findMany({
-      select: { code: true },
-    });
+    const services = await this.prisma.client.service.findMany({ select: { code: true } });
 
     const max = services.reduce((acc, s) => {
       const n = Number(s.code);
@@ -30,17 +23,12 @@ export class CatalogService {
     return String(max + 1);
   }
 
-  async create(
-    dto: CreateServiceDto,
-    username: string,
-  ): Promise<ServiceResponseDto> {
+  async create(dto: CreateServiceDto, username: string): Promise<ServiceResponseDto> {
     const start = Date.now();
     const code = await this.getNextCode();
 
     try {
-      const service = await this.prisma.client.service.create({
-        data: { ...dto, code },
-      });
+      const service = await this.prisma.client.service.create({ data: { ...dto, code } });
 
       this.logger.log(
         `[Serviço ${service.id}] usuario=${username} | criado "${service.name}" (code=${service.code}) em ${Date.now() - start}ms`,
@@ -49,40 +37,22 @@ export class CatalogService {
       return new ServiceResponseDto(service);
     } catch (error: unknown) {
       if ((error as any).code === 'P2002') {
-        this.logger.warn(
-          `[Serviço novo] usuario=${username} | code=${code} já existe (conflito de concorrência)`,
-        );
-        throw new ConflictException(
-          'Código do serviço já existe, tente novamente',
-        );
+        this.logger.warn(`[Serviço novo] usuario=${username} | code=${code} já existe (conflito de concorrência)`);
+        throw new ConflictException('Código do serviço já existe, tente novamente');
       }
 
-      this.logger.error(
-        `[Serviço novo] usuario=${username} | erro ao criar: ${(error as any).message}`,
-      );
+      this.logger.error(`[Serviço novo] usuario=${username} | erro ao criar: ${(error as any).message}`);
       throw error;
     }
   }
 
-  async findAll(
-    query: FindAllServicesDto,
-  ): Promise<PaginatedResponseDto<ServiceResponseDto>> {
-    const {
-      page = 1,
-      limit = 10,
-      sortKey = 'name',
-      sortOrder = 'asc',
-      search,
-      active,
-    } = query;
+  async findAll(query: FindAllServicesDto): Promise<PaginatedResponseDto<ServiceResponseDto>> {
+    const { page = 1, limit = 10, sortKey = 'name', sortOrder = 'asc', search, active } = query;
 
     const where: any = {};
 
     if (search) {
-      where.OR = [
-        { name: { contains: search } },
-        { code: { contains: search } },
-      ];
+      where.OR = [{ name: { contains: search } }, { code: { contains: search } }];
     }
 
     if (active !== undefined) {
@@ -90,12 +60,7 @@ export class CatalogService {
     }
 
     const [services, total] = await this.prisma.client.$transaction([
-      this.prisma.client.service.findMany({
-        where,
-        orderBy: { [sortKey]: sortOrder },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
+      this.prisma.client.service.findMany({ where, orderBy: { [sortKey]: sortOrder }, skip: (page - 1) * limit, take: limit }),
       this.prisma.client.service.count({ where }),
     ]);
 
@@ -108,9 +73,7 @@ export class CatalogService {
   }
 
   async findOne(id: number): Promise<ServiceResponseDto> {
-    const service = await this.prisma.client.service.findUnique({
-      where: { id },
-    });
+    const service = await this.prisma.client.service.findUnique({ where: { id } });
 
     if (!service) {
       throw new NotFoundException('Serviço não encontrado');
@@ -119,20 +82,13 @@ export class CatalogService {
     return new ServiceResponseDto(service);
   }
 
-  async update(
-    id: number,
-    dto: UpdateServiceDto,
-    username: string,
-  ): Promise<ServiceResponseDto> {
+  async update(id: number, dto: UpdateServiceDto, username: string): Promise<ServiceResponseDto> {
     const start = Date.now();
 
     await this.findOne(id);
 
     try {
-      const service = await this.prisma.client.service.update({
-        where: { id },
-        data: dto,
-      });
+      const service = await this.prisma.client.service.update({ where: { id }, data: dto });
 
       this.logger.log(
         `[Serviço ${id}] usuario=${username} | atualizado: ${Object.keys(dto).join(', ')} em ${Date.now() - start}ms`,
@@ -140,9 +96,7 @@ export class CatalogService {
 
       return new ServiceResponseDto(service);
     } catch (error: unknown) {
-      this.logger.error(
-        `[Serviço ${id}] usuario=${username} | erro ao atualizar: ${(error as any).message}`,
-      );
+      this.logger.error(`[Serviço ${id}] usuario=${username} | erro ao atualizar: ${(error as any).message}`);
       throw error;
     }
   }
@@ -150,14 +104,9 @@ export class CatalogService {
   async remove(id: number, username: string): Promise<ServiceResponseDto> {
     await this.findOne(id);
 
-    const service = await this.prisma.client.service.update({
-      where: { id },
-      data: { active: false },
-    });
+    const service = await this.prisma.client.service.update({ where: { id }, data: { active: false } });
 
-    this.logger.log(
-      `[Serviço ${id}] usuario=${username} | desativado (soft delete)`,
-    );
+    this.logger.log(`[Serviço ${id}] usuario=${username} | desativado (soft delete)`);
 
     return new ServiceResponseDto(service);
   }

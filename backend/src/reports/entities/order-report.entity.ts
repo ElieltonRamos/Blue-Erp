@@ -80,18 +80,8 @@ export interface OrderReportSummary {
   ordersByHour: TimeDistribution[];
   byLocation: LocationReport[];
   topProducts: ProductPerformance[];
-  topTables: {
-    table: string;
-    locationId: string;
-    locationName: string;
-    totalOrders: number;
-    totalRevenue: number;
-  }[];
-  topCustomers: {
-    customerName: string;
-    totalOrders: number;
-    totalRevenue: number;
-  }[];
+  topTables: { table: string; locationId: string; locationName: string; totalOrders: number; totalRevenue: number }[];
+  topCustomers: { customerName: string; totalOrders: number; totalRevenue: number }[];
   recentOrders: OrderSummary[];
   slowestOrders: OrderSummary[];
   fastestOrders: OrderSummary[];

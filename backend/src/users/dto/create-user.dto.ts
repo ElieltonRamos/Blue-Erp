@@ -1,15 +1,6 @@
 // src/users/dto/create-user.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsNotEmpty,
-  MinLength,
-  IsOptional,
-  IsBoolean,
-  IsNumber,
-  Min,
-  Max,
-} from 'class-validator';
+import { IsString, IsNotEmpty, MinLength, IsOptional, IsBoolean, IsNumber, Min, Max } from 'class-validator';
 import { ValidationMessages } from 'src/common/utils/validation';
 
 export class CreateUserDto {
@@ -29,12 +20,7 @@ export class CreateUserDto {
   @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Local de trabalho') })
   workplace: string;
 
-  @ApiProperty({
-    example: 'user',
-    default: 'user',
-    required: false,
-    description: 'Função do usuário no sistema',
-  })
+  @ApiProperty({ example: 'user', default: 'user', required: false, description: 'Função do usuário no sistema' })
   @IsString({ message: ValidationMessages.IS_STRING('Função') })
   @IsOptional()
   role?: string;
@@ -44,15 +30,8 @@ export class CreateUserDto {
   @IsOptional()
   active?: boolean;
 
-  @ApiProperty({
-    example: 40.0,
-    required: false,
-    description: 'Percentual de comissão (mecânico)',
-  })
-  @IsNumber(
-    {},
-    { message: ValidationMessages.IS_STRING('Percentual de comissão') },
-  )
+  @ApiProperty({ example: 40.0, required: false, description: 'Percentual de comissão (mecânico)' })
+  @IsNumber({}, { message: ValidationMessages.IS_STRING('Percentual de comissão') })
   @Min(0)
   @Max(100)
   @IsOptional()

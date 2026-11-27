@@ -106,17 +106,13 @@ export class AppService implements OnApplicationBootstrap {
           .readdirSync(backupDir)
           .filter((file) => file.endsWith('.sql') && file.startsWith('backup-'))
           .sort(
-            (a, b) =>
-              fs.statSync(path.join(backupDir, b)).mtime.getTime() -
-              fs.statSync(path.join(backupDir, a)).mtime.getTime(),
+            (a, b) => fs.statSync(path.join(backupDir, b)).mtime.getTime() - fs.statSync(path.join(backupDir, a)).mtime.getTime(),
           );
 
         if (allBackups.length > 0) {
           const latestBackup = allBackups[0];
           const stats = fs.statSync(path.join(backupDir, latestBackup));
-          const daysAgo = Math.floor(
-            (Date.now() - stats.mtime.getTime()) / (1000 * 60 * 60 * 24),
-          );
+          const daysAgo = Math.floor((Date.now() - stats.mtime.getTime()) / (1000 * 60 * 60 * 24));
 
           backupInfo = {
             lastBackup: stats.mtime.toLocaleDateString('pt-BR'),
@@ -139,43 +135,25 @@ export class AppService implements OnApplicationBootstrap {
     }
 
     // License info
-    const licenseInfo = {
-      status: '❌ Inválida',
-      statusClass: 'text-red-400',
-      plan: '-',
-      cnpj: '-',
-      validUntil: '-',
-      alert: '',
-    };
+    const licenseInfo = { status: '❌ Inválida', statusClass: 'text-red-400', plan: '-', cnpj: '-', validUntil: '-', alert: '' };
 
     try {
       const licenseStatus = await this.licenseService.getStatus();
 
       if (licenseStatus.isValid) {
-        licenseInfo.status =
-          licenseStatus.mode === 'online' ? '🟢 Online' : '🟡 Offline';
-        licenseInfo.statusClass =
-          licenseStatus.mode === 'online'
-            ? 'text-green-400'
-            : 'text-yellow-400';
+        licenseInfo.status = licenseStatus.mode === 'online' ? '🟢 Online' : '🟡 Offline';
+        licenseInfo.statusClass = licenseStatus.mode === 'online' ? 'text-green-400' : 'text-yellow-400';
       } else {
         licenseInfo.status = '🔴 Expirada';
         licenseInfo.statusClass = 'text-red-400';
       }
 
-      licenseInfo.plan =
-        licenseStatus.plan === 'pro'
-          ? 'Pro'
-          : licenseStatus.plan === 'basic'
-            ? 'Basic'
-            : '-';
+      licenseInfo.plan = licenseStatus.plan === 'pro' ? 'Pro' : licenseStatus.plan === 'basic' ? 'Basic' : '-';
       licenseInfo.alert = licenseStatus.message || '';
 
       const tokenInfo = await this.licenseService.getTokenInfo();
       licenseInfo.cnpj = tokenInfo.cnpj;
-      licenseInfo.validUntil = new Date(
-        tokenInfo.licenseValidUntil,
-      ).toLocaleDateString('pt-BR');
+      licenseInfo.validUntil = new Date(tokenInfo.licenseValidUntil).toLocaleDateString('pt-BR');
     } catch {
       // Mantém valores padrão
     }
@@ -342,17 +320,12 @@ export class AppService implements OnApplicationBootstrap {
       console.log(`🗑️  Backup antigo removido: ${file}`);
     });
 
-    console.log(
-      `📊 Total de backups mantidos: ${allBackups.length - toDelete.length + 1}`,
-    );
+    console.log(`📊 Total de backups mantidos: ${allBackups.length - toDelete.length + 1}`);
   }
 
   async execBackup(): Promise<void> {
     try {
-      const timestamp = new Date()
-        .toISOString()
-        .replace(/:/g, '-')
-        .slice(0, 19);
+      const timestamp = new Date().toISOString().replace(/:/g, '-').slice(0, 19);
       const backupDir = path.join(process.cwd(), 'backups');
       const backupFile = path.join(backupDir, `backup-${timestamp}.sql`);
 

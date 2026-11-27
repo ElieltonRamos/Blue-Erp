@@ -17,9 +17,7 @@ export class TelegramService {
     this.enabled = Boolean(this.token && this.chatId);
 
     if (!this.enabled) {
-      this.logger.warn(
-        'TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID não definidos. TelegramService desabilitado.',
-      );
+      this.logger.warn('TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID não definidos. TelegramService desabilitado.');
     }
   }
 
@@ -36,9 +34,7 @@ export class TelegramService {
           { chat_id: this.chatId, text, parse_mode: 'HTML' },
           { timeout: this.timeoutMs },
         );
-        this.logger.log(
-          `Mensagem Telegram enviada (tentativa ${attempt}/${this.maxRetries}).`,
-        );
+        this.logger.log(`Mensagem Telegram enviada (tentativa ${attempt}/${this.maxRetries}).`);
         return;
       } catch (error) {
         const isLastAttempt = attempt === this.maxRetries;

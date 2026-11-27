@@ -1,20 +1,7 @@
-import {
-  BadRequestException,
-  HttpException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
-import {
-  Company,
-  OpeningHour,
-  Prisma,
-} from '../../../generated/prisma/client.js';
+import { BadRequestException, HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Company, OpeningHour, Prisma } from '../../../generated/prisma/client.js';
 import { OnlineMenuSettingsResponseDto } from './dto/online-menu-settings-response.dto.js';
-import {
-  OpeningHourDto,
-  ReplaceOpeningHoursDto,
-} from './dto/opening-hour.dto.js';
+import { OpeningHourDto, ReplaceOpeningHoursDto } from './dto/opening-hour.dto.js';
 import { UpdateOnlineMenuSettingsDto } from './dto/update-online-menu-settings.dto.js';
 import { PrismaService } from '../../common/database/prisma.service.js';
 import { COMPANY_ID } from './company.service.js';
@@ -69,10 +56,7 @@ export class OnlineMenuSettingsService {
   }
 
   private async findCompany(actor: string): Promise<CompanyWithHours> {
-    const company = await this.prisma.client.company.findUnique({
-      where: { id: COMPANY_ID },
-      include: this.include,
-    });
+    const company = await this.prisma.client.company.findUnique({ where: { id: COMPANY_ID }, include: this.include });
     if (!company) {
       this.logger.warn(`Empresa não cadastrada (actor=${actor})`);
       throw new NotFoundException('Empresa não cadastrada');
@@ -81,10 +65,7 @@ export class OnlineMenuSettingsService {
   }
 
   // Só os campos enviados que realmente mudaram em relação ao registro atual
-  private diff(
-    current: CompanyWithHours,
-    dto: UpdateOnlineMenuSettingsDto,
-  ): Prisma.CompanyUpdateInput {
+  private diff(current: CompanyWithHours, dto: UpdateOnlineMenuSettingsDto): Prisma.CompanyUpdateInput {
     const currentValues: Record<SettingsField, unknown> = {
       onlineMenuEnabled: current.onlineMenuEnabled,
       onlineOrdersPaused: current.onlineOrdersPaused,
@@ -110,10 +91,7 @@ export class OnlineMenuSettingsService {
           ? dto.onlinePaymentMethods.map(({ type, label }) => ({ type, label }))
           : dto[key];
 
-      if (
-        value !== undefined &&
-        JSON.stringify(value) !== JSON.stringify(currentValues[key])
-      ) {
+      if (value !== undefined && JSON.stringify(value) !== JSON.stringify(currentValues[key])) {
         changes[key] = value;
       }
     }
@@ -128,25 +106,12 @@ export class OnlineMenuSettingsService {
     }
   }
 
-  private validateDeliveryTime(
-    current: CompanyWithHours,
-    dto: UpdateOnlineMenuSettingsDto,
-    actor: string,
-  ): void {
-    const min =
-      dto.deliveryTimeMin !== undefined
-        ? dto.deliveryTimeMin
-        : current.deliveryTimeMin;
-    const max =
-      dto.deliveryTimeMax !== undefined
-        ? dto.deliveryTimeMax
-        : current.deliveryTimeMax;
+  private validateDeliveryTime(current: CompanyWithHours, dto: UpdateOnlineMenuSettingsDto, actor: string): void {
+    const min = dto.deliveryTimeMin !== undefined ? dto.deliveryTimeMin : current.deliveryTimeMin;
+    const max = dto.deliveryTimeMax !== undefined ? dto.deliveryTimeMax : current.deliveryTimeMax;
 
     if (min !== null && max !== null && min > max) {
-      this.badRequest(
-        'O tempo mínimo de entrega não pode ser maior que o máximo',
-        actor,
-      );
+      this.badRequest('O tempo mínimo de entrega não pode ser maior que o máximo', actor);
     }
   }
 
@@ -161,16 +126,10 @@ export class OnlineMenuSettingsService {
       const close = toMinutes(h.closesAt);
 
       if (open === close) {
-        this.badRequest(
-          'O horário de abertura e o de fechamento não podem ser iguais',
-          actor,
-        );
+        this.badRequest('O horário de abertura e o de fechamento não podem ser iguais', actor);
       }
 
-      return {
-        start: h.weekday * MINUTES_IN_DAY + open,
-        duration: (close - open + MINUTES_IN_DAY) % MINUTES_IN_DAY,
-      };
+      return { start: h.weekday * MINUTES_IN_DAY + open, duration: (close - open + MINUTES_IN_DAY) % MINUTES_IN_DAY };
     });
 
     for (let i = 0; i < ranges.length; i++) {
@@ -192,10 +151,7 @@ export class OnlineMenuSettingsService {
     return new OnlineMenuSettingsResponseDto(company);
   }
 
-  async updateSettings(
-    dto: UpdateOnlineMenuSettingsDto,
-    actor: string,
-  ): Promise<OnlineMenuSettingsResponseDto> {
+  async updateSettings(dto: UpdateOnlineMenuSettingsDto, actor: string): Promise<OnlineMenuSettingsResponseDto> {
     try {
       const company = await this.findCompany(actor);
 
@@ -208,9 +164,7 @@ export class OnlineMenuSettingsService {
       const fields = Object.keys(changes);
 
       if (fields.length === 0) {
-        this.logger.warn(
-          `Edição das configurações do cardápio sem alterações (actor=${actor}, id=${company.id})`,
-        );
+        this.logger.warn(`Edição das configurações do cardápio sem alterações (actor=${actor}, id=${company.id})`);
         return new OnlineMenuSettingsResponseDto(company);
       }
 
@@ -221,9 +175,7 @@ export class OnlineMenuSettingsService {
       });
 
       // Só nomes dos campos, nunca valores
-      this.logger.log(
-        `Configurações do cardápio editadas (actor=${actor}, id=${company.id}, campos=${fields.join(',')})`,
-      );
+      this.logger.log(`Configurações do cardápio editadas (actor=${actor}, id=${company.id}, campos=${fields.join(',')})`);
 
       if (changes.onlineMenuEnabled !== undefined) {
         this.logger.warn(
@@ -243,32 +195,19 @@ export class OnlineMenuSettingsService {
 
       return new OnlineMenuSettingsResponseDto(updated);
     } catch (error) {
-      this.rethrow(
-        error,
-        `Falha ao editar configurações do cardápio (actor=${actor})`,
-      );
+      this.rethrow(error, `Falha ao editar configurações do cardápio (actor=${actor})`);
     }
   }
 
-  async replaceOpeningHours(
-    dto: ReplaceOpeningHoursDto,
-    actor: string,
-  ): Promise<OnlineMenuSettingsResponseDto> {
+  async replaceOpeningHours(dto: ReplaceOpeningHoursDto, actor: string): Promise<OnlineMenuSettingsResponseDto> {
     try {
       const company = await this.findCompany(actor);
       this.validateOpeningHours(dto.hours, actor);
 
       await this.prisma.client.$transaction([
-        this.prisma.client.openingHour.deleteMany({
-          where: { companyId: company.id },
-        }),
+        this.prisma.client.openingHour.deleteMany({ where: { companyId: company.id } }),
         this.prisma.client.openingHour.createMany({
-          data: dto.hours.map((h) => ({
-            companyId: company.id,
-            weekday: h.weekday,
-            opensAt: h.opensAt,
-            closesAt: h.closesAt,
-          })),
+          data: dto.hours.map((h) => ({ companyId: company.id, weekday: h.weekday, opensAt: h.opensAt, closesAt: h.closesAt })),
         }),
       ]);
 
@@ -278,10 +217,7 @@ export class OnlineMenuSettingsService {
 
       return this.getSettings(actor);
     } catch (error) {
-      this.rethrow(
-        error,
-        `Falha ao substituir horários de funcionamento (actor=${actor})`,
-      );
+      this.rethrow(error, `Falha ao substituir horários de funcionamento (actor=${actor})`);
     }
   }
 }

@@ -3,14 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { promises as fs } from 'fs';
 import { XMLParser } from 'fast-xml-parser';
-import {
-  PDFDocument,
-  PDFFont,
-  PDFImage,
-  PDFPage,
-  StandardFonts,
-  rgb,
-} from 'pdf-lib';
+import { PDFDocument, PDFFont, PDFImage, PDFPage, StandardFonts, rgb } from 'pdf-lib';
 import { DanfeNfeConfig } from '../../entities/nfe.entity';
 
 // ---------- Modelo lido do XML ----------
@@ -43,13 +36,7 @@ interface DanfeData {
   dhEmi: string;
   dhSaiEnt: string;
   protocolo: string;
-  emit: {
-    xNome: string;
-    cnpj: string;
-    ie: string;
-    iest: string;
-    lines: string[];
-  };
+  emit: { xNome: string; cnpj: string; ie: string; iest: string; lines: string[] };
   dest: {
     xNome: string;
     doc: string;
@@ -62,20 +49,7 @@ interface DanfeData {
     ie: string;
   };
   itens: DanfeItem[];
-  total: Record<
-    | 'vBC'
-    | 'vICMS'
-    | 'vBCST'
-    | 'vST'
-    | 'vProd'
-    | 'vFrete'
-    | 'vSeg'
-    | 'vDesc'
-    | 'vOutro'
-    | 'vIPI'
-    | 'vNF',
-    number
-  >;
+  total: Record<'vBC' | 'vICMS' | 'vBCST' | 'vST' | 'vProd' | 'vFrete' | 'vSeg' | 'vDesc' | 'vOutro' | 'vIPI' | 'vNF', number>;
   transp: {
     modFrete: string;
     xNome: string;
@@ -118,16 +92,14 @@ const decode = (t: string) =>
     .replace(/&apos;/g, "'")
     .replace(/&amp;/g, '&');
 
-const s = (v: unknown): string =>
-  v === undefined || v === null ? '' : decode(String(v)).trim();
+const s = (v: unknown): string => (v === undefined || v === null ? '' : decode(String(v)).trim());
 
 const n = (v: unknown): number => {
   const x = parseFloat(s(v));
   return Number.isFinite(x) ? x : 0;
 };
 
-const arr = <T>(v: T | T[] | undefined | null): T[] =>
-  v === undefined || v === null ? [] : Array.isArray(v) ? v : [v];
+const arr = <T>(v: T | T[] | undefined | null): T[] => (v === undefined || v === null ? [] : Array.isArray(v) ? v : [v]);
 
 function fmtNum(v: number, minDec = 2, maxDec = minDec): string {
   const [intPart, decRaw = ''] = v.toFixed(maxDec).split('.');
@@ -139,19 +111,15 @@ function fmtNum(v: number, minDec = 2, maxDec = minDec): string {
 
 function fmtDoc(doc: string): string {
   const d = doc.replace(/\D/g, '');
-  if (d.length === 14)
-    return d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
-  if (d.length === 11)
-    return d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+  if (d.length === 14) return d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+  if (d.length === 11) return d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
   return doc;
 }
 
 function fmtFone(f: string): string {
   const d = f.replace(/\D/g, '');
-  if (d.length === 10)
-    return d.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
-  if (d.length === 11)
-    return d.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+  if (d.length === 10) return d.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
+  if (d.length === 11) return d.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
   return f;
 }
 
@@ -161,11 +129,9 @@ const fmtDate = (iso: string) => {
   return y && m && d ? `${d}/${m}/${y}` : '';
 };
 const fmtTime = (iso: string) => iso.split('T')[1]?.substring(0, 8) ?? '';
-const fmtDateTime = (iso: string) =>
-  iso ? `${fmtDate(iso)} ${fmtTime(iso)}`.trim() : '';
+const fmtDateTime = (iso: string) => (iso ? `${fmtDate(iso)} ${fmtTime(iso)}`.trim() : '');
 
-const fmtNota = (nNF: string) =>
-  nNF.padStart(9, '0').replace(/^(\d{3})(\d{3})(\d{3})$/, '$1.$2.$3');
+const fmtNota = (nNF: string) => nNF.padStart(9, '0').replace(/^(\d{3})(\d{3})(\d{3})$/, '$1.$2.$3');
 
 const fmtKey = (k: string) => k.replace(/(\d{4})(?=\d)/g, '$1 ');
 
@@ -177,11 +143,7 @@ function addressLine(e: any): string {
 // ---------- Parser ----------
 
 function parseDanfeXml(xml: string): DanfeData {
-  const parser = new XMLParser({
-    ignoreAttributes: false,
-    processEntities: false,
-    parseTagValue: false,
-  });
+  const parser = new XMLParser({ ignoreAttributes: false, processEntities: false, parseTagValue: false });
   const parsed = parser.parse(xml);
   const proc = parsed.nfeProc;
   const nfe = proc?.NFe ?? parsed.NFe;
@@ -232,9 +194,7 @@ function parseDanfeXml(xml: string): DanfeData {
     s(ender.xBairro),
     `${s(ender.xMun)} - ${s(ender.UF)}`,
     s(ender.fone) ? `TELEFONE: ${fmtFone(s(ender.fone))}` : '',
-    s(ender.CEP)
-      ? `CEP: ${s(ender.CEP).replace(/^(\d{2})(\d{3})(\d{3})$/, '$1.$2-$3')}`
-      : '',
+    s(ender.CEP) ? `CEP: ${s(ender.CEP).replace(/^(\d{2})(\d{3})(\d{3})$/, '$1.$2-$3')}` : '',
   ].filter(Boolean);
 
   return {
@@ -246,16 +206,8 @@ function parseDanfeXml(xml: string): DanfeData {
     tpAmb: s(ide.tpAmb),
     dhEmi: s(ide.dhEmi),
     dhSaiEnt: s(ide.dhSaiEnt),
-    protocolo: prot?.nProt
-      ? `${s(prot.nProt)} - ${fmtDateTime(s(prot.dhRecbto))}`
-      : '',
-    emit: {
-      xNome: s(emit.xNome),
-      cnpj: fmtDoc(s(emit.CNPJ || emit.CPF)),
-      ie: s(emit.IE),
-      iest: s(emit.IEST),
-      lines: emitLines,
-    },
+    protocolo: prot?.nProt ? `${s(prot.nProt)} - ${fmtDateTime(s(prot.dhRecbto))}` : '',
+    emit: { xNome: s(emit.xNome), cnpj: fmtDoc(s(emit.CNPJ || emit.CPF)), ie: s(emit.IE), iest: s(emit.IEST), lines: emitLines },
     dest: {
       xNome: s(dest.xNome),
       doc: fmtDoc(s(dest.CNPJ || dest.CPF)),
@@ -299,11 +251,7 @@ function parseDanfeXml(xml: string): DanfeData {
       pesoB: hasVol('pesoB') ? fmtNum(sumVol('pesoB'), 3) : '',
       pesoL: hasVol('pesoL') ? fmtNum(sumVol('pesoL'), 3) : '',
     },
-    dup: arr<any>(inf.cobr?.dup).map((d) => ({
-      nDup: s(d.nDup),
-      dVenc: s(d.dVenc),
-      vDup: n(d.vDup),
-    })),
+    dup: arr<any>(inf.cobr?.dup).map((d) => ({ nDup: s(d.nDup), dVenc: s(d.dVenc), vDup: n(d.vDup) })),
     infCpl: s(inf.infAdic?.infCpl),
     infAdFisco: s(inf.infAdic?.infAdFisco),
   };
@@ -427,8 +375,7 @@ export function code128cPattern(digits: string): string {
   for (let i = 0; i < digits.length; i += 2) {
     values.push(parseInt(digits.slice(i, i + 2), 10));
   }
-  const checksum =
-    values.reduce((acc, v, i) => acc + v * (i === 0 ? 1 : i), 0) % 103;
+  const checksum = values.reduce((acc, v, i) => acc + v * (i === 0 ? 1 : i), 0) % 103;
   values.push(checksum, 106);
   return values.map((v) => CODE128[v]).join('');
 }
@@ -473,10 +420,7 @@ const COLS: { w: number; label: string }[] = [
   { w: 22, label: 'ALÍQ.\nICMS' },
   { w: 22, label: 'ALÍQ.\nIPI' },
 ];
-const COL_X = COLS.reduce<number[]>(
-  (acc, c, i) => [...acc, i === 0 ? MX : acc[i - 1] + COLS[i - 1].w],
-  [],
-);
+const COL_X = COLS.reduce<number[]>((acc, c, i) => [...acc, i === 0 ? MX : acc[i - 1] + COLS[i - 1].w], []);
 
 type Align = 'left' | 'center' | 'right';
 
@@ -504,37 +448,18 @@ class Pen {
     return this.f(b).widthOfTextAtSize(t, size);
   }
 
-  text(
-    str: string,
-    x: number,
-    top: number,
-    size: number,
-    o: { bold?: boolean; align?: Align; w?: number; color?: any } = {},
-  ) {
+  text(str: string, x: number, top: number, size: number, o: { bold?: boolean; align?: Align; w?: number; color?: any } = {}) {
     const t = clean(str).replace(/\n/g, ' ');
     if (!t) return;
     const tw = this.width(t, size, o.bold);
     let px = x;
     if (o.w !== undefined && o.align === 'center') px = x + (o.w - tw) / 2;
     if (o.w !== undefined && o.align === 'right') px = x + o.w - tw;
-    this.page.drawText(t, {
-      x: px,
-      y: PAGE_H - top,
-      size,
-      font: this.f(o.bold),
-      color: o.color ?? BLACK,
-    });
+    this.page.drawText(t, { x: px, y: PAGE_H - top, size, font: this.f(o.bold), color: o.color ?? BLACK });
   }
 
   rect(x: number, top: number, w: number, h: number) {
-    this.page.drawRectangle({
-      x,
-      y: PAGE_H - top - h,
-      width: w,
-      height: h,
-      borderColor: BLACK,
-      borderWidth: 0.6,
-    });
+    this.page.drawRectangle({ x, y: PAGE_H - top - h, width: w, height: h, borderColor: BLACK, borderWidth: 0.6 });
   }
 
   line(x1: number, t1: number, x2: number, t2: number, dash = false) {
@@ -603,11 +528,7 @@ class Pen {
     this.text(l.t, x + 2, top + 6, l.sz);
     if (!value) return;
     const v = this.fit(value, o.size ?? 8, w - 4, o.bold, 5.5);
-    this.text(v.t, x + 2, top + h - 4.5, v.sz, {
-      bold: o.bold,
-      align: o.align,
-      w: w - 4,
-    });
+    this.text(v.t, x + 2, top + h - 4.5, v.sz, { bold: o.bold, align: o.align, w: w - 4 });
   }
 
   barcode(digits: string, x: number, top: number, w: number, h: number) {
@@ -618,13 +539,7 @@ class Pen {
     [...pattern].forEach((c, i) => {
       const bw = Number(c) * unit;
       if (i % 2 === 0) {
-        this.page.drawRectangle({
-          x: cx,
-          y: PAGE_H - top - h,
-          width: bw,
-          height: h,
-          color: BLACK,
-        });
+        this.page.drawRectangle({ x: cx, y: PAGE_H - top - h, width: bw, height: h, color: BLACK });
       }
       cx += bw;
     });
@@ -676,17 +591,7 @@ export class DanfeNfeGenerator {
     pages.forEach((plan, idx) => {
       const page = pdf.addPage([PAGE_W, PAGE_H]);
       const pen = new Pen(page, font, bold);
-      this.drawPage(pen, data, {
-        plan,
-        rows,
-        adic,
-        logo,
-        homolog,
-        topStart,
-        first,
-        pageNo: idx + 1,
-        total: pages.length,
-      });
+      this.drawPage(pen, data, { plan, rows, adic, logo, homolog, topStart, first, pageNo: idx + 1, total: pages.length });
     });
 
     return pdf.save();
@@ -725,22 +630,12 @@ export class DanfeNfeGenerator {
 
   private planAdic(pen: Pen, data: DanfeData): AdicPlan {
     const linesC = pen.wrap(data.infCpl, 6.5, 395 - 6).slice(0, ADIC_MAX_LINES);
-    const linesF = pen
-      .wrap(data.infAdFisco, 6.5, 160 - 6)
-      .slice(0, ADIC_MAX_LINES);
-    const boxH = Math.max(
-      70,
-      Math.max(linesC.length, linesF.length) * ADIC_LINE_H + 14,
-    );
+    const linesF = pen.wrap(data.infAdFisco, 6.5, 160 - 6).slice(0, ADIC_MAX_LINES);
+    const boxH = Math.max(70, Math.max(linesC.length, linesF.length) * ADIC_LINE_H + 14);
     return { linesC, linesF, boxH };
   }
 
-  private planPages(
-    rows: RowPlan[],
-    adic: AdicPlan,
-    firstProductsTop: number,
-    topStart: number,
-  ): PagePlan[] {
+  private planPages(rows: RowPlan[], adic: AdicPlan, firstProductsTop: number, topStart: number): PagePlan[] {
     const bottom = PAGE_H - MB;
     const adicBlock = TITLE_H + adic.boxH + GAP;
     const nextProductsTop = topStart + HEADER_H + 2 * ROW_H + GAP;
@@ -803,12 +698,7 @@ export class DanfeNfeGenerator {
     const isFirst = c.pageNo === 1;
 
     if (c.homolog) {
-      pen.text('AMBIENTE DE HOMOLOGAÇÃO - SEM VALOR FISCAL', MX, MT + 6, 8, {
-        bold: true,
-        align: 'center',
-        w: W,
-        color: RED,
-      });
+      pen.text('AMBIENTE DE HOMOLOGAÇÃO - SEM VALOR FISCAL', MX, MT + 6, 8, { bold: true, align: 'center', w: W, color: RED });
     }
 
     let headerTop = c.topStart;
@@ -847,58 +737,19 @@ export class DanfeNfeGenerator {
       .wrap(text, 5.5, 371)
       .slice(0, 3)
       .forEach((l, i) => pen.text(l, x + 2, top + 8 + i * 6.5, 5.5));
-    pen.field(
-      x + 375,
-      top,
-      80,
-      24,
-      'VALOR NOTA',
-      `R$ ${fmtNum(data.total.vNF)}`,
-      {
-        align: 'right',
-        bold: true,
-      },
-    );
+    pen.field(x + 375, top, 80, 24, 'VALOR NOTA', `R$ ${fmtNum(data.total.vNF)}`, { align: 'right', bold: true });
     pen.field(x, top + 24, 100, 24, 'DATA DE RECEBIMENTO', '');
-    pen.field(
-      x + 100,
-      top + 24,
-      200,
-      24,
-      'IDENTIFICAÇÃO E ASSINATURA DO RECEBEDOR',
-      '',
-    );
-    pen.field(x + 300, top + 24, 155, 24, 'DESTINATÁRIO', data.dest.xNome, {
-      bold: true,
-    });
+    pen.field(x + 100, top + 24, 200, 24, 'IDENTIFICAÇÃO E ASSINATURA DO RECEBEDOR', '');
+    pen.field(x + 300, top + 24, 155, 24, 'DESTINATÁRIO', data.dest.xNome, { bold: true });
 
     pen.rect(x + 455, top, 100, RECEIPT_H);
-    pen.text('NF-e', x + 455, top + 14, 11, {
-      bold: true,
-      align: 'center',
-      w: 100,
-    });
-    pen.text(`Nº ${fmtNota(data.nNF)}`, x + 455, top + 28, 8, {
-      bold: true,
-      align: 'center',
-      w: 100,
-    });
-    pen.text(`SÉRIE: ${data.serie}`, x + 455, top + 39, 8, {
-      bold: true,
-      align: 'center',
-      w: 100,
-    });
+    pen.text('NF-e', x + 455, top + 14, 11, { bold: true, align: 'center', w: 100 });
+    pen.text(`Nº ${fmtNota(data.nNF)}`, x + 455, top + 28, 8, { bold: true, align: 'center', w: 100 });
+    pen.text(`SÉRIE: ${data.serie}`, x + 455, top + 39, 8, { bold: true, align: 'center', w: 100 });
     pen.line(MX, top + RECEIPT_H + 4, MX + W, top + RECEIPT_H + 4, true);
   }
 
-  private drawHeader(
-    pen: Pen,
-    data: DanfeData,
-    top: number,
-    pageNo: number,
-    total: number,
-    logo?: PDFImage,
-  ) {
+  private drawHeader(pen: Pen, data: DanfeData, top: number, pageNo: number, total: number, logo?: PDFImage) {
     // Emitente
     const ew = 245;
     pen.rect(MX, top, ew, HEADER_H);
@@ -908,12 +759,7 @@ export class DanfeNfeGenerator {
       const scale = Math.min(66 / logo.width, 80 / logo.height);
       const lw = logo.width * scale;
       const lh = logo.height * scale;
-      pen.page.drawImage(logo, {
-        x: MX + 4 + (66 - lw) / 2,
-        y: PAGE_H - top - (HEADER_H + lh) / 2,
-        width: lw,
-        height: lh,
-      });
+      pen.page.drawImage(logo, { x: MX + 4 + (66 - lw) / 2, y: PAGE_H - top - (HEADER_H + lh) / 2, width: lw, height: lh });
       textX = MX + 72;
       textW = ew - 72;
     }
@@ -922,9 +768,7 @@ export class DanfeNfeGenerator {
       pen.text(l, textX, ty, 9, { bold: true, align: 'center', w: textW });
       ty += 10;
     }
-    const extra = this.config.emitterEmail
-      ? [`E-MAIL: ${this.config.emitterEmail}`]
-      : [];
+    const extra = this.config.emitterEmail ? [`E-MAIL: ${this.config.emitterEmail}`] : [];
     for (const raw of [...data.emit.lines, ...extra]) {
       for (const l of pen.wrap(raw, 7, textW - 6)) {
         if (ty > top + HEADER_H - 4) break;
@@ -939,35 +783,15 @@ export class DanfeNfeGenerator {
     pen.rect(dx, top, dw, HEADER_H);
     pen.text('DANFE', dx, top + 15, 13, { bold: true, align: 'center', w: dw });
     ['DOCUMENTO AUXILIAR', 'DA NOTA FISCAL', 'ELETRÔNICA'].forEach((l, i) =>
-      pen.text(l, dx, top + 24 + i * 7, 6, {
-        bold: true,
-        align: 'center',
-        w: dw,
-      }),
+      pen.text(l, dx, top + 24 + i * 7, 6, { bold: true, align: 'center', w: dw }),
     );
     pen.text('0 - ENTRADA', dx + 6, top + 51, 6.5, { bold: true });
     pen.text('1 - SAÍDA', dx + 6, top + 60, 6.5, { bold: true });
     pen.rect(dx + dw - 24, top + 44, 16, 17);
-    pen.text(data.tpNF, dx + dw - 24, top + 56, 10, {
-      bold: true,
-      align: 'center',
-      w: 16,
-    });
-    pen.text(`Nº ${fmtNota(data.nNF)}`, dx, top + 73, 8, {
-      bold: true,
-      align: 'center',
-      w: dw,
-    });
-    pen.text(`SÉRIE: ${data.serie}`, dx, top + 82, 8, {
-      bold: true,
-      align: 'center',
-      w: dw,
-    });
-    pen.text(`FOLHA: ${pageNo} de ${total}`, dx, top + 91, 7, {
-      bold: true,
-      align: 'center',
-      w: dw,
-    });
+    pen.text(data.tpNF, dx + dw - 24, top + 56, 10, { bold: true, align: 'center', w: 16 });
+    pen.text(`Nº ${fmtNota(data.nNF)}`, dx, top + 73, 8, { bold: true, align: 'center', w: dw });
+    pen.text(`SÉRIE: ${data.serie}`, dx, top + 82, 8, { bold: true, align: 'center', w: dw });
+    pen.text(`FOLHA: ${pageNo} de ${total}`, dx, top + 91, 7, { bold: true, align: 'center', w: dw });
 
     // Código de barras + chave
     const rx = dx + dw;
@@ -985,35 +809,15 @@ export class DanfeNfeGenerator {
       'Consulta de autenticidade no portal nacional da NF-e',
       'www.nfe.fazenda.gov.br/portal',
       'ou no site da Sefaz Autorizadora',
-    ].forEach((l, i) =>
-      pen.text(l, rx, top + 72 + i * 8, 6, { align: 'center', w: rw }),
-    );
+    ].forEach((l, i) => pen.text(l, rx, top + 72 + i * 8, 6, { align: 'center', w: rw }));
 
     // Natureza / protocolo / IE / CNPJ
     const r1 = top + HEADER_H;
     pen.field(MX, r1, 340, ROW_H, 'NATUREZA DA OPERAÇÃO', data.natOp);
-    pen.field(
-      MX + 340,
-      r1,
-      rw,
-      ROW_H,
-      'PROTOCOLO DE AUTORIZAÇÃO DE USO',
-      data.protocolo,
-      {
-        bold: true,
-        align: 'center',
-      },
-    );
+    pen.field(MX + 340, r1, rw, ROW_H, 'PROTOCOLO DE AUTORIZAÇÃO DE USO', data.protocolo, { bold: true, align: 'center' });
     const r2 = r1 + ROW_H;
     pen.field(MX, r2, 185, ROW_H, 'INSCRIÇÃO ESTADUAL', data.emit.ie);
-    pen.field(
-      MX + 185,
-      r2,
-      185,
-      ROW_H,
-      'INSCRIÇÃO ESTADUAL DO SUBST. TRIBUTÁRIO',
-      data.emit.iest,
-    );
+    pen.field(MX + 185, r2, 185, ROW_H, 'INSCRIÇÃO ESTADUAL DO SUBST. TRIBUTÁRIO', data.emit.iest);
     pen.field(MX + 370, r2, 185, ROW_H, 'CNPJ', data.emit.cnpj);
   }
 
@@ -1028,14 +832,7 @@ export class DanfeNfeGenerator {
     pen.field(MX, y, 250, ROW_H, 'ENDEREÇO', d.endereco);
     pen.field(MX + 250, y, 125, ROW_H, 'BAIRRO/DISTRITO', d.bairro);
     pen.field(MX + 375, y, 75, ROW_H, 'CEP', d.cep);
-    pen.field(
-      MX + 450,
-      y,
-      105,
-      ROW_H,
-      'DATA DA SAÍDA/ENTRADA',
-      fmtDate(data.dhSaiEnt),
-    );
+    pen.field(MX + 450, y, 105, ROW_H, 'DATA DA SAÍDA/ENTRADA', fmtDate(data.dhSaiEnt));
     y += ROW_H;
     pen.field(MX, y, 205, ROW_H, 'MUNICÍPIO', d.municipio);
     pen.field(MX + 205, y, 120, ROW_H, 'FONE/FAX', d.fone);
@@ -1052,12 +849,7 @@ export class DanfeNfeGenerator {
       const x = MX + (i % DUP_PER_ROW) * cw;
       const y = top + TITLE_H + Math.floor(i / DUP_PER_ROW) * DUP_ROW_H;
       pen.rect(x, y, cw, DUP_ROW_H);
-      pen.text(
-        `${d.nDup}   ${fmtDate(d.dVenc)}   ${fmtNum(d.vDup)}`,
-        x + 3,
-        y + 10,
-        6.5,
-      );
+      pen.text(`${d.nDup}   ${fmtDate(d.dVenc)}   ${fmtNum(d.vDup)}`, x + 3, y + 10, 6.5);
     });
   }
 
@@ -1073,17 +865,7 @@ export class DanfeNfeGenerator {
       ['BASE DE CÁLCULO DO ICMS ST', t.vBCST],
       ['VALOR DO ICMS SUBSTITUIÇÃO', t.vST],
       ['VALOR TOTAL DOS PRODUTOS', t.vProd],
-    ].forEach(([label, v], i) =>
-      pen.field(
-        MX + i * w1,
-        y1,
-        w1,
-        ROW_H,
-        label as string,
-        fmtNum(v as number),
-        o,
-      ),
-    );
+    ].forEach(([label, v], i) => pen.field(MX + i * w1, y1, w1, ROW_H, label as string, fmtNum(v as number), o));
     const y2 = y1 + ROW_H;
     const w2 = W / 6;
     [
@@ -1093,34 +875,15 @@ export class DanfeNfeGenerator {
       ['OUTRAS DESPESAS ACESSÓRIAS', t.vOutro],
       ['VALOR DO IPI', t.vIPI],
       ['VALOR TOTAL DA NOTA', t.vNF],
-    ].forEach(([label, v], i) =>
-      pen.field(
-        MX + i * w2,
-        y2,
-        w2,
-        ROW_H,
-        label as string,
-        fmtNum(v as number),
-        o,
-      ),
-    );
+    ].forEach(([label, v], i) => pen.field(MX + i * w2, y2, w2, ROW_H, label as string, fmtNum(v as number), o));
   }
 
   private drawTransp(pen: Pen, data: DanfeData, top: number) {
     const t = data.transp;
-    pen.text('TRANSPORTADOR/VOLUMES TRANSPORTADOS', MX, top + 7, 7, {
-      bold: true,
-    });
+    pen.text('TRANSPORTADOR/VOLUMES TRANSPORTADOS', MX, top + 7, 7, { bold: true });
     let y = top + TITLE_H;
     pen.field(MX, y, 200, ROW_H, 'RAZÃO SOCIAL', t.xNome);
-    pen.field(
-      MX + 200,
-      y,
-      110,
-      ROW_H,
-      'FRETE',
-      FRETE_LABELS[t.modFrete] ?? t.modFrete,
-    );
+    pen.field(MX + 200, y, 110, ROW_H, 'FRETE', FRETE_LABELS[t.modFrete] ?? t.modFrete);
     pen.field(MX + 310, y, 65, ROW_H, 'CÓDIGO ANTT', t.antt);
     pen.field(MX + 375, y, 75, ROW_H, 'PLACA DO VEÍCULO', t.placa);
     pen.field(MX + 450, y, 30, ROW_H, 'UF', t.placaUf);
@@ -1139,14 +902,7 @@ export class DanfeNfeGenerator {
     pen.field(MX + 482.5, y, 72.5, ROW_H, 'PESO LÍQUIDO', t.pesoL);
   }
 
-  private drawProducts(
-    pen: Pen,
-    data: DanfeData,
-    rows: RowPlan[],
-    plan: PagePlan,
-    top: number,
-    limit: number,
-  ) {
+  private drawProducts(pen: Pen, data: DanfeData, rows: RowPlan[], plan: PagePlan, top: number, limit: number) {
     pen.text('DADOS DO PRODUTO/SERVIÇO', MX, top + 7, 7, { bold: true });
     const t0 = top + TITLE_H;
     pen.rect(MX, t0, W, limit - t0);
@@ -1156,11 +912,7 @@ export class DanfeNfeGenerator {
     COLS.forEach((c, i) => {
       if (i > 0) pen.line(COL_X[i], t0, COL_X[i], limit);
       const label = i === 3 ? cstLabel : c.label;
-      label
-        .split('\n')
-        .forEach((l, k) =>
-          pen.text(l, COL_X[i], t0 + 7 + k * 6, 5, { align: 'center', w: c.w }),
-        );
+      label.split('\n').forEach((l, k) => pen.text(l, COL_X[i], t0 + 7 + k * 6, 5, { align: 'center', w: c.w }));
     });
 
     let y = t0 + PROD_HEAD_H;
@@ -1170,15 +922,10 @@ export class DanfeNfeGenerator {
       const base = y + 8;
       const cell = (idx: number, v: string, align: Align) => {
         const f = pen.fit(v, 6, COLS[idx].w - 4, false, 4.5);
-        pen.text(f.t, COL_X[idx] + 2, base, f.sz, {
-          align,
-          w: COLS[idx].w - 4,
-        });
+        pen.text(f.t, COL_X[idx] + 2, base, f.sz, { align, w: COLS[idx].w - 4 });
       };
       cell(0, it.cProd, 'left');
-      r.lines.forEach((l, k) =>
-        pen.text(l, COL_X[1] + 2, base + k * LINE_H, 6),
-      );
+      r.lines.forEach((l, k) => pen.text(l, COL_X[1] + 2, base + k * LINE_H, 6));
       cell(2, it.ncm, 'center');
       cell(3, it.cst, 'center');
       cell(4, it.cfop, 'center');
@@ -1203,11 +950,7 @@ export class DanfeNfeGenerator {
     pen.rect(MX + 395, y, 160, adic.boxH);
     pen.text('INFORMAÇÕES COMPLEMENTARES', MX + 2, y + 6, 5);
     pen.text('RESERVADO AO FISCO', MX + 397, y + 6, 5);
-    adic.linesC.forEach((l, i) =>
-      pen.text(l, MX + 3, y + 15 + i * ADIC_LINE_H, 6.5),
-    );
-    adic.linesF.forEach((l, i) =>
-      pen.text(l, MX + 398, y + 15 + i * ADIC_LINE_H, 6.5),
-    );
+    adic.linesC.forEach((l, i) => pen.text(l, MX + 3, y + 15 + i * ADIC_LINE_H, 6.5));
+    adic.linesF.forEach((l, i) => pen.text(l, MX + 398, y + 15 + i * ADIC_LINE_H, 6.5));
   }
 }

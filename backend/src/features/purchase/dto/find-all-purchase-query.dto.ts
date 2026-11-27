@@ -1,24 +1,10 @@
 // find-all-purchase-query.dto.ts — com os novos filtros
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import {
-  IsEnum,
-  IsIn,
-  IsInt,
-  IsOptional,
-  IsString,
-  Min,
-} from 'class-validator';
+import { IsEnum, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { PurchaseStatus } from 'generated/prisma/client';
 
-const PURCHASE_SORT_FIELDS = [
-  'id',
-  'receivedAt',
-  'total',
-  'invoiceNumber',
-  'status',
-  'createdAt',
-] as const;
+const PURCHASE_SORT_FIELDS = ['id', 'receivedAt', 'total', 'invoiceNumber', 'status', 'createdAt'] as const;
 
 export class FindAllPurchaseQueryDto {
   @ApiPropertyOptional({ default: 1 })
@@ -37,9 +23,7 @@ export class FindAllPurchaseQueryDto {
 
   @ApiPropertyOptional({ enum: PurchaseStatus })
   @IsOptional()
-  @IsEnum(PurchaseStatus, {
-    message: `Status inválido. Valores aceitos: ${Object.values(PurchaseStatus).join(', ')}`,
-  })
+  @IsEnum(PurchaseStatus, { message: `Status inválido. Valores aceitos: ${Object.values(PurchaseStatus).join(', ')}` })
   status?: PurchaseStatus;
 
   @ApiPropertyOptional()
@@ -69,15 +53,11 @@ export class FindAllPurchaseQueryDto {
 
   @ApiPropertyOptional({ enum: PURCHASE_SORT_FIELDS })
   @IsOptional()
-  @IsIn(PURCHASE_SORT_FIELDS, {
-    message: `Campo de ordenação inválido. Valores aceitos: ${PURCHASE_SORT_FIELDS.join(', ')}`,
-  })
+  @IsIn(PURCHASE_SORT_FIELDS, { message: `Campo de ordenação inválido. Valores aceitos: ${PURCHASE_SORT_FIELDS.join(', ')}` })
   sortBy?: (typeof PURCHASE_SORT_FIELDS)[number];
 
   @ApiPropertyOptional({ enum: ['asc', 'desc'] })
   @IsOptional()
-  @IsIn(['asc', 'desc'], {
-    message: 'Ordem deve ser "asc" ou "desc"',
-  })
+  @IsIn(['asc', 'desc'], { message: 'Ordem deve ser "asc" ou "desc"' })
   sortOrder?: 'asc' | 'desc';
 }

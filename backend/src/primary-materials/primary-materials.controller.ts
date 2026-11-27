@@ -1,16 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-  HttpCode,
-  HttpStatus,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { PrimaryMaterialsService } from './primary-materials.service';
 import { CreatePrimaryMaterialDto } from './dto/create-primary-material.dto';
 import { UpdatePrimaryMaterialDto } from './dto/update-primary-material.dto';
@@ -22,9 +10,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 @Controller('primary-materials')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PrimaryMaterialsController {
-  constructor(
-    private readonly primaryMaterialsService: PrimaryMaterialsService,
-  ) {}
+  constructor(private readonly primaryMaterialsService: PrimaryMaterialsService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -34,21 +20,9 @@ export class PrimaryMaterialsController {
 
   @Get()
   findAll(@Query() filters: FilterPrimaryMaterialDto) {
-    const {
-      page = 1,
-      limit = 10,
-      sortKey = 'name',
-      sortOrder = 'asc',
-      ...rest
-    } = filters;
+    const { page = 1, limit = 10, sortKey = 'name', sortOrder = 'asc', ...rest } = filters;
 
-    return this.primaryMaterialsService.findAll(
-      page,
-      limit,
-      rest,
-      sortKey,
-      sortOrder,
-    );
+    return this.primaryMaterialsService.findAll(page, limit, rest, sortKey, sortOrder);
   }
 
   @Get('suggested-code')
@@ -77,10 +51,7 @@ export class PrimaryMaterialsController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: number,
-    @Body() updatePrimaryMaterialDto: UpdatePrimaryMaterialDto,
-  ) {
+  update(@Param('id') id: number, @Body() updatePrimaryMaterialDto: UpdatePrimaryMaterialDto) {
     return this.primaryMaterialsService.update(id, updatePrimaryMaterialDto);
   }
 

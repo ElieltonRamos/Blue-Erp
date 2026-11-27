@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsNumber,
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-} from 'class-validator';
+import { IsString, IsNumber, IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateExpenseDto {
@@ -13,11 +7,7 @@ export class CreateExpenseDto {
   @IsNotEmpty()
   supplier: string;
 
-  @ApiProperty({
-    description: 'Descrição da despesa',
-    example: 'Compra de insumos restaurante',
-    required: false,
-  })
+  @ApiProperty({ description: 'Descrição da despesa', example: 'Compra de insumos restaurante', required: false })
   @IsString()
   @IsOptional()
   description?: string;
@@ -27,19 +17,12 @@ export class CreateExpenseDto {
   @IsNotEmpty()
   value: number;
 
-  @ApiProperty({
-    description: 'Data de pagamento (YYYY-MM-DD)',
-    example: '2026-02-03',
-  })
+  @ApiProperty({ description: 'Data de pagamento (YYYY-MM-DD)', example: '2026-02-03' })
   @IsString()
   @IsNotEmpty()
   datePayment: string;
 
-  @ApiProperty({
-    enum: ['Pago', 'Pendente', 'Atrasado'],
-    example: 'Pendente',
-    description: 'Status da despesa',
-  })
+  @ApiProperty({ enum: ['Pago', 'Pendente', 'Atrasado'], example: 'Pendente', description: 'Status da despesa' })
   @IsEnum(['Pago', 'Pendente', 'Atrasado'])
   @IsNotEmpty()
   status: 'Pago' | 'Pendente' | 'Atrasado';

@@ -27,10 +27,7 @@ export class OrderProductionDto {
   @ApiProperty({ example: 'JAPONESA' })
   productionLocation: string;
 
-  @ApiProperty({
-    example: 'COMPLETED',
-    enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELED'],
-  })
+  @ApiProperty({ example: 'COMPLETED', enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELED'] })
   status: string;
 
   @ApiProperty({ example: 2 })
@@ -110,10 +107,7 @@ export class TableOrderItemDto {
   @ApiProperty({ example: '2026-02-24T18:09:28.000Z' })
   updatedAt: Date;
 
-  @ApiProperty({
-    type: [OrderProductionDto],
-    description: 'Produções associadas a este item',
-  })
+  @ApiProperty({ type: [OrderProductionDto], description: 'Produções associadas a este item' })
   productions: OrderProductionDto[];
 
   constructor(data: any) {
@@ -134,9 +128,7 @@ export class TableOrderItemDto {
     this.updatedAt = data.updatedAt;
 
     // ✅ MAPEAR PRODUÇÕES
-    this.productions = (data.productions || []).map(
-      (p: any) => new OrderProductionDto(p),
-    );
+    this.productions = (data.productions || []).map((p: any) => new OrderProductionDto(p));
   }
 }
 
@@ -191,10 +183,7 @@ export class TableResponseDto {
   @ApiProperty({ example: 4 })
   capacity: number;
 
-  @ApiProperty({
-    enum: ['AVAILABLE', 'OCCUPIED', 'RESERVED'],
-    example: 'AVAILABLE',
-  })
+  @ApiProperty({ enum: ['AVAILABLE', 'OCCUPIED', 'RESERVED'], example: 'AVAILABLE' })
   status: TableStatus;
 
   @ApiPropertyOptional({ example: 'João Silva' })
@@ -229,9 +218,7 @@ export class TableResponseDto {
     this.customer = data.customer;
     this.time = data.time;
     this.locationId = data.locationId;
-    this.location = data.location
-      ? new TableLocationDto(data.location)
-      : data.location;
+    this.location = data.location ? new TableLocationDto(data.location) : data.location;
     this.orderId = data.orderId;
     this.order = data.order ? new TableOrderDto(data.order) : null;
     this.createdAt = data.createdAt;
@@ -252,12 +239,7 @@ export class CloseTabResponseDto {
   @ApiProperty({ example: 'Comanda fechada para a mesa 5' })
   message: string;
 
-  constructor(data: {
-    orderId: number;
-    total: any;
-    serviceCharge: any;
-    message: string;
-  }) {
+  constructor(data: { orderId: number; total: any; serviceCharge: any; message: string }) {
     this.orderId = data.orderId;
     this.total = Number(data.total);
     this.serviceCharge = Number(data.serviceCharge ?? 0);

@@ -20,9 +20,7 @@ function assertPublicBaseUrl(): void {
       throw new Error();
     }
   } catch {
-    throw new Error(
-      'PUBLIC_BASE_URL deve ser uma URL absoluta (http ou https)',
-    );
+    throw new Error('PUBLIC_BASE_URL deve ser uma URL absoluta (http ou https)');
   }
 }
 
@@ -35,13 +33,7 @@ async function bootstrap() {
 
   app.enableCors();
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
 
   const packageVersion = version;
 
@@ -68,18 +60,10 @@ async function bootstrap() {
   console.log('=== Environment Variables ===');
   appEnvKeys.forEach((key) => {
     const value = process.env[key];
-    const isSensitive = ['PASSWORD', 'SECRET', 'TOKEN', 'KEY'].some((s) =>
-      key.includes(s),
-    );
-    console.log(
-      `${key}:`,
-      value ? (isSensitive ? '***' : value) : 'nao-identificado',
-    );
+    const isSensitive = ['PASSWORD', 'SECRET', 'TOKEN', 'KEY'].some((s) => key.includes(s));
+    console.log(`${key}:`, value ? (isSensitive ? '***' : value) : 'nao-identificado');
   });
-  console.log(
-    'PM2 instance:',
-    process.env.NODE_APP_INSTANCE ?? 'nao-identificado',
-  );
+  console.log('PM2 instance:', process.env.NODE_APP_INSTANCE ?? 'nao-identificado');
   console.log(`VERSAO SERVIDOR = ${packageVersion}`);
   console.log('=============================');
 

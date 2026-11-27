@@ -1,13 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import {
-  IsNumber,
-  IsString,
-  IsBoolean,
-  IsEnum,
-  IsOptional,
-  Min,
-} from 'class-validator';
+import { IsNumber, IsString, IsBoolean, IsEnum, IsOptional, Min } from 'class-validator';
 import { FiscalStatus } from 'generated/prisma/client';
 
 export class SaleFiltersDto {
@@ -62,9 +55,7 @@ export class SaleFiltersDto {
   @IsOptional()
   paymentMethod?: string;
 
-  @ApiPropertyOptional({
-    example: '35210512345678901234567890123456789012345678',
-  })
+  @ApiPropertyOptional({ example: '35210512345678901234567890123456789012345678' })
   @IsString()
   @IsOptional()
   fiscalKey?: string;

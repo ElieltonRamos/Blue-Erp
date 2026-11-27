@@ -68,15 +68,10 @@ function buildIcmsGroup(item: NFeProduct): Record<string, any> {
 
 function buildItemTax(item: NFeProduct) {
   const vProd = item.qCom * item.vUnCom;
-  const totalRate =
-    (item.aliqFederal ?? 0) +
-    (item.aliqEstadual ?? 0) +
-    (item.aliqMunicipal ?? 0);
+  const totalRate = (item.aliqFederal ?? 0) + (item.aliqEstadual ?? 0) + (item.aliqMunicipal ?? 0);
 
   if (totalRate === 0) {
-    throw new Error(
-      `Produto "${item.xProd}" (NCM: ${item.ncm}) com totalRate zero. Verifique as alíquotas IBPT.`,
-    );
+    throw new Error(`Produto "${item.xProd}" (NCM: ${item.ncm}) com totalRate zero. Verifique as alíquotas IBPT.`);
   }
 
   const vTotTrib = vProd * (totalRate / 100);
@@ -90,22 +85,8 @@ function buildItemTax(item: NFeProduct) {
   return {
     vTotTrib: vTotTrib.toFixed(2),
     ICMS: buildIcmsGroup(item),
-    PIS: {
-      PISOutr: {
-        CST: item.pisCst || '49',
-        vBC: '0.00',
-        pPIS: '0.00',
-        vPIS: '0.00',
-      },
-    },
-    COFINS: {
-      COFINSOutr: {
-        CST: item.cofinsCst || '49',
-        vBC: '0.00',
-        pCOFINS: '0.00',
-        vCOFINS: '0.00',
-      },
-    },
+    PIS: { PISOutr: { CST: item.pisCst || '49', vBC: '0.00', pPIS: '0.00', vPIS: '0.00' } },
+    COFINS: { COFINSOutr: { CST: item.cofinsCst || '49', vBC: '0.00', pCOFINS: '0.00', vCOFINS: '0.00' } },
   };
 }
 
@@ -117,9 +98,7 @@ function buildDest(data: NFeOptions) {
   if (hasCpf) {
     return {
       CPF: cpf,
-      xNome: isHomolog
-        ? 'NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL'
-        : data.dest.xNome,
+      xNome: isHomolog ? 'NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL' : data.dest.xNome,
       indIEDest: '9',
     };
   }
@@ -155,8 +134,7 @@ export function buildQrCodeUrl(params: {
     .digest('hex')
     .toUpperCase();
 
-  const qrBaseUrl =
-    PORTAL_URLS[uf.toUpperCase()]?.[tpAmb === '1' ? 'production' : 'staging'];
+  const qrBaseUrl = PORTAL_URLS[uf.toUpperCase()]?.[tpAmb === '1' ? 'production' : 'staging'];
   if (!qrBaseUrl) {
     throw new Error(`QR-Code base URL not configured for state: ${uf}`);
   }
@@ -190,10 +168,7 @@ export function generateNFeXML(data: NFeOptions): string {
   data.ide.nNF = parseInt(data.ide.nNF, 10).toString();
   const taxPerItem = data.produtos.map((p) => buildItemTax(p));
 
-  const totalProducts = data.produtos.reduce(
-    (sum, p) => sum + p.qCom * p.vUnCom,
-    0,
-  );
+  const totalProducts = data.produtos.reduce((sum, p) => sum + p.qCom * p.vUnCom, 0);
 
   const totalVOutro = data.produtos.reduce((sum, p) => sum + p.vOutro, 0);
   const totalVDesc = data.produtos.reduce((sum, p) => sum + p.vDesc, 0); // <- adicionar aqui
@@ -246,10 +221,7 @@ export function generateNFeXML(data: NFeOptions): string {
           prod: {
             cProd: p.cProd,
             cEAN: 'SEM GTIN',
-            xProd:
-              isHomolog && index === 0
-                ? 'NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL'
-                : p.xProd,
+            xProd: isHomolog && index === 0 ? 'NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL' : p.xProd,
             NCM: p.ncm,
             CFOP: p.cfop,
             uCom: p.uCom,
@@ -291,10 +263,7 @@ export function generateNFeXML(data: NFeOptions): string {
           },
         },
         transp: { modFrete: '9' },
-        pag: {
-          detPag: buildDetPag(data),
-          vTroco: '0.00',
-        },
+        pag: { detPag: buildDetPag(data), vTroco: '0.00' },
         infAdic: data.infAdic ? { infCpl: data.infAdic } : undefined,
       },
     },

@@ -19,10 +19,7 @@ export class PaginatedResponseDto<T> {
   totalPages: number;
 }
 
-export const ApiPaginatedResponse = <TModel extends Type<unknown>>(
-  model: TModel,
-  description = 'Lista paginada',
-) =>
+export const ApiPaginatedResponse = <TModel extends Type<unknown>>(model: TModel, description = 'Lista paginada') =>
   applyDecorators(
     ApiExtraModels(PaginatedResponseDto, model),
     ApiOkResponse({
@@ -30,15 +27,7 @@ export const ApiPaginatedResponse = <TModel extends Type<unknown>>(
       schema: {
         allOf: [
           { $ref: getSchemaPath(PaginatedResponseDto) },
-          {
-            properties: {
-              data: {
-                type: 'array',
-                items: { $ref: getSchemaPath(model) },
-              },
-            },
-            required: ['data'],
-          },
+          { properties: { data: { type: 'array', items: { $ref: getSchemaPath(model) } } }, required: ['data'] },
         ],
       },
     }),

@@ -1,43 +1,20 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type {
-  BusinessPartner,
-  Client,
-  Product,
-  SaleItem,
-} from '../../generated/prisma/client';
+import type { BusinessPartner, Client, Product, SaleItem } from '../../generated/prisma/client';
 import { PrismaService } from '../common/database/prisma.service';
 import { CompanyService } from '../features/company/company.service';
-import type {
-  Nfe55Ipi,
-  Nfe55Item,
-  Nfe55Options,
-  Nfe55PisCofins,
-} from '../features/fiscal-module/entities/nfe.entity';
+import type { Nfe55Ipi, Nfe55Item, Nfe55Options, Nfe55PisCofins } from '../features/fiscal-module/entities/nfe.entity';
 import { FiscalException } from '../features/fiscal-module/fiscal.exception';
 import { PAYMENT_MAP, UF_CODES } from './entities/sale-converter-nfe';
-import {
-  digits,
-  distributeDiscount,
-  round2,
-  toNumber,
-  toTransporta,
-} from './sale-converter-nf.utils';
+import { digits, distributeDiscount, round2, toNumber, toTransporta } from './sale-converter-nf.utils';
 import { EmitNfeDto } from '../features/fiscal-module/dto/emit-nfe.dto';
-import {
-  buildCreditIcms,
-  creditInfoNote,
-  resolveCsosn,
-  toGtin,
-} from '../features/fiscal-module/lib/nfe-utils';
+import { buildCreditIcms, creditInfoNote, resolveCsosn, toGtin } from '../features/fiscal-module/lib/nfe-utils';
 import { nowBrasilia, toSefazDateTime } from 'src/common/utils/date-utils';
 
 const CARD_PAYMENT_METHODS = ['CARTAO_CREDITO', 'CARTAO_DEBITO', 'PIX'];
 
 type SaleItemWithProduct = SaleItem & { product: Product | null };
 
-type BaseItem = Omit<Nfe55Item, 'vDesc' | 'icms' | 'ipi' | 'pis' | 'cofins'> & {
-  product: Product;
-};
+type BaseItem = Omit<Nfe55Item, 'vDesc' | 'icms' | 'ipi' | 'pis' | 'cofins'> & { product: Product };
 
 @Injectable()
 export class SaleConverterNFeService {
@@ -48,9 +25,7 @@ export class SaleConverterNFeService {
   ) {}
 
   async convert(dto: EmitNfeDto, nfeNumber: number): Promise<Nfe55Options> {
-    this.logger.debug(
-      `convert: dto.permiteCredito=${JSON.stringify(dto.permiteCredito)}`,
-    );
+    this.logger.debug(`convert: dto.permiteCredito=${JSON.stringify(dto.permiteCredito)}`);
     const omitServices = dto.omitServices === true;
 
     const sale = await this.findSale(dto.saleId, omitServices);
@@ -66,42 +41,28 @@ export class SaleConverterNFeService {
 
     const dest = this.buildDest(sale.client);
     if (allowCredit && dest.indIEDest === '9') {
-      throw new FiscalException(
-        'Crédito de ICMS (CSOSN 101) não é permitido para destinatário não contribuinte',
-      );
+      throw new FiscalException('Crédito de ICMS (CSOSN 101) não é permitido para destinatário não contribuinte');
     }
 
-    const baseItems = sale.items.map((item) =>
-      this.toBaseItem(item, sale.cfop, allowCredit, omitServices),
-    );
+    const baseItems = sale.items.map((item) => this.toBaseItem(item, sale.cfop, allowCredit, omitServices));
 
     // venda com serviços: desconto da venda não é aplicado à nota
     const discount = omitServices ? 0 : toNumber(sale.discount, 2);
-    const totalProd = round2(
-      baseItems.reduce((sum, i) => sum + round2(i.qCom * i.vUnCom), 0),
-    );
+    const totalProd = round2(baseItems.reduce((sum, i) => sum + round2(i.qCom * i.vUnCom), 0));
     if (discount > totalProd) {
       throw new FiscalException(
         `Desconto da venda (R$ ${discount.toFixed(2)}) maior que o total dos itens (R$ ${totalProd.toFixed(2)})`,
       );
     }
 
-    const produtos = distributeDiscount(baseItems, discount).map((item) =>
-      this.finalizeItem(item, creditRate),
-    );
+    const produtos = distributeDiscount(baseItems, discount).map((item) => this.finalizeItem(item, creditRate));
 
-    const totalCredit = round2(
-      produtos.reduce((sum, p) => sum + Number(p.icms?.vCredICMSSN ?? 0), 0),
-    );
+    const totalCredit = round2(produtos.reduce((sum, p) => sum + Number(p.icms?.vCredICMSSN ?? 0), 0));
 
     // TODO: incluir o texto de tributos aproximados (IBPT) em infAdic, como na NFC-e
     const infAdic =
-      [
-        dto.infAdic?.trim(),
-        totalCredit > 0 ? creditInfoNote(creditRate, totalCredit) : undefined,
-      ]
-        .filter(Boolean)
-        .join(' ') || undefined;
+      [dto.infAdic?.trim(), totalCredit > 0 ? creditInfoNote(creditRate, totalCredit) : undefined].filter(Boolean).join(' ') ||
+      undefined;
 
     const carrier = await this.findCarrier(dto.transp.carrierId);
 
@@ -114,18 +75,9 @@ export class SaleConverterNFeService {
 
     const payments = omitServices
       ? this.resolveNotePayments(dto)
-      : sale.payments.map((p) => ({
-          method: p.method,
-          amount: round2(toNumber(p.amount, 2) - toNumber(p.change, 2)),
-        }));
+      : sale.payments.map((p) => ({ method: p.method, amount: round2(toNumber(p.amount, 2) - toNumber(p.change, 2)) }));
 
-    const totalNota = round2(
-      produtos.reduce(
-        (s, p) =>
-          s + round2(p.qCom * p.vUnCom) - (p.vDesc ?? 0) + (p.vOutro ?? 0),
-        0,
-      ),
-    );
+    const totalNota = round2(produtos.reduce((s, p) => s + round2(p.qCom * p.vUnCom) - (p.vDesc ?? 0) + (p.vOutro ?? 0), 0));
     const totalPag = round2(payments.reduce((s, p) => s + p.amount, 0));
 
     if (Math.abs(totalPag - totalNota) > 0.01) {
@@ -142,9 +94,7 @@ export class SaleConverterNFeService {
         serie: company.nfeSeries,
         nNF: String(nfeNumber).padStart(9, '0'),
         dhEmi: toSefazDateTime(nowBrasilia()),
-        ...(dto.dhSaiEnt && {
-          dhSaiEnt: toSefazDateTime(new Date(dto.dhSaiEnt)),
-        }),
+        ...(dto.dhSaiEnt && { dhSaiEnt: toSefazDateTime(new Date(dto.dhSaiEnt)) }),
         tpNF: dto.tpNF ?? '1',
         idDest: sale.client.state?.toUpperCase() === company.state ? '1' : '2',
         cMunFG: company.cityCode,
@@ -200,65 +150,40 @@ export class SaleConverterNFeService {
   private buildCard(method: string): Record<string, string> | undefined {
     if (!CARD_PAYMENT_METHODS.includes(method)) return undefined;
 
-    return method === 'PIX'
-      ? { tpIntegra: '2' }
-      : { tpIntegra: '2', tBand: '99', cAut: '000000' };
+    return method === 'PIX' ? { tpIntegra: '2' } : { tpIntegra: '2', tBand: '99', cAut: '000000' };
   }
 
   private async findSale(saleId: number, omitServices = false) {
     const sale = await this.prisma.client.sale.findUnique({
       where: { id: saleId },
-      include: {
-        items: {
-          include: { product: true },
-          orderBy: { itemNumber: 'asc' },
-        },
-        client: true,
-        payments: true,
-      },
+      include: { items: { include: { product: true }, orderBy: { itemNumber: 'asc' } }, client: true, payments: true },
     });
 
     if (!sale) throw new FiscalException('Sale not found', 404);
 
     if (omitServices) {
       // nItem da NF-e precisa ser sequencial (1..N), sem lacunas
-      sale.items = sale.items
-        .filter((i) => i.serviceId == null)
-        .map((i, idx) => ({ ...i, itemNumber: idx + 1 }));
+      sale.items = sale.items.filter((i) => i.serviceId == null).map((i, idx) => ({ ...i, itemNumber: idx + 1 }));
     }
 
     if (!sale.items.length) throw new FiscalException('Sale has no items', 400);
 
     return sale;
   }
-  private async findCarrier(
-    carrierId?: number,
-  ): Promise<BusinessPartner | null> {
+  private async findCarrier(carrierId?: number): Promise<BusinessPartner | null> {
     if (!carrierId) return null;
 
-    const carrier = await this.prisma.client.businessPartner.findFirst({
-      where: { id: carrierId, type: 'CARRIER' },
-    });
+    const carrier = await this.prisma.client.businessPartner.findFirst({ where: { id: carrierId, type: 'CARRIER' } });
     if (!carrier) {
-      throw new FiscalException(
-        `Transportadora ${carrierId} não encontrada`,
-        404,
-      );
+      throw new FiscalException(`Transportadora ${carrierId} não encontrada`, 404);
     }
     return carrier;
   }
 
-  private toBaseItem(
-    item: SaleItemWithProduct,
-    saleCfop: string,
-    allowCredit: boolean,
-    omitServices: boolean,
-  ): BaseItem {
+  private toBaseItem(item: SaleItemWithProduct, saleCfop: string, allowCredit: boolean, omitServices: boolean): BaseItem {
     const product = item.product;
     if (!product) {
-      throw new FiscalException(
-        `Item ${item.itemNumber} sem produto: NF-e modelo 55 não emite serviço`,
-      );
+      throw new FiscalException(`Item ${item.itemNumber} sem produto: NF-e modelo 55 não emite serviço`);
     }
 
     const xProd = item.xProd || product.name;
@@ -270,15 +195,11 @@ export class SaleConverterNFeService {
     }
 
     let csosn: string;
-    this.logger.debug(
-      `toBaseItem: allowCredit=${allowCredit} csosn=${product.csosn}`,
-    );
+    this.logger.debug(`toBaseItem: allowCredit=${allowCredit} csosn=${product.csosn}`);
     try {
       csosn = resolveCsosn(product.csosn, allowCredit);
     } catch (error) {
-      throw new FiscalException(
-        `${label}: ${error instanceof Error ? error.message : 'CSOSN inválido'}`,
-      );
+      throw new FiscalException(`${label}: ${error instanceof Error ? error.message : 'CSOSN inválido'}`);
     }
 
     const uCom = product.unit || 'UN';
@@ -304,18 +225,13 @@ export class SaleConverterNFeService {
       vUnTrib: toNumber(item.taxUnitPrice ?? vUnCom, 4),
       ...(vOutro > 0 && { vOutro }),
       indTot: String(item.composesTotal),
-      ...(item.totalTaxValue != null && {
-        vTotTrib: toNumber(item.totalTaxValue, 2),
-      }),
+      ...(item.totalTaxValue != null && { vTotTrib: toNumber(item.totalTaxValue, 2) }),
       origem: product.origin,
       csosn,
     };
   }
 
-  private finalizeItem(
-    item: BaseItem & { vDesc: number },
-    creditRate: number,
-  ): Nfe55Item {
+  private finalizeItem(item: BaseItem & { vDesc: number }, creditRate: number): Nfe55Item {
     const { product, ...rest } = item;
     const vProd = round2(item.qCom * item.vUnCom);
     const base = round2(vProd - item.vDesc);
@@ -323,9 +239,7 @@ export class SaleConverterNFeService {
 
     return {
       ...rest,
-      ...(item.csosn === '101' && {
-        icms: buildCreditIcms(vProd, creditRate),
-      }),
+      ...(item.csosn === '101' && { icms: buildCreditIcms(vProd, creditRate) }),
       ...(ipi && { ipi }),
       pis: this.buildPisCofins(product.cstPis, product.pisRate, base),
       cofins: this.buildPisCofins(product.cstCofins, product.cofinsRate, base),
@@ -336,30 +250,18 @@ export class SaleConverterNFeService {
     if (!product.ipiCst) return undefined;
 
     if (!product.ipiEnqCode) {
-      throw new FiscalException(
-        `Produto "${product.name}" tem CST de IPI sem código de enquadramento (cEnq)`,
-      );
+      throw new FiscalException(`Produto "${product.name}" tem CST de IPI sem código de enquadramento (cEnq)`);
     }
 
     return {
       cEnq: product.ipiEnqCode,
       cst: product.ipiCst,
-      ...(product.ipiRate != null && {
-        vBC: base,
-        pIPI: toNumber(product.ipiRate, 2),
-      }),
+      ...(product.ipiRate != null && { vBC: base, pIPI: toNumber(product.ipiRate, 2) }),
     };
   }
 
-  private buildPisCofins(
-    cst: string | null,
-    rate: unknown,
-    base: number,
-  ): Nfe55PisCofins {
-    return {
-      cst: cst || '49',
-      ...(rate != null && { vBC: base, aliq: toNumber(rate, 2) }),
-    };
+  private buildPisCofins(cst: string | null, rate: unknown, base: number): Nfe55PisCofins {
+    return { cst: cst || '49', ...(rate != null && { vBC: base, aliq: toNumber(rate, 2) }) };
   }
 
   private buildDest(client: Client): Nfe55Options['dest'] {
@@ -368,9 +270,7 @@ export class SaleConverterNFeService {
     const cnpj = digits(client.cnpj);
     const cpf = digits(client.cpf);
     if (cnpj.length !== 14 && cpf.length !== 11) {
-      throw new FiscalException(
-        `Cliente "${client.name}" sem CNPJ/CPF válido no cadastro`,
-      );
+      throw new FiscalException(`Cliente "${client.name}" sem CNPJ/CPF válido no cadastro`);
     }
 
     const cep = digits(client.zipCode);
@@ -384,23 +284,17 @@ export class SaleConverterNFeService {
       cep.length !== 8 && 'CEP (8 dígitos)',
     ].filter(Boolean);
     if (missing.length) {
-      throw new FiscalException(
-        `Cliente "${client.name}" com endereço incompleto: ${missing.join(', ')}`,
-      );
+      throw new FiscalException(`Cliente "${client.name}" com endereço incompleto: ${missing.join(', ')}`);
     }
 
     const indIEDest = client.ieIndicator;
     if (!indIEDest || !['1', '2', '9'].includes(indIEDest)) {
-      throw new FiscalException(
-        `Cliente "${client.name}" sem indicador de IE (1, 2 ou 9) no cadastro`,
-      );
+      throw new FiscalException(`Cliente "${client.name}" sem indicador de IE (1, 2 ou 9) no cadastro`);
     }
 
     const ie = digits(client.stateRegistration);
     if (indIEDest === '1' && !ie) {
-      throw new FiscalException(
-        `Cliente "${client.name}" é contribuinte de ICMS, mas está sem inscrição estadual`,
-      );
+      throw new FiscalException(`Cliente "${client.name}" é contribuinte de ICMS, mas está sem inscrição estadual`);
     }
 
     return {
@@ -423,24 +317,14 @@ export class SaleConverterNFeService {
     };
   }
 
-  private resolveNotePayments(
-    dto: EmitNfeDto,
-  ): { method: string; amount: number }[] {
+  private resolveNotePayments(dto: EmitNfeDto): { method: string; amount: number }[] {
     if (!dto.payments?.length) {
-      throw new FiscalException(
-        'Venda com serviços: informe os pagamentos da nota (omitServices)',
-      );
+      throw new FiscalException('Venda com serviços: informe os pagamentos da nota (omitServices)');
     }
-    return dto.payments.map((p) => ({
-      method: p.method,
-      amount: round2(p.amount),
-    }));
+    return dto.payments.map((p) => ({ method: p.method, amount: round2(p.amount) }));
   }
 
-  private buildTransp(
-    dto: EmitNfeDto,
-    carrier: BusinessPartner | null,
-  ): Nfe55Options['transp'] {
+  private buildTransp(dto: EmitNfeDto, carrier: BusinessPartner | null): Nfe55Options['transp'] {
     const { modFrete, vehicle, volumes } = dto.transp;
 
     return {
@@ -471,12 +355,7 @@ export class SaleConverterNFeService {
     if (!cobr?.fat && !cobr?.dup?.length) return {};
 
     return {
-      cobr: {
-        ...(cobr.fat && { fat: { ...cobr.fat } }),
-        ...(cobr.dup?.length && {
-          dup: cobr.dup.map((d) => ({ ...d })),
-        }),
-      },
+      cobr: { ...(cobr.fat && { fat: { ...cobr.fat } }), ...(cobr.dup?.length && { dup: cobr.dup.map((d) => ({ ...d })) }) },
     };
   }
 }

@@ -1,15 +1,6 @@
 // src/clients/dto/create-client.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsNotEmpty,
-  IsOptional,
-  IsBoolean,
-  IsIn,
-  Length,
-  Matches,
-  MaxLength,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsIn, Length, Matches, MaxLength } from 'class-validator';
 import { ValidationMessages } from 'src/common/utils/validation';
 
 export class CreateClientDto {
@@ -42,9 +33,7 @@ export class CreateClientDto {
 
   @ApiProperty({ required: false, example: '123456789' })
   @IsString({ message: ValidationMessages.IS_STRING('Inscrição estadual') })
-  @MaxLength(20, {
-    message: 'Inscrição estadual deve ter no máximo 20 caracteres',
-  })
+  @MaxLength(20, { message: 'Inscrição estadual deve ter no máximo 20 caracteres' })
   @IsOptional()
   stateRegistration?: string;
 
@@ -52,13 +41,9 @@ export class CreateClientDto {
     required: false,
     enum: ['1', '2', '9'],
     example: '9',
-    description:
-      'Indicador de IE do destinatário: 1 = contribuinte, 2 = isento, 9 = não contribuinte',
+    description: 'Indicador de IE do destinatário: 1 = contribuinte, 2 = isento, 9 = não contribuinte',
   })
-  @IsIn(['1', '2', '9'], {
-    message:
-      'Indicador de IE deve ser 1 (contribuinte), 2 (isento) ou 9 (não contribuinte)',
-  })
+  @IsIn(['1', '2', '9'], { message: 'Indicador de IE deve ser 1 (contribuinte), 2 (isento) ou 9 (não contribuinte)' })
   @IsOptional()
   ieIndicator?: string;
 
@@ -87,15 +72,9 @@ export class CreateClientDto {
   @IsOptional()
   city?: string;
 
-  @ApiProperty({
-    required: false,
-    example: '3106200',
-    description: 'Código IBGE do município (7 dígitos)',
-  })
+  @ApiProperty({ required: false, example: '3106200', description: 'Código IBGE do município (7 dígitos)' })
   @IsString({ message: ValidationMessages.IS_STRING('Código do município') })
-  @Matches(/^\d{7}$/, {
-    message: 'Código do município (IBGE) deve ter 7 dígitos numéricos',
-  })
+  @Matches(/^\d{7}$/, { message: 'Código do município (IBGE) deve ter 7 dígitos numéricos' })
   @IsOptional()
   cityCode?: string;
 

@@ -25,17 +25,8 @@ export class OrderProductionEntity {
     total: number;
     orderId: number;
     productId: number;
-    order?: {
-      id: number;
-      customerName: string | null;
-      table: string | null;
-      type: string;
-    };
-    product?: {
-      id: number;
-      name: string;
-      code: string;
-    };
+    order?: { id: number; customerName: string | null; table: string | null; type: string };
+    product?: { id: number; name: string; code: string };
   };
 
   // Durações calculadas (opcionais)

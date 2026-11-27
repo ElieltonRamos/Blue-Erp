@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsEnum,
-  IsInt,
-  IsNumber,
-  IsOptional,
-  IsPositive,
-} from 'class-validator';
+import { IsEnum, IsInt, IsNumber, IsOptional, IsPositive } from 'class-validator';
 import { DocumentItemType } from 'generated/prisma/enums';
 
 export class AddDocumentItemDto {

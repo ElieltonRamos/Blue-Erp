@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  Min,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, Min } from 'class-validator';
 import { ValidationMessages } from 'src/common/utils/validation';
 
 export class CreateServiceDto {
@@ -20,12 +14,7 @@ export class CreateServiceDto {
   @IsNotEmpty({ message: ValidationMessages.IS_NOT_EMPTY('Preço') })
   price: number;
 
-  @ApiProperty({
-    type: Number,
-    required: false,
-    example: 30,
-    description: 'Tempo estimado em minutos',
-  })
+  @ApiProperty({ type: Number, required: false, example: 30, description: 'Tempo estimado em minutos' })
   @IsNumber({}, { message: ValidationMessages.IS_NUMBER('Tempo estimado') })
   @Min(0, { message: ValidationMessages.MIN('Tempo estimado', 0) })
   @IsOptional()

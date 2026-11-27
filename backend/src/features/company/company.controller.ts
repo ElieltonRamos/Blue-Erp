@@ -20,10 +20,7 @@ import { UpdateCompanyDto } from './dto/update-company.dto.js';
 import { UpdateOnlineMenuSettingsDto } from './dto/update-online-menu-settings.dto.js';
 import { ReplaceOpeningHoursDto } from './dto/opening-hour.dto.js';
 import { OnlineMenuSettingsResponseDto } from './dto/online-menu-settings-response.dto.js';
-import {
-  AuthenticatedUser,
-  JwtAuthGuard,
-} from '../../common/guards/jwt-auth.guard.js';
+import { AuthenticatedUser, JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Public } from '../../common/decorators/public.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
@@ -51,51 +48,30 @@ export class CompanyController {
 
   @Get()
   @ApiOperation({ summary: 'Buscar dados da empresa' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Dados da empresa retornados',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Empresa não configurada',
-  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Dados da empresa retornados' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Empresa não configurada' })
   getCompany(@CurrentUser() user: AuthenticatedUser) {
     return this.companyService.getCompany(this.actorOf(user));
   }
 
   @Patch()
   @ApiOperation({ summary: 'Atualizar dados da empresa' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Empresa atualizada com sucesso',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Empresa não configurada',
-  })
-  update(
-    @Body() updateCompanyDto: UpdateCompanyDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
+  @ApiResponse({ status: HttpStatus.OK, description: 'Empresa atualizada com sucesso' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Empresa não configurada' })
+  update(@Body() updateCompanyDto: UpdateCompanyDto, @CurrentUser() user: AuthenticatedUser) {
     return this.companyService.update(updateCompanyDto, this.actorOf(user));
   }
 
   @Delete()
   @ApiOperation({ summary: 'Deletar empresa (reset config)' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Empresa deletada com sucesso',
-  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Empresa deletada com sucesso' })
   deleteCompany(@CurrentUser() user: AuthenticatedUser) {
     return this.companyService.deleteCompany(this.actorOf(user));
   }
 
   @Get('configured')
   @ApiOperation({ summary: 'Verificar se empresa está configurada' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Status da configuração',
-  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Status da configuração' })
   async isConfigured() {
     const configured = await this.companyService.isCompanyConfigured();
     return { configured };
@@ -103,56 +79,32 @@ export class CompanyController {
 
   @Post('nfceIncrement')
   @ApiOperation({ summary: 'Incrementa número NFC-e' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Número incrementado com sucesso',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Empresa não configurada',
-  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Número incrementado com sucesso' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Empresa não configurada' })
   incrementNfceNumber() {
     return this.companyService.incrementNfceNumber();
   }
 
   @Get('certificado')
   @ApiOperation({ summary: 'Status certificado digital' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Status do certificado',
-  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Status do certificado' })
   getCertificadoConfig() {
     return this.companyService.getCertificateConfig();
   }
 
   @Get('certificado/buffer')
   @ApiOperation({ summary: 'Obter buffer do certificado digital' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Buffer do certificado retornado',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Certificado não encontrado',
-  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Buffer do certificado retornado' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Certificado não encontrado' })
   getCertificadoBuffer() {
     return this.companyService.getCertificateBuffer();
   }
 
   @Patch('certificate')
   @ApiOperation({ summary: 'Upload certificado digital' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Certificado enviado com sucesso',
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Arquivo inválido',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Empresa não configurada',
-  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Certificado enviado com sucesso' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Arquivo inválido' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Empresa não configurada' })
   @UseInterceptors(FileInterceptor('certificado'))
   uploadCompanyCertificate(
     @UploadedFile() file: Express.Multer.File,
@@ -164,12 +116,7 @@ export class CompanyController {
       throw new BadRequestException('Arquivo não fornecido');
     }
 
-    const uploadedFile = {
-      originalname: file.originalname,
-      buffer: file.buffer,
-      mimetype: file.mimetype,
-      size: file.size,
-    };
+    const uploadedFile = { originalname: file.originalname, buffer: file.buffer, mimetype: file.mimetype, size: file.size };
 
     return this.companyService.uploadCompanyCertificate(
       uploadedFile,
@@ -181,14 +128,8 @@ export class CompanyController {
 
   @Delete('certificate')
   @ApiOperation({ summary: 'Deletar certificado digital' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Certificado removido com sucesso',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Certificado não encontrado',
-  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Certificado removido com sucesso' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Certificado não encontrado' })
   deleteCertificate(@CurrentUser() user: AuthenticatedUser) {
     return this.companyService.deleteCertificate(this.actorOf(user));
   }
@@ -200,10 +141,7 @@ export class CompanyController {
     description: 'Configurações e horários de funcionamento',
     type: OnlineMenuSettingsResponseDto,
   })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Empresa não cadastrada',
-  })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Empresa não cadastrada' })
   getOnlineMenuSettings(@CurrentUser() user: AuthenticatedUser) {
     return this.onlineMenuSettingsService.getSettings(this.actorOf(user));
   }
@@ -211,30 +149,13 @@ export class CompanyController {
   @Patch('online-menu')
   @ApiOperation({
     summary: 'Atualizar configurações do cardápio online',
-    description:
-      'Todos os campos são opcionais. Enviar `null` em um campo opcional limpa o valor.',
+    description: 'Todos os campos são opcionais. Enviar `null` em um campo opcional limpa o valor.',
   })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Configurações atualizadas',
-    type: OnlineMenuSettingsResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Dados inválidos',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Empresa não cadastrada',
-  })
-  updateOnlineMenuSettings(
-    @Body() dto: UpdateOnlineMenuSettingsDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
-    return this.onlineMenuSettingsService.updateSettings(
-      dto,
-      this.actorOf(user),
-    );
+  @ApiResponse({ status: HttpStatus.OK, description: 'Configurações atualizadas', type: OnlineMenuSettingsResponseDto })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Dados inválidos' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Empresa não cadastrada' })
+  updateOnlineMenuSettings(@Body() dto: UpdateOnlineMenuSettingsDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.onlineMenuSettingsService.updateSettings(dto, this.actorOf(user));
   }
 
   @Put('online-menu/opening-hours')
@@ -242,26 +163,10 @@ export class CompanyController {
     summary: 'Substituir todos os horários de funcionamento',
     description: 'Envie `{ "hours": [] }` para remover todos os horários.',
   })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Horários substituídos',
-    type: OnlineMenuSettingsResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Horários inválidos ou sobrepostos',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Empresa não cadastrada',
-  })
-  replaceOpeningHours(
-    @Body() dto: ReplaceOpeningHoursDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
-    return this.onlineMenuSettingsService.replaceOpeningHours(
-      dto,
-      this.actorOf(user),
-    );
+  @ApiResponse({ status: HttpStatus.OK, description: 'Horários substituídos', type: OnlineMenuSettingsResponseDto })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Horários inválidos ou sobrepostos' })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Empresa não cadastrada' })
+  replaceOpeningHours(@Body() dto: ReplaceOpeningHoursDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.onlineMenuSettingsService.replaceOpeningHours(dto, this.actorOf(user));
   }
 }

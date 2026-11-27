@@ -2,33 +2,14 @@
 import { create } from 'xmlbuilder2';
 import { formatDateTimeBR, generateAccessKey } from './xml-common';
 
-import {
-  Nfe55Ipi,
-  Nfe55Item,
-  Nfe55Options,
-  Nfe55PisCofins,
-} from '../../entities/nfe.entity';
+import { Nfe55Ipi, Nfe55Item, Nfe55Options, Nfe55PisCofins } from '../../entities/nfe.entity';
 
 // ---------- Helpers ----------
 
-const HOMOLOG_TEXT =
-  'NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL';
-const HOMOLOG_DEST_NAME =
-  'NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL';
+const HOMOLOG_TEXT = 'NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL';
+const HOMOLOG_DEST_NAME = 'NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL';
 
-const ADDRESS_KEYS = [
-  'xLgr',
-  'nro',
-  'xCpl',
-  'xBairro',
-  'cMun',
-  'xMun',
-  'UF',
-  'CEP',
-  'cPais',
-  'xPais',
-  'fone',
-];
+const ADDRESS_KEYS = ['xLgr', 'nro', 'xCpl', 'xBairro', 'cMun', 'xMun', 'UF', 'CEP', 'cPais', 'xPais', 'fone'];
 
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 const num = (v: unknown) => (v === undefined || v === '' ? 0 : Number(v));
@@ -48,17 +29,7 @@ function pick(obj: object | undefined, keys: string[]): Record<string, string> {
 
 // ---------- ICMS (Simples Nacional) ----------
 
-const ST_FIELDS = [
-  'modBCST',
-  'pMVAST',
-  'pRedBCST',
-  'vBCST',
-  'pICMSST',
-  'vICMSST',
-  'vBCFCPST',
-  'pFCPST',
-  'vFCPST',
-];
+const ST_FIELDS = ['modBCST', 'pMVAST', 'pRedBCST', 'vBCST', 'pICMSST', 'vICMSST', 'vBCFCPST', 'pFCPST', 'vFCPST'];
 
 const ICMS_SN: Record<string, { tag: string; fields: string[] }> = {
   '101': { tag: 'ICMSSN101', fields: ['pCredSN', 'vCredICMSSN'] },
@@ -66,10 +37,7 @@ const ICMS_SN: Record<string, { tag: string; fields: string[] }> = {
   '103': { tag: 'ICMSSN102', fields: [] },
   '300': { tag: 'ICMSSN102', fields: [] },
   '400': { tag: 'ICMSSN102', fields: [] },
-  '201': {
-    tag: 'ICMSSN201',
-    fields: [...ST_FIELDS, 'pCredSN', 'vCredICMSSN'],
-  },
+  '201': { tag: 'ICMSSN201', fields: [...ST_FIELDS, 'pCredSN', 'vCredICMSSN'] },
   '202': { tag: 'ICMSSN202', fields: ST_FIELDS },
   '203': { tag: 'ICMSSN202', fields: ST_FIELDS },
   '500': {
@@ -88,35 +56,15 @@ const ICMS_SN: Record<string, { tag: string; fields: string[] }> = {
       'vICMSEfet',
     ],
   },
-  '900': {
-    tag: 'ICMSSN900',
-    fields: [
-      'modBC',
-      'vBC',
-      'pRedBC',
-      'pICMS',
-      'vICMS',
-      ...ST_FIELDS,
-      'pCredSN',
-      'vCredICMSSN',
-    ],
-  },
+  '900': { tag: 'ICMSSN900', fields: ['modBC', 'vBC', 'pRedBC', 'pICMS', 'vICMS', ...ST_FIELDS, 'pCredSN', 'vCredICMSSN'] },
 };
 
 function buildIcms(item: Nfe55Item) {
   const def = ICMS_SN[item.csosn];
   if (!def) {
-    throw new Error(
-      `CSOSN "${item.csosn}" não suportado (item ${item.nItem}).`,
-    );
+    throw new Error(`CSOSN "${item.csosn}" não suportado (item ${item.nItem}).`);
   }
-  return {
-    [def.tag]: {
-      orig: String(item.origem),
-      CSOSN: item.csosn,
-      ...pick(item.icms, def.fields),
-    },
-  };
+  return { [def.tag]: { orig: String(item.origem), CSOSN: item.csosn, ...pick(item.icms, def.fields) } };
 }
 
 // ---------- IPI ----------
@@ -131,15 +79,7 @@ function buildIpi(ipi: Nfe55Ipi) {
   const vIPI = ipi.vIPI ?? round2((vBC * pIPI) / 100);
   return {
     value: vIPI,
-    node: {
-      cEnq: ipi.cEnq,
-      IPITrib: {
-        CST: ipi.cst,
-        vBC: vBC.toFixed(2),
-        pIPI: pIPI.toFixed(2),
-        vIPI: vIPI.toFixed(2),
-      },
-    },
+    node: { cEnq: ipi.cEnq, IPITrib: { CST: ipi.cst, vBC: vBC.toFixed(2), pIPI: pIPI.toFixed(2), vIPI: vIPI.toFixed(2) } },
   };
 }
 
@@ -154,34 +94,14 @@ function buildPisCofins(name: 'PIS' | 'COFINS', t: Nfe55PisCofins) {
     const vBC = t.vBC ?? 0;
     const aliq = t.aliq ?? 0;
     const valor = t.valor ?? round2((vBC * aliq) / 100);
-    return {
-      valor,
-      node: {
-        [`${name}Aliq`]: {
-          CST,
-          vBC: vBC.toFixed(2),
-          [p]: aliq.toFixed(2),
-          [v]: valor.toFixed(2),
-        },
-      },
-    };
+    return { valor, node: { [`${name}Aliq`]: { CST, vBC: vBC.toFixed(2), [p]: aliq.toFixed(2), [v]: valor.toFixed(2) } } };
   }
 
   if (CST === '03') {
     const q = t.qBCProd ?? 0;
     const a = t.vAliqProd ?? 0;
     const valor = t.valor ?? round2(q * a);
-    return {
-      valor,
-      node: {
-        [`${name}Qtde`]: {
-          CST,
-          qBCProd: q.toFixed(4),
-          vAliqProd: a.toFixed(4),
-          [v]: valor.toFixed(2),
-        },
-      },
-    };
+    return { valor, node: { [`${name}Qtde`]: { CST, qBCProd: q.toFixed(4), vAliqProd: a.toFixed(4), [v]: valor.toFixed(2) } } };
   }
 
   if (['04', '05', '06', '07', '08', '09'].includes(CST)) {
@@ -191,27 +111,13 @@ function buildPisCofins(name: 'PIS' | 'COFINS', t: Nfe55PisCofins) {
   const vBC = t.vBC ?? 0;
   const aliq = t.aliq ?? 0;
   const valor = t.valor ?? round2((vBC * aliq) / 100);
-  return {
-    valor,
-    node: {
-      [`${name}Outr`]: {
-        CST,
-        vBC: vBC.toFixed(2),
-        [p]: aliq.toFixed(2),
-        [v]: valor.toFixed(2),
-      },
-    },
-  };
+  return { valor, node: { [`${name}Outr`]: { CST, vBC: vBC.toFixed(2), [p]: aliq.toFixed(2), [v]: valor.toFixed(2) } } };
 }
 
 // ---------- Blocos ----------
 
 function buildDest(d: Nfe55Options['dest'], isHomolog: boolean) {
-  const doc = d.CNPJ
-    ? { CNPJ: digits(d.CNPJ) }
-    : d.CPF
-      ? { CPF: digits(d.CPF) }
-      : undefined;
+  const doc = d.CNPJ ? { CNPJ: digits(d.CNPJ) } : d.CPF ? { CPF: digits(d.CPF) } : undefined;
   if (!doc) throw new Error('Destinatário sem CNPJ ou CPF.');
 
   return {
@@ -224,15 +130,9 @@ function buildDest(d: Nfe55Options['dest'], isHomolog: boolean) {
 }
 
 function buildTransp(t: Nfe55Options['transp']) {
-  const transporta = t.transporta
-    ? pick(t.transporta, ['CNPJ', 'CPF', 'xNome', 'IE', 'xEnder', 'xMun', 'UF'])
-    : undefined;
-  const veicTransp = t.veicTransp
-    ? pick(t.veicTransp, ['placa', 'UF', 'RNTC'])
-    : undefined;
-  const vol = t.vol
-    ? pick(t.vol, ['qVol', 'esp', 'marca', 'nVol', 'pesoL', 'pesoB'])
-    : undefined;
+  const transporta = t.transporta ? pick(t.transporta, ['CNPJ', 'CPF', 'xNome', 'IE', 'xEnder', 'xMun', 'UF']) : undefined;
+  const veicTransp = t.veicTransp ? pick(t.veicTransp, ['placa', 'UF', 'RNTC']) : undefined;
+  const vol = t.vol ? pick(t.vol, ['qVol', 'esp', 'marca', 'nVol', 'pesoL', 'pesoB']) : undefined;
 
   return {
     modFrete: t.modFrete,
@@ -254,15 +154,7 @@ function buildCobr(c: NonNullable<Nfe55Options['cobr']>) {
           },
         }
       : {}),
-    ...(c.dup?.length
-      ? {
-          dup: c.dup.map((d) => ({
-            nDup: d.nDup,
-            dVenc: d.dVenc,
-            vDup: d.vDup.toFixed(2),
-          })),
-        }
-      : {}),
+    ...(c.dup?.length ? { dup: c.dup.map((d) => ({ nDup: d.nDup, dVenc: d.dVenc, vDup: d.vDup.toFixed(2) })) } : {}),
   };
 }
 
@@ -281,11 +173,7 @@ function buildDetPag(pag: Nfe55Options['pag']) {
 const SEFAZ_BA_CNPJ = '13937073000156';
 
 function buildAutXml(uf: string, cnpjContador?: string) {
-  const cnpj = cnpjContador
-    ? digits(cnpjContador)
-    : uf === 'BA'
-      ? SEFAZ_BA_CNPJ
-      : undefined;
+  const cnpj = cnpjContador ? digits(cnpjContador) : uf === 'BA' ? SEFAZ_BA_CNPJ : undefined;
   return cnpj ? { autXML: [{ CNPJ: cnpj }] } : {};
 }
 
@@ -373,9 +261,7 @@ export function generateNFe55XML(data: Nfe55Options): string {
         indTot: p.indTot,
       },
       imposto: {
-        ...(p.vTotTrib !== undefined
-          ? { vTotTrib: p.vTotTrib.toFixed(2) }
-          : {}),
+        ...(p.vTotTrib !== undefined ? { vTotTrib: p.vTotTrib.toFixed(2) } : {}),
         ICMS: buildIcms(p),
         ...(ipi ? { IPI: 'node' in ipi ? ipi.node : ipi } : {}),
         PIS: pis.node,
@@ -384,15 +270,7 @@ export function generateNFe55XML(data: Nfe55Options): string {
     };
   });
 
-  const vNF = round2(
-    tot.vProd -
-      tot.vDesc +
-      tot.vST +
-      tot.vFrete +
-      tot.vSeg +
-      tot.vOutro +
-      tot.vIPI,
-  );
+  const vNF = round2(tot.vProd - tot.vDesc + tot.vST + tot.vFrete + tot.vSeg + tot.vOutro + tot.vIPI);
   const f = (n: number) => round2(n).toFixed(2);
 
   const root = {
@@ -420,9 +298,7 @@ export function generateNFe55XML(data: Nfe55Options): string {
           finNFe: ide.finNFe,
           indFinal: ide.indFinal,
           indPres: ide.indPres,
-          ...(ide.indIntermed !== undefined
-            ? { indIntermed: ide.indIntermed }
-            : {}),
+          ...(ide.indIntermed !== undefined ? { indIntermed: ide.indIntermed } : {}),
           procEmi: ide.procEmi,
           verProc: ide.verProc,
         },
@@ -466,10 +342,7 @@ export function generateNFe55XML(data: Nfe55Options): string {
         },
         transp: buildTransp(data.transp),
         ...(data.cobr ? { cobr: buildCobr(data.cobr) } : {}),
-        pag: {
-          detPag: buildDetPag(data.pag),
-          vTroco: (data.pag.vTroco ?? 0).toFixed(2),
-        },
+        pag: { detPag: buildDetPag(data.pag), vTroco: (data.pag.vTroco ?? 0).toFixed(2) },
         ...(data.infAdic ? { infAdic: { infCpl: data.infAdic } } : {}),
       },
     },

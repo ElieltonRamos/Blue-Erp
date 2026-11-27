@@ -1,10 +1,5 @@
 // src/clients/clients.service.ts
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../common/database/prisma.service.js';
 import { CreateClientDto } from './dto/create-client.dto.js';
 import { ClientResponseDto } from './dto/client-response.dto.js';
@@ -48,23 +43,13 @@ export class ClientsService {
     return cleaned;
   }
 
-  private async assertDocumentAvailable(
-    field: 'cpf' | 'cnpj',
-    value: string,
-    excludeId?: number,
-  ): Promise<void> {
-    const where: Prisma.ClientWhereInput =
-      field === 'cpf' ? { cpf: value } : { cnpj: value };
+  private async assertDocumentAvailable(field: 'cpf' | 'cnpj', value: string, excludeId?: number): Promise<void> {
+    const where: Prisma.ClientWhereInput = field === 'cpf' ? { cpf: value } : { cnpj: value };
     if (excludeId) where.id = { not: excludeId };
 
-    const exists = await this.prisma.client.client.findFirst({
-      where,
-      select: { id: true },
-    });
+    const exists = await this.prisma.client.client.findFirst({ where, select: { id: true } });
     if (exists) {
-      throw new ConflictException(
-        `Já existe um cliente com este ${field === 'cpf' ? 'CPF' : 'CNPJ'}`,
-      );
+      throw new ConflictException(`Já existe um cliente com este ${field === 'cpf' ? 'CPF' : 'CNPJ'}`);
     }
   }
 
@@ -85,20 +70,14 @@ export class ClientsService {
       await this.assertDocumentAvailable('cnpj', cnpj);
     }
 
-    const zipCode = createClientDto.zipCode
-      ? this.normalizeZipCode(createClientDto.zipCode)
-      : undefined;
+    const zipCode = createClientDto.zipCode ? this.normalizeZipCode(createClientDto.zipCode) : undefined;
 
-    const existingByName = await this.prisma.client.client.findFirst({
-      where: { name },
-    });
+    const existingByName = await this.prisma.client.client.findFirst({ where: { name } });
     if (existingByName) {
       throw new ConflictException('Já existe um cliente com este nome');
     }
 
-    const client = await this.prisma.client.client.create({
-      data: { ...createClientDto, cpf, cnpj, zipCode },
-    });
+    const client = await this.prisma.client.client.create({ data: { ...createClientDto, cpf, cnpj, zipCode } });
 
     return new ClientResponseDto(client);
   }
@@ -106,24 +85,17 @@ export class ClientsService {
   async findByCnpj(cnpj: string): Promise<ClientResponseDto | null> {
     this.validateCnpj(cnpj);
 
-    const client = await this.prisma.client.client.findUnique({
-      where: { cnpj: this.cleanCnpj(cnpj) },
-    });
+    const client = await this.prisma.client.client.findUnique({ where: { cnpj: this.cleanCnpj(cnpj) } });
 
     return client ? new ClientResponseDto(client) : null;
   }
 
-  async update(
-    id: number,
-    updateClientDto: UpdateClientDto,
-  ): Promise<ClientResponseDto> {
+  async update(id: number, updateClientDto: UpdateClientDto): Promise<ClientResponseDto> {
     if (isNaN(id) || id <= 0) {
       throw new BadRequestException('ID inválido');
     }
 
-    const existingClient = await this.prisma.client.client.findUnique({
-      where: { id },
-    });
+    const existingClient = await this.prisma.client.client.findUnique({ where: { id } });
     if (!existingClient) {
       throw new NotFoundException('Cliente não encontrado');
     }
@@ -159,18 +131,13 @@ export class ClientsService {
     }
 
     if (updateClientDto.name && updateClientDto.name !== existingClient.name) {
-      const nameExists = await this.prisma.client.client.findFirst({
-        where: { name: updateClientDto.name, id: { not: id } },
-      });
+      const nameExists = await this.prisma.client.client.findFirst({ where: { name: updateClientDto.name, id: { not: id } } });
       if (nameExists) {
         throw new ConflictException('Já existe um cliente com este nome');
       }
     }
 
-    const client = await this.prisma.client.client.update({
-      where: { id },
-      data: { ...updateClientDto, cpf, cnpj, zipCode },
-    });
+    const client = await this.prisma.client.client.update({ where: { id }, data: { ...updateClientDto, cpf, cnpj, zipCode } });
 
     return new ClientResponseDto(client);
   }
@@ -182,9 +149,7 @@ export class ClientsService {
     active?: boolean,
   ): Promise<PaginatedResponseDto<ClientResponseDto>> {
     if (page < 1 || limit < 1 || isNaN(page) || isNaN(limit)) {
-      throw new BadRequestException(
-        'A página ou a quantidade de itens por página está incorreta',
-      );
+      throw new BadRequestException('A página ou a quantidade de itens por página está incorreta');
     }
 
     const offset = (page - 1) * limit;
@@ -201,32 +166,17 @@ export class ClientsService {
 
     // Filtro de nome: busca parcial case-insensitive
     if (name) {
-      where.name = {
-        contains: name,
-      };
+      where.name = { contains: name };
     }
 
-    const clients = await this.prisma.client.client.findMany({
-      where,
-      orderBy: { id: 'asc' },
-      skip: offset,
-      take: limit,
-    });
+    const clients = await this.prisma.client.client.findMany({ where, orderBy: { id: 'asc' }, skip: offset, take: limit });
 
-    const total = await this.prisma.client.client.count({
-      where,
-    });
+    const total = await this.prisma.client.client.count({ where });
 
     const data = clients.map((client) => new ClientResponseDto(client));
     const totalPages = Math.ceil(total / limit);
 
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages,
-    };
+    return { data, total, page, limit, totalPages };
   }
 
   async search(searchName: string): Promise<ClientResponseDto[]> {
@@ -235,10 +185,7 @@ export class ClientsService {
     }
 
     const clients = await this.prisma.client.client.findMany({
-      where: {
-        name: { contains: searchName },
-        active: true,
-      },
+      where: { name: { contains: searchName }, active: true },
       orderBy: { name: 'asc' },
     });
 
@@ -250,9 +197,7 @@ export class ClientsService {
       throw new BadRequestException('ID inválido');
     }
 
-    const client = await this.prisma.client.client.findUnique({
-      where: { id },
-    });
+    const client = await this.prisma.client.client.findUnique({ where: { id } });
 
     if (!client) {
       throw new NotFoundException('Cliente não encontrado');
@@ -265,9 +210,7 @@ export class ClientsService {
     const cleanedCpf = this.cleanCpf(cpf);
     this.validateCpf(cleanedCpf);
 
-    const client = await this.prisma.client.client.findUnique({
-      where: { cpf: cleanedCpf },
-    });
+    const client = await this.prisma.client.client.findUnique({ where: { cpf: cleanedCpf } });
 
     if (!client) {
       return null;
@@ -281,12 +224,7 @@ export class ClientsService {
       throw new BadRequestException('Telefone não pode ser vazio');
     }
 
-    const clients = await this.prisma.client.client.findMany({
-      where: {
-        phone: { contains: phone },
-        active: true,
-      },
-    });
+    const clients = await this.prisma.client.client.findMany({ where: { phone: { contains: phone }, active: true } });
 
     return clients.map((client) => new ClientResponseDto(client));
   }
@@ -296,19 +234,14 @@ export class ClientsService {
       throw new BadRequestException('ID inválido');
     }
 
-    const client = await this.prisma.client.client.findUnique({
-      where: { id },
-    });
+    const client = await this.prisma.client.client.findUnique({ where: { id } });
 
     if (!client) {
       throw new NotFoundException('Cliente não encontrado');
     }
 
     // Marca como inativo
-    await this.prisma.client.client.update({
-      where: { id },
-      data: { active: false },
-    });
+    await this.prisma.client.client.update({ where: { id }, data: { active: false } });
 
     return { message: 'Cliente deletado com sucesso' };
   }
@@ -318,18 +251,13 @@ export class ClientsService {
       throw new BadRequestException('ID inválido');
     }
 
-    const client = await this.prisma.client.client.findUnique({
-      where: { id },
-    });
+    const client = await this.prisma.client.client.findUnique({ where: { id } });
 
     if (!client) {
       throw new NotFoundException('Cliente não encontrado');
     }
 
-    const restoredClient = await this.prisma.client.client.update({
-      where: { id },
-      data: { active: true },
-    });
+    const restoredClient = await this.prisma.client.client.update({ where: { id }, data: { active: true } });
 
     return new ClientResponseDto(restoredClient);
   }

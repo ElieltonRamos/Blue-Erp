@@ -3,17 +3,8 @@ import { CompanyService } from '../../company/company.service';
 import { IbptService } from '../../../ibpt/ibpt.service';
 import { StorageService } from './storage.service';
 import { SaleConverterNFCeService } from '../../../sales/sale-converte-nfce.service';
-import {
-  FiscalAlreadyEmittedException,
-  SefazException,
-  FiscalException,
-} from '../fiscal.exception';
-import {
-  EmissionResult,
-  NFeOptions,
-  DanfeConfig,
-  SefazReturn,
-} from '../entities/fiscal-module.entity';
+import { FiscalAlreadyEmittedException, SefazException, FiscalException } from '../fiscal.exception';
+import { EmissionResult, NFeOptions, DanfeConfig, SefazReturn } from '../entities/fiscal-module.entity';
 import { EmitNfceDto } from '../dto/emit-nfce.dto';
 import { PrismaService } from 'src/common/database/prisma.service';
 import { generateNFeXML } from '../lib/xml/nfce-xml-builder';
@@ -52,9 +43,7 @@ export class EmissionNfceService {
     this.checkIfAlreadyEmitted(sale);
 
     const company = await this.companyService.getCompany();
-    const certificate = await loadCertificate(() =>
-      this.companyService.getCertificateBuffer(),
-    );
+    const certificate = await loadCertificate(() => this.companyService.getCertificateBuffer());
 
     await this.ibptService.updateAliqSale(dto.saleId);
 
@@ -89,12 +78,7 @@ export class EmissionNfceService {
     const sefazReturn = await sender.send(xml, nfeData);
 
     if (!isAuthorized(sefazReturn)) {
-      await this.handleRejection(
-        dto.saleId,
-        accessKey,
-        sefazReturn,
-        nfceNumber,
-      );
+      await this.handleRejection(dto.saleId, accessKey, sefazReturn, nfceNumber);
     }
 
     if (!sefazReturn.signedXml) {
@@ -106,46 +90,26 @@ export class EmissionNfceService {
 
     // A partir daqui a nota está autorizada na SEFAZ.
     // Qualquer falha é registrada com a chave para recuperação manual.
-    const storagePaths = this.storageService.getStoragePaths(
-      accessKey,
-      new Date(nfeData.ide.dhEmi),
-    );
+    const storagePaths = this.storageService.getStoragePaths(accessKey, new Date(nfeData.ide.dhEmi));
 
     try {
-      await this.storageService.saveXml(
-        storagePaths.xmlPath,
-        sefazReturn.signedXml,
-      );
+      await this.storageService.saveXml(storagePaths.xmlPath, sefazReturn.signedXml);
     } catch (error) {
-      this.logger.error(
-        `Nota autorizada (${accessKey}) mas falha ao salvar XML: ${error}`,
-      );
+      this.logger.error(`Nota autorizada (${accessKey}) mas falha ao salvar XML: ${error}`);
     }
 
     let pdfPath = '';
     if (dto.generateDanfe && storagePaths.pdfPath) {
       try {
-        pdfPath = await this.generateDanfe(
-          nfeData,
-          accessKey,
-          sefazReturn.signedXml,
-          storagePaths.pdfPath,
-        );
+        pdfPath = await this.generateDanfe(nfeData, accessKey, sefazReturn.signedXml, storagePaths.pdfPath);
       } catch (error) {
-        this.logger.error(
-          `Nota autorizada (${accessKey}) mas falha ao gerar DANFE: ${error}`,
-        );
+        this.logger.error(`Nota autorizada (${accessKey}) mas falha ao gerar DANFE: ${error}`);
       }
     }
 
     // Persiste o status final — se falhar, loga com todos os dados para recuperação
     try {
-      await this.updateSaleAsEmitted(
-        dto.saleId,
-        accessKey,
-        sefazReturn.signedXml,
-        sefazReturn.protocol,
-      );
+      await this.updateSaleAsEmitted(dto.saleId, accessKey, sefazReturn.signedXml, sefazReturn.protocol);
     } catch (error) {
       this.logger.error(
         `CRÍTICO: Nota autorizada pelo SEFAZ mas falha ao atualizar venda. ` +
@@ -184,9 +148,7 @@ export class EmissionNfceService {
         data: { nfceCurrentNumber: { decrement: 1 } },
       });
     } catch (error) {
-      this.logger.warn(
-        `Falha ao liberar número NFC-e reservado (${number}): ${error}`,
-      );
+      this.logger.warn(`Falha ao liberar número NFC-e reservado (${number}): ${error}`);
     }
   }
 
@@ -194,40 +156,29 @@ export class EmissionNfceService {
     const infCpl = nfeData.infAdic;
 
     if (!infCpl || infCpl.trim().length === 0) {
-      throw new FiscalException(
-        'Campo infAdic/infCpl não foi gerado. Emissão bloqueada para evitar multas fiscais.',
-      );
+      throw new FiscalException('Campo infAdic/infCpl não foi gerado. Emissão bloqueada para evitar multas fiscais.');
     }
 
     const checks = [
-      {
-        pattern: /Tributos aproximados R\$\s[\d.,]+/,
-        label: 'valor total de tributos',
-      },
+      { pattern: /Tributos aproximados R\$\s[\d.,]+/, label: 'valor total de tributos' },
       { pattern: /federais/i, label: 'tributos federais' },
       { pattern: /estaduais/i, label: 'tributos estaduais' },
       { pattern: /municipais/i, label: 'tributos municipais' },
       { pattern: /IBPT/i, label: 'fonte IBPT' },
     ];
 
-    const failures = checks
-      .filter(({ pattern }) => !pattern.test(infCpl))
-      .map(({ label }) => label);
+    const failures = checks.filter(({ pattern }) => !pattern.test(infCpl)).map(({ label }) => label);
 
     if (failures.length > 0) {
       this.logger.error(`infCpl inválido para chave ${accessKey}: ${infCpl}`);
-      throw new FiscalException(
-        `infAdic incompleto. Campos ausentes: ${failures.join(', ')}. Emissão bloqueada.`,
-      );
+      throw new FiscalException(`infAdic incompleto. Campos ausentes: ${failures.join(', ')}. Emissão bloqueada.`);
     }
 
     this.logger.log(`infAdic validado com sucesso para chave ${accessKey}`);
   }
 
   private async findSale(saleId: number) {
-    const sale = await this.prisma.client.sale.findUnique({
-      where: { id: saleId },
-    });
+    const sale = await this.prisma.client.sale.findUnique({ where: { id: saleId } });
 
     if (!sale) {
       throw new FiscalException('Venda não encontrada', 404);
@@ -236,10 +187,7 @@ export class EmissionNfceService {
     return sale;
   }
 
-  private checkIfAlreadyEmitted(sale: {
-    fiscalStatus: string;
-    fiscalKey: string | null;
-  }): void {
+  private checkIfAlreadyEmitted(sale: { fiscalStatus: string; fiscalKey: string | null }): void {
     if (sale.fiscalStatus === 'EMITIDA' && sale.fiscalKey) {
       throw new FiscalAlreadyEmittedException(sale.fiscalKey);
     }
@@ -263,12 +211,7 @@ export class EmissionNfceService {
     }
   }
 
-  private async handleRejection(
-    saleId: number,
-    accessKey: string,
-    sefazReturn: SefazReturn,
-    nfceNumber: number,
-  ): Promise<never> {
+  private async handleRejection(saleId: number, accessKey: string, sefazReturn: SefazReturn, nfceNumber: number): Promise<never> {
     await this.releaseNfceNumber(nfceNumber);
     await this.prisma.client.sale.update({
       where: { id: saleId },
@@ -281,46 +224,23 @@ export class EmissionNfceService {
       },
     });
 
-    throw new SefazException(
-      sefazReturn.message || 'NFC-e rejeitada pela SEFAZ',
-    );
+    throw new SefazException(sefazReturn.message || 'NFC-e rejeitada pela SEFAZ');
   }
 
-  private async generateDanfe(
-    nfeData: NFeOptions,
-    accessKey: string,
-    signedXml: string,
-    pdfPath: string,
-  ): Promise<string> {
+  private async generateDanfe(nfeData: NFeOptions, accessKey: string, signedXml: string, pdfPath: string): Promise<string> {
     const { nfceCsc, nfceCscId } = await this.companyService.getCscConfig();
 
-    const danfeConfig: DanfeConfig = {
-      csc: nfceCsc,
-      idCSC: nfceCscId,
-      widthMM: 80,
-    };
+    const danfeConfig: DanfeConfig = { csc: nfceCsc, idCSC: nfceCscId, widthMM: 80 };
 
     const danfe = new DanfeGenerator(danfeConfig);
     const { totals, qrCodeUrl, urlChave } = danfe.parseXml(signedXml);
 
-    await danfe.generateDanfe(
-      nfeData,
-      accessKey,
-      totals,
-      qrCodeUrl,
-      urlChave,
-      pdfPath,
-    );
+    await danfe.generateDanfe(nfeData, accessKey, totals, qrCodeUrl, urlChave, pdfPath);
 
     return pdfPath;
   }
 
-  private async updateSaleAsEmitted(
-    saleId: number,
-    accessKey: string,
-    signedXml: string,
-    protocol?: string,
-  ): Promise<void> {
+  private async updateSaleAsEmitted(saleId: number, accessKey: string, signedXml: string, protocol?: string): Promise<void> {
     await this.prisma.client.sale.update({
       where: { id: saleId },
       data: {

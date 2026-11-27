@@ -1,9 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Decimal } from '@prisma/client/runtime/index-browser';
-import {
-  DocumentStatus,
-  DocumentType,
-} from '../../../../generated/prisma/enums.js';
+import { DocumentStatus, DocumentType } from '../../../../generated/prisma/enums.js';
 import { DocumentItemResponseDto } from './document-item-response.dto.js';
 
 export class DocumentResponseDto {
@@ -49,12 +46,7 @@ export class DocumentResponseDto {
   @ApiProperty({ example: 'maria.admin', required: false })
   responsibleName?: string;
 
-  constructor(
-    partial: Partial<DocumentResponseDto> & {
-      client?: { name: string };
-      responsible?: { username: string } | null;
-    },
-  ) {
+  constructor(partial: Partial<DocumentResponseDto> & { client?: { name: string }; responsible?: { username: string } | null }) {
     const { client, responsible, items, ...rest } = partial as any;
     Object.assign(this, rest);
     if (client?.name) {

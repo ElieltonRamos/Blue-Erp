@@ -8,10 +8,7 @@ export class FiscalException extends HttpException {
 
 export class FiscalAlreadyEmittedException extends FiscalException {
   constructor(accessKey: string) {
-    super(
-      `Documento fiscal já emitido para esta venda. Chave: ${accessKey}`,
-      HttpStatus.CONFLICT,
-    );
+    super(`Documento fiscal já emitido para esta venda. Chave: ${accessKey}`, HttpStatus.CONFLICT);
   }
 }
 
@@ -35,9 +32,6 @@ export class SefazException extends FiscalException {
 
 export class FiscalNotFoundException extends FiscalException {
   constructor(identifier: string) {
-    super(
-      `Documento fiscal não encontrado: ${identifier}`,
-      HttpStatus.NOT_FOUND,
-    );
+    super(`Documento fiscal não encontrado: ${identifier}`, HttpStatus.NOT_FOUND);
   }
 }

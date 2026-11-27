@@ -13,14 +13,7 @@ import {
   ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { TablesService } from './tables.service.js';
 import { CreateTableDto } from './dto/create-table.dto.js';
 import { UpdateTableDto } from './dto/update-table.dto.js';
@@ -41,26 +34,15 @@ export class TablesController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Criar nova mesa' })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: 'Mesa criada com sucesso',
-  })
-  @ApiResponse({
-    status: HttpStatus.CONFLICT,
-    description: 'Mesa já existe nesta localização',
-  })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Mesa criada com sucesso' })
+  @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Mesa já existe nesta localização' })
   create(@Body() createTableDto: CreateTableDto) {
     return this.tablesService.create(createTableDto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Listar mesas' })
-  @ApiQuery({
-    name: 'locationId',
-    required: false,
-    type: Number,
-    description: 'Filtrar por localização',
-  })
+  @ApiQuery({ name: 'locationId', required: false, type: Number, description: 'Filtrar por localização' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Lista de mesas' })
   findAll(@Query('locationId') locationId?: string) {
     return this.tablesService.findAll(locationId ? +locationId : undefined);
@@ -70,10 +52,7 @@ export class TablesController {
   @ApiOperation({ summary: 'Buscar mesa por ID' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: HttpStatus.OK, description: 'Mesa encontrada' })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Mesa não encontrada',
-  })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Mesa não encontrada' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.tablesService.findOne(id);
   }
@@ -82,14 +61,8 @@ export class TablesController {
   @ApiOperation({ summary: 'Atualizar mesa' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: HttpStatus.OK, description: 'Mesa atualizada' })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Mesa não encontrada',
-  })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateTableDto: UpdateTableDto,
-  ) {
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Mesa não encontrada' })
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateTableDto: UpdateTableDto) {
     return this.tablesService.update(id, updateTableDto);
   }
 
@@ -98,10 +71,7 @@ export class TablesController {
   @ApiOperation({ summary: 'Excluir mesa' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: HttpStatus.OK, description: 'Mesa excluída' })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Mesa não está disponível',
-  })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Mesa não está disponível' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.tablesService.remove(id);
   }
@@ -111,19 +81,9 @@ export class TablesController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Ocupar mesa (cria Order automaticamente)' })
   @ApiParam({ name: 'id', type: Number })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Mesa ocupada e comanda criada',
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Mesa já ocupada',
-  })
-  occupy(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() occupyTableDto: OccupyTableDto,
-    @CurrentUser('userId') userId: number,
-  ) {
+  @ApiResponse({ status: HttpStatus.OK, description: 'Mesa ocupada e comanda criada' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Mesa já ocupada' })
+  occupy(@Param('id', ParseIntPipe) id: number, @Body() occupyTableDto: OccupyTableDto, @CurrentUser('userId') userId: number) {
     return this.tablesService.occupy(id, occupyTableDto, userId);
   }
 
@@ -131,10 +91,7 @@ export class TablesController {
   @ApiOperation({ summary: 'Liberar mesa' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: HttpStatus.OK, description: 'Mesa liberada' })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Finalize a comanda primeiro',
-  })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Finalize a comanda primeiro' })
   release(@Param('id', ParseIntPipe) id: number) {
     return this.tablesService.release(id);
   }
@@ -143,44 +100,23 @@ export class TablesController {
   @ApiOperation({ summary: 'Reservar mesa' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: HttpStatus.OK, description: 'Mesa reservada' })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Mesa está ocupada',
-  })
-  reserve(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() reserveTableDto: ReserveTableDto,
-  ) {
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Mesa está ocupada' })
+  reserve(@Param('id', ParseIntPipe) id: number, @Body() reserveTableDto: ReserveTableDto) {
     return this.tablesService.reserve(id, reserveTableDto);
   }
 
   @Post(':id/close-tab')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Fechar comanda da mesa (redireciona para /comandas/:orderId)',
-  })
+  @ApiOperation({ summary: 'Fechar comanda da mesa (redireciona para /comandas/:orderId)' })
   @ApiParam({ name: 'id', type: Number })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Comanda fechada',
-    schema: {
-      properties: {
-        orderId: { type: 'number' },
-        total: { type: 'number' },
-        message: { type: 'string' },
-      },
-    },
+    schema: { properties: { orderId: { type: 'number' }, total: { type: 'number' }, message: { type: 'string' } } },
   })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Mesa sem comanda ativa',
-  })
-  closeTab(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser('userId') operatorId: number,
-    @Body() dto: CloseTabDto,
-  ) {
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Mesa sem comanda ativa' })
+  closeTab(@Param('id', ParseIntPipe) id: number, @CurrentUser('userId') operatorId: number, @Body() dto: CloseTabDto) {
     return this.tablesService.closeTab(id, operatorId, dto);
   }
 
@@ -193,22 +129,9 @@ export class TablesController {
     description: 'Comanda transferida ou fundida com sucesso',
     schema: { properties: { message: { type: 'string' } } },
   })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Pedido ou mesa não encontrada',
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Pedido não está aberto ou mesa destino ocupada',
-  })
-  transferTable(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: TransferTableDto,
-  ) {
-    return this.tablesService.transferTable(
-      id,
-      dto.targetTableNumber,
-      dto.targetLocationCode,
-    );
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Pedido ou mesa não encontrada' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Pedido não está aberto ou mesa destino ocupada' })
+  transferTable(@Param('id', ParseIntPipe) id: number, @Body() dto: TransferTableDto) {
+    return this.tablesService.transferTable(id, dto.targetTableNumber, dto.targetLocationCode);
   }
 }

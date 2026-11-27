@@ -1,22 +1,5 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  ParseIntPipe,
-  Query,
-  Res,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, ParseIntPipe, Query, Res, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { createReadStream } from 'fs';
 import { FiscalService } from './fiscal.service';
@@ -68,9 +51,7 @@ export class FiscalController {
   }
 
   @Get('query')
-  @ApiOperation({
-    summary: 'Query fiscal document (NF-e or NFC-e) by access key',
-  })
+  @ApiOperation({ summary: 'Query fiscal document (NF-e or NFC-e) by access key' })
   @ApiResponse({ status: 200, description: 'Query result' })
   @ApiResponse({ status: 404, description: 'Document not found' })
   async query(@Query() dto: QueryFiscalDto) {
@@ -82,23 +63,15 @@ export class FiscalController {
   @ApiParam({ name: 'accessKey', description: '44-digit access key' })
   @ApiResponse({ status: 200, description: 'PDF file stream' })
   @ApiResponse({ status: 404, description: 'PDF not found' })
-  async downloadPdf(
-    @Param('accessKey') accessKey: string,
-    @Res() res: Response,
-  ) {
+  async downloadPdf(@Param('accessKey') accessKey: string, @Res() res: Response) {
     const pdfPath = await this.fiscalService.downloadPdf(accessKey);
     const fileStream = createReadStream(pdfPath);
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${accessKey}.pdf"`,
-    });
+    res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${accessKey}.pdf"` });
     fileStream.pipe(res);
   }
 
   @Get('list')
-  @ApiOperation({
-    summary: 'List fiscal documents (NF-e and NFC-e) with filters',
-  })
+  @ApiOperation({ summary: 'List fiscal documents (NF-e and NFC-e) with filters' })
   @ApiResponse({ status: 200, description: 'List of fiscal documents' })
   async list(@Query() dto: ListFiscalDto) {
     return this.fiscalReportsService.list(dto);
@@ -109,17 +82,10 @@ export class FiscalController {
   @ApiParam({ name: 'saleId', description: 'Sale ID' })
   @ApiResponse({ status: 200, description: 'XML file stream' })
   @ApiResponse({ status: 404, description: 'XML not found' })
-  async downloadXml(
-    @Param('saleId', ParseIntPipe) saleId: number,
-    @Res() res: Response,
-  ) {
-    const { xmlPath, filename } =
-      await this.fiscalReportsService.downloadXml(saleId);
+  async downloadXml(@Param('saleId', ParseIntPipe) saleId: number, @Res() res: Response) {
+    const { xmlPath, filename } = await this.fiscalReportsService.downloadXml(saleId);
     const fileStream = createReadStream(xmlPath);
-    res.set({
-      'Content-Type': 'application/xml',
-      'Content-Disposition': `attachment; filename="${filename}"`,
-    });
+    res.set({ 'Content-Type': 'application/xml', 'Content-Disposition': `attachment; filename="${filename}"` });
     fileStream.pipe(res);
   }
 
@@ -128,17 +94,10 @@ export class FiscalController {
   @ApiParam({ name: 'saleId', description: 'Sale ID' })
   @ApiResponse({ status: 200, description: 'PDF file stream' })
   @ApiResponse({ status: 404, description: 'XML not found for reprint' })
-  async reprintPdf(
-    @Param('saleId', ParseIntPipe) saleId: number,
-    @Res() res: Response,
-  ) {
-    const { pdfPath, filename } =
-      await this.fiscalReportsService.reprintPdf(saleId);
+  async reprintPdf(@Param('saleId', ParseIntPipe) saleId: number, @Res() res: Response) {
+    const { pdfPath, filename } = await this.fiscalReportsService.reprintPdf(saleId);
     const fileStream = createReadStream(pdfPath);
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${filename}"`,
-    });
+    res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${filename}"` });
     fileStream.pipe(res);
   }
 

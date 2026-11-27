@@ -1,16 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-  HttpStatus,
-  HttpCode,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, HttpStatus, HttpCode, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
@@ -41,11 +29,7 @@ export class ExpensesController {
   @ApiQuery({ name: 'startDate', required: false, example: '2026-01-01' })
   @ApiQuery({ name: 'endDate', required: false, example: '2026-02-03' })
   @ApiQuery({ name: 'supplier', required: false, example: 'Fornecedor ABC' })
-  @ApiQuery({
-    name: 'status',
-    required: false,
-    enum: ['Pago', 'Pendente', 'Atrasado'],
-  })
+  @ApiQuery({ name: 'status', required: false, enum: ['Pago', 'Pendente', 'Atrasado'] })
   findAll(
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
@@ -56,14 +40,7 @@ export class ExpensesController {
     @Query('sortBy') sortBy?: string,
     @Query('sortOrder') sortOrder?: 'asc' | 'desc',
   ) {
-    const filters = {
-      startDate,
-      endDate,
-      supplier,
-      status,
-      sortBy,
-      sortOrder,
-    };
+    const filters = { startDate, endDate, supplier, status, sortBy, sortOrder };
 
     return this.expensesService.findAll(+page, +limit, filters);
   }
@@ -101,10 +78,7 @@ export class ExpensesController {
   @ApiQuery({ name: 'startDate', example: '2026-01-01', required: true })
   @ApiQuery({ name: 'endDate', example: '2026-02-03', required: true })
   @ApiResponse({ status: 200, description: 'Relatório gerado' })
-  getReport(
-    @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string,
-  ) {
+  getReport(@Query('startDate') startDate: string, @Query('endDate') endDate: string) {
     return this.expensesService.getReport(startDate, endDate);
   }
 }

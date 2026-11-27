@@ -11,11 +11,7 @@ export class ClientResponseDto {
   @ApiProperty({ type: String, nullable: true, example: '(31) 99999-9999' })
   phone: string | null;
 
-  @ApiProperty({
-    type: String,
-    nullable: true,
-    example: 'Rua das Flores, 123, Centro',
-  })
+  @ApiProperty({ type: String, nullable: true, example: 'Rua das Flores, 123, Centro' })
   address: string | null;
 
   @ApiProperty({ type: String, nullable: true, example: '12345678900' })
@@ -27,12 +23,7 @@ export class ClientResponseDto {
   @ApiProperty({ type: String, nullable: true, example: '123456789' })
   stateRegistration: string | null;
 
-  @ApiProperty({
-    type: String,
-    nullable: true,
-    enum: ['1', '2', '9'],
-    example: '9',
-  })
+  @ApiProperty({ type: String, nullable: true, enum: ['1', '2', '9'], example: '9' })
   ieIndicator: string | null;
 
   @ApiProperty({ type: String, nullable: true, example: 'Rua das Flores' })

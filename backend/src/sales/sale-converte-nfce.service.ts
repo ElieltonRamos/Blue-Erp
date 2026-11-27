@@ -2,16 +2,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Decimal } from '@prisma/client/runtime/client';
 import { PrismaService } from 'src/common/database/prisma.service';
-import {
-  NFeOptions,
-  NFeProduct,
-} from 'src/features/fiscal-module/entities/fiscal-module.entity';
+import { NFeOptions, NFeProduct } from 'src/features/fiscal-module/entities/fiscal-module.entity';
 import { FiscalException } from 'src/features/fiscal-module/fiscal.exception';
-import {
-  PAYMENT_MAP,
-  TaxSummary,
-  UF_CODES,
-} from './entities/sale-converter-nfe';
+import { PAYMENT_MAP, TaxSummary, UF_CODES } from './entities/sale-converter-nfe';
 import { CompanyService } from 'src/features/company/company.service';
 import { nowBrasilia, toSefazDateTime } from 'src/common/utils/date-utils';
 
@@ -103,10 +96,7 @@ export class SaleConverterNFCeService {
           xPag: p.method === 'CREDITO_LOJA' ? 'Crédito Loja' : undefined,
           vPag: this.toNumber(p.amount, 2),
           ...(CARD_PAYMENT_METHODS.includes(p.method) && {
-            card:
-              p.method === 'PIX'
-                ? { tpIntegra: '2' }
-                : { tpIntegra: '2', tBand: '99', cAut: '000000' },
+            card: p.method === 'PIX' ? { tpIntegra: '2' } : { tpIntegra: '2', tBand: '99', cAut: '000000' },
           }),
         })),
       },
@@ -120,10 +110,7 @@ export class SaleConverterNFCeService {
     const sale = await this.prisma.client.sale.findUnique({
       where: { id: saleId },
       include: {
-        items: {
-          include: { product: true },
-          orderBy: { itemNumber: 'asc' },
-        },
+        items: { include: { product: true }, orderBy: { itemNumber: 'asc' } },
         operator: { select: { id: true, username: true } },
         client: true,
         payments: true,
@@ -131,8 +118,7 @@ export class SaleConverterNFCeService {
     });
 
     if (!sale) throw new FiscalException('Sale not found', 404);
-    if (!sale.items?.length)
-      throw new FiscalException('Sale has no items', 400);
+    if (!sale.items?.length) throw new FiscalException('Sale has no items', 400);
 
     return sale;
   }
@@ -153,13 +139,7 @@ export class SaleConverterNFCeService {
         cProd: product.code || String(product.id),
         xProd: item.xProd || product.name || 'PRODUTO SEM NOME',
         ncm: product.ncm || null,
-        cfop:
-          item.cfop ||
-          this.resolveCfop(
-            product.csosn,
-            sale.cfop,
-            product.productType === 'MANUFACTURED',
-          ),
+        cfop: item.cfop || this.resolveCfop(product.csosn, sale.cfop, product.productType === 'MANUFACTURED'),
         csosn: product.csosn || '102',
         origem: product.origin ?? 0,
         uCom,
@@ -169,22 +149,10 @@ export class SaleConverterNFCeService {
         uTrib: item.taxUnit || uCom,
         qTrib: this.toNumber(item.taxQuantity ?? qCom, 4),
         vUnTrib: this.toNumber(item.taxUnitPrice ?? vUnCom, 4),
-        aliqFederal:
-          product.federalTaxRate != null
-            ? this.toNumber(product.federalTaxRate, 2)
-            : null,
-        aliqEstadual:
-          product.stateTaxRate != null
-            ? this.toNumber(product.stateTaxRate, 2)
-            : null,
-        aliqMunicipal:
-          product.municipalTaxRate != null
-            ? this.toNumber(product.municipalTaxRate, 2)
-            : null,
-        vTotTrib:
-          item.totalTaxValue != null
-            ? this.toNumber(item.totalTaxValue, 2)
-            : null,
+        aliqFederal: product.federalTaxRate != null ? this.toNumber(product.federalTaxRate, 2) : null,
+        aliqEstadual: product.stateTaxRate != null ? this.toNumber(product.stateTaxRate, 2) : null,
+        aliqMunicipal: product.municipalTaxRate != null ? this.toNumber(product.municipalTaxRate, 2) : null,
+        vTotTrib: item.totalTaxValue != null ? this.toNumber(item.totalTaxValue, 2) : null,
         pisCst: product.cstPis || '49',
         cofinsCst: product.cstCofins || '49',
         iiValor: this.toNumber(item.importTaxValue ?? 0, 2),
@@ -196,10 +164,7 @@ export class SaleConverterNFCeService {
     return this.distributeDiscount(rawItems, this.toNumber(sale.discount, 2));
   }
 
-  private distributeDiscount(
-    items: Omit<NFeProduct, 'vDesc'>[],
-    totalDiscount: number,
-  ): NFeProduct[] {
+  private distributeDiscount(items: Omit<NFeProduct, 'vDesc'>[], totalDiscount: number): NFeProduct[] {
     if (totalDiscount <= 0 || items.length === 0) {
       return items.map((item) => ({ ...item, vDesc: 0 }));
     }
@@ -227,11 +192,7 @@ export class SaleConverterNFCeService {
     return result;
   }
 
-  private resolveCfop(
-    csosn: string | null,
-    saleCfop: string,
-    isManufactured: boolean = false,
-  ): string {
+  private resolveCfop(csosn: string | null, saleCfop: string, isManufactured: boolean = false): string {
     switch (csosn) {
       case '500':
         return '5405';
@@ -251,16 +212,10 @@ export class SaleConverterNFCeService {
 
     for (const item of items) {
       if (!item.ncm || item.ncm === '0' || item.ncm === '00000000') {
-        throw new FiscalException(
-          `Produto "${item.xProd}" (ID: ${item.cProd}) não possui NCM cadastrado. Emissão bloqueada.`,
-        );
+        throw new FiscalException(`Produto "${item.xProd}" (ID: ${item.cProd}) não possui NCM cadastrado. Emissão bloqueada.`);
       }
 
-      if (
-        item.aliqFederal == null ||
-        item.aliqEstadual == null ||
-        item.aliqMunicipal == null
-      ) {
+      if (item.aliqFederal == null || item.aliqEstadual == null || item.aliqMunicipal == null) {
         throw new FiscalException(
           `Produto "${item.xProd}" (NCM: ${item.ncm}) sem alíquota IBPT calculada. Atualize a tabela IBPT ou verifique o NCM cadastrado. Emissão bloqueada.`,
         );
@@ -288,9 +243,7 @@ export class SaleConverterNFCeService {
   }
 
   private buildTaxText(taxes: TaxSummary, ibptVersion?: string): string {
-    const totalPercent = taxes.totalValue
-      ? (taxes.totalTax / taxes.totalValue) * 100
-      : 0;
+    const totalPercent = taxes.totalValue ? (taxes.totalTax / taxes.totalValue) * 100 : 0;
 
     const base =
       `Tributos aproximados R$ ${taxes.totalTax.toFixed(2)}` +
@@ -299,9 +252,7 @@ export class SaleConverterNFCeService {
       ` R$ ${taxes.stateTax.toFixed(2)} estaduais` +
       ` e R$ ${taxes.municipalTax.toFixed(2)} municipais`;
 
-    return ibptVersion
-      ? `${base}. Fonte: IBPT ${ibptVersion}`
-      : `${base}. Fonte: IBPT`;
+    return ibptVersion ? `${base}. Fonte: IBPT ${ibptVersion}` : `${base}. Fonte: IBPT`;
   }
 
   private toNumber(value: unknown, decimals: number): number {

@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/common/database/prisma.service';
 import { OrderEntity } from './entities/order.entity';
 import { OrderStatus, ProductType } from 'generated/prisma/client';
@@ -11,11 +6,7 @@ import { RemoveOrderItemsDto } from './dto/remove-order-items.dto';
 import { OrderProductionService } from './order-production.service';
 import { OrderStockService } from './order-stock.service';
 import { OrderPrintService } from './order-print.service';
-import {
-  mapOrderToEntity,
-  ORDER_INCLUDE_BASIC,
-  ORDER_INCLUDE_ITEMS_FULL,
-} from './order.mapper';
+import { mapOrderToEntity, ORDER_INCLUDE_BASIC, ORDER_INCLUDE_ITEMS_FULL } from './order.mapper';
 import { AddOrderItemsDto } from './dto/add-order-itens.dto';
 import { UpdateServiceChargeDto } from './dto/update-service-charge.dto';
 import { resolveLogicalDateTime } from 'src/common/utils/date-utils';
@@ -38,12 +29,7 @@ export class OrderItemsService {
    * desatualizado no client (duas sessões abertas na mesma comanda).
    * Se o decremento zerar ou passar de zero, o item é removido por completo.
    */
-  async removeItems(
-    id: number,
-    dto: RemoveOrderItemsDto,
-    userRole: string,
-    operatorId: number,
-  ): Promise<OrderEntity> {
+  async removeItems(id: number, dto: RemoveOrderItemsDto, userRole: string, operatorId: number): Promise<OrderEntity> {
     const start = Date.now();
     const tag = `Pedido ${id}`;
     const requests = dto.items;
@@ -59,43 +45,28 @@ export class OrderItemsService {
     // addItems (sem criar produção, sem baixar estoque).
     for (const req of requests) {
       if (!Number.isFinite(req.quantity) || req.quantity <= 0) {
-        throw new BadRequestException(
-          `Quantidade inválida para o item ${req.id}: deve ser um número positivo`,
-        );
+        throw new BadRequestException(`Quantidade inválida para o item ${req.id}: deve ser um número positivo`);
       }
     }
 
-    const existingOrder = await this.prisma.client.order.findUnique({
-      where: { id },
-      include: ORDER_INCLUDE_ITEMS_FULL,
-    });
+    const existingOrder = await this.prisma.client.order.findUnique({ where: { id }, include: ORDER_INCLUDE_ITEMS_FULL });
 
     if (!existingOrder) {
       throw new NotFoundException(`Pedido ${id} não encontrado`);
     }
 
     if (existingOrder.status === OrderStatus.PAID) {
-      this.logger.warn(
-        `[${tag}] operador=${operatorId} | bloqueado: pedido já pago`,
-      );
-      throw new BadRequestException(
-        'Pedido já foi pago e não pode ser alterado',
-      );
+      this.logger.warn(`[${tag}] operador=${operatorId} | bloqueado: pedido já pago`);
+      throw new BadRequestException('Pedido já foi pago e não pode ser alterado');
     }
 
     if (existingOrder.status === OrderStatus.CANCELED) {
-      throw new BadRequestException(
-        'Pedido cancelado não permite alteração de itens',
-      );
+      throw new BadRequestException('Pedido cancelado não permite alteração de itens');
     }
 
     if (!['admin', 'caixa'].includes(userRole)) {
-      this.logger.warn(
-        `[${tag}] operador=${operatorId} | Tentativa de remover/reduzir itens sem permissão (papel: ${userRole})`,
-      );
-      throw new BadRequestException(
-        'Apenas admin e caixa podem remover ou reduzir itens do pedido',
-      );
+      this.logger.warn(`[${tag}] operador=${operatorId} | Tentativa de remover/reduzir itens sem permissão (papel: ${userRole})`);
+      throw new BadRequestException('Apenas admin e caixa podem remover ou reduzir itens do pedido');
     }
 
     const removedItems: typeof existingOrder.items = [];
@@ -105,9 +76,7 @@ export class OrderItemsService {
       for (const req of requests) {
         const existing = existingOrder.items.find((i) => i.id === req.id);
         if (!existing) {
-          throw new BadRequestException(
-            `Item ${req.id} não encontrado no pedido`,
-          );
+          throw new BadRequestException(`Item ${req.id} não encontrado no pedido`);
         }
 
         const quantidadeAtual = Number(existing.quantity);
@@ -116,62 +85,37 @@ export class OrderItemsService {
 
         if (novaQuantidade <= 0) {
           if (this.productionService.isProduced(existing.product.productType)) {
-            await this.productionService.cancelActiveByOrderItem(
-              tx,
-              existing.id,
-            );
+            await this.productionService.cancelActiveByOrderItem(tx, existing.id);
           }
 
           await tx.orderItem.delete({ where: { id: existing.id } });
 
           if (existing.product.productType === ProductType.RESALE) {
-            await this.stockService.increment(
-              tx,
-              existing.productId,
-              quantidadeAtual,
-            );
+            await this.stockService.increment(tx, existing.productId, quantidadeAtual);
           }
 
           removedItems.push(existing);
         } else {
           if (this.productionService.isProduced(existing.product.productType)) {
-            await this.productionService.reduceQuantity(
-              tx,
-              existing.productions,
-              quantidadeARemover,
-            );
+            await this.productionService.reduceQuantity(tx, existing.productions, quantidadeARemover);
           }
 
           if (existing.product.productType === ProductType.RESALE) {
-            await this.stockService.increment(
-              tx,
-              existing.productId,
-              quantidadeARemover,
-            );
+            await this.stockService.increment(tx, existing.productId, quantidadeARemover);
           }
 
           const totalItem = novaQuantidade * Number(existing.unitPrice);
           remainingItemsTotal += totalItem;
 
-          await tx.orderItem.update({
-            where: { id: existing.id },
-            data: { quantity: novaQuantidade, total: totalItem },
-          });
+          await tx.orderItem.update({ where: { id: existing.id }, data: { quantity: novaQuantidade, total: totalItem } });
         }
       }
 
       const untouchedTotal = existingOrder.items
-        .filter(
-          (i) =>
-            !requests.some((r) => r.id === i.id) &&
-            !removedItems.some((r) => r.id === i.id),
-        )
+        .filter((i) => !requests.some((r) => r.id === i.id) && !removedItems.some((r) => r.id === i.id))
         .reduce((sum, i) => sum + Number(i.total), 0);
 
-      await tx.order.update({
-        where: { id },
-        data: { total: untouchedTotal + remainingItemsTotal },
-      });
+      await tx.order.update({ where: { id }, data: { total: untouchedTotal + remainingItemsTotal } });
     });
 
     if (removedItems.length > 0) {
@@ -181,16 +125,11 @@ export class OrderItemsService {
       );
     }
 
-    const updated = await this.prisma.client.order.findUnique({
-      where: { id },
-      include: ORDER_INCLUDE_BASIC,
-    });
+    const updated = await this.prisma.client.order.findUnique({ where: { id }, include: ORDER_INCLUDE_BASIC });
 
     this.logger.log(
       `[${tag}] operador=${operatorId} | reduzido/removido em ${Date.now() - start}ms | itens finais: ` +
-        (updated?.items
-          .map((i) => `${i.id}:${i.name}(x${Number(i.quantity)})`)
-          .join(', ') || 'nenhum'),
+        (updated?.items.map((i) => `${i.id}:${i.name}(x${Number(i.quantity)})`).join(', ') || 'nenhum'),
     );
 
     return mapOrderToEntity(updated!);
@@ -206,11 +145,7 @@ export class OrderItemsService {
    * existing.unitPrice (preço travado na criação do item) — incoming.unitPrice
    * é ignorado de propósito nesse caso, por decisão confirmada.
    */
-  async addItems(
-    id: number,
-    dto: AddOrderItemsDto,
-    operatorId: number,
-  ): Promise<OrderEntity> {
+  async addItems(id: number, dto: AddOrderItemsDto, operatorId: number): Promise<OrderEntity> {
     const start = Date.now();
     const tag = `Pedido ${id}`;
     const newItems = dto.items;
@@ -220,34 +155,22 @@ export class OrderItemsService {
         newItems.map((i) => `produto ${i.productId} x${i.quantity}`).join(', '),
     );
 
-    const existingOrder = await this.prisma.client.order.findUnique({
-      where: { id },
-      include: ORDER_INCLUDE_ITEMS_FULL,
-    });
+    const existingOrder = await this.prisma.client.order.findUnique({ where: { id }, include: ORDER_INCLUDE_ITEMS_FULL });
 
     if (!existingOrder) {
       throw new NotFoundException(`Pedido ${id} não encontrado`);
     }
 
     if (existingOrder.status === OrderStatus.PAID) {
-      this.logger.warn(
-        `[${tag}] operador=${operatorId} | bloqueado: pedido já pago`,
-      );
-      throw new BadRequestException(
-        'Pedido já foi pago e não pode ser alterado',
-      );
+      this.logger.warn(`[${tag}] operador=${operatorId} | bloqueado: pedido já pago`);
+      throw new BadRequestException('Pedido já foi pago e não pode ser alterado');
     }
 
     if (existingOrder.status === OrderStatus.CANCELED) {
-      throw new BadRequestException(
-        'Pedido cancelado não permite adição de itens',
-      );
+      throw new BadRequestException('Pedido cancelado não permite adição de itens');
     }
 
-    const currentOperator = await this.prisma.client.user.findUnique({
-      where: { id: operatorId },
-      select: { username: true },
-    });
+    const currentOperator = await this.prisma.client.user.findUnique({ where: { id: operatorId }, select: { username: true } });
 
     const printBuilder = this.printService.createBuilder({
       orderId: id,
@@ -268,23 +191,14 @@ export class OrderItemsService {
         const product = products.find((p) => p.id === incoming.productId);
 
         if (!product) {
-          throw new BadRequestException(
-            `Produto ${incoming.productId} não encontrado`,
-          );
+          throw new BadRequestException(`Produto ${incoming.productId} não encontrado`);
         }
 
-        if (
-          incoming.quantity === undefined ||
-          incoming.unitPrice === undefined
-        ) {
-          throw new BadRequestException(
-            `Produto ${incoming.productId} com erro de cadastro`,
-          );
+        if (incoming.quantity === undefined || incoming.unitPrice === undefined) {
+          throw new BadRequestException(`Produto ${incoming.productId} com erro de cadastro`);
         }
 
-        const existing = existingOrder.items.find(
-          (i) => i.productId === incoming.productId,
-        );
+        const existing = existingOrder.items.find((i) => i.productId === incoming.productId);
 
         if (existing) {
           const novaQuantidade = Number(existing.quantity) + incoming.quantity;
@@ -302,22 +216,16 @@ export class OrderItemsService {
             printBuilder.addItem(product.productionLocation || 'LOCAL_01', {
               name: existing.name,
               quantity: incoming.quantity,
-              observation:
-                incoming.observation ?? existing.observation ?? undefined,
+              observation: incoming.observation ?? existing.observation ?? undefined,
             });
           }
 
           if (product.productType === ProductType.RESALE) {
-            await this.stockService.decrement(
-              tx,
-              incoming.productId,
-              incoming.quantity,
-            );
+            await this.stockService.decrement(tx, incoming.productId, incoming.quantity);
             printBuilder.addItemIfLocation(product.productionLocation, {
               name: existing.name,
               quantity: incoming.quantity,
-              observation:
-                incoming.observation ?? existing.observation ?? undefined,
+              observation: incoming.observation ?? existing.observation ?? undefined,
             });
           }
 
@@ -349,11 +257,7 @@ export class OrderItemsService {
           });
 
           if (product.productType === ProductType.RESALE) {
-            await this.stockService.decrement(
-              tx,
-              incoming.productId,
-              incoming.quantity,
-            );
+            await this.stockService.decrement(tx, incoming.productId, incoming.quantity);
             printBuilder.addItemIfLocation(product.productionLocation, {
               name: incoming.name!,
               quantity: incoming.quantity,
@@ -382,34 +286,23 @@ export class OrderItemsService {
         .filter((i) => !newItems.some((n) => n.productId === i.productId))
         .reduce((sum, i) => sum + Number(i.total), 0);
 
-      await tx.order.update({
-        where: { id },
-        data: { total: untouchedTotal + addedOrIncreasedTotal },
-      });
+      await tx.order.update({ where: { id }, data: { total: untouchedTotal + addedOrIncreasedTotal } });
     });
 
     this.logger.log(
       `[${tag}] operador=${operatorId} | transação concluída, despachando impressão para ${printBuilder.map.size} local(is): ` +
         [...printBuilder.map.entries()]
-          .map(
-            ([loc, job]) =>
-              `${loc}[${job.items.map((i: any) => `${i.name} x${i.quantity}`).join(', ')}]`,
-          )
+          .map(([loc, job]) => `${loc}[${job.items.map((i: any) => `${i.name} x${i.quantity}`).join(', ')}]`)
           .join(' | '),
     );
 
     this.printService.dispatchAsync(id, printBuilder.map);
 
-    const updated = await this.prisma.client.order.findUnique({
-      where: { id },
-      include: ORDER_INCLUDE_BASIC,
-    });
+    const updated = await this.prisma.client.order.findUnique({ where: { id }, include: ORDER_INCLUDE_BASIC });
 
     this.logger.log(
       `[${tag}] operador=${operatorId} | adicionado em ${Date.now() - start}ms | itens finais: ` +
-        updated?.items
-          .map((i) => `${i.id}:${i.name}(x${Number(i.quantity)})`)
-          .join(', '),
+        updated?.items.map((i) => `${i.id}:${i.name}(x${Number(i.quantity)})`).join(', '),
     );
 
     return mapOrderToEntity(updated!);
@@ -425,40 +318,25 @@ export class OrderItemsService {
    * enabled=true com amount customizado: divide igualmente entre os itens
    * (amount / quantidade de itens).
    */
-  async updateServiceCharge(
-    id: number,
-    dto: UpdateServiceChargeDto,
-    operatorId: number,
-  ): Promise<OrderEntity> {
+  async updateServiceCharge(id: number, dto: UpdateServiceChargeDto, operatorId: number): Promise<OrderEntity> {
     const start = Date.now();
     const tag = `Pedido ${id}`;
 
-    this.logger.log(
-      `[${tag}] operador=${operatorId} | atualizando taxa de serviço: enabled=${dto.enabled} amount=${dto.amount}`,
-    );
+    this.logger.log(`[${tag}] operador=${operatorId} | atualizando taxa de serviço: enabled=${dto.enabled} amount=${dto.amount}`);
 
-    const existingOrder = await this.prisma.client.order.findUnique({
-      where: { id },
-      include: ORDER_INCLUDE_ITEMS_FULL,
-    });
+    const existingOrder = await this.prisma.client.order.findUnique({ where: { id }, include: ORDER_INCLUDE_ITEMS_FULL });
 
     if (!existingOrder) {
       throw new NotFoundException(`Pedido ${id} não encontrado`);
     }
 
     if (existingOrder.status === OrderStatus.PAID) {
-      this.logger.warn(
-        `[${tag}] operador=${operatorId} | bloqueado: pedido já pago`,
-      );
-      throw new BadRequestException(
-        'Pedido já foi pago e não pode ser alterado',
-      );
+      this.logger.warn(`[${tag}] operador=${operatorId} | bloqueado: pedido já pago`);
+      throw new BadRequestException('Pedido já foi pago e não pode ser alterado');
     }
 
     if (existingOrder.status === OrderStatus.CANCELED) {
-      throw new BadRequestException(
-        'Pedido cancelado não permite alteração de taxa de serviço',
-      );
+      throw new BadRequestException('Pedido cancelado não permite alteração de taxa de serviço');
     }
 
     const items = existingOrder.items;
@@ -474,42 +352,24 @@ export class OrderItemsService {
       const isDefault = Number(dto.amount.toFixed(2)) === defaultAmount;
 
       if (isDefault) {
-        perItemCharges = items.map((i) => ({
-          id: i.id,
-          serviceCharge: Number((Number(i.total) * 0.1).toFixed(2)),
-        }));
+        perItemCharges = items.map((i) => ({ id: i.id, serviceCharge: Number((Number(i.total) * 0.1).toFixed(2)) }));
       } else {
         const perItem = Number((dto.amount / items.length).toFixed(2));
-        perItemCharges = items.map((i) => ({
-          id: i.id,
-          serviceCharge: perItem,
-        }));
+        perItemCharges = items.map((i) => ({ id: i.id, serviceCharge: perItem }));
       }
 
-      finalServiceCharge = perItemCharges.reduce(
-        (sum, i) => sum + i.serviceCharge,
-        0,
-      );
+      finalServiceCharge = perItemCharges.reduce((sum, i) => sum + i.serviceCharge, 0);
     }
 
     await this.prisma.client.$transaction(async (tx) => {
       for (const charge of perItemCharges) {
-        await tx.orderItem.update({
-          where: { id: charge.id },
-          data: { serviceCharge: charge.serviceCharge },
-        });
+        await tx.orderItem.update({ where: { id: charge.id }, data: { serviceCharge: charge.serviceCharge } });
       }
 
-      await tx.order.update({
-        where: { id },
-        data: { serviceCharge: finalServiceCharge },
-      });
+      await tx.order.update({ where: { id }, data: { serviceCharge: finalServiceCharge } });
     });
 
-    const updated = await this.prisma.client.order.findUnique({
-      where: { id },
-      include: ORDER_INCLUDE_BASIC,
-    });
+    const updated = await this.prisma.client.order.findUnique({ where: { id }, include: ORDER_INCLUDE_BASIC });
 
     this.logger.log(
       `[${tag}] operador=${operatorId} | taxa de serviço atualizada em ${Date.now() - start}ms | total=${finalServiceCharge}`,

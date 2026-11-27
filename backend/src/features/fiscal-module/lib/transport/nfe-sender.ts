@@ -38,15 +38,10 @@ export class NfeSender {
     this.config = config;
     this.certificate = {
       ...certificate,
-      pfxBuffer: Buffer.isBuffer(certificate.pfxBuffer)
-        ? certificate.pfxBuffer
-        : Buffer.from(certificate.pfxBuffer),
+      pfxBuffer: Buffer.isBuffer(certificate.pfxBuffer) ? certificate.pfxBuffer : Buffer.from(certificate.pfxBuffer),
     };
     this.signer = new NfeSigner(this.certificate);
-    this.http = new NfeHttpClient({
-      key: this.signer.getKeyPem(),
-      cert: this.signer.getCertPem(),
-    });
+    this.http = new NfeHttpClient({ key: this.signer.getKeyPem(), cert: this.signer.getCertPem() });
     this.parser = new NfeResponseParser();
   }
 
@@ -61,9 +56,7 @@ export class NfeSender {
       const accessKey = this.extractAccessKey(signedXml);
       if (!accessKey) throw new Error('Access key not found');
 
-      const digValMatch = signedXml.match(
-        /<Reference URI="#NFe\d{44}">[\s\S]*?<DigestValue>([^<]+)<\/DigestValue>/,
-      );
+      const digValMatch = signedXml.match(/<Reference URI="#NFe\d{44}">[\s\S]*?<DigestValue>([^<]+)<\/DigestValue>/);
       if (!digValMatch) throw new Error('infNFe DigestValue not found');
 
       const vNFMatch = signedXml.match(/<vNF>([^<]+)<\/vNF>/);
@@ -79,8 +72,7 @@ export class NfeSender {
 
       const isProd = nfeData.ide.tpAmb === '1';
       const uf = this.config.state.toUpperCase();
-      const urlChaveConsulta =
-        CHAVE_CONSULTA_URLS[uf]?.[isProd ? 'production' : 'staging'];
+      const urlChaveConsulta = CHAVE_CONSULTA_URLS[uf]?.[isProd ? 'production' : 'staging'];
 
       const infNFeSupl =
         `<infNFeSupl>` +
@@ -103,16 +95,8 @@ export class NfeSender {
         `Enviando autorização ${accessKey} para ${host}${path} (state=${this.config.state}, env=${this.config.environment})`,
       );
 
-      const soapEnvelope = this.http.buildSoapEnvelope(
-        'nfeAutorizacaoLote',
-        batchXml,
-      );
-      const responseXml = await this.http.postSoap(
-        host,
-        path,
-        soapEnvelope,
-        'nfeAutorizacaoLote',
-      );
+      const soapEnvelope = this.http.buildSoapEnvelope('nfeAutorizacaoLote', batchXml);
+      const responseXml = await this.http.postSoap(host, path, soapEnvelope, 'nfeAutorizacaoLote');
 
       this.logger.debug(`SEFAZ raw response (${accessKey}): ${responseXml}`);
 
@@ -125,12 +109,7 @@ export class NfeSender {
       return { ...result, signedXml: finalXml };
     } catch (error) {
       const err = error as Error;
-      return {
-        success: false,
-        message: err.message,
-        statusCode: '999',
-        errors: [err.stack || err.message],
-      };
+      return { success: false, message: err.message, statusCode: '999', errors: [err.stack || err.message] };
     }
   }
 
@@ -141,9 +120,7 @@ export class NfeSender {
 
       const modMatch = xml.match(/<mod>(\d+)<\/mod>/);
       if (modMatch?.[1] !== '55') {
-        throw new Error(
-          `Modelo inválido: esperado 55, recebido ${modMatch?.[1] ?? 'ausente'}`,
-        );
+        throw new Error(`Modelo inválido: esperado 55, recebido ${modMatch?.[1] ?? 'ausente'}`);
       }
 
       const tpAmbMatch = xml.match(/<tpAmb>(\d)<\/tpAmb>/);
@@ -164,16 +141,8 @@ export class NfeSender {
         `Enviando autorização NF-e ${accessKey} para ${host}${path} (state=${this.config.state}, env=${this.config.environment})`,
       );
 
-      const soapEnvelope = this.http.buildSoapEnvelope(
-        'nfeAutorizacaoLote',
-        batchXml,
-      );
-      const responseXml = await this.http.postSoap(
-        host,
-        path,
-        soapEnvelope,
-        'nfeAutorizacaoLote',
-      );
+      const soapEnvelope = this.http.buildSoapEnvelope('nfeAutorizacaoLote', batchXml);
+      const responseXml = await this.http.postSoap(host, path, soapEnvelope, 'nfeAutorizacaoLote');
 
       this.logger.debug(`SEFAZ raw response (${accessKey}): ${responseXml}`);
       this.saveXmlDebug(accessKey, responseXml, 'retorno');
@@ -187,32 +156,20 @@ export class NfeSender {
       let nfeProcXml: string | undefined;
 
       if (result.success) {
-        const protNFeMatch = responseXml.match(
-          /<protNFe[\s>][\s\S]*?<\/protNFe>/,
-        );
+        const protNFeMatch = responseXml.match(/<protNFe[\s>][\s\S]*?<\/protNFe>/);
 
         if (protNFeMatch) {
           nfeProcXml =
-            `<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">` +
-            signedXml +
-            protNFeMatch[0] +
-            `</nfeProc>`;
+            `<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">` + signedXml + protNFeMatch[0] + `</nfeProc>`;
         } else {
-          this.logger.error(
-            `protNFe não encontrado na resposta autorizada (${accessKey})`,
-          );
+          this.logger.error(`protNFe não encontrado na resposta autorizada (${accessKey})`);
         }
       }
 
       return { ...result, signedXml, nfeProcXml };
     } catch (error) {
       const err = error as Error;
-      return {
-        success: false,
-        message: err.message,
-        statusCode: '999',
-        errors: [err.stack || err.message],
-      };
+      return { success: false, message: err.message, statusCode: '999', errors: [err.stack || err.message] };
     }
   }
 
@@ -226,10 +183,7 @@ export class NfeSender {
     }
   }
 
-  async queryNFe(
-    accessKey: string,
-    model: NfeModel = '65',
-  ): Promise<SefazReturn> {
+  async queryNFe(accessKey: string, model: NfeModel = '65'): Promise<SefazReturn> {
     try {
       const environment = this.config.environment === 'production' ? '1' : '2';
 
@@ -242,38 +196,20 @@ export class NfeSender {
       const { host, path } = this.getEndpoint('query', model);
       this.logger.debug(`Consultando ${accessKey} em ${host}${path}`);
 
-      const soapEnvelope = this.http.buildSoapEnvelope(
-        'nfeConsultaNF',
-        content,
-      );
-      const responseXml = await this.http.postSoap(
-        host,
-        path,
-        soapEnvelope,
-        'nfeConsultaNF',
-      );
+      const soapEnvelope = this.http.buildSoapEnvelope('nfeConsultaNF', content);
+      const responseXml = await this.http.postSoap(host, path, soapEnvelope, 'nfeConsultaNF');
 
-      this.logger.debug(
-        `SEFAZ raw response (consulta ${accessKey}): ${responseXml}`,
-      );
+      this.logger.debug(`SEFAZ raw response (consulta ${accessKey}): ${responseXml}`);
 
       return this.parser.extractAndParse(responseXml);
     } catch (error) {
       const err = error as Error;
       this.logger.error(`Erro ao consultar ${accessKey}: ${err.message}`);
-      return {
-        success: false,
-        message: `Error querying NF-e: ${err.message}`,
-        statusCode: '999',
-      };
+      return { success: false, message: `Error querying NF-e: ${err.message}`, statusCode: '999' };
     }
   }
 
-  async queryStatus(model: NfeModel = '65'): Promise<{
-    online: boolean;
-    message: string;
-    time?: number;
-  }> {
+  async queryStatus(model: NfeModel = '65'): Promise<{ online: boolean; message: string; time?: number }> {
     const start = Date.now();
 
     try {
@@ -283,45 +219,22 @@ export class NfeSender {
       const content = `<consStatServ xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00"><tpAmb>${environment}</tpAmb><cUF>${ufCode}</cUF><xServ>STATUS</xServ></consStatServ>`;
 
       const { host, path } = this.getEndpoint('status', model);
-      const soapEnvelope = this.http.buildSoapEnvelope(
-        'nfeStatusServicoNF',
-        content,
-      );
-      const responseXml = await this.http.postSoap(
-        host,
-        path,
-        soapEnvelope,
-        'nfeStatusServicoNF',
-      );
+      const soapEnvelope = this.http.buildSoapEnvelope('nfeStatusServicoNF', content);
+      const responseXml = await this.http.postSoap(host, path, soapEnvelope, 'nfeStatusServicoNF');
 
       this.logger.debug(`SEFAZ raw response (status): ${responseXml}`);
 
-      const { cStat, xMotivo } =
-        await this.parser.parseStatusResponse(responseXml);
+      const { cStat, xMotivo } = await this.parser.parseStatusResponse(responseXml);
 
-      return {
-        online: cStat === '107',
-        message: xMotivo || 'Unknown status',
-        time: Date.now() - start,
-      };
+      return { online: cStat === '107', message: xMotivo || 'Unknown status', time: Date.now() - start };
     } catch (error) {
       const err = error as Error;
-      this.logger.error(
-        `Erro ao consultar status SEFAZ: ${err.message}`,
-        err.stack,
-      );
-      return {
-        online: false,
-        message: `Error querying status: ${err.message}`,
-        time: Date.now() - start,
-      };
+      this.logger.error(`Erro ao consultar status SEFAZ: ${err.message}`, err.stack);
+      return { online: false, message: `Error querying status: ${err.message}`, time: Date.now() - start };
     }
   }
 
-  async cancelNFe(
-    params: CancelNFeParams,
-    model: NfeModel = '65',
-  ): Promise<SefazReturn> {
+  async cancelNFe(params: CancelNFeParams, model: NfeModel = '65'): Promise<SefazReturn> {
     try {
       const { accessKey, protocol, justification, cnpj } = params;
       const environment = this.config.environment === 'production' ? '1' : '2';
@@ -348,10 +261,7 @@ export class NfeSender {
         `</detEvento>` +
         `</infEvento>`;
 
-      const eventoXml =
-        `<evento xmlns="http://www.portalfiscal.inf.br/nfe" versao="1.00">` +
-        infEvento +
-        `</evento>`;
+      const eventoXml = `<evento xmlns="http://www.portalfiscal.inf.br/nfe" versao="1.00">` + infEvento + `</evento>`;
 
       const signedEvento = this.signer.signXmlById(eventoXml, eventId);
 
@@ -364,20 +274,10 @@ export class NfeSender {
       const { host, path } = this.getEndpoint('cancellation', model);
       this.logger.log(`Enviando cancelamento ${accessKey} para ${host}${path}`);
 
-      const soapEnvelope = this.http.buildSoapEnvelope(
-        'nfeRecepcaoEvento',
-        content,
-      );
-      const responseXml = await this.http.postSoap(
-        host,
-        path,
-        soapEnvelope,
-        'nfeRecepcaoEvento',
-      );
+      const soapEnvelope = this.http.buildSoapEnvelope('nfeRecepcaoEvento', content);
+      const responseXml = await this.http.postSoap(host, path, soapEnvelope, 'nfeRecepcaoEvento');
 
-      this.logger.debug(
-        `SEFAZ raw response (cancelamento ${accessKey}): ${responseXml}`,
-      );
+      this.logger.debug(`SEFAZ raw response (cancelamento ${accessKey}): ${responseXml}`);
 
       const result = await this.parser.extractAndParseCancellation(responseXml);
 
@@ -389,21 +289,14 @@ export class NfeSender {
     } catch (error) {
       const err = error as Error;
       this.logger.error(`Erro ao cancelar: ${err.message}`);
-      return {
-        success: false,
-        message: err.message,
-        statusCode: '999',
-        errors: [err.stack || err.message],
-      };
+      return { success: false, message: err.message, statusCode: '999', errors: [err.stack || err.message] };
     }
   }
 
   private assertEnvironment(tpAmb: string): void {
     const expected = this.config.environment === 'production' ? '1' : '2';
     if (tpAmb !== expected) {
-      throw new Error(
-        `tpAmb do XML (${tpAmb}) diverge de config.environment (${this.config.environment})`,
-      );
+      throw new Error(`tpAmb do XML (${tpAmb}) diverge de config.environment (${this.config.environment})`);
     }
   }
 
@@ -420,10 +313,7 @@ export class NfeSender {
     return `<enviNFe xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00"><idLote>${batchId}</idLote><indSinc>1</indSinc>${xml}</enviNFe>`;
   }
 
-  private getEndpoint(
-    service: ServiceType,
-    model: NfeModel = '65',
-  ): { host: string; path: string } {
+  private getEndpoint(service: ServiceType, model: NfeModel = '65'): { host: string; path: string } {
     const originalUf = this.config.state.toUpperCase();
     let uf = originalUf;
 
@@ -431,8 +321,7 @@ export class NfeSender {
       uf = 'SVRS';
     }
 
-    const env =
-      this.config.environment === 'production' ? 'production' : 'staging';
+    const env = this.config.environment === 'production' ? 'production' : 'staging';
     const host = HOSTS_BY_MODEL[model][uf]?.[env];
     const path = WEBSERVICES_BY_MODEL[model][uf]?.[env]?.[service];
 
@@ -441,12 +330,8 @@ export class NfeSender {
     );
 
     if (!host || !path) {
-      this.logger.error(
-        `Webservice não configurado: model=${model} state=${originalUf} uf=${uf} env=${env} service=${service}`,
-      );
-      throw new Error(
-        `Webservice not configured for model ${model}, state: ${this.config.state}`,
-      );
+      this.logger.error(`Webservice não configurado: model=${model} state=${originalUf} uf=${uf} env=${env} service=${service}`);
+      throw new Error(`Webservice not configured for model ${model}, state: ${this.config.state}`);
     }
 
     return { host, path };

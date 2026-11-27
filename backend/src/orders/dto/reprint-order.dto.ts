@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsArray,
-  IsInt,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
+import { IsArray, IsInt, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ReprintItemDto {

@@ -19,34 +19,20 @@ export interface OnlineMenuSettingsSource {
   deliveryFee: DecimalLike;
   minOrderValue: DecimalLike;
   onlinePaymentMethods: unknown;
-  openingHours: {
-    id: number;
-    weekday: number;
-    opensAt: string;
-    closesAt: string;
-  }[];
+  openingHours: { id: number; weekday: number; opensAt: string; closesAt: string }[];
 }
 
 export class OpeningHourResponseDto {
   @ApiProperty({ description: 'Identificador do intervalo', example: 1 })
   id: number;
 
-  @ApiProperty({
-    description: '0 = domingo ... 6 = sábado',
-    minimum: 0,
-    maximum: 6,
-    example: 1,
-  })
+  @ApiProperty({ description: '0 = domingo ... 6 = sábado', minimum: 0, maximum: 6, example: 1 })
   weekday: number;
 
   @ApiProperty({ description: 'Abertura (HH:mm)', example: '18:00' })
   opensAt: string;
 
-  @ApiProperty({
-    description:
-      'Fechamento (HH:mm). Menor que a abertura = termina no dia seguinte',
-    example: '23:00',
-  })
+  @ApiProperty({ description: 'Fechamento (HH:mm). Menor que a abertura = termina no dia seguinte', example: '23:00' })
   closesAt: string;
 }
 
@@ -54,41 +40,22 @@ export class OnlineMenuSettingsResponseDto {
   @ApiProperty({ description: 'Cardápio online ativo', example: true })
   onlineMenuEnabled: boolean;
 
-  @ApiProperty({
-    description: 'Recebimento de pedidos pausado',
-    example: false,
-  })
+  @ApiProperty({ description: 'Recebimento de pedidos pausado', example: false })
   onlineOrdersPaused: boolean;
 
-  @ApiProperty({
-    example: true,
-    description: 'Se o cardápio online considera o estoque na disponibilidade',
-  })
+  @ApiProperty({ example: true, description: 'Se o cardápio online considera o estoque na disponibilidade' })
   onlineMenuControlStock: boolean;
 
-  @ApiProperty({
-    description: 'Fuso horário da loja',
-    example: 'America/Sao_Paulo',
-  })
+  @ApiProperty({ description: 'Fuso horário da loja', example: 'America/Sao_Paulo' })
   timezone: string;
 
-  @ApiProperty({
-    type: String,
-    nullable: true,
-    description: 'Somente dígitos, com DDD',
-    example: '5533999999999',
-  })
+  @ApiProperty({ type: String, nullable: true, description: 'Somente dígitos, com DDD', example: '5533999999999' })
   whatsapp: string | null;
 
   @ApiProperty({ type: String, nullable: true, example: 'minhaloja' })
   instagram: string | null;
 
-  @ApiProperty({
-    type: String,
-    nullable: true,
-    description: 'URL do logo',
-    example: 'https://exemplo.com/logo.png',
-  })
+  @ApiProperty({ type: String, nullable: true, description: 'URL do logo', example: 'https://exemplo.com/logo.png' })
   logoUrl: string | null;
 
   @ApiProperty({ type: Number, nullable: true, example: -17.0754 })
@@ -97,28 +64,13 @@ export class OnlineMenuSettingsResponseDto {
   @ApiProperty({ type: Number, nullable: true, example: -42.9515 })
   longitude: number | null;
 
-  @ApiProperty({
-    type: Number,
-    nullable: true,
-    description: 'Tempo mínimo de entrega, em minutos',
-    example: 40,
-  })
+  @ApiProperty({ type: Number, nullable: true, description: 'Tempo mínimo de entrega, em minutos', example: 40 })
   deliveryTimeMin: number | null;
 
-  @ApiProperty({
-    type: Number,
-    nullable: true,
-    description: 'Tempo máximo de entrega, em minutos',
-    example: 60,
-  })
+  @ApiProperty({ type: Number, nullable: true, description: 'Tempo máximo de entrega, em minutos', example: 60 })
   deliveryTimeMax: number | null;
 
-  @ApiProperty({
-    type: Number,
-    nullable: true,
-    description: 'Tempo de retirada, em minutos',
-    example: 20,
-  })
+  @ApiProperty({ type: Number, nullable: true, description: 'Tempo de retirada, em minutos', example: 20 })
   takeoutTime: number | null;
 
   @ApiProperty({ description: 'Taxa de entrega fixa', example: 5 })
@@ -127,16 +79,10 @@ export class OnlineMenuSettingsResponseDto {
   @ApiProperty({ description: 'Pedido mínimo (0 = sem mínimo)', example: 10 })
   minOrderValue: number;
 
-  @ApiProperty({
-    type: [OnlinePaymentMethodDto],
-    description: 'Formas de pagamento aceitas no cardápio online',
-  })
+  @ApiProperty({ type: [OnlinePaymentMethodDto], description: 'Formas de pagamento aceitas no cardápio online' })
   onlinePaymentMethods: OnlinePaymentMethodDto[];
 
-  @ApiProperty({
-    type: [OpeningHourResponseDto],
-    description: 'Horários de funcionamento; dia sem intervalo = fechado',
-  })
+  @ApiProperty({ type: [OpeningHourResponseDto], description: 'Horários de funcionamento; dia sem intervalo = fechado' })
   openingHours: OpeningHourResponseDto[];
 
   constructor(company: OnlineMenuSettingsSource) {
@@ -154,8 +100,7 @@ export class OnlineMenuSettingsResponseDto {
     this.takeoutTime = company.takeoutTime;
     this.deliveryFee = company.deliveryFee.toNumber();
     this.minOrderValue = company.minOrderValue.toNumber();
-    this.onlinePaymentMethods =
-      (company.onlinePaymentMethods as OnlinePaymentMethodDto[] | null) ?? [];
+    this.onlinePaymentMethods = (company.onlinePaymentMethods as OnlinePaymentMethodDto[] | null) ?? [];
     this.openingHours = company.openingHours.map((h) => ({
       id: h.id,
       weekday: h.weekday,

@@ -44,10 +44,7 @@ import { UploadsModule } from './common/uploads/uploads.module';
 @Module({
   imports: [
     ServeStaticModule.forRoot(
-      {
-        rootPath: join(process.cwd(), 'public', 'frontend', 'browser'),
-        exclude: ['/api/{*any}', '/uploads/{*any}'],
-      },
+      { rootPath: join(process.cwd(), 'public', 'frontend', 'browser'), exclude: ['/api/{*any}', '/uploads/{*any}'] },
       {
         rootPath: join(process.cwd(), 'uploads'),
         serveRoot: '/uploads',

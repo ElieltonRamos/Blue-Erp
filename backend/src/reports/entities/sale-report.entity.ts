@@ -14,12 +14,7 @@ export interface SalesReportSummary {
 
   salesByPaymentMethod: PaymentBreakdown;
 
-  salesByOperator: {
-    operator: string;
-    totalSales: number;
-    revenue: number;
-    paymentBreakdown: PaymentBreakdown;
-  }[];
+  salesByOperator: { operator: string; totalSales: number; revenue: number; paymentBreakdown: PaymentBreakdown }[];
 }
 
 export interface ServiceResponse<T> {

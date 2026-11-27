@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { CreateAssetDto } from './dto/create-asset.dto.js';
 import { UpdateAssetDto } from './dto/update-asset.dto.js';
 import { PrismaService } from '../../common/database/prisma.service.js';
@@ -19,13 +14,8 @@ export class AssetService {
 
   constructor(private prisma: PrismaService) {}
 
-  async create(
-    dto: CreateAssetDto,
-    username: string,
-  ): Promise<AssetResponseDto> {
-    const client = await this.prisma.client.client.findUnique({
-      where: { id: dto.clientId },
-    });
+  async create(dto: CreateAssetDto, username: string): Promise<AssetResponseDto> {
+    const client = await this.prisma.client.client.findUnique({ where: { id: dto.clientId } });
 
     if (!client) {
       throw new BadRequestException('Cliente não encontrado');
@@ -36,32 +26,18 @@ export class AssetService {
     const asset = await this.prisma.client.asset.create({
       data: {
         ...assetData,
-        attributes: attributes?.length
-          ? { create: attributes.map((a) => ({ key: a.key, value: a.value })) }
-          : undefined,
+        attributes: attributes?.length ? { create: attributes.map((a) => ({ key: a.key, value: a.value })) } : undefined,
       },
       include: { attributes: true, client: { select: { name: true } } },
     });
 
-    this.logger.log(
-      `[Asset ${asset.id}] usuario=${username} | criado "${asset.label}" (type=${asset.type})`,
-    );
+    this.logger.log(`[Asset ${asset.id}] usuario=${username} | criado "${asset.label}" (type=${asset.type})`);
 
     return new AssetResponseDto(asset);
   }
 
-  async findAll(
-    query: FindAllAssetsDto,
-  ): Promise<PaginatedResponseDto<AssetResponseDto>> {
-    const {
-      page = 1,
-      limit = 10,
-      sortKey = 'label',
-      sortOrder = 'asc',
-      search,
-      type,
-      clientId,
-    } = query;
+  async findAll(query: FindAllAssetsDto): Promise<PaginatedResponseDto<AssetResponseDto>> {
+    const { page = 1, limit = 10, sortKey = 'label', sortOrder = 'asc', search, type, clientId } = query;
 
     const where: any = {};
 
@@ -109,17 +85,11 @@ export class AssetService {
     return new AssetResponseDto(asset);
   }
 
-  async update(
-    id: number,
-    dto: UpdateAssetDto,
-    username: string,
-  ): Promise<AssetResponseDto> {
+  async update(id: number, dto: UpdateAssetDto, username: string): Promise<AssetResponseDto> {
     await this.findOne(id);
 
     if (dto.clientId !== undefined) {
-      const client = await this.prisma.client.client.findUnique({
-        where: { id: dto.clientId },
-      });
+      const client = await this.prisma.client.client.findUnique({ where: { id: dto.clientId } });
 
       if (!client) {
         throw new BadRequestException('Cliente não encontrado');
@@ -137,30 +107,18 @@ export class AssetService {
         where: { id },
         data: {
           ...assetData,
-          attributes:
-            attributes !== undefined
-              ? {
-                  create: attributes.map((a) => ({
-                    key: a.key,
-                    value: a.value,
-                  })),
-                }
-              : undefined,
+          attributes: attributes !== undefined ? { create: attributes.map((a) => ({ key: a.key, value: a.value })) } : undefined,
         },
         include: { attributes: true, client: { select: { name: true } } },
       });
     });
 
-    this.logger.log(
-      `[Asset ${id}] usuario=${username} | atualizado: ${Object.keys(dto).join(', ')}`,
-    );
+    this.logger.log(`[Asset ${id}] usuario=${username} | atualizado: ${Object.keys(dto).join(', ')}`);
 
     return new AssetResponseDto(asset);
   }
 
-  async getMaintenanceHistory(
-    id: number,
-  ): Promise<AssetMaintenanceHistoryResponseDto> {
+  async getMaintenanceHistory(id: number): Promise<AssetMaintenanceHistoryResponseDto> {
     const asset = await this.prisma.client.asset.findUnique({
       where: { id },
       include: {

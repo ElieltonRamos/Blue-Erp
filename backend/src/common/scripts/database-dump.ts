@@ -17,10 +17,7 @@ const BATCH_SIZE = 500;
  * Não depende de mysqldump nem de MYSQLDUMP_PATH.
  * Em caso de erro, remove o arquivo parcial e relança a exceção.
  */
-export async function dumpDatabase(
-  config: DumpConfig,
-  outputFile: string,
-): Promise<void> {
+export async function dumpDatabase(config: DumpConfig, outputFile: string): Promise<void> {
   const conn = await mariadb.createConnection({
     host: config.host,
     port: config.port,
@@ -35,12 +32,7 @@ export async function dumpDatabase(
   const file = await fs.promises.open(outputFile, 'w');
 
   const serialize = (value: unknown): string => {
-    if (
-      value !== null &&
-      typeof value === 'object' &&
-      !Buffer.isBuffer(value) &&
-      !(value instanceof Date)
-    ) {
+    if (value !== null && typeof value === 'object' && !Buffer.isBuffer(value) && !(value instanceof Date)) {
       return conn.escape(JSON.stringify(value));
     }
     return conn.escape(value);
@@ -72,31 +64,23 @@ export async function dumpDatabase(
     for (const { name } of tables) {
       const tableId = conn.escapeId(name);
 
-      const [create] = await conn.query<Record<string, string>[]>(
-        `SHOW CREATE TABLE ${tableId}`,
-      );
+      const [create] = await conn.query<Record<string, string>[]>(`SHOW CREATE TABLE ${tableId}`);
 
-      await file.write(
-        `-- Tabela ${name}\nDROP TABLE IF EXISTS ${tableId};\n${create['Create Table']};\n\n`,
-      );
+      await file.write(`-- Tabela ${name}\nDROP TABLE IF EXISTS ${tableId};\n${create['Create Table']};\n\n`);
 
       let columns: string | null = null;
       let batch: string[] = [];
 
       const flush = async (): Promise<void> => {
         if (batch.length === 0 || !columns) return;
-        await file.write(
-          `INSERT INTO ${tableId} (${columns}) VALUES\n${batch.join(',\n')};\n`,
-        );
+        await file.write(`INSERT INTO ${tableId} (${columns}) VALUES\n${batch.join(',\n')};\n`);
         batch = [];
       };
 
       const stream = conn.queryStream(`SELECT * FROM ${tableId}`);
 
       // Correção da sintaxe do Type Assertion
-      for await (const row of stream as AsyncIterable<
-        Record<string, unknown>
-      >) {
+      for await (const row of stream as AsyncIterable<Record<string, unknown>>) {
         if (!columns) {
           const keys = Object.keys(row);
           columns = keys.map((column) => conn.escapeId(column)).join(', ');

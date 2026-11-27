@@ -1,22 +1,5 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  HttpStatus,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { UsersService } from './users.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
@@ -35,16 +18,9 @@ export class UsersController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Login realizado com sucesso',
-    schema: {
-      example: {
-        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-      },
-    },
+    schema: { example: { access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' } },
   })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Credenciais inválidas ou usuário inativo',
-  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Credenciais inválidas ou usuário inativo' })
   login(@Body() loginDto: LoginDto) {
     return this.usersService.login(loginDto);
   }
@@ -53,14 +29,8 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Criar novo usuário' })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: 'Usuário criado com sucesso',
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Dados inválidos',
-  })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Usuário criado com sucesso' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Dados inválidos' })
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
@@ -70,16 +40,8 @@ export class UsersController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Listar todos os usuários' })
   @ApiQuery({ name: 'username', required: false })
-  @ApiQuery({
-    name: 'role',
-    required: false,
-    enum: ['caixa', 'garcom', 'admin'],
-  })
-  @ApiQuery({
-    name: 'workplace',
-    required: false,
-    enum: ['local1', 'local2', 'local3'],
-  })
+  @ApiQuery({ name: 'role', required: false, enum: ['caixa', 'garcom', 'admin'] })
+  @ApiQuery({ name: 'workplace', required: false, enum: ['local1', 'local2', 'local3'] })
   @ApiQuery({ name: 'active', required: false, enum: ['true', 'false'] })
   @ApiResponse({ status: HttpStatus.OK, description: 'Lista de usuários' })
   findAll(@Query() filters?: UserFiltersDto) {

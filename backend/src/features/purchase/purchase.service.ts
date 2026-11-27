@@ -1,17 +1,8 @@
 // purchase.service.ts
-import {
-  Injectable,
-  Logger,
-  BadRequestException,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service';
 import { Prisma, PurchaseStatus } from 'generated/prisma/client';
-import {
-  CreatePurchaseFromXmlDto,
-  ReconciledPurchaseItemDto,
-} from './dto/create-purchase-from-xml.dto';
+import { CreatePurchaseFromXmlDto, ReconciledPurchaseItemDto } from './dto/create-purchase-from-xml.dto';
 import { ExpensesService } from '../../expenses/expenses.service';
 import { BusinessPartnerService } from './business-partner.service';
 import { ParsedNfeItemDto } from './dto/parsed-nfe.dto';
@@ -28,10 +19,7 @@ export class PurchaseService {
     private readonly expensesService: ExpensesService,
   ) {}
 
-  async createFromReconciledXml(
-    dto: CreatePurchaseFromXmlDto,
-    responsibleId?: number,
-  ) {
+  async createFromReconciledXml(dto: CreatePurchaseFromXmlDto, responsibleId?: number) {
     const start = Date.now();
 
     this.logger.log(
@@ -54,16 +42,11 @@ export class PurchaseService {
 
     try {
       const purchase = await this.prisma.client.$transaction(async (tx) => {
-        const partner = await this.businessPartnerService.findOrCreateByCnpj(
-          tx,
-          dto.supplierCnpj,
-          dto.supplierName,
-          {
-            stateRegistration: dto.supplierStateRegistration,
-            city: dto.supplierCity,
-            state: dto.supplierState,
-          },
-        );
+        const partner = await this.businessPartnerService.findOrCreateByCnpj(tx, dto.supplierCnpj, dto.supplierName, {
+          stateRegistration: dto.supplierStateRegistration,
+          city: dto.supplierCity,
+          state: dto.supplierState,
+        });
 
         const total = dto.items.reduce((sum, i) => sum + i.total, 0);
 
@@ -98,20 +81,12 @@ export class PurchaseService {
 
         this.logger.log(
           `[Compra ${createdPurchase.id}] persistida com ${createdPurchase.items.length} item(ns): ` +
-            createdPurchase.items
-              .map(
-                (i) =>
-                  `${i.id}:${i.supplierProductCode}(x${Number(i.quantity)})`,
-              )
-              .join(', '),
+            createdPurchase.items.map((i) => `${i.id}:${i.supplierProductCode}(x${Number(i.quantity)})`).join(', '),
         );
 
         for (const item of dto.items) {
           if (item.productId) {
-            await tx.product.update({
-              where: { id: item.productId },
-              data: { quantity: { increment: item.quantity } },
-            });
+            await tx.product.update({ where: { id: item.productId }, data: { quantity: { increment: item.quantity } } });
           } else if (item.materialId) {
             await tx.primaryMaterial.update({
               where: { id: item.materialId },
@@ -134,70 +109,41 @@ export class PurchaseService {
             dto.installments,
           );
         } else {
-          this.logger.log(
-            `[Compra ${createdPurchase.id}] sem duplicatas — nenhuma Expense gerada`,
-          );
+          this.logger.log(`[Compra ${createdPurchase.id}] sem duplicatas — nenhuma Expense gerada`);
         }
 
         return createdPurchase;
       });
 
-      this.logger.log(
-        `[Compra ${purchase.id}] concluída em ${Date.now() - start}ms`,
-      );
+      this.logger.log(`[Compra ${purchase.id}] concluída em ${Date.now() - start}ms`);
 
       return purchase;
     } catch (error: unknown) {
       if ((error as any).code === 'P2002') {
-        this.logger.warn(
-          `[Compra nova] chave=${dto.fiscalKey} | nota já importada anteriormente`,
-        );
-        throw new ConflictException(
-          `Esta nota fiscal (chave ${dto.fiscalKey}) já foi importada`,
-        );
+        this.logger.warn(`[Compra nova] chave=${dto.fiscalKey} | nota já importada anteriormente`);
+        throw new ConflictException(`Esta nota fiscal (chave ${dto.fiscalKey}) já foi importada`);
       }
       if ((error as any).code === 'P2003') {
-        throw new BadRequestException(
-          'Erro de chave estrangeira: verifique se produto, matéria-prima ou fornecedor existem',
-        );
+        throw new BadRequestException('Erro de chave estrangeira: verifique se produto, matéria-prima ou fornecedor existem');
       }
       throw error;
     }
   }
 
   async findAll(filters: FindAllPurchaseQueryDto) {
-    const {
-      page = 1,
-      limit = 10,
-      status,
-      supplier,
-      invoiceNumber,
-      fiscalKey,
-      startDate,
-      endDate,
-      sortBy,
-      sortOrder,
-    } = filters;
+    const { page = 1, limit = 10, status, supplier, invoiceNumber, fiscalKey, startDate, endDate, sortBy, sortOrder } = filters;
     const skip = (page - 1) * limit;
 
     const where: Prisma.PurchaseWhereInput = {
       ...(status && { status }),
-      ...(supplier && {
-        supplier: { name: { contains: supplier } },
-      }),
-      ...(invoiceNumber && {
-        invoiceNumber: { contains: invoiceNumber },
-      }),
+      ...(supplier && { supplier: { name: { contains: supplier } } }),
+      ...(invoiceNumber && { invoiceNumber: { contains: invoiceNumber } }),
       ...(fiscalKey && { fiscalKey: { contains: fiscalKey } }),
       ...(startDate || endDate
         ? {
             receivedAt: {
-              ...(startDate && {
-                gte: new Date(`${startDate}T00:00:00.000-03:00`),
-              }),
-              ...(endDate && {
-                lte: new Date(`${endDate}T23:59:59.999-03:00`),
-              }),
+              ...(startDate && { gte: new Date(`${startDate}T00:00:00.000-03:00`) }),
+              ...(endDate && { lte: new Date(`${endDate}T23:59:59.999-03:00`) }),
             },
           }
         : {}),
@@ -218,13 +164,7 @@ export class PurchaseService {
       this.prisma.client.purchase.count({ where }),
     ]);
 
-    return {
-      data: purchases,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
+    return { data: purchases, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async findOne(id: number) {
@@ -246,35 +186,19 @@ export class PurchaseService {
    * na tela de conciliação. Item sem match anterior volta sem productId/materialId
    * (front pede pra vincular manualmente ou cadastrar produto novo).
    */
-  async reconcileItems(
-    supplierCnpj: string,
-    items: ParsedNfeItemDto[],
-  ): Promise<ReconciledPurchaseItemDto[]> {
+  async reconcileItems(supplierCnpj: string, items: ParsedNfeItemDto[]): Promise<ReconciledPurchaseItemDto[]> {
     const codes = items.map((i) => i.supplierProductCode);
 
     const previousItems = await this.prisma.client.purchaseItem.findMany({
-      where: {
-        supplierProductCode: { in: codes },
-        purchase: { supplierCnpj },
-      },
+      where: { supplierProductCode: { in: codes }, purchase: { supplierCnpj } },
       orderBy: { createdAt: 'desc' },
-      select: {
-        supplierProductCode: true,
-        productId: true,
-        materialId: true,
-      },
+      select: { supplierProductCode: true, productId: true, materialId: true },
     });
 
-    const matchByCode = new Map<
-      string,
-      { productId: number | null; materialId: number | null }
-    >();
+    const matchByCode = new Map<string, { productId: number | null; materialId: number | null }>();
     for (const prev of previousItems) {
       if (!matchByCode.has(prev.supplierProductCode!)) {
-        matchByCode.set(prev.supplierProductCode!, {
-          productId: prev.productId,
-          materialId: prev.materialId,
-        });
+        matchByCode.set(prev.supplierProductCode!, { productId: prev.productId, materialId: prev.materialId });
       }
     }
 
@@ -296,10 +220,7 @@ export class PurchaseService {
   async cancel(id: number): Promise<void> {
     const start = Date.now();
 
-    const purchase = await this.prisma.client.purchase.findUnique({
-      where: { id },
-      include: { items: true, expenses: true },
-    });
+    const purchase = await this.prisma.client.purchase.findUnique({ where: { id }, include: { items: true, expenses: true } });
 
     if (!purchase) {
       throw new NotFoundException(`Compra ${id} não encontrada`);
@@ -312,10 +233,7 @@ export class PurchaseService {
     await this.prisma.client.$transaction(async (tx) => {
       for (const item of purchase.items) {
         if (item.productId) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { quantity: { decrement: item.quantity } },
-          });
+          await tx.product.update({ where: { id: item.productId }, data: { quantity: { decrement: item.quantity } } });
         } else if (item.materialId) {
           await tx.primaryMaterial.update({
             where: { id: item.materialId },
@@ -324,14 +242,9 @@ export class PurchaseService {
         }
       }
 
-      await tx.expense.deleteMany({
-        where: { purchaseId: id },
-      });
+      await tx.expense.deleteMany({ where: { purchaseId: id } });
 
-      await tx.purchase.update({
-        where: { id },
-        data: { status: PurchaseStatus.CANCELED },
-      });
+      await tx.purchase.update({ where: { id }, data: { status: PurchaseStatus.CANCELED } });
     });
 
     this.logger.log(
@@ -340,27 +253,21 @@ export class PurchaseService {
   }
 
   private async validateDestination(destCnpj: string): Promise<void> {
-    const company = await this.prisma.client.company.findUnique({
-      where: { id: 1 },
-    });
+    const company = await this.prisma.client.company.findUnique({ where: { id: 1 } });
 
     if (!company) {
       throw new BadRequestException('Empresa não configurada no sistema');
     }
 
     if (destCnpj.replace(/\D/g, '') !== company.cnpj.replace(/\D/g, '')) {
-      throw new BadRequestException(
-        `Nota fiscal não é destinada a esta empresa (CNPJ da nota: ${destCnpj})`,
-      );
+      throw new BadRequestException(`Nota fiscal não é destinada a esta empresa (CNPJ da nota: ${destCnpj})`);
     }
   }
 
   async createManual(dto: CreateManualPurchaseDto, responsibleId?: number) {
     const start = Date.now();
 
-    this.logger.log(
-      `[Compra manual nova] fornecedor=${dto.supplierId} | ${dto.items.length} item(ns)`,
-    );
+    this.logger.log(`[Compra manual nova] fornecedor=${dto.supplierId} | ${dto.items.length} item(ns)`);
 
     const supplier = await this.businessPartnerService.findOne(dto.supplierId);
 
@@ -404,16 +311,11 @@ export class PurchaseService {
         include: { items: true, supplier: true },
       });
 
-      this.logger.log(
-        `[Compra ${createdPurchase.id}] lançamento manual persistido com ${createdPurchase.items.length} item(ns)`,
-      );
+      this.logger.log(`[Compra ${createdPurchase.id}] lançamento manual persistido com ${createdPurchase.items.length} item(ns)`);
 
       for (const item of dto.items) {
         if (item.productId) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { quantity: { increment: item.quantity } },
-          });
+          await tx.product.update({ where: { id: item.productId }, data: { quantity: { increment: item.quantity } } });
         } else if (item.materialId) {
           await tx.primaryMaterial.update({
             where: { id: item.materialId },
@@ -440,17 +342,13 @@ export class PurchaseService {
       return createdPurchase;
     });
 
-    this.logger.log(
-      `[Compra ${purchase.id}] lançamento manual concluído em ${Date.now() - start}ms`,
-    );
+    this.logger.log(`[Compra ${purchase.id}] lançamento manual concluído em ${Date.now() - start}ms`);
 
     return purchase;
   }
 
   async remove(id: number): Promise<void> {
-    const purchase = await this.prisma.client.purchase.findUnique({
-      where: { id },
-    });
+    const purchase = await this.prisma.client.purchase.findUnique({ where: { id } });
 
     if (!purchase) {
       throw new NotFoundException(`Compra ${id} não encontrada`);
@@ -460,9 +358,7 @@ export class PurchaseService {
       throw new BadRequestException('Só é possível excluir compras canceladas');
     }
 
-    await this.prisma.client.purchase.delete({
-      where: { id },
-    });
+    await this.prisma.client.purchase.delete({ where: { id } });
 
     this.logger.log(`[Compra ${id}] excluída`);
   }

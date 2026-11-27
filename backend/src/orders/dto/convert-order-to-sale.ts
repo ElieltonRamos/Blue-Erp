@@ -1,13 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsString,
-  IsOptional,
-  IsInt,
-  IsNumber,
-  IsArray,
-  Min,
-  ValidateNested,
-} from 'class-validator';
+import { IsString, IsOptional, IsInt, IsNumber, IsArray, Min, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateSalePaymentDto } from '../../sales/dto/create-sale.dto';
 

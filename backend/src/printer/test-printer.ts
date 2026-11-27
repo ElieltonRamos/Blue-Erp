@@ -12,9 +12,7 @@ const LF = '\n';
 
 function formatTicket(): Buffer {
   const line = '-'.repeat(32);
-  const now = new Date().toLocaleString('pt-BR', {
-    timeZone: 'America/Sao_Paulo',
-  });
+  const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
   let text = '';
   text += CENTER + BOLD_ON + `PEDIDO #999` + BOLD_OFF + LF;

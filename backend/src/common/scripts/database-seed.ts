@@ -6,16 +6,7 @@ import * as bcrypt from 'bcryptjs';
 
 export type BusinessType = 'PDV' | 'OFICINA' | 'RESTAURANTE' | 'VAREJO';
 
-const MENUS_BASE = [
-  '/clientes',
-  '/produtos',
-  '/usuarios',
-  '/historico-vendas',
-  '/relatorios',
-  '/financeiro',
-  '/empresa',
-  '/pdv',
-];
+const MENUS_BASE = ['/clientes', '/produtos', '/usuarios', '/historico-vendas', '/relatorios', '/financeiro', '/empresa', '/pdv'];
 
 const MENUS_FISCAL = ['/fiscal', '/compras'];
 const MENUS_SEGMENTO_OFICINA = ['/veiculos', '/servicos', '/ordem-servico'];
@@ -23,24 +14,11 @@ const MENUS_SEGMENTO_RESTAURANTE = ['/comandas', '/cozinha', '/mesas'];
 
 export const MENUS_PDV = [...MENUS_BASE];
 
-export const MENUS_OFICINA = [
-  ...MENUS_BASE,
-  ...MENUS_FISCAL,
-  ...MENUS_SEGMENTO_OFICINA,
-];
+export const MENUS_OFICINA = [...MENUS_BASE, ...MENUS_FISCAL, ...MENUS_SEGMENTO_OFICINA];
 
-export const MENUS_RESTAURANTE = [
-  ...MENUS_BASE,
-  ...MENUS_FISCAL,
-  ...MENUS_SEGMENTO_RESTAURANTE,
-];
+export const MENUS_RESTAURANTE = [...MENUS_BASE, ...MENUS_FISCAL, ...MENUS_SEGMENTO_RESTAURANTE];
 
-export const MENUS_VAREJO = [
-  ...MENUS_BASE,
-  ...MENUS_FISCAL,
-  ...MENUS_SEGMENTO_OFICINA,
-  ...MENUS_SEGMENTO_RESTAURANTE,
-];
+export const MENUS_VAREJO = [...MENUS_BASE, ...MENUS_FISCAL, ...MENUS_SEGMENTO_OFICINA, ...MENUS_SEGMENTO_RESTAURANTE];
 
 export const MENUS_BY_BUSINESS_TYPE: Record<BusinessType, string[]> = {
   PDV: MENUS_PDV,
@@ -49,18 +27,10 @@ export const MENUS_BY_BUSINESS_TYPE: Record<BusinessType, string[]> = {
   VAREJO: MENUS_VAREJO,
 };
 
-const BUSINESS_TYPE_OPTIONS: BusinessType[] = [
-  'PDV',
-  'RESTAURANTE',
-  'OFICINA',
-  'VAREJO',
-];
+const BUSINESS_TYPE_OPTIONS: BusinessType[] = ['PDV', 'RESTAURANTE', 'OFICINA', 'VAREJO'];
 
 function ask(question: string): Promise<string> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
   return new Promise((resolve) => {
     rl.question(question, (answer) => {
@@ -80,11 +50,7 @@ function askHidden(question: string): Promise<string> {
     },
   });
 
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output,
-    terminal: true,
-  });
+  const rl = readline.createInterface({ input: process.stdin, output, terminal: true });
 
   return new Promise((resolve) => {
     rl.question(question, (answer) => {
@@ -96,11 +62,7 @@ function askHidden(question: string): Promise<string> {
   });
 }
 
-async function askValid(
-  question: string,
-  validate: (value: string) => string | null,
-  hidden = false,
-): Promise<string> {
+async function askValid(question: string, validate: (value: string) => string | null, hidden = false): Promise<string> {
   while (true) {
     const value = hidden ? await askHidden(question) : await ask(question);
     const error = validate(value);
@@ -113,8 +75,7 @@ async function askPassword(): Promise<string> {
   while (true) {
     const password = await askValid(
       '   Senha (mínimo 6 caracteres): ',
-      (value) =>
-        value.length >= 6 ? null : 'A senha deve ter no mínimo 6 caracteres.',
+      (value) => (value.length >= 6 ? null : 'A senha deve ter no mínimo 6 caracteres.'),
       true,
     );
     const confirmation = await askHidden('   Confirme a senha: ');
@@ -126,37 +87,25 @@ async function askPassword(): Promise<string> {
 
 async function askBusinessType(): Promise<BusinessType> {
   console.log('   Tipo de empresa:');
-  BUSINESS_TYPE_OPTIONS.forEach((type, index) =>
-    console.log(`      ${index + 1} - ${type}`),
-  );
+  BUSINESS_TYPE_OPTIONS.forEach((type, index) => console.log(`      ${index + 1} - ${type}`));
 
-  const answer = await askValid('   Escolha: ', (value) =>
-    BUSINESS_TYPE_OPTIONS[Number(value) - 1] ? null : 'Opção inválida.',
-  );
+  const answer = await askValid('   Escolha: ', (value) => (BUSINESS_TYPE_OPTIONS[Number(value) - 1] ? null : 'Opção inválida.'));
 
   return BUSINESS_TYPE_OPTIONS[Number(answer) - 1];
 }
 
-export async function runSeeds(
-  config: mariadb.ConnectionConfig,
-): Promise<void> {
+export async function runSeeds(config: mariadb.ConnectionConfig): Promise<void> {
   console.log('\n🌱 Rodando seeds...\n');
 
   const cnpj = (
     await askValid('   CNPJ (somente números): ', (value) =>
-      value.replace(/\D/g, '').length === 14
-        ? null
-        : 'O CNPJ deve ter 14 dígitos.',
+      value.replace(/\D/g, '').length === 14 ? null : 'O CNPJ deve ter 14 dígitos.',
     )
   ).replace(/\D/g, '');
 
-  const companyName = await askValid('   Nome da empresa: ', (value) =>
-    value ? null : 'Nome obrigatório.',
-  );
+  const companyName = await askValid('   Nome da empresa: ', (value) => (value ? null : 'Nome obrigatório.'));
 
-  const licenseKey = await askValid('   Chave de licença: ', (value) =>
-    value ? null : 'Chave de licença obrigatória.',
-  );
+  const licenseKey = await askValid('   Chave de licença: ', (value) => (value ? null : 'Chave de licença obrigatória.'));
 
   const businessType = await askBusinessType();
 
@@ -198,14 +147,7 @@ export async function runSeeds(
         business_type = VALUES(business_type),
         enabled_menus = VALUES(enabled_menus),
         updated_at = NOW()`,
-      [
-        cnpj,
-        companyName,
-        companyName,
-        licenseKey,
-        businessType,
-        JSON.stringify(MENUS_BY_BUSINESS_TYPE[businessType]),
-      ],
+      [cnpj, companyName, companyName, licenseKey, businessType, JSON.stringify(MENUS_BY_BUSINESS_TYPE[businessType])],
     );
     console.log('   ✅ Concluído: company-seed');
 

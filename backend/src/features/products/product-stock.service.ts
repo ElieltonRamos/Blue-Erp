@@ -1,17 +1,8 @@
-import {
-  BadRequestException,
-  HttpException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Prisma, ProductType } from 'generated/prisma/client';
 import { PrismaService } from 'src/common/database/prisma.service';
 import { ProduceProductDto } from './dto/produce-product.dto';
-import {
-  COMPOSITION_INCLUDE,
-  TYPES_WITH_COMPOSITION,
-} from './product.constants';
+import { COMPOSITION_INCLUDE, TYPES_WITH_COMPOSITION } from './product.constants';
 
 export type CompositionItemWithRelations = Prisma.CompositionItemGetPayload<{
   include: typeof COMPOSITION_INCLUDE.compositionItems.include;
@@ -57,10 +48,7 @@ export class ProductStockService {
    * Calcular quantas unidades do produto podem ser produzidas com o estoque atual
    * Suporta matérias-primas e subprodutos semiprontos
    */
-  async calculateAvailableStock(
-    items: StockCompositionItem[],
-    visited: Set<number> = new Set(),
-  ): Promise<number> {
+  async calculateAvailableStock(items: StockCompositionItem[], visited: Set<number> = new Set()): Promise<number> {
     if (items.length === 0) return 0;
 
     const possibleQuantities = await Promise.all(
@@ -78,14 +66,7 @@ export class ProductStockService {
 
           const subProduct = await this.prisma.client.product.findUnique({
             where: { id: item.subProductId },
-            include: {
-              compositionItems: {
-                include: {
-                  material: true,
-                  subProduct: { select: { id: true } },
-                },
-              },
-            },
+            include: { compositionItems: { include: { material: true, subProduct: { select: { id: true } } } } },
           });
 
           if (!subProduct || subProduct.compositionItems.length === 0) return 0;
@@ -111,25 +92,17 @@ export class ProductStockService {
    * quantidade vigente. Chamada interna das leituras, sem actor.
    */
   async syncQuantity(product: SyncableProduct): Promise<Prisma.Decimal> {
-    if (
-      !TYPES_WITH_COMPOSITION.includes(product.productType) ||
-      product.compositionItems.length === 0
-    ) {
+    if (!TYPES_WITH_COMPOSITION.includes(product.productType) || product.compositionItems.length === 0) {
       return product.quantity;
     }
 
-    const availableStock = await this.calculateAvailableStock(
-      product.compositionItems,
-    );
+    const availableStock = await this.calculateAvailableStock(product.compositionItems);
 
     if (product.quantity.toNumber() === availableStock) {
       return product.quantity;
     }
 
-    await this.prisma.client.product.update({
-      where: { id: product.id },
-      data: { quantity: availableStock },
-    });
+    await this.prisma.client.product.update({ where: { id: product.id }, data: { quantity: availableStock } });
 
     return new Prisma.Decimal(availableStock);
   }
@@ -141,10 +114,7 @@ export class ProductStockService {
    */
   async produce(id: number, produceDto: ProduceProductDto, actor: string) {
     try {
-      const product = await this.prisma.client.product.findUnique({
-        where: { id },
-        include: COMPOSITION_INCLUDE,
-      });
+      const product = await this.prisma.client.product.findUnique({ where: { id }, include: COMPOSITION_INCLUDE });
 
       if (!product) {
         const message = `Produto com ID ${id} não encontrado`;
@@ -153,10 +123,7 @@ export class ProductStockService {
       }
 
       if (!TYPES_WITH_COMPOSITION.includes(product.productType)) {
-        this.badRequest(
-          'Apenas produtos manufaturados ou semiprontos podem ser produzidos',
-          actor,
-        );
+        this.badRequest('Apenas produtos manufaturados ou semiprontos podem ser produzidos', actor);
       }
 
       if (product.productType === ProductType.SEMI_MANUFACTURED) {
@@ -204,26 +171,18 @@ export class ProductStockService {
           );
         } else if (item.subProductId != null) {
           operations.push(
-            this.prisma.client.product.update({
-              where: { id: item.subProductId },
-              data: { quantity: { decrement: required } },
-            }),
+            this.prisma.client.product.update({ where: { id: item.subProductId }, data: { quantity: { decrement: required } } }),
           );
         }
       }
 
       operations.push(
-        this.prisma.client.product.update({
-          where: { id },
-          data: { quantity: { increment: produceDto.quantity } },
-        }),
+        this.prisma.client.product.update({ where: { id }, data: { quantity: { increment: produceDto.quantity } } }),
       );
 
       await this.prisma.client.$transaction(operations);
 
-      this.logger.log(
-        `Produção registrada (actor=${actor}, id=${id}, quantidade=${produceDto.quantity})`,
-      );
+      this.logger.log(`Produção registrada (actor=${actor}, id=${id}, quantidade=${produceDto.quantity})`);
 
       return {
         message: `${produceDto.quantity} unidade(s) de ${product.name} produzida(s) com sucesso`,
@@ -231,10 +190,7 @@ export class ProductStockService {
         quantityProduced: produceDto.quantity,
       };
     } catch (error) {
-      this.rethrow(
-        error,
-        `Falha ao registrar produção (actor=${actor}, id=${id})`,
-      );
+      this.rethrow(error, `Falha ao registrar produção (actor=${actor}, id=${id})`);
     }
   }
 
@@ -248,19 +204,11 @@ export class ProductStockService {
 
     const activeProducts = products.filter((p) => p.active).length;
 
-    const totalStockValue = products.reduce(
-      (sum, p) => sum + p.quantity.toNumber() * p.price.toNumber(),
-      0,
-    );
+    const totalStockValue = products.reduce((sum, p) => sum + p.quantity.toNumber() * p.price.toNumber(), 0);
 
-    const productsLowStock = products.filter(
-      (p) => p.minStock !== null && p.quantity.lte(p.minStock),
-    ).length;
+    const productsLowStock = products.filter((p) => p.minStock !== null && p.quantity.lte(p.minStock)).length;
 
-    const totalItems = products.reduce(
-      (sum, p) => sum + p.quantity.toNumber(),
-      0,
-    );
+    const totalItems = products.reduce((sum, p) => sum + p.quantity.toNumber(), 0);
 
     return {
       totalProducts: products.length,
@@ -277,12 +225,7 @@ export class ProductStockService {
    */
   async getStockAlerts() {
     const products = await this.prisma.client.product.findMany({
-      where: {
-        AND: [
-          { minStock: { not: null } },
-          { quantity: { lte: this.prisma.client.product.fields.minStock } },
-        ],
-      },
+      where: { AND: [{ minStock: { not: null } }, { quantity: { lte: this.prisma.client.product.fields.minStock } }] },
     });
 
     return products.map((product) => ({
