@@ -1,10 +1,5 @@
-<div
-  class="fixed inset-0 flex items-center justify-center z-50 p-4"
-  style="background-color: rgba(0, 0, 0, 0.85)"
->
-  <div
-    class="bg-surface border border-border rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-  >
+<div class="fixed inset-0 flex items-center justify-center z-50 p-4" style="background-color: rgba(0, 0, 0, 0.85)">
+  <div class="bg-surface border border-border rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
     <!-- Header -->
     <div class="bg-base border-b border-border p-6 rounded-t-2xl sticky top-0 z-10">
       <h2 class="text-2xl font-bold text-text-primary">Editar Modo de Preparo</h2>
@@ -22,9 +17,7 @@
       <div class="space-y-2">
         @for (step of preparationSteps; track $index) {
           <div class="flex items-start gap-4 p-4 bg-white/5 rounded-lg border border-border">
-            <div
-              class="flex items-center justify-center w-10 h-10 rounded-full bg-success/20 text-success font-bold shrink-0"
-            >
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-success/20 text-success font-bold shrink-0">
               {{ step.order }}
             </div>
             <div class="flex-1 text-text-secondary">{{ step.description }}</div>
@@ -81,9 +74,7 @@
     </div>
 
     <!-- Footer -->
-    <div
-      class="flex justify-end gap-3 p-6 border-t border-border bg-base rounded-b-2xl sticky bottom-0"
-    >
+    <div class="flex justify-end gap-3 p-6 border-t border-border bg-base rounded-b-2xl sticky bottom-0">
       <button
         (click)="onCancel()"
         class="px-6 py-3 bg-overlay hover:bg-border text-text-primary rounded-lg font-semibold transition-colors duration-200"

@@ -41,6 +41,6 @@ export class LicenseService {
   }
 
   getCurrentPlan(): string {
-    return (localStorage.getItem('licensePlan')) || 'basic';
+    return localStorage.getItem('licensePlan') || 'basic';
   }
 }

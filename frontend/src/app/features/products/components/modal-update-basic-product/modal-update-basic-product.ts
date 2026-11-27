@@ -71,9 +71,7 @@ export class ModalUpdateBasicProduct {
         this.cdr.detectChanges();
       },
       error: (e) => {
-        this.notification.error(
-          `Erro ao carregar locais de produção: ${e.error?.message || e.message}`,
-        );
+        this.notification.error(`Erro ao carregar locais de produção: ${e.error?.message || e.message}`);
       },
     });
   }
@@ -84,16 +82,14 @@ export class ModalUpdateBasicProduct {
         this.categories = res.data;
         this.cdr.detectChanges();
       },
-      error: (e) =>
-        this.notification.error(`Erro ao carregar categorias: ${e.error?.message || e.message}`),
+      error: (e) => this.notification.error(`Erro ao carregar categorias: ${e.error?.message || e.message}`),
     });
   }
 
   async onProductTypeChange() {
     const isLeavingComposition =
       this.editableProductType === 'RESALE' &&
-      (this.product.productType === 'MANUFACTURED' ||
-        this.product.productType === 'SEMI_MANUFACTURED');
+      (this.product.productType === 'MANUFACTURED' || this.product.productType === 'SEMI_MANUFACTURED');
 
     if (isLeavingComposition) {
       const confirmed = await alertConfirm(
@@ -161,9 +157,6 @@ export class ModalUpdateBasicProduct {
   }
 
   get hasComposition(): boolean {
-    return (
-      this.editableProductType === 'MANUFACTURED' ||
-      this.editableProductType === 'SEMI_MANUFACTURED'
-    );
+    return this.editableProductType === 'MANUFACTURED' || this.editableProductType === 'SEMI_MANUFACTURED';
   }
 }

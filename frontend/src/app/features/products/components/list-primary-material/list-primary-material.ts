@@ -10,13 +10,7 @@ import { PrimaryMaterial } from '../../types/primary-material';
 
 @Component({
   selector: 'app-list-primary-material',
-  imports: [
-    CommonModule,
-    FormsModule,
-    PaginatorComponent,
-    ModalUpdatePrimaryMaterial,
-    ModalUpdatePrimaryMaterial,
-  ],
+  imports: [CommonModule, FormsModule, PaginatorComponent, ModalUpdatePrimaryMaterial, ModalUpdatePrimaryMaterial],
   templateUrl: './list-primary-material.html',
 })
 export class ListPrimaryMaterial {

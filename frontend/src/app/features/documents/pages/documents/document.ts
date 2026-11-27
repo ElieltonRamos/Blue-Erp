@@ -25,14 +25,7 @@ import { DocumentDetailComponent } from '../../components/document-detail/docume
 
 @Component({
   selector: 'app-documents',
-  imports: [
-    CommonModule,
-    FormsModule,
-    PaginatorComponent,
-    DocumentDetailComponent,
-    CreateClient,
-    VehicleCreateFormComponent,
-  ],
+  imports: [CommonModule, FormsModule, PaginatorComponent, DocumentDetailComponent, CreateClient, VehicleCreateFormComponent],
   templateUrl: './document.html',
 })
 export class Documents {

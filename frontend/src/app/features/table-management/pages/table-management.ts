@@ -1,10 +1,4 @@
-import {
-  Component,
-  inject,
-  ChangeDetectorRef,
-  ChangeDetectionStrategy,
-  OnInit,
-} from '@angular/core';
+import { Component, inject, ChangeDetectorRef, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { NotificationService } from '../../../shared/toastr/notification.service';
@@ -16,10 +10,7 @@ import { TableCard } from '../components/table-card/table-card';
 import { TableModalComponent } from '../components/table-modal/table.modal';
 import { TabModal } from '../components/tab-modal/tab-modal';
 import { TableProductModal } from '../components/table-product-modal/table-product-modal';
-import {
-  ProductionLocation,
-  ProductionLocationsService,
-} from '../../users/services/location.service';
+import { ProductionLocation, ProductionLocationsService } from '../../users/services/location.service';
 import { FormField, ModalEditEntity } from '../../../shared/modal-edit-entity/modal-edit-entity';
 import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../orders/services/order.service';
@@ -27,16 +18,7 @@ import { OrderService } from '../../orders/services/order.service';
 @Component({
   selector: 'app-table-management',
   standalone: true,
-  imports: [
-    CommonModule,
-    TableStats,
-    TableCard,
-    TableModalComponent,
-    TabModal,
-    TableProductModal,
-    ModalEditEntity,
-    FormsModule,
-  ],
+  imports: [CommonModule, TableStats, TableCard, TableModalComponent, TabModal, TableProductModal, ModalEditEntity, FormsModule],
   templateUrl: './table-management.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -95,9 +77,7 @@ export class TableManagement implements OnInit {
         this.cdr.markForCheck();
       },
       error: (error) => {
-        this.notification.error(
-          `Erro ao buscar localizações: ${error.error?.message || error.message}`,
-        );
+        this.notification.error(`Erro ao buscar localizações: ${error.error?.message || error.message}`);
       },
     });
   }
@@ -122,15 +102,11 @@ export class TableManagement implements OnInit {
   get sortedTables(): Table[] {
     return [...this.filteredTables]
       .sort((a, b) => a.number - b.number)
-      .filter((t) =>
-        this.tableNumberFilter ? t.number.toString().includes(this.tableNumberFilter) : true,
-      );
+      .filter((t) => (this.tableNumberFilter ? t.number.toString().includes(this.tableNumberFilter) : true));
   }
 
   get tabTotal(): number {
-    return (
-      this.selectedTableForProducts?.order?.items?.reduce((sum, item) => sum + item.total, 0) || 0
-    );
+    return this.selectedTableForProducts?.order?.items?.reduce((sum, item) => sum + item.total, 0) || 0;
   }
 
   selectLocation(locationId: number): void {
@@ -244,9 +220,7 @@ export class TableManagement implements OnInit {
             this.getTables();
           },
           error: (error) => {
-            this.notification.error(
-              `Erro ao excluir mesa: ${error.error?.message || error.message}`,
-            );
+            this.notification.error(`Erro ao excluir mesa: ${error.error?.message || error.message}`);
           },
         });
       }
@@ -272,9 +246,7 @@ export class TableManagement implements OnInit {
             this.getTables();
           },
           error: (error) => {
-            this.notification.error(
-              `Erro ao liberar mesa: ${error.error?.message || error.message}`,
-            );
+            this.notification.error(`Erro ao liberar mesa: ${error.error?.message || error.message}`);
           },
         });
       }
@@ -294,24 +266,20 @@ export class TableManagement implements OnInit {
 
     alertConfirm('Confirma o fechamento da comanda e liberação da mesa?').then((result) => {
       if (result && this.selectedTableForProducts?.id) {
-        this.tableService
-          .closeTab(this.selectedTableForProducts.id, serviceCharge, items)
-          .subscribe({
-            next: (response) => {
-              this.notification.success('Comanda fechada e mesa liberada com sucesso!');
-              this.closeTabModal();
-              this.getTables();
+        this.tableService.closeTab(this.selectedTableForProducts.id, serviceCharge, items).subscribe({
+          next: (response) => {
+            this.notification.success('Comanda fechada e mesa liberada com sucesso!');
+            this.closeTabModal();
+            this.getTables();
 
-              setTimeout(() => {
-                this.router.navigate(['/comandas', response.orderId]);
-              }, 100);
-            },
-            error: (error) => {
-              this.notification.error(
-                `Erro ao fechar comanda: ${error.error?.message || error.message}`,
-              );
-            },
-          });
+            setTimeout(() => {
+              this.router.navigate(['/comandas', response.orderId]);
+            }, 100);
+          },
+          error: (error) => {
+            this.notification.error(`Erro ao fechar comanda: ${error.error?.message || error.message}`);
+          },
+        });
       }
     });
   }
@@ -372,20 +340,16 @@ export class TableManagement implements OnInit {
     ).then((confirmed) => {
       if (!confirmed) return;
 
-      this.tableService
-        .transferTable(orderId, Number(entity.targetTableNumber), entity.targetLocationCode)
-        .subscribe({
-          next: (response) => {
-            this.notification.success(response.message);
-            this.closeTransferModal();
-            this.getTables();
-          },
-          error: (error) => {
-            this.notification.error(
-              `Erro ao transferir mesa: ${error.error?.message || error.message}`,
-            );
-          },
-        });
+      this.tableService.transferTable(orderId, Number(entity.targetTableNumber), entity.targetLocationCode).subscribe({
+        next: (response) => {
+          this.notification.success(response.message);
+          this.closeTransferModal();
+          this.getTables();
+        },
+        error: (error) => {
+          this.notification.error(`Erro ao transferir mesa: ${error.error?.message || error.message}`);
+        },
+      });
     });
   }
 

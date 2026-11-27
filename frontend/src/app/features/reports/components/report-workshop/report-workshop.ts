@@ -38,9 +38,7 @@ export class ReportWorkshop {
   }
 
   getTodayFormatted(): string {
-    return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(
-      new Date(),
-    );
+    return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
   }
 
   getFullDate(): string {

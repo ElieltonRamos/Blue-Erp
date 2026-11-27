@@ -1,20 +1,8 @@
 import { ChangeDetectorRef, Component, inject, OnInit, output } from '@angular/core';
-import {
-  FormArray,
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CompanyService } from '../../services/company.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
-import {
-  OnlineMenuSettings,
-  OnlineMenuSettingsUpdate,
-  OnlinePaymentType,
-  OpeningHour,
-} from '../../types/online-menu';
+import { OnlineMenuSettings, OnlineMenuSettingsUpdate, OnlinePaymentType, OpeningHour } from '../../types/online-menu';
 
 const MAX_HOURS = 35;
 
@@ -149,9 +137,7 @@ export class CompanyOnlineMenu implements OnInit {
 
     for (const p of PAYMENT_TYPES) {
       const method = s.onlinePaymentMethods.find((m) => m.type === p.type);
-      this.settingsForm.controls.payments
-        .get(p.type)
-        ?.patchValue({ enabled: !!method, label: method?.label ?? p.label });
+      this.settingsForm.controls.payments.get(p.type)?.patchValue({ enabled: !!method, label: method?.label ?? p.label });
     }
 
     this.settingsForm.markAsPristine();
@@ -180,11 +166,7 @@ export class CompanyOnlineMenu implements OnInit {
 
     const v = this.settingsForm.getRawValue();
 
-    if (
-      v.deliveryTimeMin !== null &&
-      v.deliveryTimeMax !== null &&
-      v.deliveryTimeMin > v.deliveryTimeMax
-    ) {
+    if (v.deliveryTimeMin !== null && v.deliveryTimeMax !== null && v.deliveryTimeMin > v.deliveryTimeMax) {
       this.notification.error('O tempo mínimo de entrega não pode ser maior que o máximo.');
       return;
     }
@@ -254,9 +236,7 @@ export class CompanyOnlineMenu implements OnInit {
   saveHours(): void {
     if (this.hoursForm.invalid) {
       this.hoursForm.markAllAsTouched();
-      this.notification.error(
-        'Preencha o horário de abertura e fechamento de todos os intervalos.',
-      );
+      this.notification.error('Preencha o horário de abertura e fechamento de todos os intervalos.');
       return;
     }
 

@@ -39,8 +39,7 @@ export class ProductService {
     if (filters?.productType) params = params.set('productType', filters.productType);
     if (filters?.unit) params = params.set('unit', filters.unit);
     if (filters?.active !== undefined) params = params.set('active', filters.active.toString());
-    if (filters?.lowStock !== undefined)
-      params = params.set('lowStock', filters.lowStock.toString());
+    if (filters?.lowStock !== undefined) params = params.set('lowStock', filters.lowStock.toString());
     if (filters?.categoryId) params = params.set('categoryId', filters.categoryId.toString());
 
     return this.client.get<PaginatedResponse<Product>>(this.apiUrl, { params });

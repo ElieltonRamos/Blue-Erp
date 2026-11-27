@@ -51,9 +51,7 @@ export class ReportProducts {
   }
 
   getTodayFormatted(): string {
-    return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(
-      new Date(),
-    );
+    return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
   }
 
   setToday() {
@@ -104,9 +102,7 @@ export class ReportProducts {
         this.reportGenerated = true;
       },
       error: (err) => {
-        this.notification.error(
-          `Erro ao gerar relatório: ${err.error?.message || 'Erro desconhecido'}`,
-        );
+        this.notification.error(`Erro ao gerar relatório: ${err.error?.message || 'Erro desconhecido'}`);
       },
       complete: () => {
         this.isLoading = false;

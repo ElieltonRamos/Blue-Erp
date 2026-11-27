@@ -1,21 +1,9 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  inject,
-  ChangeDetectorRef,
-  ChangeDetectionStrategy,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
-import {
-  KitchenOrderItem,
-  ProductionStatus,
-  Recipe,
-  PreparationStep,
-} from '../../types/kitchen-display';
+import { KitchenOrderItem, ProductionStatus, Recipe, PreparationStep } from '../../types/kitchen-display';
 import { FormField, ModalEditEntity } from '../../../../shared/modal-edit-entity/modal-edit-entity';
 import { AuthService } from '../../../../core/services/auth.service';
 import { KitchenService } from '../../services/kitchen-display.service';
@@ -207,10 +195,8 @@ export class KitchenDisplay implements OnInit, OnDestroy {
         ? parseInt(elapsed) * 60 + (parseInt(elapsed.split('h ')[1]) || 0)
         : parseInt(elapsed);
 
-    if (minutes < 10)
-      return 'bg-[color:var(--color-time-ok)]/20 border-[color:var(--color-time-ok)]/30';
-    if (minutes < 20)
-      return 'bg-[color:var(--color-time-warn)]/20 border-[color:var(--color-time-warn)]/30';
+    if (minutes < 10) return 'bg-[color:var(--color-time-ok)]/20 border-[color:var(--color-time-ok)]/30';
+    if (minutes < 20) return 'bg-[color:var(--color-time-warn)]/20 border-[color:var(--color-time-warn)]/30';
     return 'bg-[color:var(--color-time-critical)]/20 border-[color:var(--color-time-critical)]/30';
   }
 
@@ -240,9 +226,7 @@ export class KitchenDisplay implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.isLoading = false;
-        this.notification.error(
-          `Erro ao carregar pedidos: ${error.error?.message || error.message}`,
-        );
+        this.notification.error(`Erro ao carregar pedidos: ${error.error?.message || error.message}`);
         this.cdr.markForCheck();
       },
     });
@@ -255,9 +239,7 @@ export class KitchenDisplay implements OnInit, OnDestroy {
         this.loadOrders();
       },
       error: (error) => {
-        this.notification.error(
-          `Erro ao iniciar preparo: ${error.error?.message || error.message}`,
-        );
+        this.notification.error(`Erro ao iniciar preparo: ${error.error?.message || error.message}`);
       },
     });
   }
@@ -269,9 +251,7 @@ export class KitchenDisplay implements OnInit, OnDestroy {
         this.loadOrders();
       },
       error: (error) => {
-        this.notification.error(
-          `Erro ao marcar como pronto: ${error.error?.message || error.message}`,
-        );
+        this.notification.error(`Erro ao marcar como pronto: ${error.error?.message || error.message}`);
       },
     });
   }
@@ -283,9 +263,7 @@ export class KitchenDisplay implements OnInit, OnDestroy {
         this.loadOrders();
       },
       error: (error) => {
-        this.notification.error(
-          `Erro ao marcar como entregue: ${error.error?.message || error.message}`,
-        );
+        this.notification.error(`Erro ao marcar como entregue: ${error.error?.message || error.message}`);
       },
     });
   }

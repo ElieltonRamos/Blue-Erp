@@ -57,22 +57,11 @@
         </option>
       </select>
 
-      <div
-        class="flex items-center gap-1 h-9 bg-success/10 px-3 rounded-md border border-success/40 max-w-45"
-      >
-        <span
-          class="text-success text-sm truncate"
-          [title]="selectedClient?.name || 'Sem cliente cadastrado'"
-        >
+      <div class="flex items-center gap-1 h-9 bg-success/10 px-3 rounded-md border border-success/40 max-w-45">
+        <span class="text-success text-sm truncate" [title]="selectedClient?.name || 'Sem cliente cadastrado'">
           {{ selectedClient?.name || 'Sem cliente' }}
         </span>
-        <button
-          *ngIf="selectedClient"
-          (click)="clearCustomer()"
-          class="text-success hover:opacity-70 text-xs"
-        >
-          ✕
-        </button>
+        <button *ngIf="selectedClient" (click)="clearCustomer()" class="text-success hover:opacity-70 text-xs">✕</button>
       </div>
     </div>
   </div>
@@ -97,9 +86,7 @@
 
   <!-- Main Content -->
   <div *ngIf="!isLoading && order" class="max-w-400 mx-auto">
-    <div
-      class="bg-surface/50 backdrop-blur-sm rounded-xl shadow-2xl p-4 border border-border-subtle"
-    >
+    <div class="bg-surface/50 backdrop-blur-sm rounded-xl shadow-2xl p-4 border border-border-subtle">
       <!-- Layout Grid -->
       <div class="grid grid-cols-12 gap-4">
         <!-- Left: Products -->
@@ -110,39 +97,22 @@
             <table class="w-full text-sm">
               <thead class="sticky top-0 bg-surface-alt backdrop-blur-sm">
                 <tr class="border-b border-border">
-                  <th class="text-left py-2 px-2 text-info text-xs font-semibold uppercase">
-                    Código
-                  </th>
-                  <th class="text-left py-2 px-2 text-info text-xs font-semibold uppercase">
-                    Produto
-                  </th>
-                  <th class="text-center py-2 px-2 text-warning text-xs font-semibold uppercase">
-                    VLR. UN.
-                  </th>
-                  <th class="text-center py-2 px-2 text-qty text-xs font-semibold uppercase">
-                    QTD
-                  </th>
-                  <th class="text-center py-2 px-2 text-success text-xs font-semibold uppercase">
-                    Total
-                  </th>
+                  <th class="text-left py-2 px-2 text-info text-xs font-semibold uppercase">Código</th>
+                  <th class="text-left py-2 px-2 text-info text-xs font-semibold uppercase">Produto</th>
+                  <th class="text-center py-2 px-2 text-warning text-xs font-semibold uppercase">VLR. UN.</th>
+                  <th class="text-center py-2 px-2 text-qty text-xs font-semibold uppercase">QTD</th>
+                  <th class="text-center py-2 px-2 text-success text-xs font-semibold uppercase">Total</th>
                 </tr>
               </thead>
               <tbody>
-                <tr
-                  *ngFor="let item of order.items"
-                  class="border-b border-border-subtle hover:bg-surface-alt/20"
-                >
+                <tr *ngFor="let item of order.items" class="border-b border-border-subtle hover:bg-surface-alt/20">
                   <td class="py-2 px-2 text-text-secondary text-xs">{{ item.code }}</td>
                   <td class="py-2 px-2 text-text-primary text-xs">{{ item.name }}</td>
-                  <td class="py-2 px-2 text-center text-text-secondary text-xs">
-                    R$ {{ item.unitPrice.toFixed(2) }}
-                  </td>
+                  <td class="py-2 px-2 text-center text-text-secondary text-xs">R$ {{ item.unitPrice.toFixed(2) }}</td>
                   <td class="py-2 px-2 text-center text-qty font-bold text-xs">
                     {{ item.quantity }}
                   </td>
-                  <td class="py-2 px-2 text-center text-success font-bold text-xs">
-                    R$ {{ item.total.toFixed(2) }}
-                  </td>
+                  <td class="py-2 px-2 text-center text-success font-bold text-xs">R$ {{ item.total.toFixed(2) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -199,11 +169,7 @@
                     type="button"
                     (click)="toggleDiscountMode()"
                     class="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-surface-alt border border-border text-text-secondary hover:bg-overlay transition-colors"
-                    [title]="
-                      discountMode === 'valor'
-                        ? 'Alternar para percentual'
-                        : 'Alternar para valor (R$)'
-                    "
+                    [title]="discountMode === 'valor' ? 'Alternar para percentual' : 'Alternar para valor (R$)'"
                   >
                     {{ discountMode === 'valor' ? 'R$' : '%' }}
                   </button>
@@ -235,9 +201,7 @@
             <!-- Total Final -->
             <div class="bg-surface/50 rounded-lg p-2 border border-success/50">
               <p class="text-text-muted text-[10px]">Total Final:</p>
-              <p class="text-success font-bold text-2xl">
-                R$ {{ (total + (order.serviceCharge || 0)).toFixed(2) }}
-              </p>
+              <p class="text-success font-bold text-2xl">R$ {{ (total + (order.serviceCharge || 0)).toFixed(2) }}</p>
             </div>
 
             <div class="border-t border-border-subtle"></div>
@@ -254,14 +218,8 @@
                   <span class="text-text-primary truncate">{{ getMethodLabel(p.method) }}</span>
                 </div>
                 <span class="text-success font-bold shrink-0">R$ {{ p.amount.toFixed(2) }}</span>
-                <span *ngIf="p.change > 0" class="text-warning text-[9px] shrink-0">
-                  🔄 R$ {{ p.change.toFixed(2) }}
-                </span>
-                <button
-                  (click)="removePayment(i)"
-                  class="text-danger hover:opacity-80 ml-1 shrink-0"
-                  title="Remover pagamento"
-                >
+                <span *ngIf="p.change > 0" class="text-warning text-[9px] shrink-0"> 🔄 R$ {{ p.change.toFixed(2) }} </span>
+                <button (click)="removePayment(i)" class="text-danger hover:opacity-80 ml-1 shrink-0" title="Remover pagamento">
                   ✕
                 </button>
               </div>
@@ -270,11 +228,7 @@
             <!-- Remaining Amount -->
             <div class="bg-surface/50 rounded-lg p-2 border border-border-subtle">
               <p class="text-text-muted text-[10px]">Restante:</p>
-              <p
-                [class.text-danger]="remaining > 0.01"
-                [class.text-success]="remaining <= 0.01"
-                class="font-bold text-lg"
-              >
+              <p [class.text-danger]="remaining > 0.01" [class.text-success]="remaining <= 0.01" class="font-bold text-lg">
                 R$ {{ Math.max(0, remaining).toFixed(2) }}
               </p>
             </div>
@@ -284,11 +238,7 @@
             <!-- Payment Methods Selection -->
             <div>
               <p class="text-text-primary text-[10px] font-semibold mb-2">Método de Pagamento:</p>
-              <div
-                class="grid grid-cols-5 gap-1.5"
-                role="radiogroup"
-                aria-label="Método de pagamento"
-              >
+              <div class="grid grid-cols-5 gap-1.5" role="radiogroup" aria-label="Método de pagamento">
                 <button
                   #methodBtn
                   *ngFor="let m of paymentMethods; let i = index"
@@ -323,10 +273,7 @@
                   class="w-full bg-surface border border-border rounded-lg px-2 py-1.5 text-text-primary text-center font-bold focus:outline-none focus:border-accent"
                 />
               </div>
-              <div
-                *ngIf="newPaymentMethod === 'DINHEIRO'"
-                class="bg-surface/50 rounded-lg p-2 border border-border-subtle"
-              >
+              <div *ngIf="newPaymentMethod === 'DINHEIRO'" class="bg-surface/50 rounded-lg p-2 border border-border-subtle">
                 <p class="text-text-muted text-[10px] mb-0.5">Troco:</p>
                 <p class="text-warning font-bold">R$ {{ previewChange.toFixed(2) }}</p>
               </div>

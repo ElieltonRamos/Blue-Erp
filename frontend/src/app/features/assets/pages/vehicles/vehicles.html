@@ -12,15 +12,12 @@
     <div class="bg-surface border border-border rounded-xl shadow-lg p-6">
       <h2 class="text-text-primary font-semibold text-lg mb-1">Cadastrar Veículo</h2>
       <p class="text-text-secondary text-sm mb-4">
-        Busque o cliente dono do veículo, informe a placa e, se quiser, complete com marca, modelo,
-        ano e quilometragem.
+        Busque o cliente dono do veículo, informe a placa e, se quiser, complete com marca, modelo, ano e quilometragem.
       </p>
 
       <!-- Busca de cliente (fica no componente pai) -->
       <div class="relative mb-4">
-        <label class="block text-text-secondary font-medium mb-2 text-sm">
-          Cliente (dono do veículo)
-        </label>
+        <label class="block text-text-secondary font-medium mb-2 text-sm"> Cliente (dono do veículo) </label>
 
         <input
           type="text"
@@ -32,13 +29,9 @@
         />
 
         @if (newClientSelected) {
-          <p class="text-success text-xs mt-1">
-            ✓ Cliente selecionado: {{ newClientSelected.name }}
-          </p>
+          <p class="text-success text-xs mt-1">✓ Cliente selecionado: {{ newClientSelected.name }}</p>
         } @else {
-          <p class="text-text-muted text-xs mt-1">
-            Comece a digitar o nome e escolha o cliente na lista.
-          </p>
+          <p class="text-text-muted text-xs mt-1">Comece a digitar o nome e escolha o cliente na lista.</p>
         }
 
         @if (newClientResults.length > 0) {
@@ -76,9 +69,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
         <!-- Busca por placa -->
         <div>
-          <label class="block text-text-secondary font-medium mb-2 text-sm">
-            Buscar por Placa
-          </label>
+          <label class="block text-text-secondary font-medium mb-2 text-sm"> Buscar por Placa </label>
 
           <div class="relative">
             <input
@@ -107,9 +98,7 @@
 
         <!-- Filtro por cliente -->
         <div class="relative">
-          <label class="block text-text-secondary font-medium mb-2 text-sm">
-            Filtrar por Cliente
-          </label>
+          <label class="block text-text-secondary font-medium mb-2 text-sm"> Filtrar por Cliente </label>
 
           <div class="relative">
             <input
@@ -126,12 +115,7 @@
                 class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             }
@@ -179,20 +163,14 @@
     <div class="bg-surface border border-border rounded-xl shadow-lg overflow-hidden">
       <div class="px-6 py-4 border-b border-border">
         <p class="text-text-secondary text-sm">
-          Os veículos estão agrupados por cliente. Clique no nome do cliente para abrir ou fechar a
-          lista dos veículos dele.
+          Os veículos estão agrupados por cliente. Clique no nome do cliente para abrir ou fechar a lista dos veículos dele.
         </p>
       </div>
 
       @if (groupedAssets.length === 0) {
         <div class="py-12 text-center">
           <div class="flex flex-col items-center gap-3">
-            <svg
-              class="w-16 h-16 text-text-muted"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg class="w-16 h-16 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -203,9 +181,7 @@
 
             <p class="text-text-secondary text-lg font-medium">Nenhum veículo encontrado</p>
 
-            <p class="text-text-muted text-sm">
-              Cadastre o primeiro veículo usando o formulário acima
-            </p>
+            <p class="text-text-muted text-sm">Cadastre o primeiro veículo usando o formulário acima</p>
           </div>
         </div>
       }
@@ -227,12 +203,7 @@
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 5l7 7-7 7"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
 
                 <span class="font-semibold text-text-primary">{{ group.clientName }}</span>
@@ -250,20 +221,14 @@
               <div class="bg-base/40 px-6 pb-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                   @for (asset of group.assets; track asset.id) {
-                    <div
-                      class="bg-surface-alt border border-border rounded-lg p-4 flex flex-col gap-2"
-                    >
+                    <div class="bg-surface-alt border border-border rounded-lg p-4 flex flex-col gap-2">
                       <div class="flex items-center justify-between">
-                        <span
-                          class="font-mono font-bold text-text-primary bg-overlay px-2 py-1 rounded"
-                        >
+                        <span class="font-mono font-bold text-text-primary bg-overlay px-2 py-1 rounded">
                           {{ asset.label }}
                         </span>
 
                         <div class="flex items-center justify-between">
-                          <span
-                            class="font-mono font-bold text-text-primary bg-overlay px-2 py-1 rounded"
-                          >
+                          <span class="font-mono font-bold text-text-primary bg-overlay px-2 py-1 rounded">
                             {{ asset.label }}
                           </span>
 
@@ -288,9 +253,7 @@
                       @if (asset.attributes.length > 0) {
                         <div class="flex flex-wrap gap-1.5 mt-1">
                           @for (attr of asset.attributes; track attr.key) {
-                            <span
-                              class="text-xs text-text-secondary bg-overlay px-2 py-0.5 rounded"
-                            >
+                            <span class="text-xs text-text-secondary bg-overlay px-2 py-0.5 rounded">
                               {{ getAttributeLabel(attr.key) }}: {{ attr.value }}
                             </span>
                           }

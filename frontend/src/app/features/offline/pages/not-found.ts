@@ -6,9 +6,7 @@ import { Router } from '@angular/router';
   standalone: true,
   template: `
     <main class="bg-base min-h-screen w-screen flex items-center justify-center p-4">
-      <div
-        class="bg-surface border border-border rounded-md p-8 flex flex-col items-center gap-4 max-w-md w-full text-center"
-      >
+      <div class="bg-surface border border-border rounded-md p-8 flex flex-col items-center gap-4 max-w-md w-full text-center">
         <p class="text-text-muted text-7xl font-bold">404</p>
         <h1 class="text-text-primary text-2xl font-bold">Página não encontrada</h1>
         <p class="text-text-secondary text-sm">A página que você está procurando não existe.</p>

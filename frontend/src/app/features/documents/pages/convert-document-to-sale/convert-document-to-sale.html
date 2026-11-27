@@ -39,9 +39,7 @@
 
   @if (!isLoading && document) {
     <div class="max-w-400 mx-auto mb-2">
-      <div
-        class="bg-surface border border-border rounded-lg px-4 py-3 flex items-center justify-between"
-      >
+      <div class="bg-surface border border-border rounded-lg px-4 py-3 flex items-center justify-between">
         <div>
           <p class="text-text-muted text-[10px]">Cliente</p>
           <p class="text-text-primary font-semibold">{{ document.clientName }}</p>
@@ -65,9 +63,7 @@
     </div>
 
     <div class="max-w-400 mx-auto">
-      <div
-        class="bg-surface/50 backdrop-blur-sm rounded-xl shadow-2xl p-4 border border-border-subtle"
-      >
+      <div class="bg-surface/50 backdrop-blur-sm rounded-xl shadow-2xl p-4 border border-border-subtle">
         <div class="grid grid-cols-12 gap-4">
           <!-- Left: Itens -->
           <div class="col-span-8 bg-surface-alt/30 rounded-lg p-4">
@@ -77,21 +73,11 @@
               <table class="w-full text-sm">
                 <thead class="sticky top-0 bg-surface-alt backdrop-blur-sm">
                   <tr class="border-b border-border">
-                    <th class="text-left py-2 px-2 text-info text-xs font-semibold uppercase">
-                      Item
-                    </th>
-                    <th class="text-left py-2 px-2 text-info text-xs font-semibold uppercase">
-                      Mecânico
-                    </th>
-                    <th class="text-center py-2 px-2 text-warning text-xs font-semibold uppercase">
-                      VLR. UN.
-                    </th>
-                    <th class="text-center py-2 px-2 text-qty text-xs font-semibold uppercase">
-                      QTD
-                    </th>
-                    <th class="text-center py-2 px-2 text-success text-xs font-semibold uppercase">
-                      Total
-                    </th>
+                    <th class="text-left py-2 px-2 text-info text-xs font-semibold uppercase">Item</th>
+                    <th class="text-left py-2 px-2 text-info text-xs font-semibold uppercase">Mecânico</th>
+                    <th class="text-center py-2 px-2 text-warning text-xs font-semibold uppercase">VLR. UN.</th>
+                    <th class="text-center py-2 px-2 text-qty text-xs font-semibold uppercase">QTD</th>
+                    <th class="text-center py-2 px-2 text-success text-xs font-semibold uppercase">Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -109,9 +95,7 @@
                       <td class="py-2 px-2 text-center text-qty font-bold text-xs">
                         {{ item.quantity }}
                       </td>
-                      <td class="py-2 px-2 text-center text-success font-bold text-xs">
-                        R$ {{ +item.total | number: '1.2-2' }}
-                      </td>
+                      <td class="py-2 px-2 text-center text-success font-bold text-xs">R$ {{ +item.total | number: '1.2-2' }}</td>
                     </tr>
                   }
                 </tbody>
@@ -142,11 +126,7 @@
                     type="button"
                     (click)="toggleDiscountMode()"
                     class="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-surface-alt border border-border text-text-secondary hover:bg-overlay transition-colors"
-                    [title]="
-                      discountMode === 'valor'
-                        ? 'Alternar para percentual'
-                        : 'Alternar para valor (R$)'
-                    "
+                    [title]="discountMode === 'valor' ? 'Alternar para percentual' : 'Alternar para valor (R$)'"
                   >
                     {{ discountMode === 'valor' ? 'R$' : '%' }}
                   </button>
@@ -180,17 +160,11 @@
                     >
                       <div class="flex items-center gap-1.5 flex-1 min-w-0">
                         <span class="text-lg shrink-0">{{ getMethodIcon(p.method) }}</span>
-                        <span class="text-text-primary truncate">{{
-                          getMethodLabel(p.method)
-                        }}</span>
+                        <span class="text-text-primary truncate">{{ getMethodLabel(p.method) }}</span>
                       </div>
-                      <span class="text-success font-bold shrink-0"
-                        >R$ {{ p.amount.toFixed(2) }}</span
-                      >
+                      <span class="text-success font-bold shrink-0">R$ {{ p.amount.toFixed(2) }}</span>
                       @if (p.change > 0) {
-                        <span class="text-warning text-[9px] shrink-0">
-                          🔄 R$ {{ p.change.toFixed(2) }}
-                        </span>
+                        <span class="text-warning text-[9px] shrink-0"> 🔄 R$ {{ p.change.toFixed(2) }} </span>
                       }
                       <button
                         (click)="removePayment($index)"
@@ -206,11 +180,7 @@
 
               <div class="bg-surface/50 rounded-lg p-2 border border-border-subtle">
                 <p class="text-text-muted text-[10px]">Restante:</p>
-                <p
-                  [class.text-danger]="remaining > 0.01"
-                  [class.text-success]="remaining <= 0.01"
-                  class="font-bold text-lg"
-                >
+                <p [class.text-danger]="remaining > 0.01" [class.text-success]="remaining <= 0.01" class="font-bold text-lg">
                   R$ {{ Math.max(0, remaining).toFixed(2) }}
                 </p>
               </div>
@@ -219,11 +189,7 @@
 
               <div>
                 <p class="text-text-primary text-[10px] font-semibold mb-2">Método de Pagamento:</p>
-                <div
-                  class="grid grid-cols-5 gap-1.5"
-                  role="radiogroup"
-                  aria-label="Método de pagamento"
-                >
+                <div class="grid grid-cols-5 gap-1.5" role="radiogroup" aria-label="Método de pagamento">
                   @for (m of paymentMethods; track m.id; let i = $index) {
                     <button
                       #methodBtn
@@ -340,20 +306,12 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       (click)="closeShortcutsModal()"
     >
-      <div
-        class="bg-surface border border-border rounded-xl shadow-lg w-full max-w-md p-6"
-        (click)="$event.stopPropagation()"
-      >
+      <div class="bg-surface border border-border rounded-xl shadow-lg w-full max-w-md p-6" (click)="$event.stopPropagation()">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-text-primary font-semibold text-lg">Atalhos de teclado</h3>
           <button (click)="closeShortcutsModal()" class="text-text-muted hover:text-text-primary">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>

@@ -17,7 +17,7 @@ export class Clients {
 
   classBtnUnselected =
     'text-text-secondary hover:text-text-primary hover:bg-surface-alt px-4 py-2 rounded-lg flex items-center gap-2 font-semibold transition-all';
-  
+
   changeMenuContext(context: string): void {
     this.menuContext = context;
   }

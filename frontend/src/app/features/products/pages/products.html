@@ -8,9 +8,7 @@
   </button>
 
   <!-- Container -->
-  <div
-    class="w-full max-w-[95%] 2xl:max-w-400 bg-surface rounded-2xl shadow-2xl p-6 border border-border"
-  >
+  <div class="w-full max-w-[95%] 2xl:max-w-400 bg-surface rounded-2xl shadow-2xl p-6 border border-border">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6 border-b border-border pb-4">
       <div class="flex flex-wrap gap-4">
@@ -32,9 +30,7 @@
 
         <button
           (click)="changeMenuContext('listPrimaryMaterial')"
-          [attr.class]="
-            menuContext === 'listPrimaryMaterial' ? classBtnSelected : classBtnUnselected
-          "
+          [attr.class]="menuContext === 'listPrimaryMaterial' ? classBtnSelected : classBtnUnselected"
         >
           <i class="fas fa-layer-group"></i>
           Lista de Matérias Primas
@@ -42,9 +38,7 @@
 
         <button
           (click)="changeMenuContext('createPrimaryMaterial')"
-          [attr.class]="
-            menuContext === 'createPrimaryMaterial' ? classBtnSelected : classBtnUnselected
-          "
+          [attr.class]="menuContext === 'createPrimaryMaterial' ? classBtnSelected : classBtnUnselected"
         >
           <i class="fas fa-plus-circle"></i>
           Nova Matéria Prima

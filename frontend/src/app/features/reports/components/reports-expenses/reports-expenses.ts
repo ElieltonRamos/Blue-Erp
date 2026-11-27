@@ -72,9 +72,7 @@ export class ReportsExpensesComponent {
   setThisMonth() {
     const today = new Date();
     this.startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
-    this.endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0)
-      .toISOString()
-      .slice(0, 10);
+    this.endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().slice(0, 10);
   }
 
   async generateReport() {
@@ -94,9 +92,7 @@ export class ReportsExpensesComponent {
   }
 
   getTodayFormatted(): string {
-    return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(
-      new Date(),
-    );
+    return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
   }
 
   print() {

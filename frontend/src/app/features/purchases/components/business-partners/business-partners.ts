@@ -6,12 +6,7 @@ import { NotificationService } from '../../../../shared/toastr/notification.serv
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 import { ModalEditEntity, FormField } from '../../../../shared/modal-edit-entity/modal-edit-entity';
 import { BusinessPartnerService } from '../../services/business-partner.service';
-import {
-  BusinessPartner,
-  BusinessPartnerFilters,
-  CreateBusinessPartnerDTO,
-  PartnerType,
-} from '../../types/business-partner';
+import { BusinessPartner, BusinessPartnerFilters, CreateBusinessPartnerDTO, PartnerType } from '../../types/business-partner';
 
 @Component({
   selector: 'app-business-partners',

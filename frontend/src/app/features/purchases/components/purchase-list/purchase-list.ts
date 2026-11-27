@@ -217,9 +217,7 @@ export class PurchaseList {
   confirmPurchase() {
     if (!this.preview) return;
 
-    const unlinkedCount = this.reconciledItems.filter(
-      (item) => !item.productId && !item.materialId,
-    ).length;
+    const unlinkedCount = this.reconciledItems.filter((item) => !item.productId && !item.materialId).length;
 
     if (unlinkedCount > 0) {
       alertConfirm(
@@ -499,9 +497,7 @@ export class PurchaseList {
       }
     }
 
-    const unlinkedCount = this.manualItems.filter(
-      (item) => !item.productId && !item.materialId,
-    ).length;
+    const unlinkedCount = this.manualItems.filter((item) => !item.productId && !item.materialId).length;
 
     const send = () => this.sendManualPurchase();
 

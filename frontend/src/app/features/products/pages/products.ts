@@ -8,13 +8,7 @@ import { CategoryComponent } from '../components/category/category';
 
 @Component({
   selector: 'app-products',
-  imports: [
-    CreateProduct,
-    ListProducts,
-    CreatePrimaryMaterial,
-    ListPrimaryMaterial,
-    CategoryComponent,
-  ],
+  imports: [CreateProduct, ListProducts, CreatePrimaryMaterial, ListPrimaryMaterial, CategoryComponent],
   templateUrl: './products.html',
 })
 export class Products {

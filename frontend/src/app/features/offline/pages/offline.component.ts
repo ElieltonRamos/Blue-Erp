@@ -5,9 +5,7 @@ import { Component } from '@angular/core';
   standalone: true,
   template: `
     <main class="bg-base min-h-screen w-screen flex items-center justify-center p-4">
-      <div
-        class="bg-surface border border-border rounded-md p-8 flex flex-col items-center gap-4 max-w-md w-full text-center"
-      >
+      <div class="bg-surface border border-border rounded-md p-8 flex flex-col items-center gap-4 max-w-md w-full text-center">
         <p class="text-text-muted text-7xl font-bold">!</p>
         <h1 class="text-text-primary text-2xl font-bold">Sem conexão</h1>
         <p class="text-text-secondary text-sm">Não foi possível conectar ao servidor.</p>

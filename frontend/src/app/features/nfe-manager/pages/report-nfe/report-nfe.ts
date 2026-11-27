@@ -69,9 +69,7 @@ export class reportNfe implements OnInit {
       },
       error: (e) => {
         this.loading = false;
-        this.notification.error(
-          `Erro ao carregar relatório: ${e.error?.message ?? 'Erro desconhecido'}`,
-        );
+        this.notification.error(`Erro ao carregar relatório: ${e.error?.message ?? 'Erro desconhecido'}`);
         this.cdr.detectChanges();
       },
     });

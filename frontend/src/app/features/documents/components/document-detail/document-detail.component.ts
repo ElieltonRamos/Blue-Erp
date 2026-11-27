@@ -161,23 +161,19 @@ export class DocumentDetailComponent {
 
     this.savingResponsible = true;
 
-    this.documentService
-      .updateResponsible(this.document.id, { responsibleId: this.editResponsibleId })
-      .subscribe({
-        next: (document) => {
-          this.document = document;
-          this.savingResponsible = false;
-          this.editingResponsible = false;
-          this.notification.success('Responsável atualizado.');
-          this.changed.emit(document);
-        },
-        error: (e) => {
-          this.savingResponsible = false;
-          this.notification.error(
-            `Erro ao atualizar responsável: ${e.error?.message || e.message}`,
-          );
-        },
-      });
+    this.documentService.updateResponsible(this.document.id, { responsibleId: this.editResponsibleId }).subscribe({
+      next: (document) => {
+        this.document = document;
+        this.savingResponsible = false;
+        this.editingResponsible = false;
+        this.notification.success('Responsável atualizado.');
+        this.changed.emit(document);
+      },
+      error: (e) => {
+        this.savingResponsible = false;
+        this.notification.error(`Erro ao atualizar responsável: ${e.error?.message || e.message}`);
+      },
+    });
   }
 
   // --- Busca produto ---

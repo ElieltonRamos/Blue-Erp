@@ -5,9 +5,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
       <!-- Busca -->
       <div class="lg:col-span-2">
-        <label class="block text-text-secondary font-medium mb-2 text-sm">
-          Buscar por Nome ou Código
-        </label>
+        <label class="block text-text-secondary font-medium mb-2 text-sm"> Buscar por Nome ou Código </label>
 
         <div class="relative">
           <input
@@ -38,12 +36,7 @@
               class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           }
@@ -85,15 +78,8 @@
       <div>
         <label class="block text-text-secondary font-medium mb-2 text-sm"> Estoque </label>
 
-        <label
-          class="flex items-center gap-3 p-3 rounded-lg bg-surface-alt border border-border cursor-pointer"
-        >
-          <input
-            type="checkbox"
-            [(ngModel)]="filterLowStock"
-            (ngModelChange)="onFilterChange()"
-            class="w-5 h-5 accent-warning"
-          />
+        <label class="flex items-center gap-3 p-3 rounded-lg bg-surface-alt border border-border cursor-pointer">
+          <input type="checkbox" [(ngModel)]="filterLowStock" (ngModelChange)="onFilterChange()" class="w-5 h-5 accent-warning" />
 
           <span class="text-text-primary font-medium text-sm"> Apenas Baixo </span>
         </label>
@@ -176,9 +162,7 @@
 
             <th class="py-4 px-4 text-left text-xs font-semibold text-fiscal uppercase">Tipo</th>
 
-            <th class="py-4 px-4 text-left text-xs font-semibold text-warning uppercase">
-              Info. Fiscais
-            </th>
+            <th class="py-4 px-4 text-left text-xs font-semibold text-warning uppercase">Info. Fiscais</th>
 
             <th class="py-4 px-4 text-left text-xs font-semibold text-info uppercase">Unidade</th>
 
@@ -196,9 +180,7 @@
               Custo
             </th>
 
-            <th class="py-4 px-4 text-center text-xs font-semibold text-warning uppercase">
-              Margem
-            </th>
+            <th class="py-4 px-4 text-center text-xs font-semibold text-warning uppercase">Margem</th>
 
             <th
               class="py-4 px-4 text-center text-xs font-semibold text-info uppercase tracking-wider cursor-pointer select-none hover:bg-overlay transition-colors"
@@ -207,9 +189,7 @@
               Estoque
             </th>
 
-            <th class="py-4 px-4 text-center text-xs font-semibold text-text-secondary uppercase">
-              Ações
-            </th>
+            <th class="py-4 px-4 text-center text-xs font-semibold text-text-secondary uppercase">Ações</th>
           </tr>
         </thead>
 
@@ -340,41 +320,26 @@
               <!-- Ações -->
               <td class="py-2 px-2">
                 <div class="grid grid-cols-1 gap-1 justify-items-center w-full">
-                  <button
-                    (click)="openModalBasic(product)"
-                    class="action-btn bg-info text-white hover:opacity-90"
-                  >
+                  <button (click)="openModalBasic(product)" class="action-btn bg-info text-white hover:opacity-90">
                     <span>Editar</span>
                   </button>
 
                   @if (hasComposition(product.productType)) {
-                    <button
-                      (click)="openModalMaterials(product)"
-                      class="action-btn bg-accent text-white hover:bg-accent-hover"
-                    >
+                    <button (click)="openModalMaterials(product)" class="action-btn bg-accent text-white hover:bg-accent-hover">
                       <span>Composição</span>
                     </button>
 
-                    <button
-                      (click)="openModalPreparation(product)"
-                      class="action-btn bg-fiscal text-white hover:opacity-90"
-                    >
+                    <button (click)="openModalPreparation(product)" class="action-btn bg-fiscal text-white hover:opacity-90">
                       <span>Preparo</span>
                     </button>
                   }
 
                   @if (product.active) {
-                    <button
-                      (click)="toggleProductStatus(product)"
-                      class="action-btn bg-danger text-white hover:opacity-90"
-                    >
+                    <button (click)="toggleProductStatus(product)" class="action-btn bg-danger text-white hover:opacity-90">
                       <span>Inativar</span>
                     </button>
                   } @else {
-                    <button
-                      (click)="toggleProductStatus(product)"
-                      class="action-btn bg-success text-white hover:opacity-90"
-                    >
+                    <button (click)="toggleProductStatus(product)" class="action-btn bg-success text-white hover:opacity-90">
                       <span>Ativar</span>
                     </button>
                   }
@@ -385,12 +350,7 @@
             <tr>
               <td colspan="11" class="py-12 text-center">
                 <div class="flex flex-col items-center gap-3">
-                  <svg
-                    class="w-16 h-16 text-text-muted"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg class="w-16 h-16 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -401,9 +361,7 @@
 
                   <p class="text-text-secondary text-lg font-medium">Nenhum produto encontrado</p>
 
-                  <p class="text-text-muted text-sm">
-                    Tente ajustar os filtros ou adicionar novos produtos
-                  </p>
+                  <p class="text-text-muted text-sm">Tente ajustar os filtros ou adicionar novos produtos</p>
                 </div>
               </td>
             </tr>
@@ -420,15 +378,9 @@
 }
 
 @if (showModalMaterials && editProduct) {
-  <app-modal-update-materials-product
-    (closeModal)="closeModalMaterials()"
-    [product]="editProduct"
-  />
+  <app-modal-update-materials-product (closeModal)="closeModalMaterials()" [product]="editProduct" />
 }
 
 @if (showModalPreparation && editProduct) {
-  <app-modal-update-preparation-product
-    (closeModal)="closeModalPreparation()"
-    [product]="editProduct"
-  />
+  <app-modal-update-preparation-product (closeModal)="closeModalPreparation()" [product]="editProduct" />
 }

@@ -21,12 +21,7 @@ import Client from '../../../clients/types/clients';
 import { ConvertOrderToSaleDto, SalePaymentDto } from '../../types/convert-order-sale';
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 
-export type PaymentMethod =
-  | 'DINHEIRO'
-  | 'CARTAO_CREDITO'
-  | 'CARTAO_DEBITO'
-  | 'PIX'
-  | 'CREDITO_LOJA';
+export type PaymentMethod = 'DINHEIRO' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'PIX' | 'CREDITO_LOJA';
 
 export type DiscountMode = 'valor' | 'percentual';
 
@@ -155,8 +150,7 @@ export class CloseOrder implements OnInit {
   /** Recalcula o valor exibido no input a partir do discount real (R$) */
   private syncDiscountInputValue(): void {
     if (this.discountMode === 'percentual') {
-      this.discountInputValue =
-        this.subtotal > 0 ? this.roundMoney((this.discount / this.subtotal) * 100) : 0;
+      this.discountInputValue = this.subtotal > 0 ? this.roundMoney((this.discount / this.subtotal) * 100) : 0;
     } else {
       this.discountInputValue = this.discount;
     }
@@ -342,9 +336,7 @@ export class CloseOrder implements OnInit {
 
     // Bloquear pagamento maior que restante (exceto DINHEIRO)
     if (this.newPaymentMethod !== 'DINHEIRO' && this.newPaymentAmount > this.remaining) {
-      this.notification.error(
-        `${this.getMethodLabel(this.newPaymentMethod!)} não pode exceder R$ ${this.remaining.toFixed(2)}`,
-      );
+      this.notification.error(`${this.getMethodLabel(this.newPaymentMethod!)} não pode exceder R$ ${this.remaining.toFixed(2)}`);
       return;
     }
 
@@ -496,13 +488,11 @@ export class CloseOrder implements OnInit {
     this.isFinishing = true;
 
     const dto: ConvertOrderToSaleDto = {
-      payments: this.payments.map(
-        (p): SalePaymentDto => ({
-          method: p.method,
-          amount: p.amount,
-          change: p.change,
-        }),
-      ),
+      payments: this.payments.map((p): SalePaymentDto => ({
+        method: p.method,
+        amount: p.amount,
+        change: p.change,
+      })),
       clientId: this.selectedClient?.id || 1,
       discount: this.discount,
       cfop: this.cfop,

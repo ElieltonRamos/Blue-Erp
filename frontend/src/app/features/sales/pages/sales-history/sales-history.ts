@@ -9,7 +9,7 @@ import { FiscalStatus, Sale, SaleFilters } from '../../types/sale';
 import User from '../../../users/types/user';
 import { SaleService } from '../../services/sales.service';
 import { DatePipe } from '@angular/common';
-import { ModalEditSale } from "../../components/modal-edit-sale/modal-edit-sale";
+import { ModalEditSale } from '../../components/modal-edit-sale/modal-edit-sale';
 
 @Component({
   selector: 'app-sales-history',
@@ -59,9 +59,7 @@ export class SalesHistory {
         this.operators = response;
       },
       error: (e) => {
-        this.notification.error(
-          `Erro ao buscar operadores: ${e.error?.message || 'Erro inesperado.'}`,
-        );
+        this.notification.error(`Erro ao buscar operadores: ${e.error?.message || 'Erro inesperado.'}`);
       },
     });
   }

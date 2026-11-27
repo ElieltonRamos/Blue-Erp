@@ -1,10 +1,6 @@
 <div class="p-6 space-y-8 bg-base min-h-screen">
   <!-- Formulário -->
-  <form
-    (ngSubmit)="onSubmit()"
-    [formGroup]="form"
-    class="bg-surface border border-border p-6 rounded-xl shadow-lg"
-  >
+  <form (ngSubmit)="onSubmit()" [formGroup]="form" class="bg-surface border border-border p-6 rounded-xl shadow-lg">
     <h2 class="text-text-primary font-bold text-xl mb-6">Nova Categoria</h2>
 
     <div class="flex flex-col md:flex-row gap-4 items-end">
@@ -34,9 +30,7 @@
   </form>
 
   <!-- Filtros -->
-  <div
-    class="bg-surface border border-border rounded-xl p-6 shadow-lg grid grid-cols-1 md:grid-cols-12 gap-4 items-end"
-  >
+  <div class="bg-surface border border-border rounded-xl p-6 shadow-lg grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
     <div class="md:col-span-5">
       <label class="block text-sm font-medium text-text-secondary mb-2"> Filtrar por Nome </label>
 
@@ -90,13 +84,9 @@
 
           <th class="px-6 py-4 text-accent font-semibold text-sm uppercase tracking-wider">Nome</th>
 
-          <th class="px-6 py-4 text-accent font-semibold text-sm uppercase tracking-wider">
-            Status
-          </th>
+          <th class="px-6 py-4 text-accent font-semibold text-sm uppercase tracking-wider">Status</th>
 
-          <th class="px-6 py-4 text-accent font-semibold text-sm uppercase tracking-wider">
-            Ações
-          </th>
+          <th class="px-6 py-4 text-accent font-semibold text-sm uppercase tracking-wider">Ações</th>
         </tr>
       </thead>
 

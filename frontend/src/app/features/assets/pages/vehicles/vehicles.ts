@@ -26,14 +26,7 @@ const ATTRIBUTE_LABELS: Record<string, string> = {
 
 @Component({
   selector: 'app-vehicles',
-  imports: [
-    CommonModule,
-    FormsModule,
-    PaginatorComponent,
-    ModalEditEntity,
-    VehicleCreateFormComponent,
-    RouterLink,
-  ],
+  imports: [CommonModule, FormsModule, PaginatorComponent, ModalEditEntity, VehicleCreateFormComponent, RouterLink],
   templateUrl: './vehicles.html',
 })
 export class Vehicles {

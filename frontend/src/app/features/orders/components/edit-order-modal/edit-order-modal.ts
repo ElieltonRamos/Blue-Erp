@@ -72,9 +72,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
 
   get isDefaultServiceCharge(): boolean {
     if (!this.order) return true;
-    const defaultValue = parseFloat(
-      (this.order.items.reduce((s, i) => s + i.total, 0) * 0.1).toFixed(2),
-    );
+    const defaultValue = parseFloat((this.order.items.reduce((s, i) => s + i.total, 0) * 0.1).toFixed(2));
     return parseFloat(this.serviceChargeAmount.toFixed(2)) === defaultValue;
   }
 
@@ -86,9 +84,7 @@ export class EditOrderModal implements AfterViewInit, OnDestroy, OnChanges {
     if (changes['order'] && this.order) {
       const totalItems = this.order.items.reduce((s, i) => s + i.total, 0);
       this.serviceChargeEnabled = (this.order.serviceCharge ?? 0) > 0;
-      this.serviceChargeAmount = this.serviceChargeEnabled
-        ? (this.order.serviceCharge ?? totalItems * 0.1)
-        : totalItems * 0.1;
+      this.serviceChargeAmount = this.serviceChargeEnabled ? (this.order.serviceCharge ?? totalItems * 0.1) : totalItems * 0.1;
     }
 
     if (changes['isOpen']) {

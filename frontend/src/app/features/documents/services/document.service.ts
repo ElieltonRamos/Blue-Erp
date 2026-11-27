@@ -22,11 +22,7 @@ export class DocumentService {
   private apiUrl = `${environment.apiUrl}/documents`;
   private client = inject(HttpClient);
 
-  getAll(
-    page: number = 1,
-    limit: number = 10,
-    filters?: FilterDocumentParams,
-  ): Observable<PaginatedResponse<OSDocument>> {
+  getAll(page: number = 1, limit: number = 10, filters?: FilterDocumentParams): Observable<PaginatedResponse<OSDocument>> {
     let params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
     if (filters?.type) params = params.set('type', filters.type);
@@ -36,27 +32,18 @@ export class DocumentService {
     if (filters?.userId) params = params.set('userId', filters.userId.toString());
     if (filters?.startDate) params = params.set('startDate', filters.startDate);
     if (filters?.endDate) params = params.set('endDate', filters.endDate);
-    if (filters?.minTotal !== undefined)
-      params = params.set('minTotal', filters.minTotal.toString());
-    if (filters?.maxTotal !== undefined)
-      params = params.set('maxTotal', filters.maxTotal.toString());
+    if (filters?.minTotal !== undefined) params = params.set('minTotal', filters.minTotal.toString());
+    if (filters?.maxTotal !== undefined) params = params.set('maxTotal', filters.maxTotal.toString());
 
     return this.client.get<PaginatedResponse<OSDocument>>(this.apiUrl, { params });
   }
 
-  updateItem(
-    documentId: number,
-    itemId: number,
-    dto: UpdateDocumentItemDTO,
-  ): Observable<OSDocument> {
+  updateItem(documentId: number, itemId: number, dto: UpdateDocumentItemDTO): Observable<OSDocument> {
     return this.client.patch<OSDocument>(`${this.apiUrl}/${documentId}/items/${itemId}`, dto);
   }
 
   finalizeDocument(documentId: number, dto: FinalizeDocumentDTO): Observable<Sale> {
-    return this.client.post<Sale>(
-      `${environment.apiUrl}/sales/finalize-document/${documentId}`,
-      dto,
-    );
+    return this.client.post<Sale>(`${environment.apiUrl}/sales/finalize-document/${documentId}`, dto);
   }
 
   updateResponsible(id: number, dto: UpdateDocumentResponsibleDTO): Observable<OSDocument> {

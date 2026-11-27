@@ -18,7 +18,7 @@ export class CreateExpenses {
     datePayment: new FormControl('', [Validators.required]),
   });
   private financialService = inject(FinancialService);
-  private notification = inject(NotificationService)
+  private notification = inject(NotificationService);
 
   onSubmit() {
     const { supplier, description, value, datePayment } = this.formCreateExpense.value;

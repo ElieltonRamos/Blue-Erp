@@ -1,19 +1,10 @@
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-  <div
-    class="bg-surface border border-border rounded-xl shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6"
-  >
+  <div class="bg-surface border border-border rounded-xl shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-text-primary font-semibold text-lg">
-        #{{ document.id }} — {{ document.clientName }}
-      </h3>
+      <h3 class="text-text-primary font-semibold text-lg">#{{ document.id }} — {{ document.clientName }}</h3>
       <button (click)="close()" class="text-text-muted hover:text-text-primary">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
     </div>
@@ -37,9 +28,7 @@
           {{ document.responsibleName || 'Não definido' }}
         </span>
         @if (canAddItem()) {
-          <button (click)="startEditResponsible()" class="text-info hover:opacity-80 text-xs">
-            Editar
-          </button>
+          <button (click)="startEditResponsible()" class="text-info hover:opacity-80 text-xs">Editar</button>
         }
       } @else {
         <select
@@ -51,19 +40,10 @@
             <option [ngValue]="u.id">{{ u.username }}</option>
           }
         </select>
-        <button
-          (click)="saveResponsible()"
-          [disabled]="savingResponsible"
-          class="text-success hover:opacity-80 text-xs"
-        >
+        <button (click)="saveResponsible()" [disabled]="savingResponsible" class="text-success hover:opacity-80 text-xs">
           Salvar
         </button>
-        <button
-          (click)="cancelEditResponsible()"
-          class="text-text-muted hover:text-text-primary text-xs"
-        >
-          Cancelar
-        </button>
+        <button (click)="cancelEditResponsible()" class="text-text-muted hover:text-text-primary text-xs">Cancelar</button>
       }
     </div>
 
@@ -120,9 +100,7 @@
                     class="w-24 p-1.5 rounded bg-surface-alt text-text-primary border border-border focus:border-accent outline-none"
                   />
                 </td>
-                <td class="px-3 py-2 text-text-primary">
-                  R$ {{ editQuantity * editUnitPrice | number: '1.2-2' }}
-                </td>
+                <td class="px-3 py-2 text-text-primary">R$ {{ editQuantity * editUnitPrice | number: '1.2-2' }}</td>
                 <td class="px-3 py-2 text-right whitespace-nowrap">
                   <button
                     (click)="saveEditItem(item.id)"
@@ -131,12 +109,7 @@
                   >
                     Salvar
                   </button>
-                  <button
-                    (click)="cancelEditItem()"
-                    class="text-text-muted hover:text-text-primary text-xs"
-                  >
-                    Cancelar
-                  </button>
+                  <button (click)="cancelEditItem()" class="text-text-muted hover:text-text-primary text-xs">Cancelar</button>
                 </td>
               } @else {
                 <td class="px-3 py-2 text-text-primary">
@@ -146,24 +119,12 @@
                   {{ item.userName || '—' }}
                 </td>
                 <td class="px-3 py-2 text-text-primary">{{ item.quantity }}</td>
-                <td class="px-3 py-2 text-text-primary">
-                  R$ {{ item.unitPrice | number: '1.2-2' }}
-                </td>
+                <td class="px-3 py-2 text-text-primary">R$ {{ item.unitPrice | number: '1.2-2' }}</td>
                 <td class="px-3 py-2 text-text-primary">R$ {{ item.total | number: '1.2-2' }}</td>
                 <td class="px-3 py-2 text-right whitespace-nowrap">
                   @if (canAddItem()) {
-                    <button
-                      (click)="startEditItem(item)"
-                      class="text-info hover:opacity-80 text-xs mr-2"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      (click)="removeItem(item.id)"
-                      class="text-danger hover:opacity-80 text-xs"
-                    >
-                      Remover
-                    </button>
+                    <button (click)="startEditItem(item)" class="text-info hover:opacity-80 text-xs mr-2">Editar</button>
+                    <button (click)="removeItem(item.id)" class="text-danger hover:opacity-80 text-xs">Remover</button>
                   }
                 </td>
               }
@@ -173,9 +134,7 @@
       </table>
     </div>
 
-    <div class="text-right text-text-primary font-semibold mb-4">
-      Total: R$ {{ document.total | number: '1.2-2' }}
-    </div>
+    <div class="text-right text-text-primary font-semibold mb-4">Total: R$ {{ document.total | number: '1.2-2' }}</div>
 
     <!-- Adicionar item -->
     @if (canAddItem()) {
@@ -295,56 +254,32 @@
         Imprimir
       </button>
       @if (canApprove()) {
-        <button (click)="approve()" class="action-btn bg-success text-white hover:opacity-90">
-          Aprovar
-        </button>
+        <button (click)="approve()" class="action-btn bg-success text-white hover:opacity-90">Aprovar</button>
       }
 
       @if (canPrintSale()) {
-        <button
-          (click)="openSalePrintModal()"
-          [disabled]="loadingSale"
-          class="action-btn bg-info text-white hover:opacity-90"
-        >
+        <button (click)="openSalePrintModal()" [disabled]="loadingSale" class="action-btn bg-info text-white hover:opacity-90">
           Imprimir venda
         </button>
       }
 
       @if (canFinalize()) {
-        <button
-          (click)="finalizeToSale()"
-          class="action-btn bg-success text-white hover:opacity-90"
-        >
-          Finalizar e faturar
-        </button>
+        <button (click)="finalizeToSale()" class="action-btn bg-success text-white hover:opacity-90">Finalizar e faturar</button>
       }
       @if (canAdvance()) {
-        <button
-          (click)="advanceToInProgress()"
-          class="action-btn bg-info text-white hover:opacity-90"
-        >
-          Iniciar execução
-        </button>
+        <button (click)="advanceToInProgress()" class="action-btn bg-info text-white hover:opacity-90">Iniciar execução</button>
       }
       @if (canCancel()) {
-        <button (click)="cancel()" class="action-btn bg-danger text-white hover:opacity-90">
-          Cancelar
-        </button>
+        <button (click)="cancel()" class="action-btn bg-danger text-white hover:opacity-90">Cancelar</button>
       }
       @if (canReopen()) {
-        <button (click)="reopen()" class="action-btn bg-warning text-white hover:opacity-90">
-          Reabrir
-        </button>
+        <button (click)="reopen()" class="action-btn bg-warning text-white hover:opacity-90">Reabrir</button>
       }
     </div>
   </div>
 </div>
 
-<app-modal-document-note
-  [documentData]="document"
-  [isOpen]="showPrintModal"
-  (closeModal)="closePrintModal()"
-/>
+<app-modal-document-note [documentData]="document" [isOpen]="showPrintModal" (closeModal)="closePrintModal()" />
 
 @if (showSalePrintModal && saleData) {
   <app-modal-sales-note [saleData]="saleData" (closeModal)="closeSalePrintModal()" />

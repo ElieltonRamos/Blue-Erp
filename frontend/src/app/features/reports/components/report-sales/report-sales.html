@@ -21,10 +21,7 @@
       />
     </div>
     <div class="flex items-end gap-2">
-      <button
-        (click)="setToday()"
-        class="bg-accent text-btn-text px-4 py-2 rounded hover:bg-accent-hover transition shadow-sm"
-      >
+      <button (click)="setToday()" class="bg-accent text-btn-text px-4 py-2 rounded hover:bg-accent-hover transition shadow-sm">
         Hoje
       </button>
       <button
@@ -35,10 +32,7 @@
       </button>
     </div>
     <div class="flex items-end gap-2">
-      <button
-        (click)="generateReport()"
-        class="bg-success text-btn-text px-6 py-2 rounded hover:opacity-90 transition shadow-sm"
-      >
+      <button (click)="generateReport()" class="bg-success text-btn-text px-6 py-2 rounded hover:opacity-90 transition shadow-sm">
         Gerar Relatório
       </button>
       @if (reportGenerated) {
@@ -52,23 +46,16 @@
     </div>
   </div>
 
-  <div
-    class="w-full max-w-6xl mx-auto bg-base rounded-2xl shadow-lg p-6 mt-6 text-text-primary border border-border-subtle"
-  >
-    <h2 class="text-2xl font-bold mb-2 text-text-primary">
-      Relatório de Vendas {{ getFullDate() }}
-    </h2>
-    <p class="text-text-secondary text-sm mb-6">
-      Consolidação das vendas realizadas no período selecionado.
-    </p>
+  <div class="w-full max-w-6xl mx-auto bg-base rounded-2xl shadow-lg p-6 mt-6 text-text-primary border border-border-subtle">
+    <h2 class="text-2xl font-bold mb-2 text-text-primary">Relatório de Vendas {{ getFullDate() }}</h2>
+    <p class="text-text-secondary text-sm mb-6">Consolidação das vendas realizadas no período selecionado.</p>
 
     <div class="bg-surface-alt border border-accent/50 p-4 rounded-xl shadow mb-6">
       <h3 class="text-accent font-semibold mb-2">💡 Entenda seus números</h3>
       <div class="space-y-3 text-sm">
         <p class="text-text-secondary">
           💰 <span class="text-text-primary font-medium">Faturamento Bruto:</span>
-          Soma de todas as vendas incluindo gorjetas (taxa de serviço). Representa tudo que entrou
-          no caixa.
+          Soma de todas as vendas incluindo gorjetas (taxa de serviço). Representa tudo que entrou no caixa.
         </p>
         <p class="text-text-secondary">
           📈 <span class="text-text-primary font-medium">Lucro Bruto:</span> Calculado como
@@ -143,13 +130,9 @@
       <h4 class="text-xl font-bold mb-4 text-text-primary">👤 Resumo por Operador</h4>
       <div class="flex gap-4 overflow-x-auto pb-2">
         @for (item of report.salesByOperator; track $index) {
-          <div
-            class="w-full sm:w-1/2 bg-surface-alt p-4 rounded-xl shadow-md border border-border-subtle shrink-0"
-          >
+          <div class="w-full sm:w-1/2 bg-surface-alt p-4 rounded-xl shadow-md border border-border-subtle shrink-0">
             <div class="text-lg font-bold mb-1 text-text-primary">{{ item.operator }}</div>
-            <div class="text-md font-semibold text-accent mb-2">
-              {{ item.totalSales }} Vendas – R$ {{ item.revenue }}
-            </div>
+            <div class="text-md font-semibold text-accent mb-2">{{ item.totalSales }} Vendas – R$ {{ item.revenue }}</div>
             <div class="text-sm text-text-secondary space-y-1">
               <div>
                 <span class="font-semibold text-text-primary">Dinheiro:</span> R$
@@ -186,9 +169,7 @@
       <div>
         <div class="company-name">{{ companyData?.tradeName || companyData?.corporateName }}</div>
         <div class="company-sub">
-          CNPJ: {{ companyData?.cnpj }} &nbsp;|&nbsp; {{ companyData?.city }}/{{
-            companyData?.state
-          }}
+          CNPJ: {{ companyData?.cnpj }} &nbsp;|&nbsp; {{ companyData?.city }}/{{ companyData?.state }}
         </div>
       </div>
     </div>
@@ -220,10 +201,9 @@
   </div>
 
   <div class="info-box" style="margin-top: 8px">
-    <strong>Faturamento Bruto</strong> = soma de todas as vendas incluindo gorjetas (taxa de
-    serviço).<br />
-    <strong>Lucro Bruto</strong> = calculado como (preço de venda − custo) × quantidade por item.
-    Gorjetas não entram nesse cálculo pois pertencem aos funcionários.<br />
+    <strong>Faturamento Bruto</strong> = soma de todas as vendas incluindo gorjetas (taxa de serviço).<br />
+    <strong>Lucro Bruto</strong> = calculado como (preço de venda − custo) × quantidade por item. Gorjetas não entram nesse
+    cálculo pois pertencem aos funcionários.<br />
     <strong>Descontos</strong> reduzem diretamente o faturamento e o lucro bruto.
   </div>
 
@@ -301,9 +281,7 @@
       <div class="bg-surface p-8 rounded-2xl border border-border shadow-2xl">
         <p>Carregando relatório...</p>
         <p class="mt-2 text-text-secondary font-normal">Isso pode demorar um pouco.</p>
-        <p class="mt-4 text-sm text-accent">
-          ⚠️ Evite gerar relatórios com mais de <strong>30 dias</strong> de diferença.
-        </p>
+        <p class="mt-4 text-sm text-accent">⚠️ Evite gerar relatórios com mais de <strong>30 dias</strong> de diferença.</p>
       </div>
     </div>
   </div>

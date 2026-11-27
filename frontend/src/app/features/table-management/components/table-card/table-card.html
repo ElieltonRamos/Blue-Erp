@@ -1,6 +1,4 @@
-<div
-  class="bg-surface-alt rounded-lg p-5 border border-border-subtle hover:border-border transition-all shadow-sm"
->
+<div class="bg-surface-alt rounded-lg p-5 border border-border-subtle hover:border-border transition-all shadow-sm">
   <div class="flex justify-between items-start mb-4">
     <div>
       <h3 class="text-xl font-bold text-text-primary mb-1">Mesa {{ table.number }}</h3>
@@ -60,20 +58,13 @@
     </div>
   </div>
 
-  <div
-    [class]="
-      statusColors[table.status] +
-      ' text-btn-text text-center py-2 rounded-md mb-3 text-sm font-medium shadow-sm'
-    "
-  >
+  <div [class]="statusColors[table.status] + ' text-btn-text text-center py-2 rounded-md mb-3 text-sm font-medium shadow-sm'">
     {{ statusLabels[table.status] }}
   </div>
 
   @if (table.status === 'OCCUPIED' || table.status === 'RESERVED') {
     <div class="bg-overlay rounded-md p-3 mb-3 space-y-2 border border-border-subtle">
-      <div class="text-text-primary text-sm">
-        <span class="text-text-muted">Cliente:</span> {{ table.customer }}
-      </div>
+      <div class="text-text-primary text-sm"><span class="text-text-muted">Cliente:</span> {{ table.customer }}</div>
       @if (table.time) {
         <div class="flex items-center gap-2 text-text-primary text-sm">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

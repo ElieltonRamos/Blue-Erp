@@ -1,9 +1,7 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-8">
   <!-- Dados da Empresa -->
   <section>
-    <h2 class="text-lg font-semibold mb-4" [style.color]="'var(--color-text-primary)'">
-      Dados da Empresa
-    </h2>
+    <h2 class="text-lg font-semibold mb-4" [style.color]="'var(--color-text-primary)'">Dados da Empresa</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div>
         <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'">
@@ -31,9 +29,7 @@
           class="w-full px-4 py-3 rounded-lg border-2 outline-none transition-all duration-200"
           [style.background-color]="'var(--color-surface-alt)'"
           [style.color]="'var(--color-text-primary)'"
-          [style.border-color]="
-            hasError('corporateName') ? 'var(--color-danger)' : 'var(--color-border)'
-          "
+          [style.border-color]="hasError('corporateName') ? 'var(--color-danger)' : 'var(--color-border)'"
         />
       </div>
 
@@ -48,9 +44,7 @@
           class="w-full px-4 py-3 rounded-lg border-2 outline-none transition-all duration-200"
           [style.background-color]="'var(--color-surface-alt)'"
           [style.color]="'var(--color-text-primary)'"
-          [style.border-color]="
-            hasError('tradeName') ? 'var(--color-danger)' : 'var(--color-border)'
-          "
+          [style.border-color]="hasError('tradeName') ? 'var(--color-danger)' : 'var(--color-border)'"
         />
       </div>
 
@@ -65,9 +59,7 @@
           class="w-full px-4 py-3 rounded-lg border-2 outline-none transition-all duration-200"
           [style.background-color]="'var(--color-surface-alt)'"
           [style.color]="'var(--color-text-primary)'"
-          [style.border-color]="
-            hasError('stateRegistration') ? 'var(--color-danger)' : 'var(--color-border)'
-          "
+          [style.border-color]="hasError('stateRegistration') ? 'var(--color-danger)' : 'var(--color-border)'"
         />
       </div>
 
@@ -104,9 +96,7 @@
       </div>
 
       <div class="md:col-span-2 lg:col-span-3">
-        <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'">
-          E-mail
-        </label>
+        <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'"> E-mail </label>
         <input
           type="email"
           formControlName="email"
@@ -170,9 +160,7 @@
       </div>
 
       <div>
-        <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'">
-          Complemento
-        </label>
+        <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'"> Complemento </label>
         <input
           type="text"
           formControlName="complement"
@@ -195,9 +183,7 @@
           class="w-full px-4 py-3 rounded-lg border-2 outline-none transition-all duration-200"
           [style.background-color]="'var(--color-surface-alt)'"
           [style.color]="'var(--color-text-primary)'"
-          [style.border-color]="
-            hasError('neighborhood') ? 'var(--color-danger)' : 'var(--color-border)'
-          "
+          [style.border-color]="hasError('neighborhood') ? 'var(--color-danger)' : 'var(--color-border)'"
         />
       </div>
 
@@ -227,9 +213,7 @@
           class="w-full px-4 py-3 rounded-lg border-2 outline-none transition-all duration-200"
           [style.background-color]="'var(--color-surface-alt)'"
           [style.color]="'var(--color-text-primary)'"
-          [style.border-color]="
-            hasError('cityCode') ? 'var(--color-danger)' : 'var(--color-border)'
-          "
+          [style.border-color]="hasError('cityCode') ? 'var(--color-danger)' : 'var(--color-border)'"
         />
       </div>
 

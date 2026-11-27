@@ -23,10 +23,8 @@ export class Reports implements OnInit {
   menuContext = 'report-sales';
   businessType: string | null = null;
 
-  classBtnSelected =
-    'bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg flex items-center gap-2 font-semibold';
-  classBtnUnselected =
-    'text-text-secondary hover:text-text-primary px-4 py-2 rounded-lg flex items-center gap-2 font-semibold';
+  classBtnSelected = 'bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg flex items-center gap-2 font-semibold';
+  classBtnUnselected = 'text-text-secondary hover:text-text-primary px-4 py-2 rounded-lg flex items-center gap-2 font-semibold';
 
   ngOnInit(): void {
     this.companyService.getCompanyInfo().subscribe({

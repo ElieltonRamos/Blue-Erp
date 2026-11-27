@@ -70,5 +70,5 @@ export const productReportMock: ProductReportSummary = {
   totalRevenue: 0,
   grandTotalConsumedCost: 0,
   totalReplenishmentCost: 0,
-  totalStockValue: 0
+  totalStockValue: 0,
 };

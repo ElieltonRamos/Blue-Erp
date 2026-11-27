@@ -1,7 +1,4 @@
-<div
-  class="min-h-screen flex flex-col items-center justify-start px-4 py-6"
-  [style.background-color]="'var(--color-base)'"
->
+<div class="min-h-screen flex flex-col items-center justify-start px-4 py-6" [style.background-color]="'var(--color-base)'">
   <!-- Botão fixo -->
   <button
     (click)="goToMenu()"
@@ -12,21 +9,13 @@
   </button>
 
   <!-- Container de conteúdo -->
-  <div
-    class="w-full max-w-[90%] rounded-2xl shadow-lg p-6"
-    [style.background-color]="'var(--color-surface)'"
-  >
-    <div
-      class="flex items-center justify-between mb-6 border-b pb-4"
-      [style.border-color]="'var(--color-border)'"
-    >
+  <div class="w-full max-w-[90%] rounded-2xl shadow-lg p-6" [style.background-color]="'var(--color-surface)'">
+    <div class="flex items-center justify-between mb-6 border-b pb-4" [style.border-color]="'var(--color-border)'">
       <div class="flex flex-wrap gap-4">
         <button
           (click)="changeMenuContext('listExpenses')"
           class="px-4 py-2 rounded-lg flex items-center gap-2 font-semibold transition"
-          [style.background-color]="
-            menuContext === 'listExpenses' ? 'var(--color-accent)' : 'var(--color-surface-alt)'
-          "
+          [style.background-color]="menuContext === 'listExpenses' ? 'var(--color-accent)' : 'var(--color-surface-alt)'"
           [style.color]="menuContext === 'listExpenses' ? 'var(--color-btn-text)' : 'var(--color-text-primary)'"
         >
           <i class="fas fa-list"></i> Contas a Pagar
@@ -35,9 +24,7 @@
         <button
           (click)="changeMenuContext('createExpenses')"
           class="px-4 py-2 rounded-lg flex items-center gap-2 font-semibold transition"
-          [style.background-color]="
-            menuContext === 'createExpenses' ? 'var(--color-accent)' : 'var(--color-surface-alt)'
-          "
+          [style.background-color]="menuContext === 'createExpenses' ? 'var(--color-accent)' : 'var(--color-surface-alt)'"
           [style.color]="menuContext === 'createExpenses' ? 'var(--color-btn-text)' : 'var(--color-text-primary)'"
         >
           <i class="fas fa-plus"></i> Nova Despesa
@@ -47,9 +34,7 @@
           (click)="changeMenuContext('promissoryNoteReceivable')"
           class="px-4 py-2 rounded-lg flex items-center gap-2 font-semibold transition"
           [style.background-color]="
-            menuContext === 'promissoryNoteReceivable'
-              ? 'var(--color-accent)'
-              : 'var(--color-surface-alt)'
+            menuContext === 'promissoryNoteReceivable' ? 'var(--color-accent)' : 'var(--color-surface-alt)'
           "
           [style.color]="menuContext === 'promissoryNoteReceivable' ? 'var(--color-btn-text)' : 'var(--color-text-primary)'"
         >

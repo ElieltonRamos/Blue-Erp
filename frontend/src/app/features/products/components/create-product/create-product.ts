@@ -91,9 +91,7 @@ export class CreateProduct implements OnInit {
         this.cdr.detectChanges();
       },
       error: (e) => {
-        this.notification.error(
-          `Erro ao carregar locais de produção: ${e.error?.message || e.message}`,
-        );
+        this.notification.error(`Erro ao carregar locais de produção: ${e.error?.message || e.message}`);
       },
     });
   }
@@ -104,8 +102,7 @@ export class CreateProduct implements OnInit {
         this.categories = res.data;
         this.cdr.detectChanges();
       },
-      error: (e) =>
-        this.notification.error(`Erro ao carregar categorias: ${e.error?.message || e.message}`),
+      error: (e) => this.notification.error(`Erro ao carregar categorias: ${e.error?.message || e.message}`),
     });
   }
 
@@ -257,9 +254,7 @@ export class CreateProduct implements OnInit {
       },
       error: (e) => {
         console.error('Erro ao criar produto:', e);
-        this.notification.error(
-          `Erro ao criar produto: ${e.error?.message ?? 'Erro desconhecido'}`,
-        );
+        this.notification.error(`Erro ao criar produto: ${e.error?.message ?? 'Erro desconhecido'}`);
       },
     });
   }
@@ -283,9 +278,7 @@ export class CreateProduct implements OnInit {
         this.formCreateProduct.patchValue({ code: response.code.toString() });
       },
       error: (e) => {
-        this.notification.error(
-          `Erro ao obter código sugerido: ${e.error?.message ?? 'Erro desconhecido'}`,
-        );
+        this.notification.error(`Erro ao obter código sugerido: ${e.error?.message ?? 'Erro desconhecido'}`);
       },
     });
   }

@@ -66,12 +66,7 @@
                 class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             }
@@ -110,12 +105,7 @@
                 class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             }
@@ -244,20 +234,14 @@
             }
 
             @if (!newClientSelected && !showClientCreateForm) {
-              <button
-                type="button"
-                (click)="openClientCreateForm()"
-                class="text-info hover:opacity-80 text-xs mt-1"
-              >
+              <button type="button" (click)="openClientCreateForm()" class="text-info hover:opacity-80 text-xs mt-1">
                 + Cadastrar novo cliente
               </button>
             }
           </div>
 
           <div>
-            <label class="block text-text-secondary font-medium mb-2 text-sm"
-              >Veículo (opcional)</label
-            >
+            <label class="block text-text-secondary font-medium mb-2 text-sm">Veículo (opcional)</label>
             <select
               [(ngModel)]="newAssetSelected"
               [disabled]="!newClientSelected || newAssetOptions.length === 0"
@@ -270,20 +254,14 @@
             </select>
 
             @if (newClientSelected && !showVehicleCreateForm) {
-              <button
-                type="button"
-                (click)="openVehicleCreateForm()"
-                class="text-info hover:opacity-80 text-xs mt-1"
-              >
+              <button type="button" (click)="openVehicleCreateForm()" class="text-info hover:opacity-80 text-xs mt-1">
                 + Cadastrar veículo
               </button>
             }
           </div>
 
           <div>
-            <label class="block text-text-secondary font-medium mb-2 text-sm"
-              >Responsável (opcional)</label
-            >
+            <label class="block text-text-secondary font-medium mb-2 text-sm">Responsável (opcional)</label>
             <select
               [(ngModel)]="newResponsibleId"
               class="w-full p-3 rounded-lg bg-surface-alt text-text-primary border border-border focus:border-accent outline-none"
@@ -298,10 +276,7 @@
 
         @if (showClientCreateForm) {
           <div class="mt-4">
-            <app-create-client
-              (created)="onClientCreated($event)"
-              (cancelled)="closeClientCreateForm()"
-            />
+            <app-create-client (created)="onClientCreated($event)" (cancelled)="closeClientCreateForm()" />
           </div>
         }
 
@@ -347,9 +322,7 @@
             class="w-full flex items-center justify-between px-6 py-4 hover:bg-overlay transition-colors text-left"
           >
             <div>
-              <span class="font-semibold text-text-primary"
-                >#{{ doc.id }} — {{ doc.clientName }}</span
-              >
+              <span class="font-semibold text-text-primary">#{{ doc.id }} — {{ doc.clientName }}</span>
               <span class="text-text-muted text-sm ml-2">
                 {{ doc.type === 'QUOTE' ? 'Orçamento' : 'Ordem de Serviço' }}
               </span>

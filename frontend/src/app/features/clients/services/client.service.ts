@@ -48,10 +48,7 @@ export class ClientService {
   }
 
   updateClient(id: number, client: Client) {
-    return this.client.patch<Client>(
-      `${this.apiUrl}/clients/${id}`,
-      this.buildUpdatePayload(client),
-    );
+    return this.client.patch<Client>(`${this.apiUrl}/clients/${id}`, this.buildUpdatePayload(client));
   }
 
   private readonly clearableFields = [
@@ -97,9 +94,7 @@ export class ClientService {
   private buildPayload(client: Client): Partial<Client> {
     const { id: _, createdAt, updatedAt, ...data } = client;
     return Object.fromEntries(
-      Object.entries(data).filter(
-        ([, value]) => value !== '' && value !== null && value !== undefined,
-      ),
+      Object.entries(data).filter(([, value]) => value !== '' && value !== null && value !== undefined),
     ) as Partial<Client>;
   }
 }

@@ -124,9 +124,7 @@ export class ManageProductionLocations implements OnInit {
   toggleActive(location: ProductionLocation) {
     this.locationsService.toggleActive(location.id).subscribe({
       next: () => {
-        this.notification.success(
-          `Local ${location.active ? 'desativado' : 'ativado'} com sucesso!`,
-        );
+        this.notification.success(`Local ${location.active ? 'desativado' : 'ativado'} com sucesso!`);
         this.loadLocations();
       },
       error: (e) => {

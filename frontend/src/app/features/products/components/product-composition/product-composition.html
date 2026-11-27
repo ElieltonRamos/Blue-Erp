@@ -1,35 +1,18 @@
 <div class="space-y-6">
-  <h3
-    class="flex items-center gap-2"
-    style="font-size: 18px; font-weight: 500; color: var(--color-fiscal)"
-  >
-    <span
-      style="
-        width: 4px;
-        height: 24px;
-        background: var(--color-fiscal);
-        border-radius: 2px;
-        display: inline-block;
-      "
-    ></span>
+  <h3 class="flex items-center gap-2" style="font-size: 18px; font-weight: 500; color: var(--color-fiscal)">
+    <span style="width: 4px; height: 24px; background: var(--color-fiscal); border-radius: 2px; display: inline-block"></span>
     Composição do Produto
   </h3>
 
   <!-- Totalizadores -->
   <div class="grid grid-cols-2 gap-4">
-    <div
-      style="background: rgba(74, 111, 165, 0.12); border: 0.5px solid rgba(74, 111, 165, 0.4)"
-      class="rounded-lg p-4"
-    >
+    <div style="background: rgba(74, 111, 165, 0.12); border: 0.5px solid rgba(74, 111, 165, 0.4)" class="rounded-lg p-4">
       <div style="color: var(--color-info)" class="text-sm font-medium mb-1">Total de Itens</div>
       <div style="color: var(--color-text-primary)" class="text-2xl font-bold">
         {{ compositionItems.length }}
       </div>
     </div>
-    <div
-      style="background: rgba(61, 122, 86, 0.12); border: 0.5px solid rgba(61, 122, 86, 0.4)"
-      class="rounded-lg p-4"
-    >
+    <div style="background: rgba(61, 122, 86, 0.12); border: 0.5px solid rgba(61, 122, 86, 0.4)" class="rounded-lg p-4">
       <div style="color: #4ade80" class="text-sm font-medium mb-1">Custo Total</div>
       <div style="color: var(--color-text-primary)" class="text-2xl font-bold">
         {{ formatCurrency(getTotalCost()) }}
@@ -111,21 +94,14 @@
           </button>
         </div>
       } @empty {
-        <p style="color: var(--color-text-muted)" class="text-center py-8">
-          Nenhum item adicionado. Adicione abaixo.
-        </p>
+        <p style="color: var(--color-text-muted)" class="text-center py-8">Nenhum item adicionado. Adicione abaixo.</p>
       }
     </div>
   </div>
 
   <!-- Adicionar Item -->
-  <div
-    class="p-4 rounded-lg"
-    style="background: rgba(168, 85, 247, 0.05); border: 0.5px solid rgba(168, 85, 247, 0.3)"
-  >
-    <h4 style="color: var(--color-text-primary)" class="font-semibold mb-4">
-      Adicionar Item à Composição
-    </h4>
+  <div class="p-4 rounded-lg" style="background: rgba(168, 85, 247, 0.05); border: 0.5px solid rgba(168, 85, 247, 0.3)">
+    <h4 style="color: var(--color-text-primary)" class="font-semibold mb-4">Adicionar Item à Composição</h4>
 
     <!-- Toggle tipo de item -->
     <div class="flex gap-2 mb-4">
@@ -166,18 +142,11 @@
             [ngModelOptions]="{ standalone: true }"
             placeholder="Buscar matéria-prima por nome..."
             class="w-full p-3 rounded-lg outline-none font-medium"
-            style="
-              background: rgba(255, 255, 255, 0.92);
-              color: #1a1a1f;
-              border: 2px solid transparent;
-            "
+            style="background: rgba(255, 255, 255, 0.92); color: #1a1a1f; border: 2px solid transparent"
           />
 
           @if (searchResults.length > 0) {
-            <div
-              class="absolute z-10 w-full mt-1 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-              style="background: #fff"
-            >
+            <div class="absolute z-10 w-full mt-1 rounded-lg shadow-lg max-h-60 overflow-y-auto" style="background: #fff">
               @for (material of searchResults; track material.id) {
                 <button
                   type="button"
@@ -201,20 +170,8 @@
 
           @if (isSearching) {
             <div class="absolute right-3 top-1/2 -translate-y-1/2">
-              <svg
-                class="animate-spin h-5 w-5"
-                style="color: var(--color-fiscal)"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  class="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  stroke-width="4"
-                ></circle>
+              <svg class="animate-spin h-5 w-5" style="color: var(--color-fiscal)" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path
                   class="opacity-75"
                   fill="currentColor"
@@ -226,10 +183,7 @@
         </div>
 
         @if (selectedMaterial) {
-          <div
-            class="rounded-lg p-3"
-            style="background: rgba(74, 111, 165, 0.1); border: 0.5px solid rgba(74, 111, 165, 0.3)"
-          >
+          <div class="rounded-lg p-3" style="background: rgba(74, 111, 165, 0.1); border: 0.5px solid rgba(74, 111, 165, 0.3)">
             <div class="text-sm mb-1" style="color: #93c5fd">Matéria-Prima Selecionada:</div>
             <div class="font-semibold" style="color: var(--color-text-primary)">
               {{ selectedMaterial.name }}
@@ -251,18 +205,11 @@
             [ngModelOptions]="{ standalone: true }"
             placeholder="Buscar produto semipronto por nome..."
             class="w-full p-3 rounded-lg outline-none font-medium"
-            style="
-              background: rgba(255, 255, 255, 0.92);
-              color: #1a1a1f;
-              border: 2px solid transparent;
-            "
+            style="background: rgba(255, 255, 255, 0.92); color: #1a1a1f; border: 2px solid transparent"
           />
 
           @if (subProductSearchResults.length > 0) {
-            <div
-              class="absolute z-10 w-full mt-1 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-              style="background: #fff"
-            >
+            <div class="absolute z-10 w-full mt-1 rounded-lg shadow-lg max-h-60 overflow-y-auto" style="background: #fff">
               @for (product of subProductSearchResults; track product.id) {
                 <button
                   type="button"
@@ -286,20 +233,8 @@
 
           @if (isSearchingSubProduct) {
             <div class="absolute right-3 top-1/2 -translate-y-1/2">
-              <svg
-                class="animate-spin h-5 w-5"
-                style="color: var(--color-delivery)"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  class="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  stroke-width="4"
-                ></circle>
+              <svg class="animate-spin h-5 w-5" style="color: var(--color-delivery)" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path
                   class="opacity-75"
                   fill="currentColor"
@@ -311,18 +246,13 @@
         </div>
 
         @if (selectedSubProduct) {
-          <div
-            class="rounded-lg p-3"
-            style="background: rgba(249, 115, 22, 0.1); border: 0.5px solid rgba(249, 115, 22, 0.3)"
-          >
+          <div class="rounded-lg p-3" style="background: rgba(249, 115, 22, 0.1); border: 0.5px solid rgba(249, 115, 22, 0.3)">
             <div class="text-sm mb-1" style="color: #fdba74">Semipronto Selecionado:</div>
             <div class="font-semibold" style="color: var(--color-text-primary)">
               {{ selectedSubProduct.name }}
             </div>
             <div class="text-sm" style="color: var(--color-text-secondary)">
-              Custo: {{ formatCurrency(selectedSubProduct.costPrice) }}/{{
-                selectedSubProduct.unit
-              }}
+              Custo: {{ formatCurrency(selectedSubProduct.costPrice) }}/{{ selectedSubProduct.unit }}
             </div>
           </div>
         }
@@ -338,26 +268,16 @@
           min="0"
           placeholder="Quantidade"
           class="flex-1 p-3 rounded-lg outline-none font-medium"
-          style="
-            background: rgba(255, 255, 255, 0.92);
-            color: #1a1a1f;
-            border: 2px solid transparent;
-          "
+          style="background: rgba(255, 255, 255, 0.92); color: #1a1a1f; border: 2px solid transparent"
         />
         <button
           type="button"
           (click)="addMaterial()"
-          [disabled]="
-            (isMaterialMode && !selectedMaterial) ||
-            (isSubProductMode && !selectedSubProduct) ||
-            !newQuantity
-          "
+          [disabled]="(isMaterialMode && !selectedMaterial) || (isSubProductMode && !selectedSubProduct) || !newQuantity"
           class="px-6 py-3 rounded-lg font-semibold transition-colors text-white"
           style="background: var(--color-fiscal)"
           [style.background]="
-            (isMaterialMode && !selectedMaterial) ||
-            (isSubProductMode && !selectedSubProduct) ||
-            !newQuantity
+            (isMaterialMode && !selectedMaterial) || (isSubProductMode && !selectedSubProduct) || !newQuantity
               ? 'var(--color-text-muted)'
               : 'var(--color-fiscal)'
           "
@@ -371,19 +291,8 @@
   <!-- Passos de Preparação -->
   <div class="space-y-4 mt-8" [formGroup]="compositionForm">
     <div class="flex justify-between items-center">
-      <h4
-        class="flex items-center gap-2"
-        style="font-size: 16px; font-weight: 500; color: var(--color-fiscal)"
-      >
-        <span
-          style="
-            width: 4px;
-            height: 20px;
-            background: var(--color-fiscal);
-            border-radius: 2px;
-            display: inline-block;
-          "
-        ></span>
+      <h4 class="flex items-center gap-2" style="font-size: 16px; font-weight: 500; color: var(--color-fiscal)">
+        <span style="width: 4px; height: 20px; background: var(--color-fiscal); border-radius: 2px; display: inline-block"></span>
         Passos de Preparação
       </h4>
       <button
@@ -424,9 +333,7 @@
             </button>
           </div>
           <div class="shrink-0 w-12">
-            <span style="color: var(--color-text-primary)" class="font-bold text-lg"
-              >{{ $index + 1 }}.</span
-            >
+            <span style="color: var(--color-text-primary)" class="font-bold text-lg">{{ $index + 1 }}.</span>
           </div>
           <div class="flex-1">
             <textarea
@@ -442,12 +349,9 @@
               "
             ></textarea>
             @if (
-              preparationSteps.at($index).get('description')?.touched &&
-              preparationSteps.at($index).get('description')?.invalid
+              preparationSteps.at($index).get('description')?.touched && preparationSteps.at($index).get('description')?.invalid
             ) {
-              <p class="text-sm mt-1" style="color: #f87171">
-                Descrição deve ter pelo menos 5 caracteres
-              </p>
+              <p class="text-sm mt-1" style="color: #f87171">Descrição deve ter pelo menos 5 caracteres</p>
             }
           </div>
           <button

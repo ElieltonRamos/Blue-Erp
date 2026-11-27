@@ -43,8 +43,8 @@ export function alertConfirm(title: string): Promise<boolean> {
 export function alertSuccess(msg: string) {
   Swal.fire({
     title: msg,
-    icon: "success",
-    draggable: true
+    icon: 'success',
+    draggable: true,
   });
 }
 
@@ -54,6 +54,6 @@ export function alertWarning(message: string): void {
     title: 'Atenção',
     text: message,
     confirmButtonText: 'OK',
-    confirmButtonColor: '#f39c12'
+    confirmButtonColor: '#f39c12',
   });
 }

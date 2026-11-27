@@ -29,10 +29,7 @@
       </button>
     </div>
     <div class="flex items-end">
-      <button
-        (click)="generateReport()"
-        class="bg-success text-btn-text px-6 py-2 rounded hover:opacity-90 transition shadow-sm"
-      >
+      <button (click)="generateReport()" class="bg-success text-btn-text px-6 py-2 rounded hover:opacity-90 transition shadow-sm">
         Gerar Relatório
       </button>
     </div>
@@ -49,15 +46,12 @@
   <div class="text-text-primary">
     <h2 class="text-2xl font-bold mb-2">Relatório de Despesas {{ getFullDate() }}</h2>
     <p class="text-text-secondary text-sm mb-6">
-      Consolidação das despesas registradas no período, agrupadas por status de pagamento e por
-      fornecedor. Use este relatório para acompanhar compromissos financeiros em aberto e controlar
-      o fluxo de saídas de caixa.
+      Consolidação das despesas registradas no período, agrupadas por status de pagamento e por fornecedor. Use este relatório
+      para acompanhar compromissos financeiros em aberto e controlar o fluxo de saídas de caixa.
     </p>
 
     <div class="bg-surface p-4 rounded-xl shadow mb-4 max-w-sm border border-border">
-      <h3 class="text-xs text-text-muted uppercase tracking-wide mb-1">
-        Total de Despesas no Período
-      </h3>
+      <h3 class="text-xs text-text-muted uppercase tracking-wide mb-1">Total de Despesas no Período</h3>
       <p class="text-3xl font-bold text-danger">R$ {{ report.totalValue.toFixed(2) }}</p>
       <p class="text-xs text-text-muted mt-1">Soma de todas as despesas independente do status</p>
     </div>
@@ -66,16 +60,14 @@
       <h3 class="text-danger font-semibold mb-1">💡 Como interpretar este relatório</h3>
       <p class="text-text-secondary text-sm">
         O total geral inclui
-        <span class="text-text-primary font-medium">todas as despesas do período</span>,
-        independente de estarem pagas ou não. Acompanhe o status de cada parcela para evitar
-        inadimplência: <span class="text-success font-medium">Pago</span> = quitado,
-        <span class="text-warning font-medium">Pendente</span> = aguardando pagamento,
-        <span class="text-danger font-medium">Atrasado</span> = marcado manualmente com esse status
-        no cadastro da despesa.
+        <span class="text-text-primary font-medium">todas as despesas do período</span>, independente de estarem pagas ou não.
+        Acompanhe o status de cada parcela para evitar inadimplência: <span class="text-success font-medium">Pago</span> =
+        quitado, <span class="text-warning font-medium">Pendente</span> = aguardando pagamento,
+        <span class="text-danger font-medium">Atrasado</span> = marcado manualmente com esse status no cadastro da despesa.
       </p>
       <p class="text-text-muted text-sm mt-2">
-        O detalhamento por fornecedor permite identificar quais parceiros concentram maior volume de
-        gastos, auxiliando em negociações e revisão de contratos.
+        O detalhamento por fornecedor permite identificar quais parceiros concentram maior volume de gastos, auxiliando em
+        negociações e revisão de contratos.
       </p>
     </div>
 
@@ -83,8 +75,7 @@
       <h3 class="text-xl font-bold mb-1">📋 Total por Status</h3>
       <p class="text-text-secondary text-sm mb-4">
         Distribuição das despesas conforme situação de pagamento. Atenção especial para o valor em
-        <span class="text-danger font-bold">Atrasado</span> — representa obrigações vencidas que
-        exigem ação imediata.
+        <span class="text-danger font-bold">Atrasado</span> — representa obrigações vencidas que exigem ação imediata.
       </p>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl">
         <div class="bg-surface p-4 rounded-xl shadow border border-border">
@@ -101,8 +92,7 @@
           <h4 class="text-xs text-text-muted uppercase tracking-wide mb-1">Atrasado</h4>
           <p class="text-2xl font-semibold text-danger">R$ {{ report.totalByStatus.atrasado }}</p>
           <p class="text-xs text-text-muted mt-1">
-            Despesas marcadas manualmente como atrasadas — verifique o cadastro para confirmar a
-            situação real
+            Despesas marcadas manualmente como atrasadas — verifique o cadastro para confirmar a situação real
           </p>
         </div>
       </div>
@@ -111,19 +101,15 @@
     <div>
       <h3 class="text-xl font-bold mb-1">🏢 Total por Fornecedor</h3>
       <p class="text-text-secondary text-sm mb-4">
-        Valor total gasto com cada fornecedor no período. Fornecedores com alto volume de despesas
-        são candidatos a renegociação de prazos ou condições.
+        Valor total gasto com cada fornecedor no período. Fornecedores com alto volume de despesas são candidatos a renegociação
+        de prazos ou condições.
       </p>
       <div class="overflow-x-auto max-w-full">
         <table class="w-full text-left border-collapse border border-border">
           <thead>
             <tr class="bg-surface-alt">
-              <th class="border border-border px-4 py-2 text-text-secondary font-medium">
-                Fornecedor
-              </th>
-              <th class="border border-border px-4 py-2 text-text-secondary font-medium">
-                Total (R$)
-              </th>
+              <th class="border border-border px-4 py-2 text-text-secondary font-medium">Fornecedor</th>
+              <th class="border border-border px-4 py-2 text-text-secondary font-medium">Total (R$)</th>
             </tr>
           </thead>
           <tbody>
@@ -151,9 +137,7 @@
       <div>
         <div class="company-name">{{ companyData?.tradeName || companyData?.corporateName }}</div>
         <div class="company-sub">
-          CNPJ: {{ companyData?.cnpj }} &nbsp;|&nbsp; {{ companyData?.city }}/{{
-            companyData?.state
-          }}
+          CNPJ: {{ companyData?.cnpj }} &nbsp;|&nbsp; {{ companyData?.city }}/{{ companyData?.state }}
         </div>
       </div>
     </div>
@@ -214,9 +198,7 @@
       <div class="bg-surface p-8 rounded-2xl border border-border shadow-2xl">
         <p>Carregando relatório...</p>
         <p class="mt-2 text-text-secondary font-normal">Isso pode demorar um pouco.</p>
-        <p class="mt-4 text-sm text-accent">
-          ⚠️ Evite gerar relatórios com mais de <strong>30 dias</strong> de diferença.
-        </p>
+        <p class="mt-4 text-sm text-accent">⚠️ Evite gerar relatórios com mais de <strong>30 dias</strong> de diferença.</p>
       </div>
     </div>
   </div>

@@ -35,9 +35,7 @@ export class KitchenService {
       url = `${this.apiUrl}/location/${location}`;
     }
 
-    return this.client
-      .get<any[]>(url)
-      .pipe(map((productions) => this.mapProductionsToItems(productions)));
+    return this.client.get<any[]>(url).pipe(map((productions) => this.mapProductionsToItems(productions)));
   }
   /**
    * Agrupa produções por pedido
@@ -74,12 +72,8 @@ export class KitchenService {
    * Calcula status do pedido baseado nos items
    */
   private calculateOrderStatus(items: KitchenOrderItem[]): 'pending' | 'preparing' | 'ready' {
-    const allCompleted = items.every(
-      (item) => item.productionStatus === ProductionStatus.COMPLETED,
-    );
-    const someInProgress = items.some(
-      (item) => item.productionStatus === ProductionStatus.IN_PROGRESS,
-    );
+    const allCompleted = items.every((item) => item.productionStatus === ProductionStatus.COMPLETED);
+    const someInProgress = items.some((item) => item.productionStatus === ProductionStatus.IN_PROGRESS);
 
     if (allCompleted) return 'ready';
     if (someInProgress) return 'preparing';
@@ -109,11 +103,7 @@ export class KitchenService {
   /**
    * Inicia preparo de todos os items de um pedido
    */
-  startPreparing(
-    orderId: number,
-    items: KitchenOrderItem[],
-    productionLocation?: string,
-  ): Observable<any> {
+  startPreparing(orderId: number, items: KitchenOrderItem[], productionLocation?: string): Observable<any> {
     let pendingItems = items.filter((item) => item.productionStatus === ProductionStatus.PENDING);
 
     // Filtrar apenas itens da cozinha atual
@@ -146,9 +136,7 @@ export class KitchenService {
    * Marca todos os items de um pedido como completos
    */
   markAsReady(orderId: number, items: KitchenOrderItem[]): Observable<any> {
-    const inProgressItems = items.filter(
-      (item) => item.productionStatus === ProductionStatus.IN_PROGRESS,
-    );
+    const inProgressItems = items.filter((item) => item.productionStatus === ProductionStatus.IN_PROGRESS);
 
     if (inProgressItems.length === 0) {
       return new Observable((observer) => {
@@ -173,9 +161,7 @@ export class KitchenService {
    * Marca todos os items de um pedido como entregues
    */
   markAsDelivered(orderId: number, items: KitchenOrderItem[]): Observable<any> {
-    const completedItems = items.filter(
-      (item) => item.productionStatus === ProductionStatus.COMPLETED,
-    );
+    const completedItems = items.filter((item) => item.productionStatus === ProductionStatus.COMPLETED);
 
     if (completedItems.length === 0) {
       return new Observable((observer) => {
@@ -200,9 +186,7 @@ export class KitchenService {
    * Cancela todas as produções de um pedido
    */
   cancelOrder(orderId: number, items: KitchenOrderItem[]): Observable<any> {
-    const cancelableItems = items.filter(
-      (item) => item.productionStatus !== ProductionStatus.COMPLETED,
-    );
+    const cancelableItems = items.filter((item) => item.productionStatus !== ProductionStatus.COMPLETED);
 
     if (cancelableItems.length === 0) {
       return new Observable((observer) => {

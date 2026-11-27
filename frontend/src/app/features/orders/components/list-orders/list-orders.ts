@@ -47,8 +47,7 @@ export class ListOrders implements OnInit {
 
   private setDefaultDates(): void {
     const now = new Date();
-    const referenceDate =
-      now.getHours() < 6 ? new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1) : now;
+    const referenceDate = now.getHours() < 6 ? new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1) : now;
 
     const year = referenceDate.getFullYear();
     const month = String(referenceDate.getMonth() + 1).padStart(2, '0');

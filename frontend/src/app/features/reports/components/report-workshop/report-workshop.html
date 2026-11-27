@@ -1,9 +1,7 @@
 <div class="w-full max-w-7xl bg-surface rounded-2xl p-6">
   <div class="mb-4">
     <h1 class="text-3xl font-bold text-text-primary">Relatório da Oficina</h1>
-    <p class="text-sm text-text-muted mt-1">
-      Uma visão geral simples de como foi o movimento da oficina no período escolhido
-    </p>
+    <p class="text-sm text-text-muted mt-1">Uma visão geral simples de como foi o movimento da oficina no período escolhido</p>
   </div>
 
   <!-- Dica de uso -->
@@ -11,8 +9,8 @@
     <h3 class="text-support font-semibold mb-1">💡 Como usar</h3>
     <p class="text-text-secondary text-sm">
       Escolha um período abaixo (ou use os atalhos "Hoje", "Esta Semana" ou "Este Mês") e clique em
-      <strong>Gerar Relatório</strong>. Você vai ver quanto a oficina faturou, quantos veículos
-      passaram por aqui e quais voltaram mais vezes.
+      <strong>Gerar Relatório</strong>. Você vai ver quanto a oficina faturou, quantos veículos passaram por aqui e quais voltaram
+      mais vezes.
     </p>
   </div>
 
@@ -35,22 +33,11 @@
       />
     </div>
     <div class="flex items-end gap-2">
-      <button
-        (click)="setToday()"
-        class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded transition"
-      >
-        Hoje
-      </button>
-      <button
-        (click)="setThisWeek()"
-        class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded transition"
-      >
+      <button (click)="setToday()" class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded transition">Hoje</button>
+      <button (click)="setThisWeek()" class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded transition">
         Esta Semana
       </button>
-      <button
-        (click)="setThisMonth()"
-        class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded transition"
-      >
+      <button (click)="setThisMonth()" class="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded transition">
         Este Mês
       </button>
       <div class="flex items-end">
@@ -65,10 +52,7 @@
       </div>
     </div>
     <div class="flex items-end">
-      <button
-        (click)="generateReport()"
-        class="bg-success hover:bg-success/80 text-white px-6 py-2 rounded transition"
-      >
+      <button (click)="generateReport()" class="bg-success hover:bg-success/80 text-white px-6 py-2 rounded transition">
         Gerar Relatório
       </button>
     </div>
@@ -120,8 +104,8 @@
       <div class="bg-surface-alt p-4 rounded-xl mb-6">
         <h3 class="text-lg font-bold mb-1 text-text-primary">🏆 Veículos que mais vieram</h3>
         <p class="text-xs text-text-muted mb-4">
-          Os veículos que passaram mais vezes pela oficina no período. Isso pode indicar clientes
-          fiéis ou veículos com manutenção recorrente.
+          Os veículos que passaram mais vezes pela oficina no período. Isso pode indicar clientes fiéis ou veículos com manutenção
+          recorrente.
         </p>
 
         @if (report.topVehicles.length > 0) {
@@ -151,8 +135,8 @@
       <div class="mb-6">
         <h3 class="text-lg font-bold mb-1 text-text-primary">Veículos Atendidos</h3>
         <p class="text-xs text-text-muted mb-4">
-          Cada card mostra um veículo diferente que passou pela oficina, quantas vezes ele veio,
-          quanto gastou no total e quando foi a última vez que ele apareceu.
+          Cada card mostra um veículo diferente que passou pela oficina, quantas vezes ele veio, quanto gastou no total e quando
+          foi a última vez que ele apareceu.
         </p>
 
         @if (report.vehicles.length > 0) {
@@ -190,8 +174,8 @@
         <div class="bg-surface-alt border border-warning/40 rounded-xl p-4">
           <h3 class="text-warning font-semibold mb-1">⚠️ Orçamentos/OS sem veículo</h3>
           <p class="text-text-secondary text-sm mb-3">
-            Esses orçamentos ou ordens de serviço não têm um veículo cadastrado. Pode ser um serviço
-            avulso ou um cadastro que passou batido.
+            Esses orçamentos ou ordens de serviço não têm um veículo cadastrado. Pode ser um serviço avulso ou um cadastro que
+            passou batido.
           </p>
           <div class="flex gap-6">
             <div>

@@ -21,10 +21,7 @@
       />
     </div>
     <div class="flex items-end gap-2">
-      <button
-        (click)="setToday()"
-        class="bg-accent text-btn-text px-4 py-2 rounded hover:bg-accent-hover transition shadow-sm"
-      >
+      <button (click)="setToday()" class="bg-accent text-btn-text px-4 py-2 rounded hover:bg-accent-hover transition shadow-sm">
         Hoje
       </button>
       <button
@@ -35,10 +32,7 @@
       </button>
     </div>
     <div class="flex items-end gap-2">
-      <button
-        (click)="generateReport()"
-        class="bg-success text-btn-text px-6 py-2 rounded hover:opacity-90 transition shadow-sm"
-      >
+      <button (click)="generateReport()" class="bg-success text-btn-text px-6 py-2 rounded hover:opacity-90 transition shadow-sm">
         Gerar Relatório
       </button>
       @if (reportGenerated) {
@@ -52,9 +46,7 @@
     </div>
   </div>
 
-  <div
-    class="w-full max-w-6xl mx-auto bg-base rounded-2xl shadow-lg p-6 mt-6 text-text-primary border border-border-subtle"
-  >
+  <div class="w-full max-w-6xl mx-auto bg-base rounded-2xl shadow-lg p-6 mt-6 text-text-primary border border-border-subtle">
     <h2 class="text-2xl font-bold mb-2">Relatório de Produtos {{ getFullDate() }}</h2>
     <p class="text-text-secondary text-sm mb-6">
       Consolidação de vendas, consumo de matéria-prima e situação de estoque no período selecionado.
@@ -73,16 +65,12 @@
       </div>
       <div class="bg-surface p-4 rounded-xl shadow border border-border">
         <h3 class="text-xs text-text-muted uppercase tracking-wide mb-1">CMV de Matéria-Prima</h3>
-        <p class="text-2xl font-semibold text-warning">
-          R$ {{ report.grandTotalConsumedCost.toFixed(2) }}
-        </p>
+        <p class="text-2xl font-semibold text-warning">R$ {{ report.grandTotalConsumedCost.toFixed(2) }}</p>
         <p class="text-xs text-text-muted mt-1">Custo teórico de MP consumida</p>
       </div>
       <div class="bg-surface p-4 rounded-xl shadow border border-border">
         <h3 class="text-xs text-text-muted uppercase tracking-wide mb-1">Custo de Reposição</h3>
-        <p class="text-2xl font-semibold text-danger">
-          R$ {{ report.totalReplenishmentCost.toFixed(2) }}
-        </p>
+        <p class="text-2xl font-semibold text-danger">R$ {{ report.totalReplenishmentCost.toFixed(2) }}</p>
         <p class="text-xs text-text-muted mt-1">Estimativa para repor itens abaixo do mínimo</p>
       </div>
       <div class="bg-surface p-4 rounded-xl shadow border border-border">
@@ -90,9 +78,7 @@
         <p class="text-2xl font-semibold text-info">R$ {{ report.totalStockValue.toFixed(2) }}</p>
         <p class="text-xs text-text-muted mt-1">Valor total do estoque atual</p>
       </div>
-      <div
-        class="bg-surface-alt border border-warning/50 p-4 rounded-xl shadow col-span-1 sm:col-span-2 lg:col-span-4"
-      >
+      <div class="bg-surface-alt border border-warning/50 p-4 rounded-xl shadow col-span-1 sm:col-span-2 lg:col-span-4">
         <h3 class="text-warning font-semibold mb-1">💡 O que é CMV?</h3>
         <p class="text-text-secondary text-sm">
           Custo total dos insumos consumidos para produzir tudo que foi vendido.
@@ -102,8 +88,7 @@
         </p>
         <p class="text-text-muted text-sm mt-2">
           <span class="text-success font-medium">Faturamento − CMV = Lucro Bruto estimado.</span>
-          Este valor é <span class="text-warning">teórico</span> — não considera perdas ou variações
-          de preço por lote.
+          Este valor é <span class="text-warning">teórico</span> — não considera perdas ou variações de preço por lote.
         </p>
       </div>
     </div>
@@ -129,16 +114,12 @@
                 <td class="py-2 px-3 text-text-primary">{{ product.productName }}</td>
                 <td class="py-2 px-3 text-text-primary">{{ product.totalSold }}</td>
                 <td class="py-2 px-3 text-text-primary">R$ {{ product.revenue.toFixed(2) }}</td>
-                <td class="py-2 px-3 text-text-primary">
-                  R$ {{ product.averagePrice.toFixed(2) }}
-                </td>
+                <td class="py-2 px-3 text-text-primary">R$ {{ product.averagePrice.toFixed(2) }}</td>
               </tr>
             }
             @if (report.topSellingProducts.length === 0) {
               <tr>
-                <td colspan="5" class="py-4 text-center text-text-muted">
-                  Nenhum produto vendido no período
-                </td>
+                <td colspan="5" class="py-4 text-center text-text-muted">Nenhum produto vendido no período</td>
               </tr>
             }
           </tbody>
@@ -148,9 +129,7 @@
 
     <div class="bg-surface p-4 rounded-xl mb-6 border border-border">
       <h4 class="text-xl font-bold text-text-primary mb-1">🥫 Matérias-Primas Mais Utilizadas</h4>
-      <p class="text-text-secondary text-sm mb-4">
-        Consumo teórico calculado com base nas fichas técnicas.
-      </p>
+      <p class="text-text-secondary text-sm mb-4">Consumo teórico calculado com base nas fichas técnicas.</p>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead class="border-b border-border">
@@ -170,17 +149,13 @@
                 <td class="py-2 px-3 text-text-primary">{{ material.totalUsed }}</td>
                 <td class="py-2 px-3 text-text-primary">{{ material.unit }}</td>
                 <td class="py-2 px-3 text-text-primary">R$ {{ material.unitCost.toFixed(2) }}</td>
-                <td class="py-2 px-3 font-semibold text-warning">
-                  R$ {{ material.totalCost.toFixed(2) }}
-                </td>
+                <td class="py-2 px-3 font-semibold text-warning">R$ {{ material.totalCost.toFixed(2) }}</td>
                 <td class="py-2 px-3 text-text-muted">{{ material.usageFrequency }}x</td>
               </tr>
             }
             @if (report.mostUsedRawMaterials.length === 0) {
               <tr>
-                <td colspan="6" class="py-4 text-center text-text-muted">
-                  Nenhuma matéria-prima utilizada no período
-                </td>
+                <td colspan="6" class="py-4 text-center text-text-muted">Nenhuma matéria-prima utilizada no período</td>
               </tr>
             }
           </tbody>
@@ -189,9 +164,7 @@
     </div>
 
     <div class="bg-surface p-4 rounded-xl mb-6 border border-border">
-      <h4 class="text-xl font-bold text-text-primary mb-1">
-        ⚠️ Matérias-Primas Próximas do Vencimento
-      </h4>
+      <h4 class="text-xl font-bold text-text-primary mb-1">⚠️ Matérias-Primas Próximas do Vencimento</h4>
       <p class="text-text-secondary text-sm mb-4">Materiais com validade nos próximos 30 dias.</p>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
@@ -220,12 +193,8 @@
                 <td class="py-2 px-3">{{ formatDate(material.expiryDate) }}</td>
                 <td class="py-2 px-3">
                   <span
-                    [class.text-time-critical]="
-                      material.daysUntilExpiry <= 7 && material.daysUntilExpiry > 0
-                    "
-                    [class.text-time-warn]="
-                      material.daysUntilExpiry > 7 && material.daysUntilExpiry <= 15
-                    "
+                    [class.text-time-critical]="material.daysUntilExpiry <= 7 && material.daysUntilExpiry > 0"
+                    [class.text-time-warn]="material.daysUntilExpiry > 7 && material.daysUntilExpiry <= 15"
                     [class.font-bold]="material.daysUntilExpiry <= 15"
                   >
                     {{ material.daysUntilExpiry }} dias
@@ -236,9 +205,7 @@
             }
             @if (report.expiringRawMaterials.length === 0) {
               <tr>
-                <td colspan="4" class="py-4 text-center text-text-muted">
-                  Nenhuma matéria-prima próxima do vencimento
-                </td>
+                <td colspan="4" class="py-4 text-center text-text-muted">Nenhuma matéria-prima próxima do vencimento</td>
               </tr>
             }
           </tbody>
@@ -288,9 +255,7 @@
                     {{ item.type === 'product' ? 'Produto' : 'Matéria-Prima' }}
                   </p>
                 </div>
-                <p class="text-lg font-bold text-success">
-                  {{ item.currentStock }} {{ item.unit }}
-                </p>
+                <p class="text-lg font-bold text-success">{{ item.currentStock }} {{ item.unit }}</p>
               </div>
             </div>
           }
@@ -320,13 +285,9 @@
             @for (suggestion of report.purchaseSuggestions; track $index) {
               <tr class="border-b border-border-subtle hover:bg-surface-alt transition-colors">
                 <td class="py-2 px-3 text-text-primary">{{ suggestion.itemName }}</td>
-                <td class="py-2 px-3 text-text-primary">
-                  {{ suggestion.suggestedQuantity }} {{ suggestion.unit }}
-                </td>
+                <td class="py-2 px-3 text-text-primary">{{ suggestion.suggestedQuantity }} {{ suggestion.unit }}</td>
                 <td class="py-2 px-3 text-text-primary">R$ {{ suggestion.unitCost.toFixed(2) }}</td>
-                <td class="py-2 px-3 font-semibold text-danger">
-                  R$ {{ suggestion.replenishmentCost.toFixed(2) }}
-                </td>
+                <td class="py-2 px-3 font-semibold text-danger">R$ {{ suggestion.replenishmentCost.toFixed(2) }}</td>
                 <td class="py-2 px-3 text-sm text-text-muted">{{ suggestion.reason }}</td>
                 <td class="py-2 px-3">
                   <span
@@ -346,9 +307,7 @@
             }
             @if (report.purchaseSuggestions.length === 0) {
               <tr>
-                <td colspan="6" class="py-4 text-center text-text-muted">
-                  Nenhuma sugestão de compra no momento
-                </td>
+                <td colspan="6" class="py-4 text-center text-text-muted">Nenhuma sugestão de compra no momento</td>
               </tr>
             }
           </tbody>
@@ -358,9 +317,7 @@
         <div class="mt-4 flex justify-end">
           <div class="bg-surface-alt px-4 py-2 rounded-lg text-sm border border-border">
             <span class="text-text-secondary">Total estimado para reposição: </span>
-            <span class="text-danger font-bold text-lg"
-              >R$ {{ report.totalReplenishmentCost.toFixed(2) }}</span
-            >
+            <span class="text-danger font-bold text-lg">R$ {{ report.totalReplenishmentCost.toFixed(2) }}</span>
           </div>
         </div>
       }
@@ -375,9 +332,7 @@
       <div>
         <div class="company-name">{{ companyData?.tradeName || companyData?.corporateName }}</div>
         <div class="company-sub">
-          CNPJ: {{ companyData?.cnpj }} &nbsp;|&nbsp; {{ companyData?.city }}/{{
-            companyData?.state
-          }}
+          CNPJ: {{ companyData?.cnpj }} &nbsp;|&nbsp; {{ companyData?.city }}/{{ companyData?.state }}
         </div>
       </div>
     </div>
@@ -413,8 +368,7 @@
   </div>
 
   <div class="info-box" style="margin-top: 8px">
-    <strong>CMV</strong> = quantidade vendida × quantidade do insumo na ficha técnica × custo
-    unitário.
+    <strong>CMV</strong> = quantidade vendida × quantidade do insumo na ficha técnica × custo unitário.
     <strong>Faturamento − CMV = Lucro Bruto estimado.</strong>
     Valor teórico — não considera perdas ou variações de preço por lote.
   </div>
@@ -587,9 +541,7 @@
       <div class="bg-surface p-8 rounded-2xl border border-border shadow-2xl">
         <p>Carregando relatório...</p>
         <p class="mt-2 text-text-secondary font-normal">Isso pode demorar um pouco.</p>
-        <p class="mt-4 text-sm text-accent">
-          ⚠️ Evite gerar relatórios com mais de <strong>30 dias</strong> de diferença.
-        </p>
+        <p class="mt-4 text-sm text-accent">⚠️ Evite gerar relatórios com mais de <strong>30 dias</strong> de diferença.</p>
       </div>
     </div>
   </div>

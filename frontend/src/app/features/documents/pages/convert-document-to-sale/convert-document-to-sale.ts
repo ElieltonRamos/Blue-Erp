@@ -93,7 +93,7 @@ export class ConvertDocumentToSale implements OnInit {
       this.closeShortcutsModal();
     }
   }
-  
+
   ngOnInit(): void {
     this.initializeDocument();
   }
@@ -148,8 +148,7 @@ export class ConvertDocumentToSale implements OnInit {
 
   private syncDiscountInputValue(): void {
     if (this.discountMode === 'percentual') {
-      this.discountInputValue =
-        this.subtotal > 0 ? this.roundMoney((this.discount / this.subtotal) * 100) : 0;
+      this.discountInputValue = this.subtotal > 0 ? this.roundMoney((this.discount / this.subtotal) * 100) : 0;
     } else {
       this.discountInputValue = this.discount;
     }
@@ -322,9 +321,7 @@ export class ConvertDocumentToSale implements OnInit {
     if (!this.isValidNewPayment) return;
 
     if (this.newPaymentMethod !== 'DINHEIRO' && this.newPaymentAmount > this.remaining) {
-      this.notification.error(
-        `${this.getMethodLabel(this.newPaymentMethod!)} não pode exceder R$ ${this.remaining.toFixed(2)}`,
-      );
+      this.notification.error(`${this.getMethodLabel(this.newPaymentMethod!)} não pode exceder R$ ${this.remaining.toFixed(2)}`);
       return;
     }
 
@@ -373,13 +370,11 @@ export class ConvertDocumentToSale implements OnInit {
     this.cdr.detectChanges();
 
     const dto: FinalizeDocumentDTO = {
-      payments: this.payments.map(
-        (p): SalePaymentDto => ({
-          method: p.method,
-          amount: p.amount,
-          change: p.change,
-        }),
-      ),
+      payments: this.payments.map((p): SalePaymentDto => ({
+        method: p.method,
+        amount: p.amount,
+        change: p.change,
+      })),
       discount: this.discount,
       cfop: this.cfop,
     };

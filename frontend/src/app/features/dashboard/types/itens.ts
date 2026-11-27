@@ -1,2 +1,1 @@
-export interface Itens {
-}
+export interface Itens {}

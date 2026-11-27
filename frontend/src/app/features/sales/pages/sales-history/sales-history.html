@@ -102,22 +102,11 @@
       </div>
 
       <div class="flex gap-2">
-        <button
-          (click)="applyDateFilter()"
-          class="bg-accent text-btn-text px-4 py-2 rounded hover:bg-accent-hover transition"
-        >
+        <button (click)="applyDateFilter()" class="bg-accent text-btn-text px-4 py-2 rounded hover:bg-accent-hover transition">
           Filtrar
         </button>
 
-        @if (
-          startDate ||
-          endDate ||
-          filterId ||
-          filterOperator ||
-          filterMethod ||
-          filterFiscalStatus ||
-          filterIsPaid !== null
-        ) {
+        @if (startDate || endDate || filterId || filterOperator || filterMethod || filterFiscalStatus || filterIsPaid !== null) {
           <button
             (click)="clearDateFilter()"
             class="bg-surface-alt text-text-primary border border-border px-4 py-2 rounded hover:bg-overlay transition"
@@ -164,9 +153,7 @@
               <td class="py-3 px-4">
                 <span class="font-bold">R$ {{ sale.total.toFixed(2) }}</span>
                 @if (sale.serviceCharge) {
-                  <span class="text-warning text-xs block">
-                    Taxa de Serviço: R$ {{ sale.serviceCharge.toFixed(2) }}
-                  </span>
+                  <span class="text-warning text-xs block"> Taxa de Serviço: R$ {{ sale.serviceCharge.toFixed(2) }} </span>
                 }
               </td>
               <td class="py-3 px-4 space-x-2">
@@ -180,9 +167,7 @@
                   (click)="openEditModal(sale)"
                   [disabled]="sale.fiscalStatus === fiscalStatusEnum.EMITIDA"
                   [title]="
-                    sale.fiscalStatus === fiscalStatusEnum.EMITIDA
-                      ? 'Venda com nota fiscal emitida não pode ser editada'
-                      : ''
+                    sale.fiscalStatus === fiscalStatusEnum.EMITIDA ? 'Venda com nota fiscal emitida não pode ser editada' : ''
                   "
                   class="bg-surface-alt text-text-primary border border-border py-2 px-4 rounded hover:bg-overlay transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -215,10 +200,6 @@
   }
 
   @if (showEditModal && saleToEdit) {
-    <app-modal-edit-sale
-      [saleData]="saleToEdit"
-      (closeModal)="closeEditModal()"
-      (saved)="onSaleUpdated()"
-    />
+    <app-modal-edit-sale [saleData]="saleToEdit" (closeModal)="closeEditModal()" (saved)="onSaleUpdated()" />
   }
 </div>

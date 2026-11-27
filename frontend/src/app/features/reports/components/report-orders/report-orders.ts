@@ -1,10 +1,5 @@
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
-import {
-  OrderReportSummary,
-  orderReportMock,
-  OrderStatusDB,
-  OrderTypeDB,
-} from '../../types/reportOrders';
+import { OrderReportSummary, orderReportMock, OrderStatusDB, OrderTypeDB } from '../../types/reportOrders';
 import { ReportService } from '../../services/report.service';
 import { FormsModule } from '@angular/forms';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
@@ -47,9 +42,7 @@ export class ReportOrders implements OnInit {
   }
 
   getTodayFormatted(): string {
-    return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(
-      new Date(),
-    );
+    return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
   }
 
   toggleLocation(locationId: string): void {
@@ -140,9 +133,7 @@ export class ReportOrders implements OnInit {
         this.reportGenerated = true;
       },
       error: (err) => {
-        this.notification.error(
-          `Erro ao gerar relatório: ${(err.error?.message as string) || 'Erro desconhecido'}`,
-        );
+        this.notification.error(`Erro ao gerar relatório: ${(err.error?.message as string) || 'Erro desconhecido'}`);
       },
       complete: () => {
         this.isLoading = false;

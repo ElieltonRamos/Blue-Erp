@@ -35,10 +35,8 @@ export class OrderService {
     if (filters) {
       if (filters.searchName) params = params.set('searchName', filters.searchName);
       if (filters.searchTable) params = params.set('searchTable', filters.searchTable);
-      if (filters.searchWaiterOpen)
-        params = params.set('searchWaiterOpen', filters.searchWaiterOpen);
-      if (filters.searchWaiterClose)
-        params = params.set('searchWaiterClose', filters.searchWaiterClose);
+      if (filters.searchWaiterOpen) params = params.set('searchWaiterOpen', filters.searchWaiterOpen);
+      if (filters.searchWaiterClose) params = params.set('searchWaiterClose', filters.searchWaiterClose);
       if (filters.status) params = params.set('status', filters.status);
       if (filters.type) params = params.set('type', filters.type);
       if (filters.startDate) params = params.set('startDate', filters.startDate);
@@ -99,8 +97,7 @@ export class OrderService {
     if (filters?.productType) params = params.set('productType', filters.productType);
     if (filters?.unit) params = params.set('unit', filters.unit);
     if (filters?.active !== undefined) params = params.set('active', filters.active.toString());
-    if (filters?.lowStock !== undefined)
-      params = params.set('lowStock', filters.lowStock.toString());
+    if (filters?.lowStock !== undefined) params = params.set('lowStock', filters.lowStock.toString());
     if (filters?.categoryId) params = params.set('categoryId', filters.categoryId.toString());
 
     return this.client.get<PaginatedResponse<Product>>(this.productsApiUrl, { params });

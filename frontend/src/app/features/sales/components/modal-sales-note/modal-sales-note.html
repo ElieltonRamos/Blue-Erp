@@ -9,20 +9,11 @@
     @if (isPdfPreviewUrl) {
       <!-- PREVIEW DO PDF -->
       <div class="grow overflow-hidden">
-        <iframe
-          #pdfFrame
-          [src]="isPdfPreviewUrl | safe"
-          width="100%"
-          height="100%"
-          style="border: none"
-        ></iframe>
+        <iframe #pdfFrame [src]="isPdfPreviewUrl | safe" width="100%" height="100%" style="border: none"></iframe>
       </div>
 
       <div class="mt-4 flex justify-between print:hidden">
-        <button
-          (click)="backToSummary()"
-          class="bg-gray-200 text-gray-800 py-2 px-4 rounded hover:bg-gray-300 transition"
-        >
+        <button (click)="backToSummary()" class="bg-gray-200 text-gray-800 py-2 px-4 rounded hover:bg-gray-300 transition">
           ← Voltar ao resumo
         </button>
 
@@ -42,12 +33,7 @@
             <span>Imprimir</span>
           </button>
 
-          <button
-            (click)="close()"
-            class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition"
-          >
-            Fechar
-          </button>
+          <button (click)="close()" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition">Fechar</button>
         </div>
       </div>
     } @else {
@@ -158,10 +144,7 @@
           }
         </div>
 
-        <div
-          class="mt-8 pt-2 border-t border-gray-200 text-center text-gray-400"
-          style="font-size: 12px"
-        >
+        <div class="mt-8 pt-2 border-t border-gray-200 text-center text-gray-400" style="font-size: 12px">
           <p>⚙️ Blue ERP © 2026 | Email: saeconsultoria78&#64;gmail.com</p>
         </div>
       </div>
@@ -246,12 +229,7 @@
             <span>Imprimir</span>
           </button>
 
-          <button
-            (click)="close()"
-            class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition"
-          >
-            Fechar
-          </button>
+          <button (click)="close()" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition">Fechar</button>
         </div>
       </div>
 

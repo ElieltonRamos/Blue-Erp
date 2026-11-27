@@ -1,8 +1,6 @@
 <div class="bg-surface p-8 rounded-2xl shadow-2xl space-y-8">
   <!-- Cabeçalho -->
-  <div
-    class="border-b border-border pb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-  >
+  <div class="border-b border-border pb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
     <div>
       <h2 class="text-3xl font-bold text-text-primary mb-2">Gestão de Notas Fiscais</h2>
       <p class="text-text-secondary text-sm">Visualize, cancele e baixe suas NF-e e NFC-e</p>
@@ -56,13 +54,7 @@
         title="Verificar conexão SEFAZ"
         class="p-2 rounded-lg bg-overlay hover:bg-border text-text-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        <svg
-          class="w-4 h-4"
-          [class.animate-spin]="checkingSefaz"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg class="w-4 h-4" [class.animate-spin]="checkingSefaz" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -126,14 +118,7 @@
     <div class="flex items-center justify-center py-16">
       <div class="flex flex-col items-center gap-4">
         <svg class="animate-spin w-10 h-10 text-info" fill="none" viewBox="0 0 24 24">
-          <circle
-            class="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            stroke-width="4"
-          />
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
         </svg>
         <p class="text-text-muted text-sm">Carregando notas...</p>
@@ -145,12 +130,7 @@
   @if (!loading) {
     @if (notas.length === 0) {
       <div class="flex flex-col items-center justify-center py-16 text-text-muted">
-        <svg
-          class="w-16 h-16 mb-4 opacity-30"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg class="w-16 h-16 mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -189,10 +169,8 @@
                 <span
                   [ngClass]="{
                     'bg-success/20 text-success border-success/40': nota.fiscalStatus === 'EMITIDA',
-                    'bg-warning/20 text-warning border-warning/40':
-                      nota.fiscalStatus === 'PENDENTE',
-                    'bg-danger/20  text-danger  border-danger/40':
-                      nota.fiscalStatus === 'CANCELADA',
+                    'bg-warning/20 text-warning border-warning/40': nota.fiscalStatus === 'PENDENTE',
+                    'bg-danger/20  text-danger  border-danger/40': nota.fiscalStatus === 'CANCELADA',
                     'bg-delivery/20 text-delivery border-delivery/40': nota.fiscalStatus === 'ERRO',
                   }"
                   class="px-3 py-1 rounded-full text-xs font-semibold border"
@@ -300,12 +278,8 @@
 
 <!-- Modal de Cancelamento -->
 @if (showCancelModal && cancelTarget) {
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
-  >
-    <div
-      class="bg-surface border border-border rounded-2xl shadow-2xl p-8 w-full max-w-md space-y-6"
-    >
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+    <div class="bg-surface border border-border rounded-2xl shadow-2xl p-8 w-full max-w-md space-y-6">
       <div class="border-b border-border pb-4">
         <h3 class="text-xl font-bold text-text-primary">Cancelar Nota Fiscal</h3>
         <p class="text-text-secondary text-sm mt-1">
@@ -324,11 +298,7 @@
           placeholder="Descreva o motivo do cancelamento..."
           class="w-full p-3 rounded-lg bg-surface-alt text-text-primary placeholder-text-muted border-2 border-border focus:border-danger focus:ring-2 focus:ring-danger/20 transition-all duration-200 outline-none resize-none"
         ></textarea>
-        <p
-          [class]="
-            justificationLength >= 15 ? 'text-success text-xs mt-1' : 'text-text-muted text-xs mt-1'
-          "
-        >
+        <p [class]="justificationLength >= 15 ? 'text-success text-xs mt-1' : 'text-text-muted text-xs mt-1'">
           {{ justificationLength }} / 15 caracteres mínimos
         </p>
       </div>

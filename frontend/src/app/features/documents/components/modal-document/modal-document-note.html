@@ -3,9 +3,7 @@
     <div id="documentInvoiceContent" class="overflow-y-auto grow text-black">
       <!-- Cabeçalho -->
       <h2 class="text-xl font-bold mb-2 text-center">
-        {{ documentData.type === 'QUOTE' ? 'Orçamento' : 'Ordem de Serviço' }} #{{
-          documentData.id
-        }}
+        {{ documentData.type === 'QUOTE' ? 'Orçamento' : 'Ordem de Serviço' }} #{{ documentData.id }}
       </h2>
 
       @if (companyData) {
@@ -70,10 +68,7 @@
 
       <p class="text-right font-bold mt-2">Total: R$ {{ formatNumber(documentData.total) }}</p>
 
-      <div
-        class="mt-8 pt-2 border-t border-gray-200 text-center text-gray-400"
-        style="font-size: 12px"
-      >
+      <div class="mt-8 pt-2 border-t border-gray-200 text-center text-gray-400" style="font-size: 12px">
         <p>⚙️ Blue ERP © 2026</p>
       </div>
     </div>
@@ -98,12 +93,7 @@
         class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition flex items-center gap-2 text-sm"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
         Fechar
       </button>

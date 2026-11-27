@@ -1,22 +1,6 @@
-import {
-  Component,
-  OnInit,
-  Input,
-  Output,
-  EventEmitter,
-  inject,
-  ChangeDetectorRef,
-} from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FormBuilder,
-  FormGroup,
-  FormArray,
-  ReactiveFormsModule,
-  Validators,
-  FormsModule,
-  AbstractControl,
-} from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators, FormsModule, AbstractControl } from '@angular/forms';
 import { PrimaryMaterial } from '../../types/primary-material';
 import { PrimaryMaterialService } from '../../services/primary-material.service';
 import { ProductService } from '../../services/product.service';
@@ -186,25 +170,23 @@ export class ProductCompositionComponent implements OnInit {
 
   searchSubProducts(term: string): void {
     this.isSearchingSubProduct = true;
-    this.productService
-      .getAll(1, 20, { search: term, active: true, productType: 'SEMI_MANUFACTURED' })
-      .subscribe({
-        next: (response) => {
-          this.subProductSearchResults = response.data.map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            code: p.code,
-            costPrice: p.costPrice,
-            unit: p.unit,
-          }));
-          this.isSearchingSubProduct = false;
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.notification.error('Erro ao buscar subprodutos');
-          this.isSearchingSubProduct = false;
-        },
-      });
+    this.productService.getAll(1, 20, { search: term, active: true, productType: 'SEMI_MANUFACTURED' }).subscribe({
+      next: (response) => {
+        this.subProductSearchResults = response.data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          code: p.code,
+          costPrice: p.costPrice,
+          unit: p.unit,
+        }));
+        this.isSearchingSubProduct = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.notification.error('Erro ao buscar subprodutos');
+        this.isSearchingSubProduct = false;
+      },
+    });
   }
 
   selectSubProduct(product: SubProductOption): void {

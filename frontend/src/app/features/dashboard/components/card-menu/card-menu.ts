@@ -8,7 +8,7 @@ import { Router } from '@angular/router';
   templateUrl: './card-menu.html',
 })
 export class CardMenu {
-  private router = inject(Router)
+  private router = inject(Router);
   @Input() title: string = '';
   @Input() icon: string = '';
   @Input() path: string = '';

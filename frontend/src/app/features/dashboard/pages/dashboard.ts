@@ -112,9 +112,7 @@ export class Dashboard implements OnInit {
         this.subscriptionOverdue.set(msLeft < 0);
 
         const daysLeft = Math.ceil(msLeft / 86_400_000);
-        this.daysToExpire.set(
-          msLeft >= 0 && daysLeft <= this.EXPIRY_WARNING_DAYS ? daysLeft : null,
-        );
+        this.daysToExpire.set(msLeft >= 0 && daysLeft <= this.EXPIRY_WARNING_DAYS ? daysLeft : null);
       },
       error: () => {
         this.subscriptionOverdue.set(false);

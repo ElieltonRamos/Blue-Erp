@@ -1,10 +1,5 @@
-<div
-  class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-  [class.hidden]="!show"
->
-  <div
-    class="bg-surface rounded-lg shadow-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
-  >
+<div class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50" [class.hidden]="!show">
+  <div class="bg-surface rounded-lg shadow-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
     <div class="flex justify-between items-center p-6 border-b border-border">
       <div>
         <h3 class="text-xl font-bold text-text-primary">Comanda - Mesa {{ table.number }}</h3>
@@ -12,12 +7,7 @@
       </div>
       <button (click)="close.emit()" class="p-1 hover:bg-surface-alt rounded transition-colors">
         <svg class="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
     </div>
@@ -31,9 +21,7 @@
           <div class="flex justify-between items-center py-3 border-b border-border-subtle">
             <div class="flex-1">
               <div class="text-text-primary font-medium">{{ item.name }}</div>
-              <div class="text-text-secondary text-sm">
-                {{ item.quantity }}x R$ {{ item.unitPrice.toFixed(2) }}
-              </div>
+              <div class="text-text-secondary text-sm">{{ item.quantity }}x R$ {{ item.unitPrice.toFixed(2) }}</div>
             </div>
             <div class="text-text-primary font-bold">R$ {{ item.total.toFixed(2) }}</div>
           </div>

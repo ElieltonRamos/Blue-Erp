@@ -11,7 +11,7 @@ export class NotificationService {
       progressBar: true,
       closeButton: true,
       positionClass: 'toast-bottom-right',
-      toastClass: 'blue-toast ngx-toastr'
+      toastClass: 'blue-toast ngx-toastr',
     });
   }
 
@@ -21,7 +21,7 @@ export class NotificationService {
       closeButton: true,
       progressAnimation: 'decreasing',
       positionClass: 'toast-bottom-right',
-      toastClass: 'red-toast ngx-toastr'
+      toastClass: 'red-toast ngx-toastr',
     });
   }
 
@@ -30,7 +30,7 @@ export class NotificationService {
       timeOut: 1500,
       progressBar: true,
       positionClass: 'toast-bottom-right',
-      toastClass: 'info-toast ngx-toastr'
+      toastClass: 'info-toast ngx-toastr',
     });
   }
 
@@ -40,7 +40,7 @@ export class NotificationService {
       progressBar: true,
       closeButton: true,
       positionClass: 'toast-bottom-right',
-      toastClass: 'yellow-toast ngx-toastr'
+      toastClass: 'yellow-toast ngx-toastr',
     });
   }
 
@@ -51,7 +51,7 @@ export class NotificationService {
       progressBar: false,
       tapToDismiss: false,
       positionClass: 'toast-bottom-right',
-      toastClass: 'loading-toast ngx-toastr'
+      toastClass: 'loading-toast ngx-toastr',
     });
   }
 
@@ -59,13 +59,10 @@ export class NotificationService {
     this.toastr.clear();
   }
 
-  custom(type: 'success'|'error'|'info'|'warning', 
-         message: string, 
-         title?: string, 
-         options?: IndividualConfig) {
+  custom(type: 'success' | 'error' | 'info' | 'warning', message: string, title?: string, options?: IndividualConfig) {
     (this.toastr as any)[type](message, title, {
       positionClass: 'toast-bottom-right',
-      ...options
+      ...options,
     });
   }
 }

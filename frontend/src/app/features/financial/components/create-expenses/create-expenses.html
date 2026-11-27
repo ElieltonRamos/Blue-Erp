@@ -8,9 +8,7 @@
   <!-- Inputs lado a lado -->
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <div>
-      <label for="supplier" class="block font-bold mb-2" [style.color]="'var(--color-text-primary)'"
-        >Nome do Fornecedor</label
-      >
+      <label for="supplier" class="block font-bold mb-2" [style.color]="'var(--color-text-primary)'">Nome do Fornecedor</label>
       <input
         id="supplier"
         formControlName="supplier"
@@ -22,9 +20,7 @@
         [style.color]="'var(--color-text-primary)'"
         [style.border-color]="'var(--color-border)'"
       />
-      @if (
-        formCreateExpense.get('supplier')?.touched && formCreateExpense.get('supplier')?.invalid
-      ) {
+      @if (formCreateExpense.get('supplier')?.touched && formCreateExpense.get('supplier')?.invalid) {
         <p
           class="text-xs font-light mt-1 rounded px-2 py-1"
           [style.color]="'var(--color-danger)'"
@@ -36,12 +32,7 @@
     </div>
 
     <div>
-      <label
-        for="description"
-        class="block font-bold mb-2"
-        [style.color]="'var(--color-text-primary)'"
-        >Descrição</label
-      >
+      <label for="description" class="block font-bold mb-2" [style.color]="'var(--color-text-primary)'">Descrição</label>
       <input
         id="description"
         formControlName="description"
@@ -55,9 +46,7 @@
     </div>
 
     <div>
-      <label for="value" class="block font-bold mb-2" [style.color]="'var(--color-text-primary)'"
-        >Valor da Despesa</label
-      >
+      <label for="value" class="block font-bold mb-2" [style.color]="'var(--color-text-primary)'">Valor da Despesa</label>
       <input
         id="value"
         formControlName="value"
@@ -81,9 +70,7 @@
     </div>
 
     <div>
-      <label for="date" class="block font-bold mb-2" [style.color]="'var(--color-text-primary)'"
-        >Data de Vencimento</label
-      >
+      <label for="date" class="block font-bold mb-2" [style.color]="'var(--color-text-primary)'">Data de Vencimento</label>
       <input
         id="date"
         formControlName="datePayment"

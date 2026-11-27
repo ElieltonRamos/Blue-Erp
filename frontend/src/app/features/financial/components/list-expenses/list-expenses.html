@@ -87,11 +87,7 @@
     Clique no cabeçalho das colunas para ordenar (▲ ascendente, ▼ descendente).
   </div>
   <table class="min-w-full text-left">
-    <thead
-      class="uppercase text-sm"
-      [style.background-color]="'var(--color-surface)'"
-      [style.color]="'var(--color-accent)'"
-    >
+    <thead class="uppercase text-sm" [style.background-color]="'var(--color-surface)'" [style.color]="'var(--color-accent)'">
       <tr>
         <th class="py-3 px-4 cursor-pointer select-none" (click)="sortBy('id')">
           ID
@@ -132,16 +128,9 @@
         <th class="py-3 px-4">Ações</th>
       </tr>
     </thead>
-    <tbody
-      class="divide-y"
-      [style.border-color]="'var(--color-border)'"
-      [style.color]="'var(--color-text-primary)'"
-    >
+    <tbody class="divide-y" [style.border-color]="'var(--color-border)'" [style.color]="'var(--color-text-primary)'">
       @for (expense of listExpenses; track expense.id) {
-        <tr
-          class="hover:opacity-80 transition"
-          [style.background-color]="'var(--color-surface-alt)'"
-        >
+        <tr class="hover:opacity-80 transition" [style.background-color]="'var(--color-surface-alt)'">
           <td class="py-3 px-4">{{ expense.id }}</td>
           <td class="py-3 px-4">{{ expense.supplier }}</td>
           <td class="py-3 px-4">{{ expense.description }}</td>
@@ -179,9 +168,7 @@
                   'hover:opacity-80 transition': expense.status !== 'Pago',
                   'opacity-50 cursor-not-allowed': expense.status === 'Pago',
                 }"
-                [style.color]="
-                  expense.status === 'Pago' ? 'var(--color-text-muted)' : 'var(--color-success)'
-                "
+                [style.color]="expense.status === 'Pago' ? 'var(--color-text-muted)' : 'var(--color-success)'"
                 class="flex items-center gap-2"
                 title="Marcar como Pago"
               >

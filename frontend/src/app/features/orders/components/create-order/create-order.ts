@@ -270,9 +270,7 @@ export class CreateOrder implements OnInit {
               ...item,
               quantity: item.quantity + 1,
               total: (item.quantity + 1) * item.unitPrice,
-              serviceCharge: this.includeServiceCharge
-                ? (item.quantity + 1) * item.unitPrice * 0.1
-                : 0,
+              serviceCharge: this.includeServiceCharge ? (item.quantity + 1) * item.unitPrice * 0.1 : 0,
             }
           : item,
       );
@@ -310,9 +308,7 @@ export class CreateOrder implements OnInit {
   }
 
   updateObservation(productId: number, observation: string) {
-    this.orderItems = this.orderItems.map((item) =>
-      item.productId === productId ? { ...item, observation } : item,
-    );
+    this.orderItems = this.orderItems.map((item) => (item.productId === productId ? { ...item, observation } : item));
   }
 
   removeItem(productId: number) {

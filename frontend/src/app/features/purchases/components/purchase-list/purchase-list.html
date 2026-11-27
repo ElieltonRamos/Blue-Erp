@@ -6,9 +6,7 @@
       <button
         (click)="switchCreateMode('xml')"
         class="px-4 py-2 rounded-lg text-sm font-semibold"
-        [style.background-color]="
-          createMode === 'xml' ? 'var(--color-accent)' : 'var(--color-surface-alt)'
-        "
+        [style.background-color]="createMode === 'xml' ? 'var(--color-accent)' : 'var(--color-surface-alt)'"
         [style.color]="createMode === 'xml' ? 'var(--color-btn-text)' : 'var(--color-text-primary)'"
       >
         Importar NF-e
@@ -16,12 +14,8 @@
       <button
         (click)="switchCreateMode('manual')"
         class="px-4 py-2 rounded-lg text-sm font-semibold"
-        [style.background-color]="
-          createMode === 'manual' ? 'var(--color-accent)' : 'var(--color-surface-alt)'
-        "
-        [style.color]="
-          createMode === 'manual' ? 'var(--color-btn-text)' : 'var(--color-text-primary)'
-        "
+        [style.background-color]="createMode === 'manual' ? 'var(--color-accent)' : 'var(--color-surface-alt)'"
+        [style.color]="createMode === 'manual' ? 'var(--color-btn-text)' : 'var(--color-text-primary)'"
       >
         Lançamento Manual
       </button>
@@ -31,12 +25,7 @@
       <!-- Import XML -->
       @if (!preview) {
         <div class="flex items-center gap-4">
-          <input
-            type="file"
-            accept=".xml"
-            (change)="onFileSelected($event)"
-            class="text-text-primary text-sm"
-          />
+          <input type="file" accept=".xml" (change)="onFileSelected($event)" class="text-text-primary text-sm" />
           <button
             (click)="parseXml()"
             [disabled]="!selectedFile || loadingParse"
@@ -74,12 +63,7 @@
             </div>
           </div>
 
-          @if (
-            preview.transportStateRegistration ||
-            preview.transportCity ||
-            preview.transportState ||
-            preview.transportRntc
-          ) {
+          @if (preview.transportStateRegistration || preview.transportCity || preview.transportState || preview.transportRntc) {
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 text-sm">
               <div>
                 <span class="text-text-muted">IE transportadora:</span>
@@ -130,12 +114,7 @@
                       @if (isItemLinked($index)) {
                         <div class="flex items-center gap-2">
                           <span class="text-success text-xs">✓ {{ linkedNames[$index] }}</span>
-                          <button
-                            (click)="clearItemLink($index)"
-                            class="text-text-muted text-xs underline"
-                          >
-                            trocar
-                          </button>
+                          <button (click)="clearItemLink($index)" class="text-text-muted text-xs underline">trocar</button>
                         </div>
                       } @else {
                         <button
@@ -208,11 +187,7 @@
           }
 
           @if (!manualSupplierSelected && !quickCreateSupplierOpen) {
-            <button
-              type="button"
-              (click)="openQuickCreateSupplier()"
-              class="text-accent text-xs underline mt-1"
-            >
+            <button type="button" (click)="openQuickCreateSupplier()" class="text-accent text-xs underline mt-1">
               + Cadastrar novo fornecedor
             </button>
           }
@@ -263,9 +238,7 @@
         </div>
 
         <div class="flex flex-col">
-          <label class="block text-text-secondary font-medium mb-2 text-sm"
-            >Número/Referência (opcional)</label
-          >
+          <label class="block text-text-secondary font-medium mb-2 text-sm">Número/Referência (opcional)</label>
           <input
             type="text"
             placeholder="Ex: RECIBO-042"
@@ -277,9 +250,7 @@
         </div>
 
         <div>
-          <label class="block text-text-secondary font-medium mb-2 text-sm"
-            >Transporte (opcional)</label
-          >
+          <label class="block text-text-secondary font-medium mb-2 text-sm">Transporte (opcional)</label>
           <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
             <input
               type="text"
@@ -322,9 +293,7 @@
         <div>
           <div class="flex items-center justify-between mb-2">
             <label class="text-text-secondary font-medium text-sm">Itens</label>
-            <button (click)="addManualItem()" class="text-accent text-sm underline">
-              + Adicionar item
-            </button>
+            <button (click)="addManualItem()" class="text-accent text-sm underline">+ Adicionar item</button>
           </div>
 
           @if (manualItems.length > 0) {
@@ -380,12 +349,7 @@
                       @if (isManualItemLinked($index)) {
                         <div class="flex items-center gap-2">
                           <span class="text-success text-xs">✓ vinculado</span>
-                          <button
-                            (click)="clearManualItemLink($index)"
-                            class="text-text-muted text-xs underline"
-                          >
-                            trocar
-                          </button>
+                          <button (click)="clearManualItemLink($index)" class="text-text-muted text-xs underline">trocar</button>
                         </div>
                       } @else {
                         <button
@@ -399,9 +363,7 @@
                       }
                     </td>
                     <td class="py-2 px-3">
-                      <button (click)="removeManualItem($index)" class="text-danger text-xs">
-                        ✕
-                      </button>
+                      <button (click)="removeManualItem($index)" class="text-danger text-xs">✕</button>
                     </td>
                   </tr>
                 }
@@ -415,9 +377,7 @@
         <div>
           <div class="flex items-center justify-between mb-2">
             <label class="text-text-secondary font-medium text-sm">Parcelas (opcional)</label>
-            <button (click)="addManualInstallment()" class="text-accent text-sm underline">
-              + Adicionar parcela
-            </button>
+            <button (click)="addManualInstallment()" class="text-accent text-sm underline">+ Adicionar parcela</button>
           </div>
 
           @if (manualInstallments.length > 0) {
@@ -465,9 +425,7 @@
                       />
                     </td>
                     <td class="py-2 px-3">
-                      <button (click)="removeManualInstallment($index)" class="text-danger text-xs">
-                        ✕
-                      </button>
+                      <button (click)="removeManualInstallment($index)" class="text-danger text-xs">✕</button>
                     </td>
                   </tr>
                 }
@@ -493,9 +451,7 @@
   <!-- Modal de vínculo — fluxo XML -->
   <app-product-material-select-modal
     [show]="selectModalOpen"
-    [itemDescription]="
-      selectModalIndex !== null ? reconciledItems[selectModalIndex].description : ''
-    "
+    [itemDescription]="selectModalIndex !== null ? reconciledItems[selectModalIndex].description : ''"
     [itemNcm]="selectModalIndex !== null ? reconciledItems[selectModalIndex].ncm : ''"
     [itemUnitCost]="selectModalIndex !== null ? reconciledItems[selectModalIndex].unitCost : 0"
     (close)="selectModalOpen = false"
@@ -505,13 +461,9 @@
   <!-- Modal de vínculo — fluxo manual -->
   <app-product-material-select-modal
     [show]="manualSelectModalOpen"
-    [itemDescription]="
-      manualSelectModalIndex !== null ? manualItems[manualSelectModalIndex].description : ''
-    "
+    [itemDescription]="manualSelectModalIndex !== null ? manualItems[manualSelectModalIndex].description : ''"
     [itemNcm]="''"
-    [itemUnitCost]="
-      manualSelectModalIndex !== null ? manualItems[manualSelectModalIndex].unitCost : 0
-    "
+    [itemUnitCost]="manualSelectModalIndex !== null ? manualItems[manualSelectModalIndex].unitCost : 0"
     (close)="manualSelectModalOpen = false"
     (selected)="onManualItemSelected($event)"
   />
@@ -653,18 +605,12 @@
                 {{ purchase.receivedAt | date: 'dd/MM/yyyy' }}
               </span>
               @if (purchase.status === 'RECEIVED') {
-                <button
-                  (click)="cancelPurchase(purchase); $event.stopPropagation()"
-                  class="text-danger text-sm underline"
-                >
+                <button (click)="cancelPurchase(purchase); $event.stopPropagation()" class="text-danger text-sm underline">
                   Cancelar
                 </button>
               }
               @if (purchase.status === 'CANCELED') {
-                <button
-                  (click)="removePurchase(purchase); $event.stopPropagation()"
-                  class="text-danger text-sm underline"
-                >
+                <button (click)="removePurchase(purchase); $event.stopPropagation()" class="text-danger text-sm underline">
                   Excluir
                 </button>
               }
@@ -674,9 +620,7 @@
           @if (isExpanded(purchase.id)) {
             <div class="bg-base/40 px-6 pb-4">
               @if (purchase.stateRegistration || purchase.city || purchase.state || purchase.rntc) {
-                <p class="text-text-secondary text-xs uppercase font-semibold mt-2 mb-1">
-                  Transporte
-                </p>
+                <p class="text-text-secondary text-xs uppercase font-semibold mt-2 mb-1">Transporte</p>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm mb-3">
                   <div>
                     <span class="text-text-muted">IE:</span>

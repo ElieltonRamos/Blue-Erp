@@ -1,28 +1,15 @@
 // components/product-material-select-modal/product-material-select-modal.ts
-import {
-  ChangeDetectorRef,
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-  OnChanges,
-  SimpleChanges,
-  inject,
-} from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, Output, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
 import { ProductService } from '../../../products/services/product.service';
 import { Product, CreateProductDTO } from '../../../products/types/product';
-import {
-  CreatePrimaryMaterialDTO,
-  PrimaryMaterial,
-} from '../../../products/types/primary-material';
+import { CreatePrimaryMaterialDTO, PrimaryMaterial } from '../../../products/types/primary-material';
 import { PrimaryMaterialService } from '../../../products/services/primary-material.service';
 
 export type ProductMaterialSelection =
-  | { kind: 'product'; id: number; name: string }
-  | { kind: 'material'; id: number; name: string };
+  { kind: 'product'; id: number; name: string } | { kind: 'material'; id: number; name: string };
 
 @Component({
   selector: 'app-product-material-select-modal',
@@ -180,9 +167,7 @@ export class ProductMaterialSelectModal implements OnChanges {
         this.reset();
       },
       error: (e) => {
-        this.notification.error(
-          `Erro ao cadastrar matéria-prima: ${e.error?.message || e.message}`,
-        );
+        this.notification.error(`Erro ao cadastrar matéria-prima: ${e.error?.message || e.message}`);
       },
     });
   }

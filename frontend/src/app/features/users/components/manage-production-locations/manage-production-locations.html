@@ -42,9 +42,7 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label for="description" class="block text-text-primary font-bold mb-2">
-            Descrição
-          </label>
+          <label for="description" class="block text-text-primary font-bold mb-2"> Descrição </label>
           <input
             id="description"
             formControlName="description"
@@ -55,9 +53,7 @@
         </div>
 
         <div>
-          <label for="order" class="block text-text-primary font-bold mb-2">
-            Ordem de Exibição *
-          </label>
+          <label for="order" class="block text-text-primary font-bold mb-2"> Ordem de Exibição * </label>
           <input
             id="order"
             formControlName="order"
@@ -107,10 +103,9 @@
                 <span class="font-bold text-accent">{{ location.order }}</span>
               </td>
               <td class="py-3 px-4">
-                <code
-                  class="bg-surface-alt border border-border px-2 py-1 rounded text-xs text-text-primary"
-                  >{{ location.code }}</code
-                >
+                <code class="bg-surface-alt border border-border px-2 py-1 rounded text-xs text-text-primary">{{
+                  location.code
+                }}</code>
               </td>
               <td class="py-3 px-4 font-semibold">{{ location.name }}</td>
               <td class="py-3 px-4 text-text-secondary">
@@ -148,9 +143,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="6" class="py-8 px-4 text-center text-text-muted">
-                Nenhum local cadastrado
-              </td>
+              <td colspan="6" class="py-8 px-4 text-center text-text-muted">Nenhum local cadastrado</td>
             </tr>
           }
         </tbody>

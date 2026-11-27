@@ -8,9 +8,7 @@
   <div class="border-b border-border pb-4">
     <h2 class="text-3xl font-bold text-text-primary mb-2">Cadastro de Produto</h2>
 
-    <p class="text-text-secondary text-sm">
-      Preencha as informações do produto para emissão de NFC-e
-    </p>
+    <p class="text-text-secondary text-sm">Preencha as informações do produto para emissão de NFC-e</p>
   </div>
 
   <!-- Informações Básicas -->
@@ -162,10 +160,7 @@
           </option>
         </select>
 
-        @if (
-          formCreateProduct.get('productionLocation')?.touched &&
-          formCreateProduct.get('productionLocation')?.invalid
-        ) {
+        @if (formCreateProduct.get('productionLocation')?.touched && formCreateProduct.get('productionLocation')?.invalid) {
           <p class="msg-error">Selecione o local de produção</p>
         }
       </div>
@@ -195,9 +190,7 @@
         </label>
 
         <div class="relative">
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">
-            R$
-          </span>
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold"> R$ </span>
 
           <input
             id="price"
@@ -226,9 +219,7 @@
         </label>
 
         <div class="relative">
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">
-            R$
-          </span>
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold"> R$ </span>
 
           <input
             id="cost-price"
@@ -254,9 +245,7 @@
           }
         </p>
 
-        @if (
-          formCreateProduct.get('costPrice')?.touched && formCreateProduct.get('costPrice')?.invalid
-        ) {
+        @if (formCreateProduct.get('costPrice')?.touched && formCreateProduct.get('costPrice')?.invalid) {
           <p class="msg-error">Digite o custo</p>
         }
       </div>
@@ -276,9 +265,7 @@
           class="w-full px-4 py-3 rounded-lg bg-surface-alt border border-border text-text-primary font-medium placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-success focus:border-success transition-all duration-200"
         />
 
-        @if (
-          formCreateProduct.get('quantity')?.touched && formCreateProduct.get('quantity')?.invalid
-        ) {
+        @if (formCreateProduct.get('quantity')?.touched && formCreateProduct.get('quantity')?.invalid) {
           <p class="msg-error">Digite a quantidade</p>
         }
       </div>
@@ -351,9 +338,7 @@
 
   <!-- Status -->
   <div class="space-y-3">
-    <label class="block text-text-secondary font-medium text-sm">
-      Status do Produto <span class="text-danger">*</span>
-    </label>
+    <label class="block text-text-secondary font-medium text-sm"> Status do Produto <span class="text-danger">*</span> </label>
 
     <div class="grid grid-cols-2 gap-4">
       <!-- Ativo -->
@@ -363,9 +348,7 @@
         <div
           class="p-4 rounded-xl border border-border bg-surface-alt peer-checked:border-success peer-checked:bg-success/10 transition-all duration-200 flex items-center justify-center gap-3"
         >
-          <div
-            class="w-5 h-5 rounded-full border-2 border-border peer-checked:border-success peer-checked:bg-success"
-          ></div>
+          <div class="w-5 h-5 rounded-full border-2 border-border peer-checked:border-success peer-checked:bg-success"></div>
 
           <span class="text-text-primary font-semibold"> Ativo </span>
         </div>
@@ -378,9 +361,7 @@
         <div
           class="p-4 rounded-xl border border-border bg-surface-alt peer-checked:border-danger peer-checked:bg-danger/10 transition-all duration-200 flex items-center justify-center gap-3"
         >
-          <div
-            class="w-5 h-5 rounded-full border-2 border-border peer-checked:border-danger peer-checked:bg-danger"
-          ></div>
+          <div class="w-5 h-5 rounded-full border-2 border-border peer-checked:border-danger peer-checked:bg-danger"></div>
 
           <span class="text-text-primary font-semibold"> Inativo </span>
         </div>

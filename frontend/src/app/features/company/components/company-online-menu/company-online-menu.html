@@ -1,22 +1,14 @@
 <div class="flex flex-col gap-10">
   <!-- ===== Bloco 1: Configurações ===== -->
   <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()" class="flex flex-col gap-6">
-    <h2 class="text-lg font-semibold" [style.color]="'var(--color-text-primary)'">
-      Configurações do Cardápio Online
-    </h2>
+    <h2 class="text-lg font-semibold" [style.color]="'var(--color-text-primary)'">Configurações do Cardápio Online</h2>
 
     <div class="flex flex-wrap gap-8">
-      <label
-        class="flex items-center gap-2 cursor-pointer"
-        [style.color]="'var(--color-text-primary)'"
-      >
+      <label class="flex items-center gap-2 cursor-pointer" [style.color]="'var(--color-text-primary)'">
         <input type="checkbox" formControlName="onlineMenuEnabled" class="w-5 h-5" />
         Cardápio online ativo
       </label>
-      <label
-        class="flex items-center gap-2 cursor-pointer"
-        [style.color]="'var(--color-text-primary)'"
-      >
+      <label class="flex items-center gap-2 cursor-pointer" [style.color]="'var(--color-text-primary)'">
         <input type="checkbox" formControlName="onlineOrdersPaused" class="w-5 h-5" />
         Pedidos pausados
       </label>
@@ -42,9 +34,7 @@
           class="w-full px-4 py-3 rounded-lg border-2 outline-none transition-all duration-200"
           [style.background-color]="'var(--color-surface-alt)'"
           [style.color]="'var(--color-text-primary)'"
-          [style.border-color]="
-            hasError('timezone') ? 'var(--color-danger)' : 'var(--color-border)'
-          "
+          [style.border-color]="hasError('timezone') ? 'var(--color-danger)' : 'var(--color-border)'"
         />
       </div>
 
@@ -59,21 +49,15 @@
           class="w-full px-4 py-3 rounded-lg border-2 outline-none transition-all duration-200"
           [style.background-color]="'var(--color-surface-alt)'"
           [style.color]="'var(--color-text-primary)'"
-          [style.border-color]="
-            hasError('whatsapp') ? 'var(--color-danger)' : 'var(--color-border)'
-          "
+          [style.border-color]="hasError('whatsapp') ? 'var(--color-danger)' : 'var(--color-border)'"
         />
         @if (hasError('whatsapp')) {
-          <p class="text-xs mt-1" [style.color]="'var(--color-danger)'">
-            Informe de 10 a 13 dígitos, apenas números.
-          </p>
+          <p class="text-xs mt-1" [style.color]="'var(--color-danger)'">Informe de 10 a 13 dígitos, apenas números.</p>
         }
       </div>
 
       <div>
-        <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'">
-          Instagram
-        </label>
+        <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'"> Instagram </label>
         <input
           type="text"
           formControlName="instagram"
@@ -81,16 +65,12 @@
           class="w-full px-4 py-3 rounded-lg border-2 outline-none transition-all duration-200"
           [style.background-color]="'var(--color-surface-alt)'"
           [style.color]="'var(--color-text-primary)'"
-          [style.border-color]="
-            hasError('instagram') ? 'var(--color-danger)' : 'var(--color-border)'
-          "
+          [style.border-color]="hasError('instagram') ? 'var(--color-danger)' : 'var(--color-border)'"
         />
       </div>
 
       <div class="md:col-span-2 lg:col-span-3">
-        <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'">
-          URL do logo
-        </label>
+        <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'"> URL do logo </label>
         <input
           type="text"
           formControlName="logoUrl"
@@ -103,9 +83,7 @@
       </div>
 
       <div>
-        <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'">
-          Latitude
-        </label>
+        <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'"> Latitude </label>
         <input
           type="number"
           step="any"
@@ -114,9 +92,7 @@
           class="w-full px-4 py-3 rounded-lg border-2 outline-none transition-all duration-200"
           [style.background-color]="'var(--color-surface-alt)'"
           [style.color]="'var(--color-text-primary)'"
-          [style.border-color]="
-            hasError('latitude') ? 'var(--color-danger)' : 'var(--color-border)'
-          "
+          [style.border-color]="hasError('latitude') ? 'var(--color-danger)' : 'var(--color-border)'"
         />
         @if (hasError('latitude')) {
           <p class="text-xs mt-1" [style.color]="'var(--color-danger)'">Valor entre -90 e 90.</p>
@@ -124,9 +100,7 @@
       </div>
 
       <div>
-        <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'">
-          Longitude
-        </label>
+        <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'"> Longitude </label>
         <input
           type="number"
           step="any"
@@ -135,9 +109,7 @@
           class="w-full px-4 py-3 rounded-lg border-2 outline-none transition-all duration-200"
           [style.background-color]="'var(--color-surface-alt)'"
           [style.color]="'var(--color-text-primary)'"
-          [style.border-color]="
-            hasError('longitude') ? 'var(--color-danger)' : 'var(--color-border)'
-          "
+          [style.border-color]="hasError('longitude') ? 'var(--color-danger)' : 'var(--color-border)'"
         />
         @if (hasError('longitude')) {
           <p class="text-xs mt-1" [style.color]="'var(--color-danger)'">Valor entre -180 e 180.</p>
@@ -157,9 +129,7 @@
           class="w-full px-4 py-3 rounded-lg border-2 outline-none transition-all duration-200"
           [style.background-color]="'var(--color-surface-alt)'"
           [style.color]="'var(--color-text-primary)'"
-          [style.border-color]="
-            hasError('deliveryTimeMin') ? 'var(--color-danger)' : 'var(--color-border)'
-          "
+          [style.border-color]="hasError('deliveryTimeMin') ? 'var(--color-danger)' : 'var(--color-border)'"
         />
       </div>
 
@@ -174,9 +144,7 @@
           class="w-full px-4 py-3 rounded-lg border-2 outline-none transition-all duration-200"
           [style.background-color]="'var(--color-surface-alt)'"
           [style.color]="'var(--color-text-primary)'"
-          [style.border-color]="
-            hasError('deliveryTimeMax') ? 'var(--color-danger)' : 'var(--color-border)'
-          "
+          [style.border-color]="hasError('deliveryTimeMax') ? 'var(--color-danger)' : 'var(--color-border)'"
         />
       </div>
 
@@ -191,9 +159,7 @@
           class="w-full px-4 py-3 rounded-lg border-2 outline-none transition-all duration-200"
           [style.background-color]="'var(--color-surface-alt)'"
           [style.color]="'var(--color-text-primary)'"
-          [style.border-color]="
-            hasError('takeoutTime') ? 'var(--color-danger)' : 'var(--color-border)'
-          "
+          [style.border-color]="hasError('takeoutTime') ? 'var(--color-danger)' : 'var(--color-border)'"
         />
       </div>
 
@@ -209,9 +175,7 @@
           class="w-full px-4 py-3 rounded-lg border-2 outline-none transition-all duration-200"
           [style.background-color]="'var(--color-surface-alt)'"
           [style.color]="'var(--color-text-primary)'"
-          [style.border-color]="
-            hasError('deliveryFee') ? 'var(--color-danger)' : 'var(--color-border)'
-          "
+          [style.border-color]="hasError('deliveryFee') ? 'var(--color-danger)' : 'var(--color-border)'"
         />
       </div>
 
@@ -227,24 +191,17 @@
           class="w-full px-4 py-3 rounded-lg border-2 outline-none transition-all duration-200"
           [style.background-color]="'var(--color-surface-alt)'"
           [style.color]="'var(--color-text-primary)'"
-          [style.border-color]="
-            hasError('minOrderValue') ? 'var(--color-danger)' : 'var(--color-border)'
-          "
+          [style.border-color]="hasError('minOrderValue') ? 'var(--color-danger)' : 'var(--color-border)'"
         />
       </div>
     </div>
 
     <!-- Formas de pagamento -->
     <div formGroupName="payments" class="flex flex-col gap-3">
-      <p class="font-medium text-sm" [style.color]="'var(--color-text-secondary)'">
-        Formas de pagamento online
-      </p>
+      <p class="font-medium text-sm" [style.color]="'var(--color-text-secondary)'">Formas de pagamento online</p>
       @for (p of paymentTypes; track p.type) {
         <div [formGroupName]="p.type" class="flex items-center gap-4">
-          <label
-            class="flex items-center gap-2 w-40 cursor-pointer"
-            [style.color]="'var(--color-text-primary)'"
-          >
+          <label class="flex items-center gap-2 w-40 cursor-pointer" [style.color]="'var(--color-text-primary)'">
             <input type="checkbox" formControlName="enabled" class="w-5 h-5" />
             {{ p.label }}
           </label>
@@ -279,9 +236,7 @@
 
   <!-- ===== Bloco 2: Horários ===== -->
   <form [formGroup]="hoursForm" (ngSubmit)="saveHours()" class="flex flex-col gap-6">
-    <h2 class="text-lg font-semibold" [style.color]="'var(--color-text-primary)'">
-      Horários de Funcionamento
-    </h2>
+    <h2 class="text-lg font-semibold" [style.color]="'var(--color-text-primary)'">Horários de Funcionamento</h2>
 
     <div formArrayName="hours" class="flex flex-col gap-3">
       @for (group of hours.controls; track group; let i = $index) {
@@ -305,9 +260,7 @@
             [style.background-color]="'var(--color-surface-alt)'"
             [style.color]="'var(--color-text-primary)'"
             [style.border-color]="
-              group.get('opensAt')?.invalid && group.get('opensAt')?.touched
-                ? 'var(--color-danger)'
-                : 'var(--color-border)'
+              group.get('opensAt')?.invalid && group.get('opensAt')?.touched ? 'var(--color-danger)' : 'var(--color-border)'
             "
           />
 
@@ -320,9 +273,7 @@
             [style.background-color]="'var(--color-surface-alt)'"
             [style.color]="'var(--color-text-primary)'"
             [style.border-color]="
-              group.get('closesAt')?.invalid && group.get('closesAt')?.touched
-                ? 'var(--color-danger)'
-                : 'var(--color-border)'
+              group.get('closesAt')?.invalid && group.get('closesAt')?.touched ? 'var(--color-danger)' : 'var(--color-border)'
             "
           />
 
@@ -338,9 +289,7 @@
           </button>
         </div>
       } @empty {
-        <p class="text-sm" [style.color]="'var(--color-text-secondary)'">
-          Nenhum horário cadastrado.
-        </p>
+        <p class="text-sm" [style.color]="'var(--color-text-secondary)'">Nenhum horário cadastrado.</p>
       }
     </div>
 

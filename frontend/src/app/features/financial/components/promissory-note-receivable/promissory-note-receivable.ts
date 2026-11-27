@@ -108,9 +108,7 @@ export class PromissoryNoteReceivable {
         this.getSales(this.page, this.limit);
       },
       error: (e) => {
-        this.notification.error(
-          `Erro ao marcar vendas como recebidas: ${e.error?.message || 'Erro inesperado.'}`,
-        );
+        this.notification.error(`Erro ao marcar vendas como recebidas: ${e.error?.message || 'Erro inesperado.'}`);
       },
     });
   }

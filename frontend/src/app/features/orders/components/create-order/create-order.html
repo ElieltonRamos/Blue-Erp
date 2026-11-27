@@ -1,8 +1,4 @@
-<form
-  (ngSubmit)="onSubmit()"
-  [formGroup]="formCreateOrder"
-  class="bg-base p-6 rounded-lg space-y-6"
->
+<form (ngSubmit)="onSubmit()" [formGroup]="formCreateOrder" class="bg-base p-6 rounded-lg space-y-6">
   <!-- Tipo, Local e Nome do Cliente -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <div>
@@ -24,9 +20,7 @@
     </div>
 
     <div>
-      <label for="locationId" class="block text-text-primary font-bold mb-2">
-        Local de Origem
-      </label>
+      <label for="locationId" class="block text-text-primary font-bold mb-2"> Local de Origem </label>
 
       <select
         id="locationId"
@@ -39,17 +33,13 @@
         }
       </select>
 
-      @if (
-        formCreateOrder.get('locationId')?.touched && formCreateOrder.get('locationId')?.invalid
-      ) {
+      @if (formCreateOrder.get('locationId')?.touched && formCreateOrder.get('locationId')?.invalid) {
         <p class="msg-error">Selecione o Local!</p>
       }
     </div>
 
     <div>
-      <label for="customerName" class="block text-text-primary font-bold mb-2">
-        Nome do Cliente
-      </label>
+      <label for="customerName" class="block text-text-primary font-bold mb-2"> Nome do Cliente </label>
 
       <input
         id="customerName"
@@ -59,9 +49,7 @@
         class="text-xl w-full p-2 rounded-md bg-surface text-text-primary border border-border font-semibold placeholder:text-text-muted"
       />
 
-      @if (
-        formCreateOrder.get('customerName')?.touched && formCreateOrder.get('customerName')?.invalid
-      ) {
+      @if (formCreateOrder.get('customerName')?.touched && formCreateOrder.get('customerName')?.invalid) {
         <p class="msg-error">Informe o nome do cliente!</p>
       }
     </div>
@@ -85,9 +73,7 @@
   <!-- Endereço -->
   <div *ngIf="formCreateOrder.get('type')?.value === 'DELIVERY'" class="grid grid-cols-1 gap-6">
     <div>
-      <label for="address" class="block text-text-primary font-bold mb-2">
-        Endereço de Entrega
-      </label>
+      <label for="address" class="block text-text-primary font-bold mb-2"> Endereço de Entrega </label>
 
       <input
         id="address"
@@ -189,31 +175,20 @@
 
             <th class="text-left py-2 px-2 text-info text-xs font-semibold uppercase">Produto</th>
 
-            <th class="text-left py-2 px-2 text-warning text-xs font-semibold uppercase">
-              Observação
-            </th>
+            <th class="text-left py-2 px-2 text-warning text-xs font-semibold uppercase">Observação</th>
 
-            <th class="text-center py-2 px-2 text-warning text-xs font-semibold uppercase">
-              VLR. UN.
-            </th>
+            <th class="text-center py-2 px-2 text-warning text-xs font-semibold uppercase">VLR. UN.</th>
 
             <th class="text-center py-2 px-2 text-qty text-xs font-semibold uppercase">QTD</th>
 
-            <th class="text-center py-2 px-2 text-success text-xs font-semibold uppercase">
-              Total
-            </th>
+            <th class="text-center py-2 px-2 text-success text-xs font-semibold uppercase">Total</th>
 
-            <th class="text-center py-2 px-2 text-text-secondary text-xs font-semibold uppercase">
-              Excluir
-            </th>
+            <th class="text-center py-2 px-2 text-text-secondary text-xs font-semibold uppercase">Excluir</th>
           </tr>
         </thead>
 
         <tbody>
-          <tr
-            *ngFor="let item of orderItems"
-            class="border-b border-border-subtle hover:bg-overlay/40"
-          >
+          <tr *ngFor="let item of orderItems" class="border-b border-border-subtle hover:bg-overlay/40">
             <td class="py-2 px-2 text-text-secondary text-xs">
               {{ item.code }}
             </td>
@@ -235,9 +210,7 @@
               />
             </td>
 
-            <td class="py-2 px-2 text-center text-text-secondary text-xs">
-              R$ {{ item.unitPrice.toFixed(2) }}
-            </td>
+            <td class="py-2 px-2 text-center text-text-secondary text-xs">R$ {{ item.unitPrice.toFixed(2) }}</td>
 
             <td class="py-2 px-2 text-center">
               <input
@@ -249,9 +222,7 @@
               />
             </td>
 
-            <td class="py-2 px-2 text-center text-success font-bold text-xs">
-              R$ {{ item.total.toFixed(2) }}
-            </td>
+            <td class="py-2 px-2 text-center text-success font-bold text-xs">R$ {{ item.total.toFixed(2) }}</td>
 
             <td class="py-2 px-2 text-center">
               <button
@@ -260,14 +231,7 @@
                 class="text-danger hover:opacity-80"
                 title="Remover item"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
@@ -300,9 +264,7 @@
     </div>
 
     <!-- Taxa -->
-    <div
-      class="mt-4 p-4 bg-surface rounded-lg flex items-center justify-between border border-border"
-    >
+    <div class="mt-4 p-4 bg-surface rounded-lg flex items-center justify-between border border-border">
       <div class="flex items-center gap-3">
         <input
           type="checkbox"
@@ -313,9 +275,7 @@
           class="w-5 h-5 cursor-pointer"
         />
 
-        <label for="serviceCharge" class="text-text-primary font-bold cursor-pointer">
-          Incluir 10% de Taxa de Serviço
-        </label>
+        <label for="serviceCharge" class="text-text-primary font-bold cursor-pointer"> Incluir 10% de Taxa de Serviço </label>
       </div>
 
       <div class="text-text-secondary">

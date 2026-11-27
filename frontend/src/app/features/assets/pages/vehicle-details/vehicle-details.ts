@@ -78,9 +78,7 @@ export class VehicleDetails implements OnInit {
       },
       error: (e) => {
         this.loading = false;
-        this.notification.error(
-          `Erro ao buscar histórico de manutenção: ${e.error?.message || e.message}`,
-        );
+        this.notification.error(`Erro ao buscar histórico de manutenção: ${e.error?.message || e.message}`);
       },
     });
   }

@@ -20,13 +20,7 @@ interface CompanyTabItem {
 
 @Component({
   selector: 'app-company',
-  imports: [
-    CompanyRegistration,
-    CompanyFiscal,
-    CompanyCertificate,
-    CompanyIbpt,
-    CompanyOnlineMenu
-],
+  imports: [CompanyRegistration, CompanyFiscal, CompanyCertificate, CompanyIbpt, CompanyOnlineMenu],
   templateUrl: './company.html',
 })
 export class Company {

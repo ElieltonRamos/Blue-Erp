@@ -36,8 +36,7 @@ export class PrimaryMaterialService {
     if (filters?.search) params = params.set('search', filters.search);
     if (filters?.unit) params = params.set('unit', filters.unit);
     if (filters?.active !== undefined) params = params.set('active', filters.active.toString());
-    if (filters?.lowStock !== undefined)
-      params = params.set('lowStock', filters.lowStock.toString());
+    if (filters?.lowStock !== undefined) params = params.set('lowStock', filters.lowStock.toString());
 
     return this.client.get<PaginatedResponse<PrimaryMaterial>>(this.apiUrl, { params });
   }

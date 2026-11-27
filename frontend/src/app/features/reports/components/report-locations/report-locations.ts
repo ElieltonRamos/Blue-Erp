@@ -115,19 +115,11 @@ export class ReportLocations {
     return { matrix, productionLocations: Array.from(productionLocations) };
   }
 
-  getMatrixValue(
-    matrix: Record<string, Record<string, number>>,
-    locationName: string,
-    producedAt: string,
-  ): number {
+  getMatrixValue(matrix: Record<string, Record<string, number>>, locationName: string, producedAt: string): number {
     return matrix[locationName]?.[producedAt] ?? 0;
   }
 
-  getRowTotal(
-    matrix: Record<string, Record<string, number>>,
-    locationName: string,
-    productionLocations: string[],
-  ): number {
+  getRowTotal(matrix: Record<string, Record<string, number>>, locationName: string, productionLocations: string[]): number {
     return productionLocations.reduce((s, p) => s + (matrix[locationName]?.[p] ?? 0), 0);
   }
 
@@ -135,23 +127,15 @@ export class ReportLocations {
     return this.report.locations.reduce((s, loc) => s + (matrix[loc.name]?.[producedAt] ?? 0), 0);
   }
 
-  getGrandTotal(
-    matrix: Record<string, Record<string, number>>,
-    productionLocations: string[],
-  ): number {
+  getGrandTotal(matrix: Record<string, Record<string, number>>, productionLocations: string[]): number {
     return this.report.locations.reduce(
       (s, loc) => s + productionLocations.reduce((ss, p) => ss + (matrix[loc.name]?.[p] ?? 0), 0),
       0,
     );
   }
 
-  getMaxMatrixValue(
-    matrix: Record<string, Record<string, number>>,
-    productionLocations: string[],
-  ): number {
-    const values = this.report.locations.flatMap((loc) =>
-      productionLocations.map((p) => matrix[loc.name]?.[p] ?? 0),
-    );
+  getMaxMatrixValue(matrix: Record<string, Record<string, number>>, productionLocations: string[]): number {
+    const values = this.report.locations.flatMap((loc) => productionLocations.map((p) => matrix[loc.name]?.[p] ?? 0));
     return Math.max(...values, 1);
   }
 
@@ -189,9 +173,7 @@ export class ReportLocations {
   private openOperators: Record<number, boolean> = {};
 
   getTodayFormatted(): string {
-    return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(
-      new Date(),
-    );
+    return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date());
   }
 
   print() {

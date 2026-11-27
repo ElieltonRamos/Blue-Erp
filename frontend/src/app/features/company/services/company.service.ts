@@ -54,9 +54,7 @@ export class CompanyService {
   }
 
   getBusinessType() {
-    return this.client.get<{ businessType: Company['businessType'] | null }>(
-      `${this.apiUrl}/company/business-type`,
-    );
+    return this.client.get<{ businessType: Company['businessType'] | null }>(`${this.apiUrl}/company/business-type`);
   }
 
   importIbptFromCsv(file: File) {

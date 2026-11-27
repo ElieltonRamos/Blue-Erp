@@ -1,21 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import {
-  AbstractControl,
-  FormBuilder,
-  FormsModule,
-  ReactiveFormsModule,
-  ValidationErrors,
-  Validators,
-} from '@angular/forms';
+import { AbstractControl, FormBuilder, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, forkJoin, of, switchMap, tap } from 'rxjs';
-import {
-  FiscalStatus,
-  Sale,
-  SalePaymentDto,
-  UpdateSaleDto,
-  UpdateSaleItemDto,
-} from '../../../sales/types/sale';
+import { FiscalStatus, Sale, SalePaymentDto, UpdateSaleDto, UpdateSaleItemDto } from '../../../sales/types/sale';
 import { SaleService } from '../../../sales/services/sales.service';
 import { ClientService } from '../../../clients/services/client.service';
 import { ProductService } from '../../../products/services/product.service';
@@ -84,8 +71,7 @@ export class EmitNfe implements OnInit {
 
   readonly inputClass =
     'w-full bg-surface-alt border border-border rounded px-3 py-2 text-sm text-text-primary focus:outline-none focus:border-accent';
-  readonly cellClass =
-    'w-full bg-overlay border border-border px-2 py-1 rounded text-sm text-text-primary';
+  readonly cellClass = 'w-full bg-overlay border border-border px-2 py-1 rounded text-sm text-text-primary';
   readonly labelClass = 'block text-xs text-text-secondary mb-1';
   readonly hintClass = 'text-xs text-text-muted mt-1';
   private readonly DEFAULT_CLIENT_ID = 1;
@@ -130,10 +116,7 @@ export class EmitNfe implements OnInit {
       carrierId: this.fb.control<number | null>(null),
       vehicle: this.fb.group(
         {
-          plate: this.fb.nonNullable.control(
-            '',
-            Validators.pattern(/^[A-Za-z]{3}-?\d[A-Za-z0-9]\d{2}$/),
-          ),
+          plate: this.fb.nonNullable.control('', Validators.pattern(/^[A-Za-z]{3}-?\d[A-Za-z0-9]\d{2}$/)),
           uf: this.fb.nonNullable.control('', Validators.pattern(/^[A-Za-z]{2}$/)),
         },
         { validators: vehicleValidator },
@@ -162,9 +145,7 @@ export class EmitNfe implements OnInit {
         }
         this.loadSale(sale);
         if (this.clientBlocked) {
-          this.notification.error(
-            'Esta venda está com o cliente padrão. Troque o cliente para emitir a NF-e.',
-          );
+          this.notification.error('Esta venda está com o cliente padrão. Troque o cliente para emitir a NF-e.');
         }
         if (this.hasServices && this.productCount === 0) {
           this.notification.error(
@@ -216,9 +197,7 @@ export class EmitNfe implements OnInit {
     return JSON.stringify({
       clientId: this.selectedClientId,
       items: this.items,
-      payments: this.hasServices
-        ? null
-        : this.payments.map((p) => ({ method: p.method, amount: p.amount })),
+      payments: this.hasServices ? null : this.payments.map((p) => ({ method: p.method, amount: p.amount })),
       discount: this.discount,
       serviceCharge: this.serviceCharge,
       isPaid: this.isPaid,
@@ -259,9 +238,7 @@ export class EmitNfe implements OnInit {
       this.showCfopResults = false;
       return;
     }
-    this.cfopResults = CFOPS.filter(
-      (c) => c.code.startsWith(term) || c.natOp.toLowerCase().includes(term),
-    ).slice(0, 10);
+    this.cfopResults = CFOPS.filter((c) => c.code.startsWith(term) || c.natOp.toLowerCase().includes(term)).slice(0, 10);
     this.showCfopResults = true;
   }
 
@@ -298,14 +275,12 @@ export class EmitNfe implements OnInit {
     this.itemSearchTimer = setTimeout(() => {
       this.productService.getAll(1, 10, { search: term }).subscribe({
         next: (response) => {
-          this.itemResults = response.data.map(
-            (p): SearchResult => ({
-              type: 'PRODUCT',
-              id: p.id,
-              name: p.name,
-              price: Number(p.price),
-            }),
-          );
+          this.itemResults = response.data.map((p): SearchResult => ({
+            type: 'PRODUCT',
+            id: p.id,
+            name: p.name,
+            price: Number(p.price),
+          }));
           this.showItemResults = true;
         },
         error: () => this.notification.error('Erro ao buscar produtos'),
@@ -355,15 +330,11 @@ export class EmitNfe implements OnInit {
   }
 
   get productsTotal(): number {
-    return this.items
-      .filter((i) => i.type === 'PRODUCT')
-      .reduce((sum, item) => sum + item.totalPrice, 0);
+    return this.items.filter((i) => i.type === 'PRODUCT').reduce((sum, item) => sum + item.totalPrice, 0);
   }
 
   get servicesTotal(): number {
-    return this.items
-      .filter((i) => i.type === 'SERVICE')
-      .reduce((sum, item) => sum + item.totalPrice, 0);
+    return this.items.filter((i) => i.type === 'SERVICE').reduce((sum, item) => sum + item.totalPrice, 0);
   }
 
   get productCount(): number {
@@ -483,9 +454,7 @@ export class EmitNfe implements OnInit {
       next: () => this.emit(request),
       error: (error) => {
         this.submitting.set(false);
-        this.notification.error(
-          `Erro ao salvar a venda:\n${error.error?.message || error.message || 'Erro desconhecido'}`,
-        );
+        this.notification.error(`Erro ao salvar a venda:\n${error.error?.message || error.message || 'Erro desconhecido'}`);
       },
     });
   }
@@ -501,9 +470,7 @@ export class EmitNfe implements OnInit {
       },
       error: (error) => {
         this.submitting.set(false);
-        this.notification.error(
-          `Erro ao emitir NF-e:\n${error.error?.message || error.message || 'Erro desconhecido'}`,
-        );
+        this.notification.error(`Erro ao emitir NF-e:\n${error.error?.message || error.message || 'Erro desconhecido'}`);
       },
     });
   }
@@ -523,9 +490,7 @@ export class EmitNfe implements OnInit {
   }
 
   private compact<T extends object>(obj: T): Partial<T> | undefined {
-    const entries = Object.entries(obj).filter(
-      ([, v]) => v !== '' && v !== null && v !== undefined,
-    );
+    const entries = Object.entries(obj).filter(([, v]) => v !== '' && v !== null && v !== undefined);
     return entries.length ? (Object.fromEntries(entries) as Partial<T>) : undefined;
   }
 
@@ -575,9 +540,7 @@ export class EmitNfe implements OnInit {
       cobr: this.buildCobr(),
       infAdic: v.infAdic || undefined,
       omitServices: this.hasServices || undefined,
-      payments: this.hasServices
-        ? this.payments.map((p) => ({ method: p.method, amount: Number(p.amount) }))
-        : undefined,
+      payments: this.hasServices ? this.payments.map((p) => ({ method: p.method, amount: Number(p.amount) })) : undefined,
     };
   }
 }

@@ -10,7 +10,7 @@ export const authGuard: CanActivateFn = (route, state) => {
   const notification = inject(NotificationService);
 
   const token = localStorage.getItem('token');
-  
+
   // ✅ 1. TOKEN EXISTE?
   if (!token) {
     notification.warning('Faça login para continuar');

@@ -29,7 +29,7 @@ export interface KitchenOrderItem {
   quantity: number;
   notes?: string;
   recipe?: Recipe;
-  observation?: string 
+  observation?: string;
   preparationSteps?: PreparationStep[];
   // Dados da produção
   productionId: number;

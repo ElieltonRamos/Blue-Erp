@@ -20,13 +20,7 @@ import { NotificationService } from '../../../../shared/toastr/notification.serv
 import { alertConfirm } from '../../../../shared/alerts/custom-alerts';
 
 import Client from '../../../clients/types/clients';
-import {
-  Sale,
-  SalePaymentDto,
-  CreateDirectSaleDto,
-  CartItem,
-  CartItemType,
-} from '../../types/sale';
+import { Sale, SalePaymentDto, CreateDirectSaleDto, CartItem, CartItemType } from '../../types/sale';
 import { FinishSale } from '../../components/finish-sale/finish-sale';
 import { ModalEditProduct } from '../../components/modal-edit-product/modal-edit-product';
 import { ModalSalesNote } from '../../components/modal-sales-note/modal-sales-note';
@@ -200,10 +194,7 @@ export class Sales implements OnInit, AfterViewInit {
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
-        this.activeSearchIndex = Math.min(
-          this.activeSearchIndex + 1,
-          this.searchItemsResults.length - 1,
-        );
+        this.activeSearchIndex = Math.min(this.activeSearchIndex + 1, this.searchItemsResults.length - 1);
         break;
       case 'ArrowUp':
         event.preventDefault();
@@ -211,8 +202,7 @@ export class Sales implements OnInit, AfterViewInit {
         break;
       case 'Enter':
         event.preventDefault();
-        if (this.activeSearchIndex >= 0)
-          this.selectSearchedItem(this.searchItemsResults[this.activeSearchIndex]);
+        if (this.activeSearchIndex >= 0) this.selectSearchedItem(this.searchItemsResults[this.activeSearchIndex]);
         break;
       case 'Escape':
         this.closeSearchDropdown();
@@ -233,8 +223,7 @@ export class Sales implements OnInit, AfterViewInit {
     }
 
     this.productService.getByCode(this.product.code).subscribe({
-      next: (product) =>
-        this.addItemToCart(this.toCartItem(product, 'PRODUCT', this.product.quantity)),
+      next: (product) => this.addItemToCart(this.toCartItem(product, 'PRODUCT', this.product.quantity)),
       error: (err) => this.notification.error(err?.error?.message || 'Produto não encontrado'),
     });
   }
@@ -526,9 +515,7 @@ export class Sales implements OnInit, AfterViewInit {
     this.focusBarcodeInput();
   }
 
-  private extractProductCodeAndWeight(
-    ean13: string,
-  ): { productCode: string; weightKg: number } | false {
+  private extractProductCodeAndWeight(ean13: string): { productCode: string; weightKg: number } | false {
     if (!/^\d{13}$/.test(ean13) || !ean13.startsWith('20')) return false;
 
     const productCode = parseInt(ean13.substring(2, 5), 10);

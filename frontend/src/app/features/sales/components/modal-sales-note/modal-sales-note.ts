@@ -151,9 +151,7 @@ export class ModalSalesNote implements OnInit {
 
   requestNfce() {
     if (!this.canEmitNfce) {
-      this.notification.error(
-        'Recurso disponível apenas no plano Pro! Faça upgrade para emitir notas fiscais.',
-      );
+      this.notification.error('Recurso disponível apenas no plano Pro! Faça upgrade para emitir notas fiscais.');
       return;
     }
 
@@ -195,11 +193,7 @@ export class ModalSalesNote implements OnInit {
       error: (error) => {
         this.isRequestingNfce = false;
         console.error('Erro completo NFC-e:', error);
-        this.notification.error(
-          `Erro ao solicitar NFC-e:\n${
-            error.error?.message || error.message || 'Erro desconhecido'
-          }`,
-        );
+        this.notification.error(`Erro ao solicitar NFC-e:\n${error.error?.message || error.message || 'Erro desconhecido'}`);
       },
     });
   }
@@ -232,16 +226,12 @@ export class ModalSalesNote implements OnInit {
 
   goToEmitNfe() {
     if (!this.canEmitNfce) {
-      this.notification.error(
-        'Recurso disponível apenas no plano Pro! Faça upgrade para emitir notas fiscais.',
-      );
+      this.notification.error('Recurso disponível apenas no plano Pro! Faça upgrade para emitir notas fiscais.');
       return;
     }
 
     if (this.nfeBlocked) {
-      this.notification.error(
-        'Venda só com serviços não pode ter nota fiscal. Utilize o emissor da prefeitura da sua cidade.',
-      );
+      this.notification.error('Venda só com serviços não pode ter nota fiscal. Utilize o emissor da prefeitura da sua cidade.');
       return;
     }
     this.close();

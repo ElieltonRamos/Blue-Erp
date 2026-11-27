@@ -1,12 +1,4 @@
-import {
-  Component,
-  EventEmitter,
-  inject,
-  Input,
-  Output,
-  OnInit,
-  HostListener,
-} from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output, OnInit, HostListener } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Sale, SalePaymentDto, UpdateSaleDto, UpdateSaleItemDto } from '../../types/sale';
 import { SaleService } from '../../services/sales.service';
@@ -179,14 +171,12 @@ export class ModalEditSale implements OnInit {
 
       this.productService.getAll(1, 10, { search: term }).subscribe({
         next: (response) => {
-          productResults = response.data.map(
-            (p): SearchResult => ({
-              type: 'PRODUCT',
-              id: p.id,
-              name: p.name,
-              price: Number(p.price),
-            }),
-          );
+          productResults = response.data.map((p): SearchResult => ({
+            type: 'PRODUCT',
+            id: p.id,
+            name: p.name,
+            price: Number(p.price),
+          }));
           finish();
         },
         error: () => finish(),
@@ -194,14 +184,12 @@ export class ModalEditSale implements OnInit {
 
       this.catalogService.getAll(1, 10, { search: term }).subscribe({
         next: (response) => {
-          serviceResults = response.data.map(
-            (s): SearchResult => ({
-              type: 'SERVICE',
-              id: s.id,
-              name: s.name,
-              price: Number(s.price),
-            }),
-          );
+          serviceResults = response.data.map((s): SearchResult => ({
+            type: 'SERVICE',
+            id: s.id,
+            name: s.name,
+            price: Number(s.price),
+          }));
           finish();
         },
         error: () => finish(),
@@ -329,9 +317,7 @@ export class ModalEditSale implements OnInit {
       },
       error: (e) => {
         this.saving = false;
-        this.notification.error(
-          `Erro ao atualizar venda: ${e.error?.message || 'Erro inesperado.'}`,
-        );
+        this.notification.error(`Erro ao atualizar venda: ${e.error?.message || 'Erro inesperado.'}`);
       },
     });
   }

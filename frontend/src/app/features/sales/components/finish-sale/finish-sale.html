@@ -2,9 +2,7 @@
   <div class="w-full">
     <p class="block text-text-primary text-sm mb-1 font-bold">Resumo da Venda</p>
     <label class="block text-sm text-text-primary mb-1">Valor Total dos Produtos:</label>
-    <p class="w-full p-1 rounded bg-surface-alt text-text-primary font-bold">
-      R$: {{ totalValue }}
-    </p>
+    <p class="w-full p-1 rounded bg-surface-alt text-text-primary font-bold">R$: {{ totalValue }}</p>
   </div>
 
   <div>
@@ -65,9 +63,7 @@
       </button>
     </div>
 
-    <p class="text-[11px] text-text-muted mt-1">
-      Enter no método avança para o valor · Enter no valor adiciona o pagamento
-    </p>
+    <p class="text-[11px] text-text-muted mt-1">Enter no método avança para o valor · Enter no valor adiciona o pagamento</p>
 
     @if (selectedMethod === 'DINHEIRO' && previewChange > 0) {
       <p class="text-xl text-warning mt-1">Troco: R$ {{ previewChange.toFixed(2) }}</p>
@@ -91,11 +87,7 @@
       </ul>
     }
 
-    <p
-      class="text-xl mt-1"
-      [class.text-danger]="remainingValue > 0.01"
-      [class.text-success]="remainingValue <= 0.01"
-    >
+    <p class="text-xl mt-1" [class.text-danger]="remainingValue > 0.01" [class.text-success]="remainingValue <= 0.01">
       Restante: R$ {{ remainingValue.toFixed(2) }}
     </p>
   </div>

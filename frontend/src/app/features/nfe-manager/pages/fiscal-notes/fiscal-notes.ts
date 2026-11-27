@@ -94,9 +94,7 @@ export class FiscalNotes implements OnInit {
         },
         error: (e) => {
           this.loading = false;
-          this.notification.error(
-            `Erro ao carregar notas: ${e.error?.message ?? 'Erro desconhecido'}`,
-          );
+          this.notification.error(`Erro ao carregar notas: ${e.error?.message ?? 'Erro desconhecido'}`);
           this.cdr.detectChanges();
         },
       });
@@ -120,25 +118,21 @@ export class FiscalNotes implements OnInit {
 
     this.fiscalService.downloadPdf(nota.fiscalKey).subscribe({
       next: (blob) => this.downloadFile(blob, `${this.filePrefix(nota)}-${nota.nNF}.pdf`, 'PDF'),
-      error: (e) =>
-        this.notification.error(`Erro ao baixar PDF: ${e.error?.message ?? 'Erro desconhecido'}`),
+      error: (e) => this.notification.error(`Erro ao baixar PDF: ${e.error?.message ?? 'Erro desconhecido'}`),
     });
   }
 
   reemitirPdf(nota: NotaFiscal): void {
     this.fiscalService.reemitirPdf(nota.id).subscribe({
-      next: (blob) =>
-        this.downloadFile(blob, `${this.filePrefix(nota)}-reemissao-${nota.nNF}.pdf`, 'PDF'),
-      error: (e) =>
-        this.notification.error(`Erro ao reemitir PDF: ${e.error?.message ?? 'Erro desconhecido'}`),
+      next: (blob) => this.downloadFile(blob, `${this.filePrefix(nota)}-reemissao-${nota.nNF}.pdf`, 'PDF'),
+      error: (e) => this.notification.error(`Erro ao reemitir PDF: ${e.error?.message ?? 'Erro desconhecido'}`),
     });
   }
 
   downloadXml(nota: NotaFiscal): void {
     this.fiscalService.downloadXml(nota.id).subscribe({
       next: (blob) => this.downloadFile(blob, `${this.filePrefix(nota)}-${nota.nNF}.xml`, 'XML'),
-      error: (e) =>
-        this.notification.error(`Erro ao baixar XML: ${e.error?.message ?? 'Erro desconhecido'}`),
+      error: (e) => this.notification.error(`Erro ao baixar XML: ${e.error?.message ?? 'Erro desconhecido'}`),
     });
   }
 
@@ -147,10 +141,7 @@ export class FiscalNotes implements OnInit {
 
     this.fiscalService.queryNota(nota.fiscalKey).subscribe({
       next: (res) => this.notification.success(`Status SEFAZ: ${res?.message ?? 'Consultado'}`),
-      error: (e) =>
-        this.notification.error(
-          `Erro ao consultar SEFAZ: ${e.error?.message ?? 'Erro desconhecido'}`,
-        ),
+      error: (e) => this.notification.error(`Erro ao consultar SEFAZ: ${e.error?.message ?? 'Erro desconhecido'}`),
     });
   }
 
@@ -187,9 +178,7 @@ export class FiscalNotes implements OnInit {
       },
       error: (e) => {
         this.canceling = false;
-        this.notification.error(
-          `Erro ao cancelar nota: ${e.error?.message ?? 'Erro desconhecido'}`,
-        );
+        this.notification.error(`Erro ao cancelar nota: ${e.error?.message ?? 'Erro desconhecido'}`);
       },
     });
   }

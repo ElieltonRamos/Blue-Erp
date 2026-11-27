@@ -45,20 +45,17 @@ export class CategoryComponent {
   }
 
   getCategories(page: number, limit: number) {
-    this.categoryService
-      .getCategories(page, limit, this.filterSearch, this.filterStatus)
-      .subscribe({
-        next: (res) => {
-          this.listCategories = res.data;
-          this.totalItems = res.total;
-          this.page = res.page;
-          this.limit = res.limit;
-          this.totalPages = res.totalPages;
-          this.cdr.detectChanges();
-        },
-        error: (e) =>
-          this.notification.error(`Erro ao buscar categorias: ${e.error?.message || e.message}`),
-      });
+    this.categoryService.getCategories(page, limit, this.filterSearch, this.filterStatus).subscribe({
+      next: (res) => {
+        this.listCategories = res.data;
+        this.totalItems = res.total;
+        this.page = res.page;
+        this.limit = res.limit;
+        this.totalPages = res.totalPages;
+        this.cdr.detectChanges();
+      },
+      error: (e) => this.notification.error(`Erro ao buscar categorias: ${e.error?.message || e.message}`),
+    });
   }
 
   applyFilters() {
@@ -84,8 +81,7 @@ export class CategoryComponent {
         this.form.reset();
         this.getCategories(this.page, this.limit);
       },
-      error: (e) =>
-        this.notification.error(`Erro ao criar categoria: ${e.error?.message || e.message}`),
+      error: (e) => this.notification.error(`Erro ao criar categoria: ${e.error?.message || e.message}`),
     });
   }
 
@@ -105,8 +101,7 @@ export class CategoryComponent {
         this.notification.success('Categoria editada com sucesso');
         this.closeModalEdit();
       },
-      error: (e) =>
-        this.notification.error(`Erro ao editar categoria: ${e.error?.message || e.message}`),
+      error: (e) => this.notification.error(`Erro ao editar categoria: ${e.error?.message || e.message}`),
     });
   }
 
@@ -118,8 +113,7 @@ export class CategoryComponent {
             this.notification.success('Categoria excluída com sucesso');
             this.getCategories(this.page, this.limit);
           },
-          error: (e) =>
-            this.notification.error(`Erro ao deletar categoria: ${e.error?.message || e.message}`),
+          error: (e) => this.notification.error(`Erro ao deletar categoria: ${e.error?.message || e.message}`),
         });
       }
     });

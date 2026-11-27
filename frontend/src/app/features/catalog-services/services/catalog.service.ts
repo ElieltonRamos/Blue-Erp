@@ -3,12 +3,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../core/services/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { PaginatedResponse } from '../../../core/guards/types/paginator';
-import {
-  CreateServiceDTO,
-  FilterServiceParams,
-  Service,
-  UpdateServiceDTO,
-} from '../types/catalog-types';
+import { CreateServiceDTO, FilterServiceParams, Service, UpdateServiceDTO } from '../types/catalog-types';
 
 @Injectable({
   providedIn: 'root',

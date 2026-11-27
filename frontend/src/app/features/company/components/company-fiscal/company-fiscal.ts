@@ -43,10 +43,7 @@ export class CompanyFiscal implements OnInit {
     nfceCsc: ['', Validators.required],
     nfceCscId: ['', Validators.required],
     nfeEnvironment: ['staging' as Company['nfeEnvironment'], Validators.required],
-    simplesCreditRate: new FormControl<number | null>(null, [
-      Validators.min(0),
-      Validators.max(100),
-    ]),
+    simplesCreditRate: new FormControl<number | null>(null, [Validators.min(0), Validators.max(100)]),
   });
 
   ngOnInit(): void {

@@ -1,20 +1,12 @@
 <form (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
-  <h2 class="text-lg font-semibold" [style.color]="'var(--color-text-primary)'">
-    Tabela IBPT (Impostos)
-  </h2>
+  <h2 class="text-lg font-semibold" [style.color]="'var(--color-text-primary)'">Tabela IBPT (Impostos)</h2>
 
   <div>
     <label class="block font-medium mb-2 text-sm" [style.color]="'var(--color-text-secondary)'">
       Arquivo CSV da Tabela IBPT <span [style.color]="'var(--color-danger)'">*</span>
     </label>
 
-    <input
-      type="file"
-      id="ibptFile"
-      accept=".csv"
-      (change)="onFileSelected($event)"
-      class="hidden"
-    />
+    <input type="file" id="ibptFile" accept=".csv" (change)="onFileSelected($event)" class="hidden" />
 
     <button
       type="button"
@@ -67,18 +59,10 @@
     [style.background-color]="'var(--color-success)'"
     [style.border-color]="'var(--color-success)'"
   >
-    <p class="font-medium text-sm" [style.color]="'var(--color-text-primary)'">
-      Sobre a Tabela IBPT
-    </p>
+    <p class="font-medium text-sm" [style.color]="'var(--color-text-primary)'">Sobre a Tabela IBPT</p>
     <p class="text-xs mt-1" [style.color]="'var(--color-text-secondary)'">
-      A tabela IBPT contém as alíquotas de impostos aproximados por NCM. Baixe a tabela atualizada
-      em
-      <a
-        href="https://deolhonoimposto.ibpt.org.br"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="underline"
-      >
+      A tabela IBPT contém as alíquotas de impostos aproximados por NCM. Baixe a tabela atualizada em
+      <a href="https://deolhonoimposto.ibpt.org.br" target="_blank" rel="noopener noreferrer" class="underline">
         deolhonoimposto.ibpt.org.br
       </a>
       e importe o arquivo CSV. Esta operação substitui completamente a tabela anterior.

@@ -1,13 +1,5 @@
 import { CommonModule } from '@angular/common';
-import {
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-  inject,
-  OnChanges,
-  SimpleChanges,
-} from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, OnChanges, SimpleChanges } from '@angular/core';
 import { FormField, ModalEditEntity } from '../../../../shared/modal-edit-entity/modal-edit-entity';
 import { Table } from '../../types/table';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
@@ -126,8 +118,7 @@ export class TableModalComponent implements OnChanges {
           { name: 'time', label: 'Horário', type: 'datetime-local', required: true },
         ],
         validate: (data) => !!(data.customer && data.time),
-        execute: (service, data, tableId) =>
-          service.reserveTable(tableId!, data.customer, data.time),
+        execute: (service, data, tableId) => service.reserveTable(tableId!, data.customer, data.time),
       },
 
       occupy: {
@@ -194,9 +185,7 @@ export class TableModalComponent implements OnChanges {
       },
       error: (error: any) => {
         console.error('Modal save error:', error);
-        this.notification.error(
-          `Erro: ${error.error?.message || error.message || 'Tente novamente'}`,
-        );
+        this.notification.error(`Erro: ${error.error?.message || error.message || 'Tente novamente'}`);
       },
     });
   }

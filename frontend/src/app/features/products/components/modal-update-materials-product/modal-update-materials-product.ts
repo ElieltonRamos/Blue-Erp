@@ -1,12 +1,4 @@
-import {
-  Component,
-  EventEmitter,
-  inject,
-  Input,
-  Output,
-  OnInit,
-  ChangeDetectorRef,
-} from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ProductService } from '../../services/product.service';
 import { PrimaryMaterialService } from '../../services/primary-material.service';
 import { NotificationService } from '../../../../shared/toastr/notification.service';
@@ -164,25 +156,23 @@ export class ModalUpdateMaterialsProduct implements OnInit {
 
   searchSubProducts(term: string) {
     this.isSearchingSubProduct = true;
-    this.productService
-      .getAll(1, 20, { search: term, active: true, productType: 'SEMI_MANUFACTURED' })
-      .subscribe({
-        next: (response) => {
-          this.subProductSearchResults = response.data.map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            code: p.code,
-            costPrice: p.costPrice,
-            unit: p.unit,
-          }));
-          this.isSearchingSubProduct = false;
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.notification.error('Erro ao buscar subprodutos');
-          this.isSearchingSubProduct = false;
-        },
-      });
+    this.productService.getAll(1, 20, { search: term, active: true, productType: 'SEMI_MANUFACTURED' }).subscribe({
+      next: (response) => {
+        this.subProductSearchResults = response.data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          code: p.code,
+          costPrice: p.costPrice,
+          unit: p.unit,
+        }));
+        this.isSearchingSubProduct = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.notification.error('Erro ao buscar subprodutos');
+        this.isSearchingSubProduct = false;
+      },
+    });
   }
 
   selectSubProduct(product: SubProductOption) {

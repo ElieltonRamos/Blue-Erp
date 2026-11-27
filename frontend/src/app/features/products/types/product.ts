@@ -1,9 +1,4 @@
-export const productionLocationOptions = [
-  'Cozinha Principal',
-  'Cozinha Secundária',
-  'Cozinha Terciaria',
-  'Bar',
-];
+export const productionLocationOptions = ['Cozinha Principal', 'Cozinha Secundária', 'Cozinha Terciaria', 'Bar'];
 
 export enum Unit {
   UN = 'UN',

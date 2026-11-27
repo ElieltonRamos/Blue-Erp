@@ -5,7 +5,7 @@ const STORAGE_KEY = 'theme';
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private current = signal<'dark' | 'light'>(this.loadTheme());
-  
+
   constructor() {
     document.documentElement.classList.remove('dark', 'light');
     document.documentElement.classList.add(this.current());

@@ -4,13 +4,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../core/services/environment';
 import { PaginatedResponse } from '../../../core/guards/types/paginator';
-import {
-  CreateManualPurchase,
-  CreatePurchaseFromXml,
-  ParsedPurchasePreview,
-  Purchase,
-  PurchaseFilters,
-} from '../types/purchase';
+import { CreateManualPurchase, CreatePurchaseFromXml, ParsedPurchasePreview, Purchase, PurchaseFilters } from '../types/purchase';
 
 @Injectable({
   providedIn: 'root',
@@ -30,11 +24,7 @@ export class PurchaseService {
     return this.client.post<Purchase>(`${this.apiUrl}/purchases`, dto);
   }
 
-  getAllPurchases(
-    page: number,
-    limit: number,
-    filters: PurchaseFilters = {},
-  ): Observable<PaginatedResponse<Purchase>> {
+  getAllPurchases(page: number, limit: number, filters: PurchaseFilters = {}): Observable<PaginatedResponse<Purchase>> {
     let params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
     if (filters.status) params = params.set('status', filters.status);

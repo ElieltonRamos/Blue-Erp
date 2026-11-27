@@ -14,12 +14,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SalePaymentDto } from '../../types/sale';
 
-export type PaymentMethod =
-  | 'DINHEIRO'
-  | 'CARTAO_CREDITO'
-  | 'CARTAO_DEBITO'
-  | 'PIX'
-  | 'CREDITO_LOJA';
+export type PaymentMethod = 'DINHEIRO' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'PIX' | 'CREDITO_LOJA';
 
 export interface PaymentEntry {
   paymentMethod: PaymentMethod;

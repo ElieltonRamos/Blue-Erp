@@ -1,14 +1,8 @@
-<form
-  (ngSubmit)="onSubmit()"
-  [formGroup]="formCreateMaterial"
-  class="bg-surface border border-border p-8 rounded-2xl space-y-8"
->
+<form (ngSubmit)="onSubmit()" [formGroup]="formCreateMaterial" class="bg-surface border border-border p-8 rounded-2xl space-y-8">
   <!-- Cabeçalho -->
   <div class="border-b border-border pb-4">
     <h2 class="text-3xl font-bold text-text-primary mb-2">Cadastro de Matéria-Prima</h2>
-    <p class="text-text-secondary text-sm">
-      Preencha as informações da matéria-prima para controle de estoque
-    </p>
+    <p class="text-text-secondary text-sm">Preencha as informações da matéria-prima para controle de estoque</p>
   </div>
 
   <!-- Seção: Informações Básicas -->
@@ -31,9 +25,7 @@
           placeholder="Ex: Farinha de Trigo"
           class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-accent outline-none transition-all duration-200"
         />
-        <ng-container
-          *ngIf="formCreateMaterial.get('name')?.touched && formCreateMaterial.get('name')?.invalid"
-        >
+        <ng-container *ngIf="formCreateMaterial.get('name')?.touched && formCreateMaterial.get('name')?.invalid">
           <p class="text-danger text-sm mt-2 flex items-center gap-1">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path
@@ -59,9 +51,7 @@
           placeholder="Ex: MP-001"
           class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-accent outline-none transition-all duration-200"
         />
-        <ng-container
-          *ngIf="formCreateMaterial.get('code')?.touched && formCreateMaterial.get('code')?.invalid"
-        >
+        <ng-container *ngIf="formCreateMaterial.get('code')?.touched && formCreateMaterial.get('code')?.invalid">
           <p class="text-danger text-sm mt-2 flex items-center gap-1">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path
@@ -122,12 +112,7 @@
           placeholder="0"
           class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-success outline-none transition-all duration-200"
         />
-        <ng-container
-          *ngIf="
-            formCreateMaterial.get('currentStock')?.touched &&
-            formCreateMaterial.get('currentStock')?.invalid
-          "
-        >
+        <ng-container *ngIf="formCreateMaterial.get('currentStock')?.touched && formCreateMaterial.get('currentStock')?.invalid">
           <p class="text-danger text-sm mt-2 flex items-center gap-1">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path
@@ -155,12 +140,7 @@
           placeholder="0"
           class="w-full p-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-warning outline-none transition-all duration-200"
         />
-        <ng-container
-          *ngIf="
-            formCreateMaterial.get('minimumStock')?.touched &&
-            formCreateMaterial.get('minimumStock')?.invalid
-          "
-        >
+        <ng-container *ngIf="formCreateMaterial.get('minimumStock')?.touched && formCreateMaterial.get('minimumStock')?.invalid">
           <p class="text-danger text-sm mt-2 flex items-center gap-1">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path
@@ -202,12 +182,7 @@
             class="w-full pl-10 pr-3 py-3 rounded-lg bg-white/95 text-gray-900 font-medium placeholder-gray-400 border-2 border-transparent focus:border-success outline-none transition-all duration-200"
           />
         </div>
-        <ng-container
-          *ngIf="
-            formCreateMaterial.get('unitCost')?.touched &&
-            formCreateMaterial.get('unitCost')?.invalid
-          "
-        >
+        <ng-container *ngIf="formCreateMaterial.get('unitCost')?.touched && formCreateMaterial.get('unitCost')?.invalid">
           <p class="text-danger text-sm mt-2 flex items-center gap-1">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path
@@ -237,9 +212,7 @@
 
       <!-- Valor Total em Estoque -->
       <div class="bg-white/5 p-3 rounded-lg border border-success/30">
-        <label class="block text-text-secondary font-medium mb-2 text-sm"
-          >Valor Total em Estoque</label
-        >
+        <label class="block text-text-secondary font-medium mb-2 text-sm">Valor Total em Estoque</label>
         <div class="text-2xl font-bold text-success">R$ {{ calculateTotalValue() }}</div>
         <p class="text-xs text-text-muted mt-1">Estoque × Custo unitário</p>
       </div>
@@ -248,9 +221,7 @@
 
   <!-- Status Ativo -->
   <div class="space-y-3">
-    <label class="block text-text-secondary font-medium text-sm">
-      Status <span class="text-danger">*</span>
-    </label>
+    <label class="block text-text-secondary font-medium text-sm"> Status <span class="text-danger">*</span> </label>
     <div class="grid grid-cols-2 gap-4">
       <label class="relative cursor-pointer">
         <input type="radio" formControlName="active" [value]="true" class="peer sr-only" />
@@ -260,11 +231,7 @@
           <div
             class="w-5 h-5 rounded-full border-2 border-border-subtle peer-checked:border-success peer-checked:bg-success flex items-center justify-center"
           >
-            <svg
-              class="w-3 h-3 text-white hidden peer-checked:block"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
+            <svg class="w-3 h-3 text-white hidden peer-checked:block" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fill-rule="evenodd"
                 d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -284,11 +251,7 @@
           <div
             class="w-5 h-5 rounded-full border-2 border-border-subtle peer-checked:border-danger peer-checked:bg-danger flex items-center justify-center"
           >
-            <svg
-              class="w-3 h-3 text-white hidden peer-checked:block"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
+            <svg class="w-3 h-3 text-white hidden peer-checked:block" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fill-rule="evenodd"
                 d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"

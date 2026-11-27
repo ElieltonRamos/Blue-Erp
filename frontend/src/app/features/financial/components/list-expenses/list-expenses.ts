@@ -48,7 +48,7 @@ export class ListExpenses {
     { name: 'supplier', label: 'Fornecedor', type: 'text' },
     { name: 'description', label: 'Descrição', type: 'text' },
     { name: 'value', label: 'Valor', type: 'number' },
-    { name: 'datePayment', label: 'Data Vencimento', type: 'date' }
+    { name: 'datePayment', label: 'Data Vencimento', type: 'date' },
   ];
 
   ngOnInit() {
@@ -82,21 +82,19 @@ export class ListExpenses {
   getAllExpenses(page: number, limit: number) {
     const sortOrder = this.sortAsc ? 'asc' : 'desc';
 
-    this.financialService
-      .getAllExpenses(page, limit, this.filter, this.sortKey, sortOrder)
-      .subscribe({
-        next: (response) => {
-          this.listExpenses = response.data;
-          this.totalItems = response.total;
-          this.page = response.page;
-          this.limit = response.limit;
-          this.totalPages = response.totalPages;
-          this.cdr.detectChanges();
-        },
-        error: (e) => {
-          this.notification.error(`Erro ao carregar despesas: ${e.error.message}`);
-        },
-      });
+    this.financialService.getAllExpenses(page, limit, this.filter, this.sortKey, sortOrder).subscribe({
+      next: (response) => {
+        this.listExpenses = response.data;
+        this.totalItems = response.total;
+        this.page = response.page;
+        this.limit = response.limit;
+        this.totalPages = response.totalPages;
+        this.cdr.detectChanges();
+      },
+      error: (e) => {
+        this.notification.error(`Erro ao carregar despesas: ${e.error.message}`);
+      },
+    });
   }
 
   deleteExpense(expense: Expense) {
@@ -142,7 +140,7 @@ export class ListExpenses {
     this.financialService.updateExpense(expense).subscribe({
       next: (_res) => {
         this.notification.success('Despesa Atualizado com sucesso');
-        this.closeModalEdit()
+        this.closeModalEdit();
         this.cdr.detectChanges();
       },
       error: (e) => {

@@ -116,11 +116,7 @@ export class CatalogServices {
   }
 
   createService() {
-    if (
-      !this.newService.name ||
-      this.newService.price === null ||
-      this.newService.price === undefined
-    ) {
+    if (!this.newService.name || this.newService.price === null || this.newService.price === undefined) {
       this.notification.error('Preencha nome e preço do serviço.');
       return;
     }

@@ -89,8 +89,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '1203',
-    natOp:
-      'Devolução de venda de produção do estabelecimento, destinada à Zona Franca de Manaus ou Áreas de Livre Comércio',
+    natOp: 'Devolução de venda de produção do estabelecimento, destinada à Zona Franca de Manaus ou Áreas de Livre Comércio',
   },
   {
     code: '1204',
@@ -159,13 +158,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '1304',
-    natOp:
-      'Aquisição de serviço de comunicação por estabelecimento de prestador de serviço de transporte',
+    natOp: 'Aquisição de serviço de comunicação por estabelecimento de prestador de serviço de transporte',
   },
   {
     code: '1305',
-    natOp:
-      'Aquisição de serviço de comunicação por estabelecimento gerador, transmissor ou distribuidor de energia elétrica',
+    natOp: 'Aquisição de serviço de comunicação por estabelecimento gerador, transmissor ou distribuidor de energia elétrica',
   },
   {
     code: '1306',
@@ -181,13 +178,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '1353',
-    natOp:
-      'Aquisição de serviço de transporte por estabelecimento gerador, transmissor ou distribuidor de energia elétrica',
+    natOp: 'Aquisição de serviço de transporte por estabelecimento gerador, transmissor ou distribuidor de energia elétrica',
   },
   {
     code: '1354',
-    natOp:
-      'Aquisição de serviço de transporte por estabelecimento prestador de serviço de comunicação',
+    natOp: 'Aquisição de serviço de transporte por estabelecimento prestador de serviço de comunicação',
   },
   {
     code: '1355',
@@ -195,8 +190,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '1356',
-    natOp:
-      'Aquisição de serviço de transporte por estabelecimento de prestador de serviço de transporte',
+    natOp: 'Aquisição de serviço de transporte por estabelecimento de prestador de serviço de transporte',
   },
   {
     code: '1401',
@@ -205,18 +199,15 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '1403',
-    natOp:
-      'Compra para comercialização em operação com mercadoria sujeita ao regime de substituição tributária',
+    natOp: 'Compra para comercialização em operação com mercadoria sujeita ao regime de substituição tributária',
   },
   {
     code: '1406',
-    natOp:
-      'Compra de bem para o ativo imobilizado cuja entrada esteja sujeita ao regime de substituição tributária',
+    natOp: 'Compra de bem para o ativo imobilizado cuja entrada esteja sujeita ao regime de substituição tributária',
   },
   {
     code: '1407',
-    natOp:
-      'Compra de mercadoria para uso ou consumo cuja entrada esteja sujeita ao regime de substituição tributária',
+    natOp: 'Compra de mercadoria para uso ou consumo cuja entrada esteja sujeita ao regime de substituição tributária',
   },
   {
     code: '1408',
@@ -225,8 +216,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '1409',
-    natOp:
-      'Transferência para comercialização em operação com mercadoria sujeita ao regime de substituição tributária',
+    natOp: 'Transferência para comercialização em operação com mercadoria sujeita ao regime de substituição tributária',
   },
   {
     code: '1410',
@@ -262,8 +252,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '1503',
-    natOp:
-      'Entrada decorrente de devolução de produto remetido com fim específico de exportação, produzido pelo estabelecimento',
+    natOp: 'Entrada decorrente de devolução de produto remetido com fim específico de exportação, produzido pelo estabelecimento',
   },
   {
     code: '1504',
@@ -327,8 +316,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '1605',
-    natOp:
-      'Recebimento, por transferência, de saldo credor de ICMS de outra empresa para compensação de saldo devedor de ICMS',
+    natOp: 'Recebimento, por transferência, de saldo credor de ICMS de outra empresa para compensação de saldo devedor de ICMS',
   },
   {
     code: '1651',
@@ -352,8 +340,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '1660',
-    natOp:
-      'Devolução de venda de combustível ou lubrificante destinados à industrialização subseqüente',
+    natOp: 'Devolução de venda de combustível ou lubrificante destinados à industrialização subseqüente',
   },
   {
     code: '1661',
@@ -361,8 +348,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '1662',
-    natOp:
-      'Devolução de venda de combustível ou lubrificante destinados a consumidor ou usuário final',
+    natOp: 'Devolução de venda de combustível ou lubrificante destinados a consumidor ou usuário final',
   },
   {
     code: '1901',
@@ -374,8 +360,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '1903',
-    natOp:
-      'Entrada de mercadoria remetida para industrialização e não aplicada no processo industrial',
+    natOp: 'Entrada de mercadoria remetida para industrialização e não aplicada no processo industrial',
   },
   {
     code: '1904',
@@ -451,8 +436,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '1922',
-    natOp:
-      'Lançamento efetuado a título de simples faturamento decorrente de compra para entrega futura',
+    natOp: 'Lançamento efetuado a título de simples faturamento decorrente de compra para entrega futura',
   },
   {
     code: '1923',
@@ -480,8 +464,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '1932',
-    natOp:
-      'Aquisição de serviço de transporte iniciado em UF diversa daquela onde inscrito o prestador',
+    natOp: 'Aquisição de serviço de transporte iniciado em UF diversa daquela onde inscrito o prestador',
   },
   {
     code: '1933',
@@ -580,8 +563,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '2203',
-    natOp:
-      'Devolução de venda de produção do estabelecimento, destinada à Zona Franca de Manaus ou Áreas de Livre Comércio',
+    natOp: 'Devolução de venda de produção do estabelecimento, destinada à Zona Franca de Manaus ou Áreas de Livre Comércio',
   },
   {
     code: '2204',
@@ -650,13 +632,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '2304',
-    natOp:
-      'Aquisição de serviço de comunicação por estabelecimento de prestador de serviço de transporte',
+    natOp: 'Aquisição de serviço de comunicação por estabelecimento de prestador de serviço de transporte',
   },
   {
     code: '2305',
-    natOp:
-      'Aquisição de serviço de comunicação por estabelecimento gerador, transmissor ou distribuidor de energia elétrica',
+    natOp: 'Aquisição de serviço de comunicação por estabelecimento gerador, transmissor ou distribuidor de energia elétrica',
   },
   {
     code: '2306',
@@ -672,13 +652,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '2353',
-    natOp:
-      'Aquisição de serviço de transporte por estabelecimento gerador, transmissor ou distribuidor de energia elétrica',
+    natOp: 'Aquisição de serviço de transporte por estabelecimento gerador, transmissor ou distribuidor de energia elétrica',
   },
   {
     code: '2354',
-    natOp:
-      'Aquisição de serviço de transporte por estabelecimento prestador de serviço de comunicação',
+    natOp: 'Aquisição de serviço de transporte por estabelecimento prestador de serviço de comunicação',
   },
   {
     code: '2355',
@@ -686,8 +664,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '2356',
-    natOp:
-      'Aquisição de serviço de transporte por estabelecimento de prestador de serviço de transporte',
+    natOp: 'Aquisição de serviço de transporte por estabelecimento de prestador de serviço de transporte',
   },
   {
     code: '2401',
@@ -696,18 +673,15 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '2403',
-    natOp:
-      'Compra para comercialização em operação com mercadoria sujeita ao regime de substituição tributária',
+    natOp: 'Compra para comercialização em operação com mercadoria sujeita ao regime de substituição tributária',
   },
   {
     code: '2406',
-    natOp:
-      'Compra de bem para o ativo imobilizado cuja entrada esteja sujeita ao regime de substituição tributária',
+    natOp: 'Compra de bem para o ativo imobilizado cuja entrada esteja sujeita ao regime de substituição tributária',
   },
   {
     code: '2407',
-    natOp:
-      'Compra de mercadoria para uso ou consumo cuja entrada esteja sujeita ao regime de substituição tributária',
+    natOp: 'Compra de mercadoria para uso ou consumo cuja entrada esteja sujeita ao regime de substituição tributária',
   },
   {
     code: '2408',
@@ -716,8 +690,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '2409',
-    natOp:
-      'Transferência para comercialização em operação com mercadoria sujeita ao regime de substituição tributária',
+    natOp: 'Transferência para comercialização em operação com mercadoria sujeita ao regime de substituição tributária',
   },
   {
     code: '2410',
@@ -745,8 +718,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '2503',
-    natOp:
-      'Entrada decorrente de devolução de produto remetido com fim específico de exportação, produzido pelo estabelecimento',
+    natOp: 'Entrada decorrente de devolução de produto remetido com fim específico de exportação, produzido pelo estabelecimento',
   },
   {
     code: '2504',
@@ -826,8 +798,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '2660',
-    natOp:
-      'Devolução de venda de combustível ou lubrificante destinados à industrialização subseqüente',
+    natOp: 'Devolução de venda de combustível ou lubrificante destinados à industrialização subseqüente',
   },
   {
     code: '2661',
@@ -835,8 +806,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '2662',
-    natOp:
-      'Devolução de venda de combustível ou lubrificante destinados a consumidor ou usuário final',
+    natOp: 'Devolução de venda de combustível ou lubrificante destinados a consumidor ou usuário final',
   },
   {
     code: '2901',
@@ -848,8 +818,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '2903',
-    natOp:
-      'Entrada de mercadoria remetida para industrialização e não aplicada no processo industrial',
+    natOp: 'Entrada de mercadoria remetida para industrialização e não aplicada no processo industrial',
   },
   {
     code: '2904',
@@ -925,8 +894,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '2922',
-    natOp:
-      'Lançamento efetuado a título de simples faturamento decorrente de compra para entrega futura',
+    natOp: 'Lançamento efetuado a título de simples faturamento decorrente de compra para entrega futura',
   },
   {
     code: '2923',
@@ -949,8 +917,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '2932',
-    natOp:
-      'Aquisição de serviço de transporte iniciado em UF diversa daquela onde inscrito o prestador',
+    natOp: 'Aquisição de serviço de transporte iniciado em UF diversa daquela onde inscrito o prestador',
   },
   {
     code: '2933',
@@ -978,28 +945,23 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5104',
-    natOp:
-      'Venda de mercadoria adquirida ou recebida de terceiros, efetuada fora do estabelecimento',
+    natOp: 'Venda de mercadoria adquirida ou recebida de terceiros, efetuada fora do estabelecimento',
   },
   {
     code: '5105',
-    natOp:
-      'Venda de produção do estabelecimento que não deva transitar pelo estabelecimento do vendedor',
+    natOp: 'Venda de produção do estabelecimento que não deva transitar pelo estabelecimento do vendedor',
   },
   {
     code: '5106',
-    natOp:
-      'Venda de mercadoria adquirida ou recebida de terceiros, que não deva transitar pelo estabelecimento do vendedor',
+    natOp: 'Venda de mercadoria adquirida ou recebida de terceiros, que não deva transitar pelo estabelecimento do vendedor',
   },
   {
     code: '5109',
-    natOp:
-      'Venda de produção do estabelecimento destinada à Zona Franca de Manaus ou Áreas de Livre Comércio',
+    natOp: 'Venda de produção do estabelecimento destinada à Zona Franca de Manaus ou Áreas de Livre Comércio',
   },
   {
     code: '5110',
-    natOp:
-      'Venda de mercadoria adquirida ou recebida de terceiros, destinada à Zona Franca de Manaus ou Áreas de Livre Comércio',
+    natOp: 'Venda de mercadoria adquirida ou recebida de terceiros, destinada à Zona Franca de Manaus ou Áreas de Livre Comércio',
   },
   {
     code: '5111',
@@ -1007,8 +969,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5112',
-    natOp:
-      'Venda de mercadoria adquirida ou recebida de terceiros remetida anteriormente em consignação industrial',
+    natOp: 'Venda de mercadoria adquirida ou recebida de terceiros remetida anteriormente em consignação industrial',
   },
   {
     code: '5113',
@@ -1016,13 +977,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5114',
-    natOp:
-      'Venda de mercadoria adquirida ou recebida de terceiros remetida anteriormente em consignação mercantil',
+    natOp: 'Venda de mercadoria adquirida ou recebida de terceiros remetida anteriormente em consignação mercantil',
   },
   {
     code: '5115',
-    natOp:
-      'Venda de mercadoria adquirida ou recebida de terceiros, recebida anteriormente em consignação mercantil',
+    natOp: 'Venda de mercadoria adquirida ou recebida de terceiros, recebida anteriormente em consignação mercantil',
   },
   {
     code: '5116',
@@ -1030,8 +989,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5117',
-    natOp:
-      'Venda de mercadoria adquirida ou recebida de terceiros, originada de encomenda para entrega futura',
+    natOp: 'Venda de mercadoria adquirida ou recebida de terceiros, originada de encomenda para entrega futura',
   },
   {
     code: '5118',
@@ -1081,8 +1039,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5155',
-    natOp:
-      'Transferência de produção do estabelecimento que não deva transitar pelo estabelecimento do remetente',
+    natOp: 'Transferência de produção do estabelecimento que não deva transitar pelo estabelecimento do remetente',
   },
   {
     code: '5156',
@@ -1111,8 +1068,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5208',
-    natOp:
-      'Devolução de mercadoria recebida em transferência para industrialização ou produção rural',
+    natOp: 'Devolução de mercadoria recebida em transferência para industrialização ou produção rural',
   },
   {
     code: '5209',
@@ -1168,13 +1124,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5304',
-    natOp:
-      'Prestação de serviço de comunicação a estabelecimento de prestador de serviço de transporte',
+    natOp: 'Prestação de serviço de comunicação a estabelecimento de prestador de serviço de transporte',
   },
   {
     code: '5305',
-    natOp:
-      'Prestação de serviço de comunicação a estabelecimento gerador, transmissor ou distribuidor de energia elétrica',
+    natOp: 'Prestação de serviço de comunicação a estabelecimento gerador, transmissor ou distribuidor de energia elétrica',
   },
   {
     code: '5306',
@@ -1194,13 +1148,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5353',
-    natOp:
-      'Prestação de serviço de transporte a estabelecimento gerador, transmissor ou distribuidor de energia elétrica',
+    natOp: 'Prestação de serviço de transporte a estabelecimento gerador, transmissor ou distribuidor de energia elétrica',
   },
   {
     code: '5354',
-    natOp:
-      'Prestação de serviço de transporte a estabelecimento prestador de serviço de comunicação',
+    natOp: 'Prestação de serviço de transporte a estabelecimento prestador de serviço de comunicação',
   },
   {
     code: '5355',
@@ -1208,8 +1160,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5356',
-    natOp:
-      'Prestação de serviço de transporte a estabelecimento de prestador de serviço de transporte',
+    natOp: 'Prestação de serviço de transporte a estabelecimento de prestador de serviço de transporte',
   },
   {
     code: '5357',
@@ -1217,8 +1168,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5401',
-    natOp:
-      'Venda de produção do estabelecimento em operação com mercadoria sujeita ao regime de substituição tributária',
+    natOp: 'Venda de produção do estabelecimento em operação com mercadoria sujeita ao regime de substituição tributária',
   },
   {
     code: '5402',
@@ -1237,8 +1187,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5408',
-    natOp:
-      'Transferência de produção do estabelecimento em operação com mercadoria sujeita ao regime de substituição tributária',
+    natOp: 'Transferência de produção do estabelecimento em operação com mercadoria sujeita ao regime de substituição tributária',
   },
   {
     code: '5409',
@@ -1252,13 +1201,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5411',
-    natOp:
-      'Devolução de compra para comercialização em operação com mercadoria sujeita ao regime de substituição tributária',
+    natOp: 'Devolução de compra para comercialização em operação com mercadoria sujeita ao regime de substituição tributária',
   },
   {
     code: '5412',
-    natOp:
-      'Devolução de bem do ativo imobilizado, em operação com mercadoria sujeita ao regime de substituição tributária',
+    natOp: 'Devolução de bem do ativo imobilizado, em operação com mercadoria sujeita ao regime de substituição tributária',
   },
   {
     code: '5413',
@@ -1281,8 +1228,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5502',
-    natOp:
-      'Remessa de mercadoria adquirida ou recebida de terceiros, com fim específico de exportação',
+    natOp: 'Remessa de mercadoria adquirida ou recebida de terceiros, com fim específico de exportação',
   },
   {
     code: '5503',
@@ -1290,8 +1236,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5504',
-    natOp:
-      'Remessa de mercadoria para formação de lote de exportação, adquirida ou recebida de terceiros',
+    natOp: 'Remessa de mercadoria para formação de lote de exportação, adquirida ou recebida de terceiros',
   },
   {
     code: '5505',
@@ -1348,38 +1293,31 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5651',
-    natOp:
-      'Venda de combustível ou lubrificante de produção do estabelecimento destinados à industrialização subseqüente',
+    natOp: 'Venda de combustível ou lubrificante de produção do estabelecimento destinados à industrialização subseqüente',
   },
   {
     code: '5652',
-    natOp:
-      'Venda de combustível ou lubrificante de produção do estabelecimento destinados à comercialização',
+    natOp: 'Venda de combustível ou lubrificante de produção do estabelecimento destinados à comercialização',
   },
   {
     code: '5653',
-    natOp:
-      'Venda de combustível ou lubrificante de produção do estabelecimento destinados a consumidor ou usuário final',
+    natOp: 'Venda de combustível ou lubrificante de produção do estabelecimento destinados a consumidor ou usuário final',
   },
   {
     code: '5654',
-    natOp:
-      'Venda de combustível ou lubrificante adquiridos ou recebidos de terceiros destinados à industrialização subseqüente',
+    natOp: 'Venda de combustível ou lubrificante adquiridos ou recebidos de terceiros destinados à industrialização subseqüente',
   },
   {
     code: '5655',
-    natOp:
-      'Venda de combustível ou lubrificante adquiridos ou recebidos de terceiros destinados à comercialização',
+    natOp: 'Venda de combustível ou lubrificante adquiridos ou recebidos de terceiros destinados à comercialização',
   },
   {
     code: '5656',
-    natOp:
-      'Venda de combustível ou lubrificante adquiridos ou recebidos de terceiros destinados a consumidor ou usuário final',
+    natOp: 'Venda de combustível ou lubrificante adquiridos ou recebidos de terceiros destinados a consumidor ou usuário final',
   },
   {
     code: '5657',
-    natOp:
-      'Remessa de combustível ou lubrificante adquiridos ou recebidos de terceiros para venda fora do estabelecimento',
+    natOp: 'Remessa de combustível ou lubrificante adquiridos ou recebidos de terceiros para venda fora do estabelecimento',
   },
   {
     code: '5658',
@@ -1391,8 +1329,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5660',
-    natOp:
-      'Devolução de compra de combustível ou lubrificante adquiridos para industrialização subseqüente',
+    natOp: 'Devolução de compra de combustível ou lubrificante adquiridos para industrialização subseqüente',
   },
   {
     code: '5661',
@@ -1400,8 +1337,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5662',
-    natOp:
-      'Devolução de compra de combustível ou lubrificante adquiridos por consumidor ou usuário final',
+    natOp: 'Devolução de compra de combustível ou lubrificante adquiridos por consumidor ou usuário final',
   },
   {
     code: '5901',
@@ -1413,8 +1349,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5903',
-    natOp:
-      'Retorno de mercadoria remetida para industrialização e não aplicada no processo industrial',
+    natOp: 'Retorno de mercadoria remetida para industrialização e não aplicada no processo industrial',
   },
   {
     code: '5904',
@@ -1490,8 +1425,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5922',
-    natOp:
-      'Lançamento efetuado a título de simples faturamento decorrente de venda para entrega futura',
+    natOp: 'Lançamento efetuado a título de simples faturamento decorrente de venda para entrega futura',
   },
   {
     code: '5923',
@@ -1515,13 +1449,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5927',
-    natOp:
-      'Lançamento efetuado a título de baixa de estoque decorrente de perda, roubo ou deterioração',
+    natOp: 'Lançamento efetuado a título de baixa de estoque decorrente de perda, roubo ou deterioração',
   },
   {
     code: '5928',
-    natOp:
-      'Lançamento efetuado a título de baixa de estoque decorrente de descontinuidade da atividade',
+    natOp: 'Lançamento efetuado a título de baixa de estoque decorrente de descontinuidade da atividade',
   },
   {
     code: '5929',
@@ -1530,13 +1462,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '5931',
-    natOp:
-      'Lançamento efetuado em decorrência de emissão de documento fiscal relativo a prestação de serviço de transporte',
+    natOp: 'Lançamento efetuado em decorrência de emissão de documento fiscal relativo a prestação de serviço de transporte',
   },
   {
     code: '5932',
-    natOp:
-      'Prestação de serviço de transporte iniciada em UF diversa daquela onde inscrito o prestador',
+    natOp: 'Prestação de serviço de transporte iniciada em UF diversa daquela onde inscrito o prestador',
   },
   {
     code: '5933',
@@ -1564,18 +1494,15 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6104',
-    natOp:
-      'Venda de mercadoria adquirida ou recebida de terceiros, efetuada fora do estabelecimento',
+    natOp: 'Venda de mercadoria adquirida ou recebida de terceiros, efetuada fora do estabelecimento',
   },
   {
     code: '6105',
-    natOp:
-      'Venda de produção do estabelecimento que não deva transitar pelo estabelecimento do vendedor',
+    natOp: 'Venda de produção do estabelecimento que não deva transitar pelo estabelecimento do vendedor',
   },
   {
     code: '6106',
-    natOp:
-      'Venda de mercadoria adquirida ou recebida de terceiros, que não deva transitar pelo estabelecimento do vendedor',
+    natOp: 'Venda de mercadoria adquirida ou recebida de terceiros, que não deva transitar pelo estabelecimento do vendedor',
   },
   {
     code: '6107',
@@ -1587,13 +1514,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6109',
-    natOp:
-      'Venda de produção do estabelecimento destinada à Zona Franca de Manaus ou Áreas de Livre Comércio',
+    natOp: 'Venda de produção do estabelecimento destinada à Zona Franca de Manaus ou Áreas de Livre Comércio',
   },
   {
     code: '6110',
-    natOp:
-      'Venda de mercadoria adquirida ou recebida de terceiros, destinada à Zona Franca de Manaus ou Áreas de Livre Comércio',
+    natOp: 'Venda de mercadoria adquirida ou recebida de terceiros, destinada à Zona Franca de Manaus ou Áreas de Livre Comércio',
   },
   {
     code: '6111',
@@ -1601,8 +1526,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6112',
-    natOp:
-      'Venda de mercadoria adquirida ou recebida de terceiros remetida anteriormente em consignação industrial',
+    natOp: 'Venda de mercadoria adquirida ou recebida de terceiros remetida anteriormente em consignação industrial',
   },
   {
     code: '6113',
@@ -1610,13 +1534,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6114',
-    natOp:
-      'Venda de mercadoria adquirida ou recebida de terceiros remetida anteriormente em consignação mercantil',
+    natOp: 'Venda de mercadoria adquirida ou recebida de terceiros remetida anteriormente em consignação mercantil',
   },
   {
     code: '6115',
-    natOp:
-      'Venda de mercadoria adquirida ou recebida de terceiros, recebida anteriormente em consignação mercantil',
+    natOp: 'Venda de mercadoria adquirida ou recebida de terceiros, recebida anteriormente em consignação mercantil',
   },
   {
     code: '6116',
@@ -1624,8 +1546,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6117',
-    natOp:
-      'Venda de mercadoria adquirida ou recebida de terceiros, originada de encomenda para entrega futura',
+    natOp: 'Venda de mercadoria adquirida ou recebida de terceiros, originada de encomenda para entrega futura',
   },
   {
     code: '6118',
@@ -1675,8 +1596,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6155',
-    natOp:
-      'Transferência de produção do estabelecimento que não deva transitar pelo estabelecimento do remetente',
+    natOp: 'Transferência de produção do estabelecimento que não deva transitar pelo estabelecimento do remetente',
   },
   {
     code: '6156',
@@ -1705,8 +1625,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6208',
-    natOp:
-      'Devolução de mercadoria recebida em transferência para industrialização ou produção rural',
+    natOp: 'Devolução de mercadoria recebida em transferência para industrialização ou produção rural',
   },
   {
     code: '6209',
@@ -1762,13 +1681,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6304',
-    natOp:
-      'Prestação de serviço de comunicação a estabelecimento de prestador de serviço de transporte',
+    natOp: 'Prestação de serviço de comunicação a estabelecimento de prestador de serviço de transporte',
   },
   {
     code: '6305',
-    natOp:
-      'Prestação de serviço de comunicação a estabelecimento gerador, transmissor ou distribuidor de energia elétrica',
+    natOp: 'Prestação de serviço de comunicação a estabelecimento gerador, transmissor ou distribuidor de energia elétrica',
   },
   {
     code: '6306',
@@ -1788,13 +1705,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6353',
-    natOp:
-      'Prestação de serviço de transporte a estabelecimento gerador, transmissor ou distribuidor de energia elétrica',
+    natOp: 'Prestação de serviço de transporte a estabelecimento gerador, transmissor ou distribuidor de energia elétrica',
   },
   {
     code: '6354',
-    natOp:
-      'Prestação de serviço de transporte a estabelecimento prestador de serviço de comunicação',
+    natOp: 'Prestação de serviço de transporte a estabelecimento prestador de serviço de comunicação',
   },
   {
     code: '6355',
@@ -1802,8 +1717,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6356',
-    natOp:
-      'Prestação de serviço de transporte a estabelecimento de prestador de serviço de transporte',
+    natOp: 'Prestação de serviço de transporte a estabelecimento de prestador de serviço de transporte',
   },
   {
     code: '6357',
@@ -1811,8 +1725,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6401',
-    natOp:
-      'Venda de produção do estabelecimento em operação com mercadoria sujeita ao regime de substituição tributária',
+    natOp: 'Venda de produção do estabelecimento em operação com mercadoria sujeita ao regime de substituição tributária',
   },
   {
     code: '6402',
@@ -1826,13 +1739,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6404',
-    natOp:
-      'Venda de mercadoria sujeita ao regime de substituição tributária, cujo imposto já tenha sido retido anteriormente',
+    natOp: 'Venda de mercadoria sujeita ao regime de substituição tributária, cujo imposto já tenha sido retido anteriormente',
   },
   {
     code: '6408',
-    natOp:
-      'Transferência de produção do estabelecimento em operação com mercadoria sujeita ao regime de substituição tributária',
+    natOp: 'Transferência de produção do estabelecimento em operação com mercadoria sujeita ao regime de substituição tributária',
   },
   {
     code: '6409',
@@ -1846,13 +1757,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6411',
-    natOp:
-      'Devolução de compra para comercialização em operação com mercadoria sujeita ao regime de substituição tributária',
+    natOp: 'Devolução de compra para comercialização em operação com mercadoria sujeita ao regime de substituição tributária',
   },
   {
     code: '6412',
-    natOp:
-      'Devolução de bem do ativo imobilizado, em operação com mercadoria sujeita ao regime de substituição tributária',
+    natOp: 'Devolução de bem do ativo imobilizado, em operação com mercadoria sujeita ao regime de substituição tributária',
   },
   {
     code: '6413',
@@ -1875,8 +1784,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6502',
-    natOp:
-      'Remessa de mercadoria adquirida ou recebida de terceiros, com fim específico de exportação',
+    natOp: 'Remessa de mercadoria adquirida ou recebida de terceiros, com fim específico de exportação',
   },
   {
     code: '6503',
@@ -1884,8 +1792,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6504',
-    natOp:
-      'Remessa de mercadoria para formação de lote de exportação, adquirida ou recebida de terceiros',
+    natOp: 'Remessa de mercadoria para formação de lote de exportação, adquirida ou recebida de terceiros',
   },
   {
     code: '6505',
@@ -1934,38 +1841,31 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6651',
-    natOp:
-      'Venda de combustível ou lubrificante de produção do estabelecimento destinados à industrialização subseqüente',
+    natOp: 'Venda de combustível ou lubrificante de produção do estabelecimento destinados à industrialização subseqüente',
   },
   {
     code: '6652',
-    natOp:
-      'Venda de combustível ou lubrificante de produção do estabelecimento destinados à comercialização',
+    natOp: 'Venda de combustível ou lubrificante de produção do estabelecimento destinados à comercialização',
   },
   {
     code: '6653',
-    natOp:
-      'Venda de combustível ou lubrificante de produção do estabelecimento destinados a consumidor ou usuário final',
+    natOp: 'Venda de combustível ou lubrificante de produção do estabelecimento destinados a consumidor ou usuário final',
   },
   {
     code: '6654',
-    natOp:
-      'Venda de combustível ou lubrificante adquiridos ou recebidos de terceiros destinados à industrialização subseqüente',
+    natOp: 'Venda de combustível ou lubrificante adquiridos ou recebidos de terceiros destinados à industrialização subseqüente',
   },
   {
     code: '6655',
-    natOp:
-      'Venda de combustível ou lubrificante adquiridos ou recebidos de terceiros destinados à comercialização',
+    natOp: 'Venda de combustível ou lubrificante adquiridos ou recebidos de terceiros destinados à comercialização',
   },
   {
     code: '6656',
-    natOp:
-      'Venda de combustível ou lubrificante adquiridos ou recebidos de terceiros destinados a consumidor ou usuário final',
+    natOp: 'Venda de combustível ou lubrificante adquiridos ou recebidos de terceiros destinados a consumidor ou usuário final',
   },
   {
     code: '6657',
-    natOp:
-      'Remessa de combustível ou lubrificante adquiridos ou recebidos de terceiros para venda fora do estabelecimento',
+    natOp: 'Remessa de combustível ou lubrificante adquiridos ou recebidos de terceiros para venda fora do estabelecimento',
   },
   {
     code: '6658',
@@ -1977,8 +1877,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6660',
-    natOp:
-      'Devolução de compra de combustível ou lubrificante adquiridos para industrialização subseqüente',
+    natOp: 'Devolução de compra de combustível ou lubrificante adquiridos para industrialização subseqüente',
   },
   {
     code: '6661',
@@ -1986,8 +1885,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6662',
-    natOp:
-      'Devolução de compra de combustível ou lubrificante adquiridos por consumidor ou usuário final',
+    natOp: 'Devolução de compra de combustível ou lubrificante adquiridos por consumidor ou usuário final',
   },
   {
     code: '6901',
@@ -1999,8 +1897,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6903',
-    natOp:
-      'Retorno de mercadoria remetida para industrialização e não aplicada no processo industrial',
+    natOp: 'Retorno de mercadoria remetida para industrialização e não aplicada no processo industrial',
   },
   {
     code: '6904',
@@ -2076,8 +1973,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6922',
-    natOp:
-      'Lançamento efetuado a título de simples faturamento decorrente de venda para entrega futura',
+    natOp: 'Lançamento efetuado a título de simples faturamento decorrente de venda para entrega futura',
   },
   {
     code: '6923',
@@ -2101,13 +1997,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '6931',
-    natOp:
-      'Lançamento efetuado em decorrência de emissão de documento fiscal relativo a prestação de serviço de transporte',
+    natOp: 'Lançamento efetuado em decorrência de emissão de documento fiscal relativo a prestação de serviço de transporte',
   },
   {
     code: '6932',
-    natOp:
-      'Prestação de serviço de transporte iniciada em UF diversa daquela onde inscrito o prestador',
+    natOp: 'Prestação de serviço de transporte iniciada em UF diversa daquela onde inscrito o prestador',
   },
   {
     code: '6933',
@@ -2131,13 +2025,11 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '7105',
-    natOp:
-      'Venda de produção do estabelecimento que não deva transitar pelo estabelecimento do vendedor',
+    natOp: 'Venda de produção do estabelecimento que não deva transitar pelo estabelecimento do vendedor',
   },
   {
     code: '7106',
-    natOp:
-      'Venda de mercadoria adquirida ou recebida de terceiros, que não deva transitar pelo estabelecimento do vendedor',
+    natOp: 'Venda de mercadoria adquirida ou recebida de terceiros, que não deva transitar pelo estabelecimento do vendedor',
   },
   {
     code: '7127',
@@ -2209,8 +2101,7 @@ export const CFOPS: Cfop[] = [
   },
   {
     code: '7930',
-    natOp:
-      'Lançamento efetuado a título de devolução de bem cuja entrada tenha ocorrido sob o regime de admissão temporária',
+    natOp: 'Lançamento efetuado a título de devolução de bem cuja entrada tenha ocorrido sob o regime de admissão temporária',
   },
   {
     code: '7949',

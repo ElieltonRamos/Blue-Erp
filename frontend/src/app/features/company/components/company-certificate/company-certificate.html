@@ -1,7 +1,5 @@
 <form (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
-  <h2 class="text-lg font-semibold" [style.color]="'var(--color-text-primary)'">
-    Certificado Digital
-  </h2>
+  <h2 class="text-lg font-semibold" [style.color]="'var(--color-text-primary)'">Certificado Digital</h2>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <div>
@@ -9,13 +7,7 @@
         Arquivo do Certificado (.pfx) <span [style.color]="'var(--color-danger)'">*</span>
       </label>
 
-      <input
-        type="file"
-        id="certificateFile"
-        accept=".pfx,.p12"
-        (change)="onFileSelected($event)"
-        class="hidden"
-      />
+      <input type="file" id="certificateFile" accept=".pfx,.p12" (change)="onFileSelected($event)" class="hidden" />
 
       <button
         type="button"
@@ -85,12 +77,10 @@
     [style.background-color]="'var(--color-accent)'"
     [style.border-color]="'var(--color-accent)'"
   >
-    <p class="font-medium text-sm" [style.color]="'var(--color-text-primary)'">
-      Importante sobre o certificado digital
-    </p>
+    <p class="font-medium text-sm" [style.color]="'var(--color-text-primary)'">Importante sobre o certificado digital</p>
     <p class="text-xs mt-1" [style.color]="'var(--color-text-secondary)'">
-      O certificado digital é necessário para emissão de NFC-e. Certifique-se de que o arquivo está
-      no formato .pfx ou .p12 e que a senha está correta.
+      O certificado digital é necessário para emissão de NFC-e. Certifique-se de que o arquivo está no formato .pfx ou .p12 e que
+      a senha está correta.
     </p>
   </div>
 </form>
