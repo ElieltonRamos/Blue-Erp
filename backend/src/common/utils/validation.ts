@@ -1,3 +1,4 @@
+import { TransformFnParams } from 'class-transformer';
 import { registerDecorator } from 'class-validator';
 
 // src/core/utils/validation.ts
@@ -48,6 +49,14 @@ export function IsTimeOnly(field: string) {
       },
     });
 }
+
+// Query string: 'true'/'false' viram boolean. Qualquer outro valor segue como
+// veio e é rejeitado pelo @IsBoolean (antes virava false em silêncio).
+export const toBoolean = ({ value }: TransformFnParams): unknown => {
+  if (value === 'true' || value === true) return true;
+  if (value === 'false' || value === false) return false;
+  return value;
+};
 
 export const notUndefined = (_: unknown, value: unknown) => value !== undefined;
 

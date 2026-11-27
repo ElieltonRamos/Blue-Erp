@@ -1,71 +1,73 @@
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
 import {
-  IsOptional,
-  IsString,
   IsBoolean,
   IsEnum,
+  IsIn,
   IsInt,
-  Min,
+  IsOptional,
+  IsString,
+  MaxLength,
 } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Unit, ProductType } from 'generated/prisma/client';
+import { ProductType, Unit } from 'generated/prisma/client';
+import { PaginationQueryDto } from 'src/common/utils/pagination-query.dto';
+import {
+  ValidationMessages,
+  toBoolean,
+  trim,
+} from 'src/common/utils/validation';
 
-export class FilterProductDto {
-  @ApiPropertyOptional({
-    description: 'Número da página',
-    example: 1,
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number;
+export const PRODUCT_SORT_KEYS = [
+  'id',
+  'name',
+  'code',
+  'price',
+  'costPrice',
+  'quantity',
+  'minStock',
+  'productType',
+  'active',
+  'onlineSortOrder',
+  'createdAt',
+  'updatedAt',
+] as const;
 
-  @ApiPropertyOptional({
-    description: 'Itens por página',
-    example: 10,
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  limit?: number;
+export const SORT_ORDERS = ['asc', 'desc'] as const;
 
+export class FilterProductDto extends PaginationQueryDto {
   @ApiPropertyOptional({
     description: 'Campo para ordenação',
     example: 'name',
-    enum: [
-      'id',
-      'name',
-      'code',
-      'price',
-      'costPrice',
-      'quantity',
-      'minStock',
-      'productType',
-      'active',
-      'createdAt',
-      'updatedAt',
-    ],
+    default: 'name',
+    enum: PRODUCT_SORT_KEYS,
   })
   @IsOptional()
-  @IsString()
-  sortKey?: string;
+  @IsIn(PRODUCT_SORT_KEYS, {
+    message: ValidationMessages.IS_ENUM('O campo de ordenação'),
+  })
+  sortKey?: (typeof PRODUCT_SORT_KEYS)[number];
 
   @ApiPropertyOptional({
-    description: 'Ordem de classificação',
+    description: 'Direção da ordenação',
     example: 'asc',
-    enum: ['asc', 'desc'],
+    default: 'asc',
+    enum: SORT_ORDERS,
   })
   @IsOptional()
-  @IsString()
-  sortOrder?: 'asc' | 'desc';
+  @IsIn(SORT_ORDERS, {
+    message: ValidationMessages.IS_ENUM('A direção da ordenação'),
+  })
+  sortOrder?: (typeof SORT_ORDERS)[number];
 
   @ApiPropertyOptional({
     description: 'Busca por nome ou código',
+    maxLength: 100,
+    example: 'pizza',
   })
   @IsOptional()
-  @IsString()
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('A busca') })
+  @MaxLength(100, { message: ValidationMessages.MAX_LENGTH('A busca', 100) })
   search?: string;
 
   @ApiPropertyOptional({
@@ -73,7 +75,9 @@ export class FilterProductDto {
     enum: ProductType,
   })
   @IsOptional()
-  @IsEnum(ProductType)
+  @IsEnum(ProductType, {
+    message: ValidationMessages.IS_ENUM('O tipo do produto'),
+  })
   productType?: ProductType;
 
   @ApiPropertyOptional({
@@ -81,27 +85,46 @@ export class FilterProductDto {
     enum: Unit,
   })
   @IsOptional()
-  @IsEnum(Unit)
+  @IsEnum(Unit, { message: ValidationMessages.IS_ENUM('A unidade de medida') })
   unit?: Unit;
 
+  @ApiPropertyOptional({
+    description: 'Filtrar por status ativo/inativo',
+    example: true,
+  })
   @IsOptional()
-  @Transform(({ value }) => value === 'true')
-  @IsBoolean()
+  @Transform(toBoolean)
+  @IsBoolean({ message: ValidationMessages.IS_BOOLEAN('O status ativo') })
   active?: boolean;
 
   @ApiPropertyOptional({
     description: 'Filtrar apenas produtos com estoque baixo',
+    example: true,
   })
   @IsOptional()
-  @Transform(({ value }) => value === 'true')
-  @IsBoolean()
+  @Transform(toBoolean)
+  @IsBoolean({
+    message: ValidationMessages.IS_BOOLEAN('O filtro de estoque baixo'),
+  })
   lowStock?: boolean;
 
   @ApiPropertyOptional({
     description: 'Filtrar por categoria',
+    example: 1,
   })
   @IsOptional()
   @Type(() => Number)
-  @IsInt()
+  @IsInt({ message: ValidationMessages.IS_INT('A categoria') })
   categoryId?: number;
+
+  @ApiPropertyOptional({
+    description: 'Filtrar por visibilidade no cardápio online',
+    example: true,
+  })
+  @IsOptional()
+  @Transform(toBoolean)
+  @IsBoolean({
+    message: ValidationMessages.IS_BOOLEAN('A visibilidade no cardápio online'),
+  })
+  onlineVisible?: boolean;
 }

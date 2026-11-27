@@ -1,21 +1,33 @@
 import {
-  IsString,
-  IsNumber,
-  IsEnum,
-  IsOptional,
+  IsArray,
   IsBoolean,
+  IsDateString,
+  IsEnum,
   IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Length,
+  Max,
+  MaxLength,
   Min,
   MinLength,
-  MaxLength,
-  Length,
-  IsArray,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Unit, ProductType } from 'generated/prisma/client';
+import { ProductType, Unit } from 'generated/prisma/client';
+import {
+  ValidationMessages,
+  digits,
+  digitsOrNull,
+  notUndefined,
+  trim,
+  trimOrNull,
+} from 'src/common/utils/validation';
 import { CompositionItemDto } from './update-composition.dto';
-import { Type } from 'class-transformer';
 import { PreparationStepDto } from './update-preparation.dto';
 
 export class CreateProductDto {
@@ -25,77 +37,78 @@ export class CreateProductDto {
     maxLength: 200,
     example: 'Pizza Margherita',
   })
-  @IsString()
-  @MinLength(3, { message: 'Nome deve ter no mínimo 3 caracteres' })
-  @MaxLength(200, { message: 'Nome deve ter no máximo 200 caracteres' })
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('O nome') })
+  @MinLength(3, { message: ValidationMessages.MIN_LENGTH('O nome', 3) })
+  @MaxLength(200, { message: ValidationMessages.MAX_LENGTH('O nome', 200) })
   name: string;
 
   @ApiProperty({
     description: 'Código único do produto (SKU/EAN/GTIN)',
-    minLength: 1,
     maxLength: 50,
     example: 'PROD-001',
   })
-  @IsString()
-  @MinLength(1, { message: 'Código é obrigatório' })
-  @MaxLength(50, { message: 'Código deve ter no máximo 50 caracteres' })
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('O código') })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('O código') })
+  @MaxLength(50, { message: ValidationMessages.MAX_LENGTH('O código', 50) })
   code: string;
 
   @ApiPropertyOptional({
     description: 'Local de produção',
     example: 'Cozinha Principal',
+    type: String,
+    nullable: true,
   })
   @IsOptional()
-  @IsString()
-  productionLocation?: string;
+  @Transform(trimOrNull)
+  @IsString({ message: ValidationMessages.IS_STRING('O local de produção') })
+  productionLocation?: string | null;
 
-  @ApiProperty({
-    description: 'Preço de venda',
-    minimum: 0,
-    example: 45.9,
-  })
-  @IsNumber({}, { message: 'Preço deve ser um número' })
-  @Min(0, { message: 'Preço não pode ser negativo' })
+  @ApiProperty({ description: 'Preço de venda', minimum: 0, example: 45.9 })
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: ValidationMessages.IS_DECIMAL('O preço', 2) },
+  )
+  @Min(0, { message: ValidationMessages.MIN('O preço', 0) })
   price: number;
 
-  @ApiProperty({
-    description: 'Custo do produto',
-    minimum: 0,
-    example: 25.0,
-  })
-  @IsNumber({}, { message: 'Custo deve ser um número' })
-  @Min(0, { message: 'Custo não pode ser negativo' })
+  @ApiProperty({ description: 'Custo do produto', minimum: 0, example: 25.0 })
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: ValidationMessages.IS_DECIMAL('O custo', 2) },
+  )
+  @Min(0, { message: ValidationMessages.MIN('O custo', 0) })
   costPrice: number;
 
-  @ApiProperty({
-    description: 'Custo Extra',
-    minimum: 0,
-    example: 25.0,
-  })
-  @IsNumber({}, { message: 'Custo extra deve ser um número' })
-  @Min(0, { message: 'Custo extra não pode ser negativo' })
+  @ApiProperty({ description: 'Custo extra', minimum: 0, example: 2.5 })
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: ValidationMessages.IS_DECIMAL('O custo extra', 2) },
+  )
+  @Min(0, { message: ValidationMessages.MIN('O custo extra', 0) })
   extraCosts: number;
 
   @ApiProperty({
-    description: 'NCM (Nomenclatura Comum do Mercosul)',
-    minLength: 8,
-    maxLength: 8,
+    description: 'NCM (Nomenclatura Comum do Mercosul). Somente dígitos',
     example: '21069090',
   })
-  @IsString()
-  @Length(8, 8, { message: 'NCM deve ter exatamente 8 dígitos' })
+  @Transform(digits)
+  @IsString({ message: ValidationMessages.IS_STRING('O NCM') })
+  @Length(8, 8, { message: ValidationMessages.EXACT_DIGITS('O NCM', 8) })
   ncm: string;
 
   @ApiPropertyOptional({
     description: 'CEST (Código Especificador da Substituição Tributária)',
-    minLength: 7,
-    maxLength: 7,
     example: '1700100',
+    type: String,
+    nullable: true,
   })
   @IsOptional()
-  @IsString()
-  @Length(7, 7, { message: 'CEST deve ter exatamente 7 dígitos' })
-  cest?: string;
+  @Transform(digitsOrNull)
+  @IsString({ message: ValidationMessages.IS_STRING('O CEST') })
+  @Length(7, 7, { message: ValidationMessages.EXACT_DIGITS('O CEST', 7) })
+  cest?: string | null;
 
   @ApiProperty({
     description: 'Origem da mercadoria (0-8)',
@@ -103,136 +116,197 @@ export class CreateProductDto {
     maximum: 8,
     example: 0,
   })
-  @IsInt({ message: 'Origem deve ser um número inteiro' })
-  @Min(0, { message: 'Origem deve ser entre 0 e 8' })
+  @IsInt({ message: ValidationMessages.IS_INT('A origem') })
+  @Min(0, { message: ValidationMessages.MIN('A origem', 0) })
+  @Max(8, { message: ValidationMessages.MAX('A origem', 8) })
   origin: number;
 
   @ApiPropertyOptional({
     description: 'CSOSN (Código de Situação da Operação no Simples Nacional)',
     example: '102',
+    type: String,
+    nullable: true,
   })
   @IsOptional()
-  @IsString()
-  csosn?: string;
+  @Transform(trimOrNull)
+  @IsString({ message: ValidationMessages.IS_STRING('O CSOSN') })
+  csosn?: string | null;
 
   @ApiPropertyOptional({
     description: 'CST ICMS (Código de Situação Tributária)',
     example: '00',
+    type: String,
+    nullable: true,
   })
   @IsOptional()
-  @IsString()
-  cst?: string;
+  @Transform(trimOrNull)
+  @IsString({ message: ValidationMessages.IS_STRING('O CST do ICMS') })
+  cst?: string | null;
 
   @ApiPropertyOptional({
-    description: 'Alíquota ICMS',
+    description: 'Alíquota ICMS, em %',
     minimum: 0,
+    maximum: 100,
     example: 18.0,
+    type: Number,
+    nullable: true,
   })
   @IsOptional()
-  @IsNumber({}, { message: 'Alíquota ICMS deve ser um número' })
-  @Min(0, { message: 'Alíquota ICMS não pode ser negativa' })
-  icmsRate?: number;
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: ValidationMessages.IS_DECIMAL('A alíquota de ICMS', 2) },
+  )
+  @Min(0, { message: ValidationMessages.MIN('A alíquota de ICMS', 0) })
+  @Max(100, { message: ValidationMessages.MAX('A alíquota de ICMS', 100) })
+  icmsRate?: number | null;
 
   @ApiPropertyOptional({
     description: 'CST PIS',
     example: '49',
+    type: String,
+    nullable: true,
   })
   @IsOptional()
-  @IsString()
-  cstPis?: string;
+  @Transform(trimOrNull)
+  @IsString({ message: ValidationMessages.IS_STRING('O CST do PIS') })
+  cstPis?: string | null;
 
   @ApiPropertyOptional({
-    description: 'Alíquota PIS',
+    description: 'Alíquota PIS, em %',
     minimum: 0,
+    maximum: 100,
     example: 1.65,
+    type: Number,
+    nullable: true,
   })
   @IsOptional()
-  @IsNumber({}, { message: 'Alíquota PIS deve ser um número' })
-  @Min(0, { message: 'Alíquota PIS não pode ser negativa' })
-  pisRate?: number;
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: ValidationMessages.IS_DECIMAL('A alíquota de PIS', 2) },
+  )
+  @Min(0, { message: ValidationMessages.MIN('A alíquota de PIS', 0) })
+  @Max(100, { message: ValidationMessages.MAX('A alíquota de PIS', 100) })
+  pisRate?: number | null;
 
   @ApiPropertyOptional({
     description: 'CST COFINS',
     example: '49',
+    type: String,
+    nullable: true,
   })
   @IsOptional()
-  @IsString()
-  cstCofins?: string;
+  @Transform(trimOrNull)
+  @IsString({ message: ValidationMessages.IS_STRING('O CST do COFINS') })
+  cstCofins?: string | null;
 
   @ApiPropertyOptional({
-    description: 'Alíquota COFINS',
+    description: 'Alíquota COFINS, em %',
     minimum: 0,
+    maximum: 100,
     example: 7.6,
+    type: Number,
+    nullable: true,
   })
   @IsOptional()
-  @IsNumber({}, { message: 'Alíquota COFINS deve ser um número' })
-  @Min(0, { message: 'Alíquota COFINS não pode ser negativa' })
-  cofinsRate?: number;
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: ValidationMessages.IS_DECIMAL('A alíquota de COFINS', 2) },
+  )
+  @Min(0, { message: ValidationMessages.MIN('A alíquota de COFINS', 0) })
+  @Max(100, { message: ValidationMessages.MAX('A alíquota de COFINS', 100) })
+  cofinsRate?: number | null;
 
   @ApiPropertyOptional({
-    description: 'Percentual tributos federais',
+    description: 'Percentual de tributos federais',
     minimum: 0,
+    maximum: 100,
     example: 13.45,
+    type: Number,
+    nullable: true,
   })
   @IsOptional()
-  @IsNumber({}, { message: 'Alíquota federal deve ser um número' })
-  @Min(0, { message: 'Alíquota federal não pode ser negativa' })
-  federalTaxRate?: number;
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: ValidationMessages.IS_DECIMAL('A alíquota federal', 2) },
+  )
+  @Min(0, { message: ValidationMessages.MIN('A alíquota federal', 0) })
+  @Max(100, { message: ValidationMessages.MAX('A alíquota federal', 100) })
+  federalTaxRate?: number | null;
 
   @ApiPropertyOptional({
-    description: 'Percentual tributos estaduais',
+    description: 'Percentual de tributos estaduais',
     minimum: 0,
+    maximum: 100,
     example: 18.0,
+    type: Number,
+    nullable: true,
   })
   @IsOptional()
-  @IsNumber({}, { message: 'Alíquota estadual deve ser um número' })
-  @Min(0, { message: 'Alíquota estadual não pode ser negativa' })
-  stateTaxRate?: number;
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: ValidationMessages.IS_DECIMAL('A alíquota estadual', 2) },
+  )
+  @Min(0, { message: ValidationMessages.MIN('A alíquota estadual', 0) })
+  @Max(100, { message: ValidationMessages.MAX('A alíquota estadual', 100) })
+  stateTaxRate?: number | null;
 
   @ApiPropertyOptional({
-    description: 'Percentual tributos municipais',
+    description: 'Percentual de tributos municipais',
     minimum: 0,
+    maximum: 100,
     example: 5.0,
+    type: Number,
+    nullable: true,
   })
   @IsOptional()
-  @IsNumber({}, { message: 'Alíquota municipal deve ser um número' })
-  @Min(0, { message: 'Alíquota municipal não pode ser negativa' })
-  municipalTaxRate?: number;
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: ValidationMessages.IS_DECIMAL('A alíquota municipal', 2) },
+  )
+  @Min(0, { message: ValidationMessages.MIN('A alíquota municipal', 0) })
+  @Max(100, { message: ValidationMessages.MAX('A alíquota municipal', 100) })
+  municipalTaxRate?: number | null;
 
-  @ApiProperty({
-    description: 'Unidade de medida',
-    enum: Unit,
-    example: 'UN',
-  })
-  @IsEnum(Unit, { message: 'Unidade de medida inválida' })
+  @ApiProperty({ description: 'Unidade de medida', enum: Unit, example: 'UN' })
+  @IsEnum(Unit, { message: ValidationMessages.IS_ENUM('A unidade de medida') })
   unit: Unit;
 
   @ApiPropertyOptional({
     description: 'Quantidade em estoque',
     minimum: 0,
+    default: 0,
     example: 50,
   })
-  @IsOptional()
-  @IsNumber({}, { message: 'Quantidade deve ser um número' })
-  @Min(0, { message: 'Quantidade não pode ser negativa' })
+  @ValidateIf(notUndefined)
+  @IsNumber(
+    { maxDecimalPlaces: 3 },
+    { message: ValidationMessages.IS_DECIMAL('A quantidade', 3) },
+  )
+  @Min(0, { message: ValidationMessages.MIN('A quantidade', 0) })
   quantity?: number;
 
   @ApiPropertyOptional({
     description: 'Estoque mínimo',
     minimum: 0,
     example: 10,
+    type: Number,
+    nullable: true,
   })
   @IsOptional()
-  @IsNumber({}, { message: 'Estoque mínimo deve ser um número' })
-  @Min(0, { message: 'Estoque mínimo não pode ser negativo' })
-  minStock?: number;
+  @IsNumber(
+    { maxDecimalPlaces: 3 },
+    { message: ValidationMessages.IS_DECIMAL('O estoque mínimo', 3) },
+  )
+  @Min(0, { message: ValidationMessages.MIN('O estoque mínimo', 0) })
+  minStock?: number | null;
 
   @ApiPropertyOptional({
     description: 'Status ativo/inativo',
+    default: true,
     example: true,
   })
-  @IsOptional()
-  @IsBoolean({ message: 'Active deve ser um valor booleano' })
+  @ValidateIf(notUndefined)
+  @IsBoolean({ message: ValidationMessages.IS_BOOLEAN('O status ativo') })
   active?: boolean;
 
   @ApiProperty({
@@ -240,23 +314,122 @@ export class CreateProductDto {
     enum: ProductType,
     example: 'MANUFACTURED',
   })
-  @IsEnum(ProductType, { message: 'Tipo de produto inválido' })
+  @IsEnum(ProductType, {
+    message: ValidationMessages.IS_ENUM('O tipo do produto'),
+  })
   productType: ProductType;
 
   @ApiPropertyOptional({
     description: 'ID da categoria',
-    example: null,
+    example: 1,
+    type: Number,
+    nullable: true,
   })
   @IsOptional()
-  @IsInt({ message: 'ID da categoria deve ser um número inteiro' })
-  categoryId?: number;
+  @IsInt({ message: ValidationMessages.IS_INT('A categoria') })
+  categoryId?: number | null;
+
+  // ===== Cardápio online =====
+
+  @ApiPropertyOptional({
+    description: 'Descrição exibida no cardápio online',
+    maxLength: 1000,
+    example: 'Molho de tomate, mussarela e manjericão',
+    type: String,
+    nullable: true,
+  })
+  @IsOptional()
+  @Transform(trimOrNull)
+  @IsString({ message: ValidationMessages.IS_STRING('A descrição') })
+  @MaxLength(1000, {
+    message: ValidationMessages.MAX_LENGTH('A descrição', 1000),
+  })
+  description?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Se o produto aparece no carrossel de promoção do cardápio',
+    default: false,
+    example: false,
+  })
+  @ValidateIf(notUndefined)
+  @IsBoolean({ message: ValidationMessages.IS_BOOLEAN('O destaque') })
+  featured?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Se o produto aparece no cardápio online',
+    default: false,
+    example: false,
+  })
+  @ValidateIf(notUndefined)
+  @IsBoolean({
+    message: ValidationMessages.IS_BOOLEAN('A visibilidade no cardápio online'),
+  })
+  onlineVisible?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Ordem de exibição no cardápio online',
+    minimum: 0,
+    maximum: 9999,
+    default: 0,
+    example: 0,
+  })
+  @ValidateIf(notUndefined)
+  @IsInt({ message: ValidationMessages.IS_INT('A ordem de exibição') })
+  @Min(0, { message: ValidationMessages.MIN('A ordem de exibição', 0) })
+  @Max(9999, { message: ValidationMessages.MAX('A ordem de exibição', 9999) })
+  onlineSortOrder?: number;
+
+  @ApiPropertyOptional({
+    description: 'Preço promocional. Exige início e fim da promoção',
+    minimum: 0,
+    example: 39.9,
+    type: Number,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: ValidationMessages.IS_DECIMAL('O preço promocional', 2) },
+  )
+  @Min(0, { message: ValidationMessages.MIN('O preço promocional', 0) })
+  promoPrice?: number | null;
+
+  @ApiPropertyOptional({
+    description: 'Início da promoção (ISO 8601, com fuso -03:00)',
+    example: '2026-12-01T00:00:00-03:00',
+    type: String,
+    nullable: true,
+  })
+  @IsOptional()
+  @Transform(trimOrNull)
+  @IsDateString(
+    {},
+    { message: ValidationMessages.IS_DATE('O início da promoção') },
+  )
+  promoStartsAt?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Fim da promoção (ISO 8601, com fuso -03:00)',
+    example: '2026-12-31T23:59:59-03:00',
+    type: String,
+    nullable: true,
+  })
+  @IsOptional()
+  @Transform(trimOrNull)
+  @IsDateString(
+    {},
+    { message: ValidationMessages.IS_DATE('O fim da promoção') },
+  )
+  promoEndsAt?: string | null;
+
+  // ===== Composição e preparo =====
 
   @ApiPropertyOptional({
     description: 'Composição do produto (apenas para MANUFACTURED)',
     type: [CompositionItemDto],
   })
   @IsOptional()
-  @IsArray()
+  @IsArray({ message: ValidationMessages.IS_ARRAY('A composição') })
   @ValidateNested({ each: true })
   @Type(() => CompositionItemDto)
   composition?: CompositionItemDto[];
@@ -266,7 +439,7 @@ export class CreateProductDto {
     type: [PreparationStepDto],
   })
   @IsOptional()
-  @IsArray()
+  @IsArray({ message: ValidationMessages.IS_ARRAY('Os passos de preparo') })
   @ValidateNested({ each: true })
   @Type(() => PreparationStepDto)
   preparationSteps?: PreparationStepDto[];

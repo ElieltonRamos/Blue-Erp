@@ -1,18 +1,11 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Decimal } from '@prisma/client/runtime/client';
-import { Unit, ProductType } from 'generated/prisma/client';
+import { ApiProperty } from '@nestjs/swagger';
+import { Product, ProductType, Unit } from 'generated/prisma/client';
 
 export class ProductResponseDto {
-  @ApiProperty({
-    description: 'ID do produto',
-    example: 1,
-  })
+  @ApiProperty({ description: 'ID do produto', example: 1 })
   id: number;
 
-  @ApiProperty({
-    description: 'Nome do produto',
-    example: 'Pizza Margherita',
-  })
+  @ApiProperty({ description: 'Nome do produto', example: 'Pizza Margherita' })
   name: string;
 
   @ApiProperty({
@@ -21,30 +14,22 @@ export class ProductResponseDto {
   })
   code: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'Local de produção',
     example: 'Cozinha Principal',
+    type: String,
     nullable: true,
   })
-  productionLocation?: string | null;
+  productionLocation: string | null;
 
-  @ApiProperty({
-    description: 'Preço de venda',
-    example: 45.9,
-  })
+  @ApiProperty({ description: 'Preço de venda', example: 45.9 })
   price: number;
 
-  @ApiProperty({
-    description: 'Custo Extra',
-    example: 45.9,
-  })
-  extraCosts: number;
-
-  @ApiProperty({
-    description: 'Custo do produto',
-    example: 25.0,
-  })
+  @ApiProperty({ description: 'Custo do produto', example: 25.0 })
   costPrice: number;
+
+  @ApiProperty({ description: 'Custo extra', example: 2.5 })
+  extraCosts: number;
 
   @ApiProperty({
     description: 'NCM (Nomenclatura Comum do Mercosul)',
@@ -52,113 +37,112 @@ export class ProductResponseDto {
   })
   ncm: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'CEST (Código Especificador da Substituição Tributária)',
     example: '1700100',
+    type: String,
     nullable: true,
   })
-  cest?: string | null;
+  cest: string | null;
 
-  @ApiProperty({
-    description: 'Origem da mercadoria (0-8)',
-    example: 0,
-  })
+  @ApiProperty({ description: 'Origem da mercadoria (0-8)', example: 0 })
   origin: number;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'CSOSN (Código de Situação da Operação no Simples Nacional)',
     example: '102',
+    type: String,
     nullable: true,
   })
-  csosn?: string | null;
+  csosn: string | null;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'CST ICMS (Código de Situação Tributária)',
     example: '00',
+    type: String,
     nullable: true,
   })
-  cst?: string | null;
+  cst: string | null;
 
-  @ApiPropertyOptional({
-    description: 'Alíquota ICMS',
+  @ApiProperty({
+    description: 'Alíquota ICMS, em %',
     example: 18.0,
+    type: Number,
     nullable: true,
   })
-  icmsRate?: number | null;
+  icmsRate: number | null;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'CST PIS',
     example: '49',
+    type: String,
     nullable: true,
   })
-  cstPis?: string | null;
+  cstPis: string | null;
 
-  @ApiPropertyOptional({
-    description: 'Alíquota PIS',
+  @ApiProperty({
+    description: 'Alíquota PIS, em %',
     example: 1.65,
+    type: Number,
     nullable: true,
   })
-  pisRate?: number | null;
+  pisRate: number | null;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'CST COFINS',
     example: '49',
+    type: String,
     nullable: true,
   })
-  cstCofins?: string | null;
-
-  @ApiPropertyOptional({
-    description: 'Alíquota COFINS',
-    example: 7.6,
-    nullable: true,
-  })
-  cofinsRate?: number | null;
-
-  @ApiPropertyOptional({
-    description: 'Percentual tributos federais',
-    example: 13.45,
-    nullable: true,
-  })
-  federalTaxRate?: number | null;
-
-  @ApiPropertyOptional({
-    description: 'Percentual tributos estaduais',
-    example: 18.0,
-    nullable: true,
-  })
-  stateTaxRate?: number | null;
-
-  @ApiPropertyOptional({
-    description: 'Percentual tributos municipais',
-    example: 5.0,
-    nullable: true,
-  })
-  municipalTaxRate?: number | null;
+  cstCofins: string | null;
 
   @ApiProperty({
-    description: 'Unidade de medida',
-    enum: Unit,
-    example: 'UN',
+    description: 'Alíquota COFINS, em %',
+    example: 7.6,
+    type: Number,
+    nullable: true,
   })
+  cofinsRate: number | null;
+
+  @ApiProperty({
+    description: 'Percentual de tributos federais',
+    example: 13.45,
+    type: Number,
+    nullable: true,
+  })
+  federalTaxRate: number | null;
+
+  @ApiProperty({
+    description: 'Percentual de tributos estaduais',
+    example: 18.0,
+    type: Number,
+    nullable: true,
+  })
+  stateTaxRate: number | null;
+
+  @ApiProperty({
+    description: 'Percentual de tributos municipais',
+    example: 5.0,
+    type: Number,
+    nullable: true,
+  })
+  municipalTaxRate: number | null;
+
+  @ApiProperty({ description: 'Unidade de medida', enum: Unit, example: 'UN' })
   unit: Unit;
 
-  @ApiProperty({
-    description: 'Quantidade em estoque',
-    example: 50,
-  })
+  @ApiProperty({ description: 'Quantidade em estoque', example: 50 })
   quantity: number;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'Estoque mínimo',
     example: 10,
+    type: Number,
     nullable: true,
   })
-  minStock?: number | null;
+  minStock: number | null;
 
-  @ApiProperty({
-    description: 'Status ativo/inativo',
-    example: true,
-  })
+  @ApiProperty({ description: 'Status ativo/inativo', example: true })
   active: boolean;
 
   @ApiProperty({
@@ -168,12 +152,74 @@ export class ProductResponseDto {
   })
   productType: ProductType;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'ID da categoria',
     example: 1,
+    type: Number,
     nullable: true,
   })
-  categoryId?: number | null;
+  categoryId: number | null;
+
+  // ===== Cardápio online =====
+
+  @ApiProperty({
+    description: 'Descrição exibida no cardápio online',
+    example: 'Molho de tomate, mussarela e manjericão',
+    type: String,
+    nullable: true,
+  })
+  description: string | null;
+
+  @ApiProperty({
+    description:
+      'Caminho relativo da imagem (servida pelo backend em /uploads)',
+    example: '/uploads/products/3f2b8c1e-9d4a-4e7b-8a21-5c6d7e8f9a0b.webp',
+    type: String,
+    nullable: true,
+  })
+  imageUrl: string | null;
+
+  @ApiProperty({
+    description: 'Se aparece no carrossel de promoção do cardápio',
+    example: false,
+  })
+  featured: boolean;
+
+  @ApiProperty({
+    description: 'Se aparece no cardápio online',
+    example: false,
+  })
+  onlineVisible: boolean;
+
+  @ApiProperty({
+    description: 'Ordem de exibição no cardápio online',
+    example: 0,
+  })
+  onlineSortOrder: number;
+
+  @ApiProperty({
+    description: 'Preço promocional',
+    example: 39.9,
+    type: Number,
+    nullable: true,
+  })
+  promoPrice: number | null;
+
+  @ApiProperty({
+    description: 'Início da promoção',
+    example: '2026-12-01T03:00:00.000Z',
+    type: Date,
+    nullable: true,
+  })
+  promoStartsAt: Date | null;
+
+  @ApiProperty({
+    description: 'Fim da promoção',
+    example: '2026-12-31T02:59:59.000Z',
+    type: Date,
+    nullable: true,
+  })
+  promoEndsAt: Date | null;
 
   @ApiProperty({
     description: 'Data de criação',
@@ -187,36 +233,7 @@ export class ProductResponseDto {
   })
   updatedAt: Date;
 
-  constructor(product: {
-    id: number;
-    name: string;
-    code: string;
-    productionLocation: string | null;
-    price: Decimal;
-    costPrice: Decimal;
-    extraCosts: Decimal;
-    ncm: string;
-    cest: string | null;
-    origin: number;
-    csosn: string | null;
-    cst: string | null;
-    icmsRate: Decimal | null;
-    cstPis: string | null;
-    pisRate: Decimal | null;
-    cstCofins: string | null;
-    cofinsRate: Decimal | null;
-    federalTaxRate: Decimal | null;
-    stateTaxRate: Decimal | null;
-    municipalTaxRate: Decimal | null;
-    unit: Unit;
-    quantity: Decimal;
-    minStock: Decimal | null;
-    active: boolean;
-    productType: ProductType;
-    categoryId: number | null;
-    createdAt: Date;
-    updatedAt: Date;
-  }) {
+  constructor(product: Product) {
     this.id = product.id;
     this.name = product.name;
     this.code = product.code;
@@ -243,6 +260,14 @@ export class ProductResponseDto {
     this.active = product.active;
     this.productType = product.productType;
     this.categoryId = product.categoryId;
+    this.description = product.description;
+    this.imageUrl = product.imageUrl;
+    this.featured = product.featured;
+    this.onlineVisible = product.onlineVisible;
+    this.onlineSortOrder = product.onlineSortOrder;
+    this.promoPrice = product.promoPrice?.toNumber() ?? null;
+    this.promoStartsAt = product.promoStartsAt;
+    this.promoEndsAt = product.promoEndsAt;
     this.createdAt = product.createdAt;
     this.updatedAt = product.updatedAt;
   }

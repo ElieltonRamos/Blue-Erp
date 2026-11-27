@@ -1,14 +1,15 @@
-// update-preparation.dto.ts
-import {
-  IsInt,
-  IsString,
-  MinLength,
-  IsArray,
-  ValidateNested,
-  Min,
-} from 'class-validator';
-import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
+import {
+  IsArray,
+  IsInt,
+  IsNotEmpty,
+  IsString,
+  Min,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
+import { ValidationMessages, trim } from 'src/common/utils/validation';
 
 export class PreparationStepDto {
   @ApiProperty({
@@ -16,8 +17,8 @@ export class PreparationStepDto {
     minimum: 1,
     example: 1,
   })
-  @IsInt({ message: 'Ordem deve ser um número inteiro' })
-  @Min(1, { message: 'Ordem deve ser maior que zero' })
+  @IsInt({ message: ValidationMessages.IS_INT('A ordem') })
+  @Min(1, { message: ValidationMessages.MIN('A ordem', 1) })
   order: number;
 
   @ApiProperty({
@@ -25,8 +26,10 @@ export class PreparationStepDto {
     minLength: 3,
     example: 'Misture todos os ingredientes secos em uma tigela',
   })
-  @IsString({ message: 'Descrição deve ser uma string' })
-  @MinLength(3, { message: 'Descrição deve ter no mínimo 3 caracteres' })
+  @Transform(trim)
+  @IsString({ message: ValidationMessages.IS_STRING('A descrição') })
+  @IsNotEmpty({ message: ValidationMessages.IS_NOT_BLANK('A descrição') })
+  @MinLength(3, { message: ValidationMessages.MIN_LENGTH('A descrição', 3) })
   description: string;
 }
 
@@ -35,7 +38,7 @@ export class UpdatePreparationDto {
     description: 'Lista de passos de preparo',
     type: [PreparationStepDto],
   })
-  @IsArray({ message: 'Preparo deve ser um array' })
+  @IsArray({ message: ValidationMessages.IS_ARRAY('Os passos de preparo') })
   @ValidateNested({ each: true })
   @Type(() => PreparationStepDto)
   steps: PreparationStepDto[];

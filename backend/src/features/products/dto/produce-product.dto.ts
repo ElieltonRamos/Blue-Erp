@@ -1,6 +1,6 @@
-// produce-product.dto.ts
-import { IsNumber, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNumber, Min } from 'class-validator';
+import { ValidationMessages } from 'src/common/utils/validation';
 
 export class ProduceProductDto {
   @ApiProperty({
@@ -8,7 +8,10 @@ export class ProduceProductDto {
     minimum: 0.001,
     example: 10,
   })
-  @IsNumber({}, { message: 'Quantidade deve ser um número' })
-  @Min(0.001, { message: 'Quantidade deve ser maior que zero' })
+  @IsNumber(
+    { maxDecimalPlaces: 3 },
+    { message: ValidationMessages.IS_DECIMAL('A quantidade', 3) },
+  )
+  @Min(0.001, { message: ValidationMessages.MIN('A quantidade', 0.001) })
   quantity: number;
 }
