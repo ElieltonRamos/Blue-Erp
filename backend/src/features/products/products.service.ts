@@ -1,173 +1,264 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  BadRequestException,
-} from '@nestjs/common';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
-import { FilterProductDto } from './dto/filter-product.dto';
-import { UpdateCompositionDto } from './dto/update-composition.dto';
-import { UpdatePreparationDto } from './dto/update-preparation.dto';
-import { ProduceProductDto } from './dto/produce-product.dto';
+import { BadRequestException, ConflictException, HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Prisma, ProductType } from 'generated/prisma/client';
 import { PrismaService } from 'src/common/database/prisma.service';
-import { ProductResponseDto } from './dto/response-product.dto';
 import { PaginatedResponseDto } from 'src/common/utils/paginated-response';
+import { UploadedImage, UploadsService } from 'src/common/uploads/uploads.service';
+import { CreateProductDto } from './dto/create-product.dto';
+import { FilterProductDto, PRODUCT_SORT_KEYS, SORT_ORDERS } from './dto/filter-product.dto';
+import { ProductResponseDto } from './dto/response-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+import { COMPOSITION_INCLUDE, PRODUCT_DETAIL_INCLUDE, ProductDetail, TYPES_WITH_COMPOSITION } from './product.constants';
+import { ProductCompositionService } from './product-composition.service';
+import { ProductStockService } from './product-stock.service';
 
-const COMPOSITION_INCLUDE = {
-  compositionItems: {
-    include: {
-      material: true,
-      subProduct: {
-        select: {
-          id: true,
-          name: true,
-          code: true,
-          quantity: true,
-          unit: true,
-          costPrice: true,
-        },
-      },
-    },
-  },
-};
+const UPLOADS_FOLDER = 'products';
 
-const TYPES_WITH_COMPOSITION: ProductType[] = [
-  ProductType.MANUFACTURED,
-  ProductType.SEMI_MANUFACTURED,
-];
+// prettier-ignore
+const PLAIN_FIELDS = [
+  'name', 'code', 'productionLocation', 'ncm', 'cest', 'origin',
+  'csosn', 'cst', 'cstPis', 'cstCofins', 'unit', 'active',
+  'productType', 'categoryId', 'description', 'featured', 'onlineVisible', 'onlineSortOrder',
+] as const;
+
+// prettier-ignore
+const DECIMAL_FIELDS = [
+  'price', 'costPrice', 'extraCosts', 'promoPrice', 'quantity', 'minStock',
+  'icmsRate', 'pisRate', 'cofinsRate', 'federalTaxRate', 'stateTaxRate', 'municipalTaxRate',
+] as const;
+
+const DATE_FIELDS = ['promoStartsAt', 'promoEndsAt'] as const;
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(ProductService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly composition: ProductCompositionService,
+    private readonly stock: ProductStockService,
+    private readonly uploads: UploadsService,
+  ) {}
+
+  // Loga como error só o que não foi decisão do próprio service (falha de banco,
+  // bug, etc). HttpException já foi logada como warn onde foi lançada.
+  private rethrow(error: unknown, context: string): never {
+    if (!(error instanceof HttpException)) {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.logger.error(`${context}: ${reason}`);
+    }
+    throw error;
+  }
+
+  private badRequest(message: string, actor: string): never {
+    this.logger.warn(`${message} (actor=${actor})`);
+    throw new BadRequestException(message);
+  }
+
+  private conflict(message: string, actor: string): never {
+    this.logger.warn(`${message} (actor=${actor})`);
+    throw new ConflictException(message);
+  }
+
+  private notFound(message: string, actor: string): never {
+    this.logger.warn(`${message} (actor=${actor})`);
+    throw new NotFoundException(message);
+  }
+
+  private async findProduct(id: number, actor: string): Promise<ProductDetail> {
+    const product = await this.prisma.client.product.findUnique({ where: { id }, include: PRODUCT_DETAIL_INCLUDE });
+
+    if (!product) {
+      this.notFound(`Produto com ID ${id} não encontrado`, actor);
+    }
+
+    return product;
+  }
+
+  private toDate(value: string | null | undefined): Date | null | undefined {
+    if (value === undefined) return undefined;
+    return value === null ? null : new Date(value);
+  }
+
+  private async assertCodeAvailable(code: string, actor: string, ignoreId?: number): Promise<void> {
+    const existing = await this.prisma.client.product.findFirst({
+      where: { code, ...(ignoreId !== undefined && { id: { not: ignoreId } }) },
+      select: { id: true },
+    });
+
+    if (existing) {
+      this.conflict(`Produto com código ${code} já existe`, actor);
+    }
+  }
+
+  private async assertNameAvailable(name: string, actor: string, ignoreId?: number): Promise<void> {
+    const existing = await this.prisma.client.product.findFirst({
+      where: { name: { equals: name }, ...(ignoreId !== undefined && { id: { not: ignoreId } }) },
+      select: { id: true },
+    });
+
+    if (existing) {
+      this.conflict(`Produto com nome "${name}" já existe`, actor);
+    }
+  }
+
+  private async assertCategoryExists(categoryId: number, actor: string): Promise<void> {
+    const category = await this.prisma.client.category.findUnique({ where: { id: categoryId }, select: { id: true } });
+
+    if (!category) {
+      this.notFound(`Categoria com ID ${categoryId} não encontrada`, actor);
+    }
+  }
+
+  // Preço, início e fim vêm juntos ou nenhum, e o fim é posterior ao início
+  private validatePromotion(
+    price: number | null | undefined,
+    startsAt: Date | null | undefined,
+    endsAt: Date | null | undefined,
+    actor: string,
+  ): void {
+    if (price == null && !startsAt && !endsAt) return;
+
+    if (price == null || !startsAt || !endsAt) {
+      this.badRequest('Informe o preço promocional, o início e o fim da promoção juntos', actor);
+    }
+
+    if (endsAt.getTime() <= startsAt.getTime()) {
+      this.badRequest('O fim da promoção deve ser posterior ao início', actor);
+    }
+  }
+
+  // Só os campos enviados que realmente mudaram em relação ao registro atual
+  private diff(current: ProductDetail, dto: UpdateProductDto): Prisma.ProductUncheckedUpdateInput {
+    const changes: Record<string, unknown> = {};
+
+    for (const key of PLAIN_FIELDS) {
+      const value = dto[key];
+      if (value !== undefined && value !== current[key]) {
+        changes[key] = value;
+      }
+    }
+
+    for (const key of DECIMAL_FIELDS) {
+      const value = dto[key];
+      if (value === undefined) continue;
+
+      if (value !== (current[key]?.toNumber() ?? null)) {
+        changes[key] = value;
+      }
+    }
+
+    for (const key of DATE_FIELDS) {
+      const value = this.toDate(dto[key]);
+      if (value === undefined) continue;
+
+      if ((value?.getTime() ?? null) !== (current[key]?.getTime() ?? null)) {
+        changes[key] = value;
+      }
+    }
+
+    return changes as Prisma.ProductUncheckedUpdateInput;
+  }
 
   /**
    * Criar produto (com ou sem composição/preparo)
    */
-  async create(createDto: CreateProductDto) {
-    const existingCode = await this.prisma.client.product.findUnique({
-      where: { code: createDto.code },
-    });
+  async create(createDto: CreateProductDto, actor: string) {
+    try {
+      await this.assertCodeAvailable(createDto.code, actor);
+      await this.assertNameAvailable(createDto.name, actor);
 
-    if (existingCode) {
-      throw new ConflictException(
-        `Produto com código ${createDto.code} já existe`,
-      );
-    }
+      if (createDto.categoryId != null) {
+        await this.assertCategoryExists(createDto.categoryId, actor);
+      }
 
-    const existingName = await this.prisma.client.product.findFirst({
-      where: { name: { equals: createDto.name } },
-    });
+      const hasComposition = TYPES_WITH_COMPOSITION.includes(createDto.productType);
 
-    if (existingName) {
-      throw new ConflictException(
-        `Produto com nome "${createDto.name}" já existe`,
-      );
-    }
+      if (createDto.productType === ProductType.RESALE && (createDto.composition || createDto.preparationSteps)) {
+        this.badRequest('Produtos para revenda não podem ter composição ou modo de preparo', actor);
+      }
 
-    if (createDto.categoryId) {
-      const category = await this.prisma.client.category.findUnique({
-        where: { id: createDto.categoryId },
+      if (hasComposition && (!createDto.composition || createDto.composition.length === 0)) {
+        this.badRequest('Produtos manufaturados ou semiprontos devem ter ao menos um item na composição', actor);
+      }
+
+      if (hasComposition && createDto.composition) {
+        await this.composition.validateCompositionItems(createDto.composition, actor);
+      }
+
+      if (hasComposition && createDto.preparationSteps) {
+        this.composition.validatePreparationSteps(createDto.preparationSteps, actor);
+      }
+
+      const promoStartsAt = this.toDate(createDto.promoStartsAt);
+      const promoEndsAt = this.toDate(createDto.promoEndsAt);
+
+      this.validatePromotion(createDto.promoPrice, promoStartsAt, promoEndsAt, actor);
+
+      const product = await this.prisma.client.product.create({
+        data: {
+          name: createDto.name,
+          code: createDto.code,
+          productionLocation: createDto.productionLocation,
+          price: createDto.price,
+          extraCosts: createDto.extraCosts,
+          costPrice: createDto.costPrice,
+          ncm: createDto.ncm,
+          cest: createDto.cest,
+          origin: createDto.origin,
+          csosn: createDto.csosn,
+          cst: createDto.cst,
+          icmsRate: createDto.icmsRate,
+          cstPis: createDto.cstPis,
+          pisRate: createDto.pisRate,
+          cstCofins: createDto.cstCofins,
+          cofinsRate: createDto.cofinsRate,
+          federalTaxRate: createDto.federalTaxRate,
+          stateTaxRate: createDto.stateTaxRate,
+          municipalTaxRate: createDto.municipalTaxRate,
+          unit: createDto.unit,
+          quantity: createDto.quantity ?? 0,
+          minStock: createDto.minStock,
+          active: createDto.active ?? true,
+          productType: createDto.productType,
+          categoryId: createDto.categoryId,
+          description: createDto.description,
+          featured: createDto.featured,
+          onlineVisible: createDto.onlineVisible,
+          onlineSortOrder: createDto.onlineSortOrder,
+          promoPrice: createDto.promoPrice,
+          promoStartsAt,
+          promoEndsAt,
+          compositionItems:
+            hasComposition && createDto.composition
+              ? {
+                  create: createDto.composition.map((item) => ({
+                    materialId: item.materialId ?? null,
+                    subProductId: item.subProductId ?? null,
+                    quantity: item.quantity,
+                  })),
+                }
+              : undefined,
+          preparationSteps:
+            hasComposition && createDto.preparationSteps
+              ? { create: createDto.preparationSteps.map((step) => ({ order: step.order, description: step.description })) }
+              : undefined,
+        },
+        include: PRODUCT_DETAIL_INCLUDE,
       });
 
-      if (!category) {
-        throw new NotFoundException(
-          `Categoria com ID ${createDto.categoryId} não encontrada`,
-        );
-      }
+      this.logger.log(`Produto criado (actor=${actor}, id=${product.id})`);
+
+      return product;
+    } catch (error) {
+      this.rethrow(error, `Falha ao criar produto (actor=${actor})`);
     }
-
-    const hasComposition = TYPES_WITH_COMPOSITION.includes(
-      createDto.productType,
-    );
-
-    if (
-      hasComposition &&
-      createDto.composition &&
-      createDto.composition.length > 0
-    ) {
-      await this.validateCompositionItems(createDto.composition);
-    }
-
-    if (
-      hasComposition &&
-      (!createDto.composition || createDto.composition.length === 0)
-    ) {
-      throw new BadRequestException(
-        'Produtos manufaturados ou semiprontos devem ter ao menos um item na composição',
-      );
-    }
-
-    if (
-      createDto.productType === ProductType.RESALE &&
-      (createDto.composition || createDto.preparationSteps)
-    ) {
-      throw new BadRequestException(
-        'Produtos para revenda não podem ter composição ou modo de preparo',
-      );
-    }
-
-    return this.prisma.client.product.create({
-      data: {
-        name: createDto.name,
-        code: createDto.code,
-        productionLocation: createDto.productionLocation,
-        price: createDto.price,
-        extraCosts: createDto.extraCosts,
-        costPrice: createDto.costPrice,
-        ncm: createDto.ncm,
-        cest: createDto.cest,
-        origin: createDto.origin,
-        csosn: createDto.csosn,
-        cst: createDto.cst,
-        icmsRate: createDto.icmsRate,
-        cstPis: createDto.cstPis,
-        pisRate: createDto.pisRate,
-        cstCofins: createDto.cstCofins,
-        cofinsRate: createDto.cofinsRate,
-        federalTaxRate: createDto.federalTaxRate,
-        stateTaxRate: createDto.stateTaxRate,
-        municipalTaxRate: createDto.municipalTaxRate,
-        unit: createDto.unit,
-        quantity: createDto.quantity ?? 0,
-        minStock: createDto.minStock,
-        active: createDto.active ?? true,
-        productType: createDto.productType,
-        categoryId: createDto.categoryId,
-        compositionItems:
-          hasComposition && createDto.composition
-            ? {
-                create: createDto.composition.map((item) => ({
-                  materialId: item.materialId ?? null,
-                  subProductId: item.subProductId ?? null,
-                  quantity: item.quantity,
-                })),
-              }
-            : undefined,
-        preparationSteps:
-          hasComposition && createDto.preparationSteps
-            ? {
-                create: createDto.preparationSteps.map((step) => ({
-                  order: step.order,
-                  description: step.description,
-                })),
-              }
-            : undefined,
-      },
-      include: {
-        ...COMPOSITION_INCLUDE,
-        preparationSteps: true,
-        category: true,
-      },
-    });
   }
 
   /**
    * Listar produtos com filtros e paginação
    */
   async findAll(
+    actor: string,
     page: number = 1,
     limit: number = 10,
     filters?: FilterProductDto,
@@ -175,20 +266,18 @@ export class ProductService {
     sortOrder: string = 'asc',
   ): Promise<PaginatedResponseDto<ProductResponseDto>> {
     if (page < 1 || limit < 1 || isNaN(page) || isNaN(limit)) {
-      throw new BadRequestException(
-        'A página ou a quantidade de itens por página está incorreta',
-      );
+      this.badRequest('A página ou a quantidade de itens por página está incorreta', actor);
     }
 
-    const offset = (page - 1) * limit;
-
-    const where: Prisma.ProductWhereInput = {};
-
-    if (filters?.active !== undefined) {
-      where.active = filters.active;
-    } else {
-      where.active = true;
+    if (!(PRODUCT_SORT_KEYS as readonly string[]).includes(sortKey)) {
+      this.badRequest('Campo de ordenação inválido', actor);
     }
+
+    if (!(SORT_ORDERS as readonly string[]).includes(sortOrder)) {
+      this.badRequest('Direção de ordenação inválida', actor);
+    }
+
+    const where: Prisma.ProductWhereInput = { active: filters?.active ?? true };
 
     if (filters?.productType) {
       where.productType = filters.productType;
@@ -198,664 +287,177 @@ export class ProductService {
       where.unit = filters.unit;
     }
 
-    if (filters?.categoryId) {
+    if (filters?.categoryId !== undefined) {
       where.categoryId = filters.categoryId;
     }
 
+    if (filters?.onlineVisible !== undefined) {
+      where.onlineVisible = filters.onlineVisible;
+    }
+
     if (filters?.search) {
-      where.OR = [
-        { name: { contains: filters.search } },
-        { code: { contains: filters.search } },
-      ];
+      where.OR = [{ name: { contains: filters.search } }, { code: { contains: filters.search } }];
     }
 
     if (filters?.lowStock) {
-      where.AND = [
-        {
-          quantity: {
-            lte: this.prisma.client.product.fields.minStock,
-          },
-        },
-        {
-          minStock: {
-            not: null,
-          },
-        },
-      ];
+      where.AND = [{ quantity: { lte: this.prisma.client.product.fields.minStock } }, { minStock: { not: null } }];
     }
 
-    const products = await this.prisma.client.product.findMany({
-      where,
-      orderBy: { [sortKey]: sortOrder },
-      skip: offset,
-      take: limit,
-      include: {
-        category: true,
-        ...COMPOSITION_INCLUDE,
-      },
-    });
+    const [products, total] = await Promise.all([
+      this.prisma.client.product.findMany({
+        where,
+        orderBy: { [sortKey]: sortOrder },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: { category: true, ...COMPOSITION_INCLUDE },
+      }),
+      this.prisma.client.product.count({ where }),
+    ]);
 
-    const total = await this.prisma.client.product.count({ where });
-
-    const updatedProducts = await Promise.all(
+    const data = await Promise.all(
       products.map(async (product) => {
-        if (
-          TYPES_WITH_COMPOSITION.includes(product.productType) &&
-          product.compositionItems.length > 0
-        ) {
-          const availableStock = await this.calculateAvailableStock(
-            product.compositionItems,
-          );
-
-          if (product.quantity.toNumber() !== availableStock) {
-            await this.prisma.client.product.update({
-              where: { id: product.id },
-              data: { quantity: availableStock },
-            });
-
-            product.quantity = new Prisma.Decimal(availableStock);
-          }
-        }
-
+        product.quantity = await this.stock.syncQuantity(product);
         return new ProductResponseDto(product);
       }),
     );
 
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      data: updatedProducts,
-      total,
-      page,
-      limit,
-      totalPages,
-    };
-  }
-
-  /**
-   * Calcular quantas unidades do produto podem ser produzidas com o estoque atual
-   * Suporta matérias-primas e subprodutos semiprontos
-   */
-  private async calculateAvailableStock(
-    compositionItems: any[],
-    visited: Set<number> = new Set(),
-  ): Promise<number> {
-    if (compositionItems.length === 0) return 0;
-
-    const possibleQuantities = await Promise.all(
-      compositionItems.map(async (item) => {
-        const requiredQuantity = item.quantity.toNumber();
-        if (requiredQuantity === 0) return 0;
-
-        if (item.materialId && item.material) {
-          const stock = item.material.currentStock.toNumber();
-          return Math.floor(stock / requiredQuantity);
-        }
-
-        if (item.subProductId) {
-          if (visited.has(item.subProductId)) return 0;
-
-          const subProduct = await this.prisma.client.product.findUnique({
-            where: { id: item.subProductId },
-            include: {
-              compositionItems: {
-                include: {
-                  material: true,
-                  subProduct: { select: { id: true } },
-                },
-              },
-            },
-          });
-
-          if (!subProduct || subProduct.compositionItems.length === 0) return 0;
-
-          const subStock = await this.calculateAvailableStock(
-            subProduct.compositionItems,
-            new Set([...visited, item.subProductId]),
-          );
-
-          return Math.floor(subStock / requiredQuantity);
-        }
-
-        return 0;
-      }),
-    );
-
-    return Math.min(...possibleQuantities);
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   /**
    * Buscar produto por ID
    */
-  async findOne(id: number) {
-    const product = await this.prisma.client.product.findUnique({
-      where: { id },
-      include: {
-        category: true,
-        ...COMPOSITION_INCLUDE,
-        preparationSteps: {
-          orderBy: { order: 'asc' },
-        },
-      },
-    });
-
-    if (!product) {
-      throw new NotFoundException(`Produto com ID ${id} não encontrado`);
-    }
-
-    if (
-      TYPES_WITH_COMPOSITION.includes(product.productType) &&
-      product.compositionItems.length > 0
-    ) {
-      const availableStock = await this.calculateAvailableStock(
-        product.compositionItems,
-      );
-
-      if (product.quantity.toNumber() !== availableStock) {
-        await this.prisma.client.product.update({
-          where: { id },
-          data: { quantity: availableStock },
-        });
-
-        product.quantity = new Prisma.Decimal(availableStock);
-      }
-    }
-
+  async findOne(id: number, actor: string) {
+    const product = await this.findProduct(id, actor);
+    product.quantity = await this.stock.syncQuantity(product);
     return product;
   }
 
   /**
    * Buscar produto por código
    */
-  async findByCode(code: string) {
-    const product = await this.prisma.client.product.findUnique({
-      where: { code },
-      include: {
-        category: true,
-        ...COMPOSITION_INCLUDE,
-        preparationSteps: {
-          orderBy: { order: 'asc' },
-        },
-      },
-    });
+  async findByCode(code: string, actor: string) {
+    const product = await this.prisma.client.product.findUnique({ where: { code }, include: PRODUCT_DETAIL_INCLUDE });
 
     if (!product) {
-      throw new NotFoundException(`Produto com código ${code} não encontrado`);
+      this.notFound(`Produto com código ${code} não encontrado`, actor);
     }
 
-    if (
-      TYPES_WITH_COMPOSITION.includes(product.productType) &&
-      product.compositionItems.length > 0
-    ) {
-      const availableStock = await this.calculateAvailableStock(
-        product.compositionItems,
-      );
-
-      if (product.quantity.toNumber() !== availableStock) {
-        await this.prisma.client.product.update({
-          where: { id: product.id },
-          data: { quantity: availableStock },
-        });
-
-        product.quantity = new Prisma.Decimal(availableStock);
-      }
-    }
+    product.quantity = await this.stock.syncQuantity(product);
 
     return new ProductResponseDto(product);
   }
 
   /**
-   * Obter composição do produto
-   */
-  async getComposition(id: number) {
-    const product = await this.findOne(id);
-
-    if (!TYPES_WITH_COMPOSITION.includes(product.productType)) {
-      throw new BadRequestException(
-        'Apenas produtos manufaturados ou semiprontos possuem composição',
-      );
-    }
-
-    return product.compositionItems;
-  }
-
-  /**
-   * Obter passos de preparo do produto
-   */
-  async getPreparation(id: number) {
-    const product = await this.findOne(id);
-
-    if (!TYPES_WITH_COMPOSITION.includes(product.productType)) {
-      throw new BadRequestException(
-        'Apenas produtos manufaturados ou semiprontos possuem modo de preparo',
-      );
-    }
-
-    return product.preparationSteps;
-  }
-
-  /**
    * Atualizar produto
    */
-  async update(id: number, updateDto: UpdateProductDto) {
-    await this.findOne(id);
+  async update(id: number, updateDto: UpdateProductDto, actor: string) {
+    try {
+      const current = await this.findProduct(id, actor);
+      const changes = this.diff(current, updateDto);
+      const fields = Object.keys(changes);
 
-    if (updateDto.code) {
-      const existingCode = await this.prisma.client.product.findFirst({
-        where: { code: updateDto.code, id: { not: id } },
-      });
-
-      if (existingCode) {
-        throw new ConflictException(
-          `Produto com código ${updateDto.code} já existe`,
-        );
+      if (fields.length === 0) {
+        this.logger.warn(`Edição do produto sem alterações (actor=${actor}, id=${id})`);
+        return current;
       }
-    }
 
-    if (updateDto.name) {
-      const existingName = await this.prisma.client.product.findFirst({
-        where: { name: { equals: updateDto.name }, id: { not: id } },
-      });
-
-      if (existingName) {
-        throw new ConflictException(
-          `Produto com nome "${updateDto.name}" já existe`,
-        );
+      if (typeof changes.code === 'string') {
+        await this.assertCodeAvailable(changes.code, actor, id);
       }
+
+      if (typeof changes.name === 'string') {
+        await this.assertNameAvailable(changes.name, actor, id);
+      }
+
+      if (typeof changes.categoryId === 'number') {
+        await this.assertCategoryExists(changes.categoryId, actor);
+      }
+
+      // A promoção é validada pelo estado final: o que foi enviado, ou o atual
+      this.validatePromotion(
+        updateDto.promoPrice !== undefined ? updateDto.promoPrice : (current.promoPrice?.toNumber() ?? null),
+        this.toDate(updateDto.promoStartsAt) !== undefined ? this.toDate(updateDto.promoStartsAt) : current.promoStartsAt,
+        this.toDate(updateDto.promoEndsAt) !== undefined ? this.toDate(updateDto.promoEndsAt) : current.promoEndsAt,
+        actor,
+      );
+
+      const product = await this.prisma.client.product.update({ where: { id }, data: changes, include: PRODUCT_DETAIL_INCLUDE });
+
+      // Só nomes dos campos, nunca valores
+      this.logger.log(`Produto editado (actor=${actor}, id=${id}, campos=${fields.join(',')})`);
+
+      return product;
+    } catch (error) {
+      this.rethrow(error, `Falha ao editar produto (actor=${actor}, id=${id})`);
     }
-
-    const { categoryId, ...restData } = updateDto;
-
-    const updateData: any = { ...restData };
-
-    if (categoryId !== undefined) {
-      updateData.categoryId = categoryId;
-    }
-
-    return this.prisma.client.product.update({
-      where: { id },
-      data: updateData,
-      include: {
-        category: true,
-        ...COMPOSITION_INCLUDE,
-        preparationSteps: {
-          orderBy: { order: 'asc' },
-        },
-      },
-    });
   }
 
   /**
-   * Atualizar composição do produto
-   * Suporta itens com materialId ou subProductId
+   * Enviar a imagem do produto (cardápio online)
    */
-  async updateComposition(id: number, compositionDto: UpdateCompositionDto) {
-    const product = await this.findOne(id);
+  async uploadImage(id: number, file: UploadedImage, actor: string) {
+    try {
+      const current = await this.findProduct(id, actor);
 
-    if (!TYPES_WITH_COMPOSITION.includes(product.productType)) {
-      throw new BadRequestException(
-        'Apenas produtos manufaturados ou semiprontos podem ter composição',
-      );
-    }
+      // Ordem do guia (2.7): grava o novo, atualiza o banco e só então apaga o antigo
+      const imageUrl = await this.uploads.saveImage(file, UPLOADS_FOLDER, actor);
 
-    await this.validateCompositionItems(compositionDto.composition);
-
-    const costPrice = await this.calculateCompositionCost(
-      compositionDto.composition,
-    );
-
-    await this.prisma.client.$transaction([
-      this.prisma.client.compositionItem.deleteMany({
-        where: { productId: id },
-      }),
-      this.prisma.client.compositionItem.createMany({
-        data: compositionDto.composition.map((item) => ({
-          productId: id,
-          materialId: item.materialId ?? null,
-          subProductId: item.subProductId ?? null,
-          quantity: item.quantity,
-        })),
-      }),
-      this.prisma.client.product.update({
-        where: { id },
-        data: { costPrice },
-      }),
-    ]);
-
-    return this.getComposition(id);
-  }
-
-  /**
-   * Atualizar passos de preparo
-   */
-  async updatePreparation(id: number, preparationDto: UpdatePreparationDto) {
-    const product = await this.findOne(id);
-
-    if (!TYPES_WITH_COMPOSITION.includes(product.productType)) {
-      throw new BadRequestException(
-        'Apenas produtos manufaturados ou semiprontos podem ter modo de preparo',
-      );
-    }
-
-    await this.prisma.client.$transaction([
-      this.prisma.client.preparationStep.deleteMany({
-        where: { productId: id },
-      }),
-      this.prisma.client.preparationStep.createMany({
-        data: preparationDto.steps.map((step) => ({
-          productId: id,
-          order: step.order,
-          description: step.description,
-        })),
-      }),
-    ]);
-
-    return this.getPreparation(id);
-  }
-
-  /**
-   * Produzir produto:
-   * - Baixa matérias-primas e/ou subprodutos
-   * - Aumenta estoque do produto produzido
-   */
-  async produce(id: number, produceDto: ProduceProductDto) {
-    const product = await this.findOne(id);
-
-    if (!TYPES_WITH_COMPOSITION.includes(product.productType)) {
-      throw new BadRequestException(
-        'Apenas produtos manufaturados ou semiprontos podem ser produzidos',
-      );
-    }
-
-    if (product.productType === ProductType.SEMI_MANUFACTURED) {
-      throw new BadRequestException(
-        'Produtos semiprontos não podem ser produzidos manualmente. O estoque é calculado automaticamente com base nas matérias-primas.',
-      );
-    }
-
-    if (!product.compositionItems || product.compositionItems.length === 0) {
-      throw new BadRequestException('Produto não possui composição cadastrada');
-    }
-
-    // Verificar estoque de cada item da composição
-    for (const item of product.compositionItems) {
-      const requiredQuantity = item.quantity.toNumber() * produceDto.quantity;
-
-      if (item.materialId && item.material) {
-        const available = item.material.currentStock.toNumber();
-        if (available < requiredQuantity) {
-          throw new BadRequestException(
-            `Estoque insuficiente de "${item.material.name}". Necessário: ${requiredQuantity}, Disponível: ${available}`,
-          );
-        }
+      let product: ProductDetail;
+      try {
+        product = await this.prisma.client.product.update({ where: { id }, data: { imageUrl }, include: PRODUCT_DETAIL_INCLUDE });
+      } catch (error) {
+        await this.uploads.remove(imageUrl, actor);
+        throw error;
       }
 
-      if (item.subProductId && item.subProduct) {
-        const available = item.subProduct.quantity.toNumber();
-        if (available < requiredQuantity) {
-          throw new BadRequestException(
-            `Estoque insuficiente do semiproduto "${item.subProduct.name}". Necessário: ${requiredQuantity}, Disponível: ${available}`,
-          );
-        }
-      }
+      await this.uploads.remove(current.imageUrl, actor);
+
+      this.logger.log(`Imagem do produto atualizada (actor=${actor}, id=${id})`);
+
+      return product;
+    } catch (error) {
+      this.rethrow(error, `Falha ao enviar imagem do produto (actor=${actor}, id=${id})`);
     }
-
-    // Montar operações de baixa
-    const decrementOps = product.compositionItems.map((item) => {
-      const qty = item.quantity.toNumber() * produceDto.quantity;
-
-      if (item.materialId) {
-        return this.prisma.client.primaryMaterial.update({
-          where: { id: item.materialId },
-          data: { currentStock: { decrement: qty } },
-        });
-      }
-
-      // subProduct
-      return this.prisma.client.product.update({
-        where: { id: item.subProductId! },
-        data: { quantity: { decrement: qty } },
-      });
-    });
-
-    await this.prisma.client.$transaction([
-      ...decrementOps,
-      this.prisma.client.product.update({
-        where: { id },
-        data: { quantity: { increment: produceDto.quantity } },
-      }),
-    ]);
-
-    return {
-      message: `${produceDto.quantity} unidade(s) de ${product.name} produzida(s) com sucesso`,
-      productId: id,
-      quantityProduced: produceDto.quantity,
-    };
   }
 
   /**
    * Deletar produto
    */
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(id: number, actor: string) {
+    try {
+      const product = await this.findProduct(id, actor);
 
-    await this.prisma.client.product.delete({ where: { id } });
+      try {
+        await this.prisma.client.product.delete({ where: { id } });
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+          this.conflict(
+            'Produto possui vínculos (pedidos, vendas, documentos, compras ou composições) e não pode ser deletado. Desative-o.',
+            actor,
+          );
+        }
+        throw error;
+      }
 
-    return { message: 'Produto deletado com sucesso' };
-  }
+      await this.uploads.remove(product.imageUrl, actor);
 
-  /**
-   * Resumo de produtos
-   */
-  async getSummary() {
-    const totalProducts = await this.prisma.client.product.count();
-    const activeProducts = await this.prisma.client.product.count({
-      where: { active: true },
-    });
-    const inactiveProducts = totalProducts - activeProducts;
+      this.logger.log(`Produto removido (actor=${actor}, id=${id})`);
 
-    const products = await this.prisma.client.product.findMany({
-      select: { quantity: true, price: true, minStock: true },
-    });
-
-    const totalStockValue = products.reduce(
-      (sum, p) => sum + p.quantity.toNumber() * p.price.toNumber(),
-      0,
-    );
-
-    const productsLowStock = products.filter(
-      (p) => p.minStock && p.quantity.toNumber() <= p.minStock.toNumber(),
-    ).length;
-
-    const totalItems = products.reduce(
-      (sum, p) => sum + p.quantity.toNumber(),
-      0,
-    );
-
-    return {
-      totalProducts,
-      activeProducts,
-      inactiveProducts,
-      totalStockValue,
-      productsLowStock,
-      totalItems,
-    };
-  }
-
-  /**
-   * Produtos com estoque baixo
-   */
-  async getStockAlerts() {
-    const products = await this.prisma.client.product.findMany({
-      where: {
-        AND: [
-          { minStock: { not: null } },
-          {
-            quantity: {
-              lte: this.prisma.client.product.fields.minStock,
-            },
-          },
-        ],
-      },
-      include: { category: true },
-    });
-
-    return products.map((product) => ({
-      id: product.id,
-      name: product.name,
-      code: product.code,
-      unit: product.unit,
-      currentStock: product.quantity.toNumber(),
-      minStock: product.minStock?.toNumber(),
-      price: product.price.toNumber(),
-      estimatedValue: product.quantity.toNumber() * product.price.toNumber(),
-    }));
+      return { message: 'Produto deletado com sucesso' };
+    } catch (error) {
+      this.rethrow(error, `Falha ao remover produto (actor=${actor}, id=${id})`);
+    }
   }
 
   /**
    * Sugerir próximo código
    */
   async getSuggestCode() {
-    const lastProduct = await this.prisma.client.product.findFirst({
-      orderBy: { id: 'desc' },
-    });
+    const lastProduct = await this.prisma.client.product.findFirst({ orderBy: { id: 'desc' }, select: { id: true } });
 
     const nextNumber = lastProduct ? lastProduct.id + 1 : 1;
-    const suggestedCode = `PROD-${String(nextNumber).padStart(4, '0')}`;
 
-    return { code: suggestedCode };
-  }
-
-  // ---------------------------------------------------------------------------
-  // Privados
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Valida itens da composição:
-   * - Cada item deve ter exatamente materialId OU subProductId
-   * - Matérias-primas devem existir e estar ativas
-   * - Subprodutos devem existir, estar ativos e ser SEMI_MANUFACTURED
-   */
-  private async validateCompositionItems(
-    items: Array<{
-      materialId?: number;
-      subProductId?: number;
-      quantity: number;
-    }>,
-  ) {
-    for (const item of items) {
-      const hasMaterial = !!item.materialId;
-      const hasSubProduct = !!item.subProductId;
-
-      if (hasMaterial === hasSubProduct) {
-        throw new BadRequestException(
-          'Cada item da composição deve ter exatamente materialId ou subProductId, não ambos nem nenhum',
-        );
-      }
-    }
-
-    const materialIds = items
-      .filter((i) => i.materialId)
-      .map((i) => i.materialId!);
-
-    if (materialIds.length > 0) {
-      const materials = await this.prisma.client.primaryMaterial.findMany({
-        where: { id: { in: materialIds } },
-      });
-
-      if (materials.length !== materialIds.length) {
-        const foundIds = materials.map((m) => m.id);
-        const missing = materialIds.filter((id) => !foundIds.includes(id));
-        throw new NotFoundException(
-          `Matéria(s)-prima(s) com ID(s) ${missing.join(', ')} não encontrada(s)`,
-        );
-      }
-
-      const inactive = materials.filter((m) => !m.active);
-      if (inactive.length > 0) {
-        throw new BadRequestException(
-          `Matéria(s)-prima(s) inativa(s): ${inactive.map((m) => m.name).join(', ')}`,
-        );
-      }
-    }
-
-    const subProductIds = items
-      .filter((i) => i.subProductId)
-      .map((i) => i.subProductId!);
-
-    if (subProductIds.length > 0) {
-      const subProducts = await this.prisma.client.product.findMany({
-        where: { id: { in: subProductIds } },
-      });
-
-      if (subProducts.length !== subProductIds.length) {
-        const foundIds = subProducts.map((p) => p.id);
-        const missing = subProductIds.filter((id) => !foundIds.includes(id));
-        throw new NotFoundException(
-          `Subproduto(s) com ID(s) ${missing.join(', ')} não encontrado(s)`,
-        );
-      }
-
-      const invalid = subProducts.filter(
-        (p) => !p.active || p.productType !== ProductType.SEMI_MANUFACTURED,
-      );
-
-      if (invalid.length > 0) {
-        throw new BadRequestException(
-          `Produto(s) inválido(s) como subproduto (deve ser ativo e SEMI_MANUFACTURED): ${invalid.map((p) => p.name).join(', ')}`,
-        );
-      }
-    }
-  }
-
-  /**
-   * Calcula custo total da composição somando matérias-primas e subprodutos
-   */
-  private async calculateCompositionCost(
-    items: Array<{
-      materialId?: number;
-      subProductId?: number;
-      quantity: number;
-    }>,
-  ): Promise<number> {
-    let total = 0;
-
-    const materialIds = items
-      .filter((i) => i.materialId)
-      .map((i) => i.materialId!);
-
-    const subProductIds = items
-      .filter((i) => i.subProductId)
-      .map((i) => i.subProductId!);
-
-    const [materials, subProducts] = await Promise.all([
-      materialIds.length > 0
-        ? this.prisma.client.primaryMaterial.findMany({
-            where: { id: { in: materialIds } },
-          })
-        : ([] as { id: number; unitCost: Prisma.Decimal }[]),
-      subProductIds.length > 0
-        ? this.prisma.client.product.findMany({
-            where: { id: { in: subProductIds } },
-            select: { id: true, costPrice: true },
-          })
-        : ([] as { id: number; costPrice: Prisma.Decimal }[]),
-    ]);
-
-    for (const item of items) {
-      if (item.materialId) {
-        const material = materials.find((m) => m.id === item.materialId);
-        if (material) {
-          total += material.unitCost.toNumber() * item.quantity;
-        }
-      } else if (item.subProductId) {
-        const subProduct = subProducts.find((p) => p.id === item.subProductId);
-        if (subProduct) {
-          total += subProduct.costPrice.toNumber() * item.quantity;
-        }
-      }
-    }
-
-    return total;
+    return { code: `PROD-${String(nextNumber).padStart(4, '0')}` };
   }
 }
