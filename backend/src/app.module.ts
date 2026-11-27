@@ -18,7 +18,7 @@ import { ReportsModule } from './reports/reports.module';
 import { LicenseSystemModule } from './license-system/license-system.module';
 import { LicenseSystemService } from './license-system/license-system.service';
 import { FiscalModule } from './features/fiscal-module/fiscal.module';
-import { CategoryProductModule } from './category-product/category-product.module';
+import { CategoryModule } from './features/category/category.module';
 import { PrinterModule } from './printer/printer.module';
 import { TelegramModule } from './telegram/telegram.module';
 import { CompanyModule } from './features/company/company.module';
@@ -72,7 +72,7 @@ import { UploadsModule } from './common/uploads/uploads.module';
     ReportsModule,
     LicenseSystemModule,
     FiscalModule,
-    CategoryProductModule,
+    CategoryModule,
     PrinterModule,
     TelegramModule,
     CatalogServiceModule,

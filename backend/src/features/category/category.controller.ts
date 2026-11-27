@@ -11,12 +11,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
+import { JwtAuthGuard, JwtPayload } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { FilterCategoryDto } from './dto/filter-category.dto';
 import { CategoryResponseDto } from './dto/response-category.dto';
-import { CategoryService } from './category-product.service';
+import { CategoryService } from './category.service';
 import { UpdateCategoryDto } from './dto/update-category-product.dto';
 import { PaginatedResponseDto } from 'src/common/utils/paginated-response';
 
@@ -26,6 +27,10 @@ import { PaginatedResponseDto } from 'src/common/utils/paginated-response';
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
+  private actorOf(user: JwtPayload): string {
+    return String(user.userId);
+  }
+
   @Post()
   @ApiOperation({ summary: 'Criar categoria' })
   @ApiResponse({
@@ -33,8 +38,11 @@ export class CategoryController {
     description: 'Categoria criada com sucesso',
     type: CategoryResponseDto,
   })
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoryService.create(createCategoryDto);
+  create(
+    @Body() createCategoryDto: CreateCategoryDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.categoryService.create(createCategoryDto, this.actorOf(user));
   }
 
   @Get()
@@ -46,6 +54,7 @@ export class CategoryController {
   })
   findAll(
     @Query() filters: FilterCategoryDto,
+    @CurrentUser() user: JwtPayload,
   ): Promise<PaginatedResponseDto<CategoryResponseDto>> {
     const {
       page = 1,
@@ -55,7 +64,14 @@ export class CategoryController {
       ...rest
     } = filters;
 
-    return this.categoryService.findAll(page, limit, rest, sortKey, sortOrder);
+    return this.categoryService.findAll(
+      this.actorOf(user),
+      page,
+      limit,
+      rest,
+      sortKey,
+      sortOrder,
+    );
   }
 
   @Get(':id')
@@ -65,8 +81,11 @@ export class CategoryController {
     description: 'Categoria encontrada',
     type: CategoryResponseDto,
   })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.categoryService.findOne(id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.categoryService.findOne(id, this.actorOf(user));
   }
 
   @Patch(':id')
@@ -79,14 +98,22 @@ export class CategoryController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCategoryDto: UpdateCategoryDto,
+    @CurrentUser() user: JwtPayload,
   ) {
-    return this.categoryService.update(id, updateCategoryDto);
+    return this.categoryService.update(
+      id,
+      updateCategoryDto,
+      this.actorOf(user),
+    );
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Deletar categoria' })
   @ApiResponse({ status: 200, description: 'Categoria deletada' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.categoryService.remove(id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.categoryService.remove(id, this.actorOf(user));
   }
 }
