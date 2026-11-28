@@ -29,6 +29,7 @@ import { PurchaseModule } from './features/purchase/purchase.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { UploadsModule } from './common/uploads/uploads.module';
+import { OptionGroupModule } from './features/option-group/option-group.module';
 
 // ScheduleModule.forRoot(): registra o scheduler global do NestJS (@nestjs/schedule).
 // Só pode existir 1x na aplicação — habilita o decorator @Cron nos providers
@@ -76,6 +77,7 @@ import { UploadsModule } from './common/uploads/uploads.module';
     AssetModule,
     DocumentModule,
     PurchaseModule,
+    OptionGroupModule,
   ],
   controllers: [AppController],
   providers: [AppService, LicenseSystemService],

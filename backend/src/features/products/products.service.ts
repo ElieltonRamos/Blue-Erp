@@ -451,6 +451,35 @@ export class ProductService {
   }
 
   /**
+   * Remover a imagem do produto (cardápio online)
+   */
+  async removeImage(id: number, actor: string) {
+    try {
+      const current = await this.findProduct(id, actor);
+
+      if (!current.imageUrl) {
+        this.logger.warn(`Produto sem imagem para remover (actor=${actor}, id=${id})`);
+        return current;
+      }
+
+      // Ordem do guia (2.7): atualiza o banco e só então apaga o arquivo
+      const product = await this.prisma.client.product.update({
+        where: { id },
+        data: { imageUrl: null },
+        include: PRODUCT_DETAIL_INCLUDE,
+      });
+
+      await this.uploads.remove(current.imageUrl, actor);
+
+      this.logger.log(`Imagem do produto removida (actor=${actor}, id=${id})`);
+
+      return product;
+    } catch (error) {
+      this.rethrow(error, `Falha ao remover imagem do produto (actor=${actor}, id=${id})`);
+    }
+  }
+
+  /**
    * Sugerir próximo código
    */
   async getSuggestCode() {
